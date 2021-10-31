@@ -177,14 +177,14 @@ $$
 
 然后在`_include`里的`head.html`文件中加上
 
-{% highlight html %}
+{%- highlight html -%}
 {%- if page.math -%}
   {%- include mathjax.html -%}
 {%- endif -%}
-{% endhighlight %}
+{%- endhighlight -%}
 
 这样就可以做到在`markdown`文件开头加上
-`math: true`就可以在文章中用`$ $`来插入公式了. 
+`math: true`就可以在文章中用`$` `$`来插入公式了. 
 
 ## 后记
 怎么说呢, 上面的东西不一定对, 有错误请谅解并帮忙指出. 谢啦. 

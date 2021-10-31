@@ -1,0 +1,226 @@
+---
+layout: post
+title:  "Untitled(1)"
+date:   2021-10-29 11:14:16 +0800 
+categories: jekyll update
+---
+# To Learn a Bigger Picture
+开始学习CTF, 看的书是Hacking The Art of Exploitation by John Erickson. 
+发现自己以前玩的电脑竟然还有这么多讲究, 虽然也不是很熟, 总之, 
+先练着玩玩. 照着书学而已. 
+
+(因为不知道该给这个取什么名字, 所以就Untitled先吧. )
+
+(从后面来的一句话: 感觉我的这个文字完全就和人类学与现代性老师讲课一样, 
+堪称想到那里写那里, 遇到什么问题就去学什么, 肯定会很乱. 堪称杂学. 
+但是我不会随便改动的, 因为很麻烦. 看来我是一个学习上的杂食系么. )
+
+## 偷窥狂
+在 [攻壳机动队 SAC](https://en.wikipedia.org/wiki/Ghost_in_the_Shell:_Stand_Alone_Complex) 
+里面, 我记得那个特A级黑客说自己就是一个偷窥狂. 虽然, 但是, 真是十分贴切了. 
+想要看到计算机的内部, 而不是只是停留在表面. 我觉得这和物理很像啦, 
+都是通过自己的各种方式来得到"谜语"的答案. (虽然我不喜欢猜谜, 但是我很喜欢拆解. )
+
+总之, 先了解一些用来查看的工具:
+* `file <file>` 指出 `<file>` 是什么东西
+* `hexdump <file>` 用十六进制来查看文件
+* `objdump <option(s)> <file(s)>` 显示对象`<file(s)>`的信息 
+  目前用(见)到的`<option(s)>`有: 
+  * `objdump -D <file>` 把文件用反编译的方式来看,
+    说白了就是把十六进制的那种混乱的符号变成
+    "好懂的"汇编语言(组语, 好像台湾那里这么叫. )
+  * `objdump -M intel -D <file>` 书上写的是可以用`intel`的语法
+    类似的语法结构还有`AT&T`的`syntax`但是我有点懵, 虽然书上写着如此, 
+    但是我实际操作中并没有得到像书上所说的很好看的结果, 甚至还得到了嘲讽: 
+    `objdump: unrecognised disassembler option: intel`. 罢了. 
+    我先放着.  
+    据说`AT&T`语法结构的特点是在变量(地址)和值前面放上`%`和`$`符号, 
+    并且还是所有`linux`反编译工具默认的输出形式. 
+    (但是, 我甚至连这个也看不到. 哭. )
+  * 一般建议是配合`grep`一起使用, 如
+    `objdump -D <file> | grep -A10 main.:`
+    查看`main`函数的前十行的反编译的结果. 
+* `gdb <file>` debugger, 调试器, 用来检查已经编译了的程序, 
+  可以设置断点, 可以检查程序的内存使用(感觉翻译的不到位), 
+  还可以查看处理器的寄存器(registers), 总之很强大. 
+
+  > A debugger can view the execution from all angles, 
+  > pause it and change anything along the way. 
+  
+  感觉强大到需要专门学习, 我们老师也这么说, 虽然已经鸽了好久了.  
+  我现在有怀疑我是不是做错什么了, 因为我的输出和书上以及网上的都不同. 
+  咳, 这是什么玄学. 
+
+## GDB前的插曲 = 完全就跑偏了的ARM学习
+我不管, 教练, 我先学着先. 
+
+现在的想法是先掌握一些gdb的用法, 至于为什么会出现bug, 暂时不想它. 
+(才怪!!)
+
+我在这里描述一下我遇到的问题: 本来应该`eax`, `ebx`的东西, 
+现在却是`x20`, `sp`, `w0`之类的东西, 这简直完全看不懂么. 
+所以我有点怀疑人生, 但是经过了一番搜索, 找到了一篇
+[博客](https://tenloy.github.io/2021/04/16/Arm64-Introduce.html)
+感觉好像这应该是解决问题的一个可行的方向. 
+
+(虽然这篇文章注重的是iOS开发的, 不过有什么关系呢? 笑. 
+肝就完事了. )
+
+(因为apple的m1是ARM架构, 所以会用ARM的寄存器好像也无可厚非. )
+
+所以我应该看的是ARM syntax的玩意. 咳, intel毁灭吧. 
+我看的书和做的CTF问题都是intel么? 看来只好都学了. 
+
+那么先记录一下一些基本的知识点, 以后在去学习详细的东西: 
+* x86 & arm asm
+  * [x86](https://www.cs.virginia.edu/~evans/cs216/guides/x86.html)
+  * [arm](http://www.cs.uni.edu//~fienup/cs1410s13/lectures/lec13_ARM_Guide.pdf)
+
+### ARM
+* arm registers
+  * `x0 - x30`通用寄存器, 32位的形式是`w0 - w30`
+  * `v0 - v31`浮点数寄存器(虽然不知道在那里看到的英文是vector)
+    用`Bn Hn Sn Dn Qn`来表示byte, half word, single word, 
+    double word, quad word
+  * `wzr`, `xzr`, `wsp`, `sp`, `pc` 特殊的几个
+    分别是zero register, current stack pointer, 
+    program counter 看名字可以区分. (目前不是很清楚)
+    * `zr` 用于丢弃结果, 类似于永久回收站? 扔进去就没了, 
+      因为再去访问就是0. 
+    * `sp` 和栈有关
+    * `pc` 指向下一条要执行的命令, arm64里不可以改写. 
+  * `cpsr`, `spsr` 不是很懂的样子
+* instructions
+  * Memory Access (读档? )
+    * `ldr r4, mem` : `[r4] <- [mem]` 
+      (`mem` is a global varible label)
+    * `str r4, mem` : `[r4] -> [mem]`
+    * `[r3]` : indirect access
+    * `[r3, #4]` : offset
+  * Move (赋值? )
+    * `mov r4, r2` : `[r4] <- [r2]`
+    * `mov r4, #10` : `[r4] <- 10`
+  * Load Address (取地址算符? )
+    * `adr r4, mem` : `[r4] <- load address of mem`
+  * Compare (`cmp`)
+    * `cmp r4, r2` : set condition codes by `r4 - r2`
+  * Branch (`jmp`)
+    * `bgt LABEL` : condition code greater than 0
+    * `b LABEL` : just jump
+
+(虽然我觉得一时半会儿我是用不到这个东西的, 
+但是我可以很自觉地说: 我知道为什么我的结果和书上不一样了. )
+
+### x86 Assembly
+* x86 registers
+  * `eax`, `ecx`, `edx`, `ebx` 分别代表
+    Accumulator, Counter, Data, Base register
+  * `esp`, `ebp`, `esi`, `edi` 分别代表
+    Stack Pointer, Base Pointer, 
+    Source Index, Destination Index 
+    (看名字就知道了, 前面两个在程序运行和内存管理上有大用处, 
+    后面两个在拷贝数据的时候有大用处. )
+  * `eip` Instruction Pointer 指向当前处理器执行读取的指令, 
+    在debug的时候比较有用. (`cp`)
+  * `eflags` 由几个比特的flags组成, 用于比较和分割
+    (used for comparisions and memory segmentations. )
+
+    > Like a child pointing his finger at each word 
+    > as he reads, the processor reads each instruction
+    > using the EIP register as its finger. 
+* x86 instructions
+  * Address Access: 
+    * registers 直接就是地址, 类似于变量
+    * offsets `[eax + 8]` 通过和标准的位置的差别来得到新的地址
+    * `BYTE PTR [ebx]`这样的表示拿一个比特, 
+      同样的有`WORD`, `DWORD`等
+  * Move `mov a, b` : `a = b`
+  * Push, Pop: `push a`, `pop a`
+  * Condition
+    * `jmp LABEL` 直接就是跳转
+    * `cmp a, b` 比较一本后面跟着条件跳转
+    * `je`, `jne`, `jz`, `jg`, `jge`, `jl`, `jle`
+      就是跳转的条件: equal, not equal... 看名字. 
+      (这里的坑就是这个比较是怎么比较的? 
+      感觉可以把这个指令用农民的方法来记: `if a je b then j`)
+  * Call, Return `call <LABEL>` 
+    (和`jmp`区别是会记下出发的位置, 结束完调用call之后会回来)
+    `ret`就只是一个单独的命令, 把`eax`给返回
+
+
+现在也不需要知道太多, 总之这么点应该够用了. 
+(快点回归正轨. )
+
+## GDB 的基本使用
+启动`gdb`, 很简单在终端里面输入`gdb`就好. 
+不过, 如果说弹出来的一大堆文字让你觉得好像是报错信息而心烦意乱的话, 
+试一试加上`-q`修饰符, 这样可以减少很多的介绍文字. 
+
+(`q` = quiet, 好的, 老外. )
+
+举个例子(其中`t`是我用`gcc`编译的一段类似于`hello world`的代码)
+```
+❰**|learn❱ gdb -q t  
+Reading symbols from t...
+(No debugging symbols found in t)
+(gdb)
+```
+
+然后可以设置断点`break <func>`, 运行程序`run`, 
+查看寄存器`info registers`, `info register <name>`, 
+反汇编`disassemble <func>`: 
+```
+(gdb) break main
+Breakpoint 1 at 0x77c
+(gdb) run
+Starting program: /**/**/**/learn/t
+
+Breakpoint 1, 0x0000aaaaaaaaa77c in main ()
+(gdb) info registers
+x0             0xaaaaaaaaa830      187649984473136
+x1             0xfffffffff608      281474976708104
+x2             0xfffffffff618      281474976708120
+x3             0xaaaaaaaaa76c      187649984472940
+x4             0x0                 0
+x5             0x7c51e727f47b8b78  8958195292608105336
+x6             0xfffff7fc8608      281474842265096
+x7             0x4004004100400000  4612812197511299072
+x8             0xffffffffffffffff  -1
+x9             0xf                 15
+x10            0x80008             524296
+--Type <RET> for more, q to quit, c to continue without paging--
+(gdb) info register pc
+pc             0xaaaaaaaaa77c      0xaaaaaaaaa77c <main+16>
+(gdb) disassemble main
+Dump of assembler code for function main:
+   0x0000aaaaaaaaa76c <+0>:     stp     x29, x30, [sp, #-16]!
+   0x0000aaaaaaaaa770 <+4>:     mov     x29, sp
+   0x0000aaaaaaaaa774 <+8>:     adrp    x0, 0xaaaaaaaaa000
+   0x0000aaaaaaaaa778 <+12>:    add     x0, x0, #0x830
+=> 0x0000aaaaaaaaa77c <+16>:    bl      0xaaaaaaaaa650 <puts@plt>
+   0x0000aaaaaaaaa780 <+20>:    mov     w0, #0x0                        // #0
+   0x0000aaaaaaaaa784 <+24>:    ldp     x29, x30, [sp], #16
+   0x0000aaaaaaaaa788 <+28>:    ret
+End of assembler dump.
+```
+
+(退出就是`quit`, 这个想必一定是有很多人英语比我好的. )
+
+### 利用GCC的 `-g` 修饰符, 让编译器保留额外的调试信息
+假如文件是这样的: 
+{%- highlight c -%}
+#include <stdio.h>
+
+int main()
+{
+  for(int i=0; i<=8; i++)
+    printf("I'm Groot.\n");
+  return 0;
+}
+{%- endhighlight -%}
+然后在编译的时候加上 `-g` 修饰符
+```
+gcc -g t.c -o t
+```
+
+(哎呀, 要考试了, 先鸽一下. 那就下次继续. :p)
