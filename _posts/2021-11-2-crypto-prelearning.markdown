@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Crypto Pre-learning"
-date:   2021-11-01 22:02:27 +0800
+date:   2021-11-02 22:50:49 +0800
 categories: jekyll update
 ---
 # 初学一点点的Crypto
