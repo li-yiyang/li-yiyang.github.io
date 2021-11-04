@@ -1,0 +1,103 @@
+---
+layout: post
+title:  "Stack"
+date:   2021-11-04 17:20:45 +0800
+categories: jekyll update
+---
+# Stack
+算是之前`Untitled(1)` 的接续吧. 原因是因为我做到了汇编的题, 
+然后对`stack`的了解实在是不深, 
+导致之前的参数几乎都是靠蒙和猜得到的, 就是不知道参数和
+`[ebp+x]`的对应关系, 导致了现在卡住了, 前进不了就要学习. 
+
+唯一的问题是, 网上的相关的信息是在是太少了, 虽然有些人也有做笔记, 
+但是他们的笔记我看不懂(QAQ, 不是说别人不好, 只是因为我太菜了. )
+
+所以我只好去看难懂的外文文章了. 
+
+(虽然我也很想要系统地学习, 但是我毕竟只是一个在CTF骗钱的烂人, 
+所以暂时还是学一点做一点吧. 假如手头闲下来的话, 我想读编码. )
+
+## The Stack Overview
+> In computer architecture, the stack is a hardware 
+> manifestation of the stack data structure 
+> (a Last In, First Out queue).
+> 
+> In x86, the stack is simply an area in RAM 
+> that was chosen to be the stack - 
+> there is no special hardware to store stack contents. 
+> The `esp`/`rsp` register holds the address in memory 
+> where the bottom of the stack resides. 
+> When something is pushed to the stack, 
+> `esp` decrements by 4 (or 8 on 64-bit x86), 
+> and the value that was pushed is stored 
+> at that location in memory. Likewise, 
+> when a pop instruction is executed, 
+> the value at `esp` is retrieved 
+> (i.e. esp is dereferenced), 
+> and `esp` is then incremented by 4 (or 8).
+> 
+> Conventionally, `ebp`/`rbp` contains the address of 
+> the top of the current stack frame, 
+> and so sometimes local variables are referenced 
+> as an offset relative to `ebp` 
+> rather than an offset to esp. 
+> A stack frame is essentially just the space 
+> used on the stack by a given function.
+> 
+>  from [CTF101](https://ctf101.org/binary-exploitation/what-is-the-stack/)
+
+stack 是一个后进先出(LIFO)的队列. 在x86机器中, 
+stack只是RAM中的一部分, 不是物理意义上的单独一块. 
+
+`esp`/`rsp`指向stack的底部, 当`push a`的时候, 先`esp -= 4`, 
+(如果是64位机器, `esp -= 8`), 然后把`a`放到`esp`的地址里. 
+
+同样的在`pop a`时, 先`esp += 4`, (如果是64位机器, `esp += 8`)
+然后再把`a`放到`esp`的地址里.
+
+这里有一个点: 
+
+```
+Memory: 
+|==PARA  2==| : higher memory address
+|==SYSTEM===| : [ebp] + 12
+|==PARA  1==| : [ebp] + 8
+|=RET  ADDR=| : [ebp] + 4
+|=SAVED EBP=| : ebp
+|=LOCAL  V1=|
+|=LOCAL  V2=|
+|=SAVED EDI=|
+|=SAVED ESI=| : esp
+|====...====|
+|STACKBUTTOM| : esp--the buttom of the stack contents
+|==UNUSED===| : 
+|====...====|
+|===HEAP====|
+|====BSS====|
+|===DATA====|
+|===TEXT====| : lower memory address
+```
+
+大概是这样? 
+
+## 简单的一点点归纳, 可能很混乱
+在我们做`push ..`这个动作的时候, 相当于是把数据放到栈里面. 
+举个例子: 
+```
+push 0xd73346ed
+
+; stack: (in bite)
+; +0x8 +0x9 +0xA +0xB 
+; +----+----+----+----+
+; | ed | 46 | 33 | d7 |
+; +----+----+----+----+
+```
+这样的话当我们用`BYTE PTR [ebp+0xa]`的时候, 里面的值就是`0x33`. 
+
+## 后记
+我懂了. 原来我掌握的还不错. 之所以会卡住的原因竟然简单得令人窒息. 
+咳, 原来是因为Ruby里面在处理二进制的时候会自动把前面的`0`给扔了. 
+导致了我把少了一个`0`, 然后就错了. 
+
+好的, 以后记住了.
