@@ -97,7 +97,7 @@ $$\bar{\vec{r} \cdot \vec{F}}
 
 ## Maxwell's Equations & Basic Group Theory
 $$ 
-  \nabla \cdot E = \frac{\rou}{\varepsilon}\\
+  \nabla \cdot E = \frac{\rho}{\varepsilon}\\
   \nabla \cdot B = 0 \\
   \nabla \times E = - \frac{\partial B}{\partial t}\\
   \nabla \times B 
