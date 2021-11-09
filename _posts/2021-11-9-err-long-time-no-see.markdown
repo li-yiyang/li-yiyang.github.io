@@ -65,7 +65,7 @@ manifold, 还有数学的$n$维任意空间就是题外话了.
 `\vec`还是有点表示不方便, `\boldsymbol`就好, 还好看. )
 
 定义单位向量
-$\bar\boldsymbol{v} 
+$\bar{\boldsymbol{v}} 
   = \frac{\boldsymbol{v}}{|\boldsymbol{v}|}$
 
 > directed line segments: 有向线段  
@@ -102,12 +102,12 @@ $$(\boldsymbol{a} \times \boldsymbol{b})
 ## 张量 - Tensor
 考虑一个投影: 
 $$\mathrm{Proj}_{\boldsymbol{u}} \boldsymbol{v}
-  = (\boldsymbol{v} \cdot \bar\boldsymbol{u})
-    \bar\boldsymbol{u}$$
+  = (\boldsymbol{v} \cdot \bar{\boldsymbol{u}})
+    \bar{\boldsymbol{u}}$$
 然后考虑这样的操作的抽象: 
 (就是取出任意的$\boldsymbol{v}$都有的形式或结构)
 $$\mathrm{Proj}_{\boldsymbol{u}}
-  = \bar\boldsymbol{u} \bar\boldsymbol{u}$$
+  = \bar{\boldsymbol{u}} \bar{\boldsymbol{u}}$$
 
 从这里可以看出为什么说"并矢", 就是把两个向量排在一起, 
 就是一个张量了. 
