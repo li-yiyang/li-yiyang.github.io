@@ -78,38 +78,13 @@ i \neq j$
 为了达到这样的结果, 不妨就先来一个小操作: 
 
 先把这组列向量基记为: 
-$A = (\boldsymbol{g}_1, \boldsymbol{g}_2, 
-  \cdots, \boldsymbol{g}_n)$
+$ A = (\boldsymbol{g}_1, \boldsymbol{g}_2, \cdots, \boldsymbol{g}_n) $
 
 对应的行向量的基记为: 
-$B = \left( \begin{array}{l}
-  \boldsymbol{g}^1 \\
-  \boldsymbol{g}^2 \\
-  \cdots\\
-  \boldsymbol{g}^n
-\end{array} \right)$
+$B = \left( \begin{array}{l} \boldsymbol{g}^1 \\ \boldsymbol{g}^2 \\ \cdots\\ \boldsymbol{g}^n \end{array} \right)$
 
 于是可以得到:   
-$$B A =
-\left(\begin{array}{llll}
-  \boldsymbol{g}^1 \cdot \boldsymbol{g}_1 
-  & \boldsymbol{g}^1 \cdot \boldsymbol{g}_2 
-  & \cdots 
-  & \boldsymbol{g}^1 \cdot \boldsymbol{g}_n \\
-
-  \boldsymbol{g}^2 \cdot \boldsymbol{g}_1 
-  & \boldsymbol{g}^2 \cdot \boldsymbol{g}_2 
-  & \cdots 
-  & \boldsymbol{g}^2 \cdot \boldsymbol{g}_n \\
-
-  \cdots & \cdots & \cdots & \cdots \\
-
-  \boldsymbol{g}^n \cdot \boldsymbol{g}_1 
-  & \boldsymbol{g}^n \cdot \boldsymbol{g}_2 
-  & \cdots 
-  & \boldsymbol{g}^n \cdot \boldsymbol{g}_n \\
-\end{array}
-\right)$$
+$$B A = \left(\begin{array}{llll} \boldsymbol{g}^1 \cdot \boldsymbol{g}_1 & \boldsymbol{g}^1 \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^1 \cdot \boldsymbol{g}_n \\ \boldsymbol{g}^2 \cdot \boldsymbol{g}_1 & \boldsymbol{g}^2 \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^2 \cdot \boldsymbol{g}_n \\ \cdots & \cdots & \cdots & \cdots \\ \boldsymbol{g}^n \cdot \boldsymbol{g}_1 & \boldsymbol{g}^n \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^n \cdot \boldsymbol{g}_n \\ \end{array} \right)$$
 
 然后假如这个朴素的想法能够实现的话, 
 就会发现$B A$矩阵的元素除了对角线上的元素, 
@@ -124,12 +99,7 @@ $$B A =
 对应单位矩阵的东西了. )
 
 好的, 有了上面的这个规定, 就可以引入数学符号来表示: 
-$$\boldsymbol{g}^i \dot \boldsymbol{g}_j 
-  = \delta^i_j 
-  = \left\{ \begin{array}{ll}
-    1 & \mathrm{if} \quad i = j\\
-    0 & \mathrm{if} \quad i \neq j
-  \end{array} \right.$$  
+$$\boldsymbol{g}^i \cdot \boldsymbol{g}_j = \delta^i_j = \left\{ \begin{array}{ll} 1 & \mathrm{if} \quad i = j\\ 0 & \mathrm{if} \quad i \neq j \end{array} \right.$$  
 
 ($\delta^i_j$就是**Kronecker Delta**. )
 
@@ -163,27 +133,10 @@ $$v_j = \boldsymbol{v} \cdot \boldsymbol{g}_j$$
 
 ## Let's Get Calculation
 ### Dot Product
-$$\boldsymbol{u} \cdot \boldsymbol{v} 
-= u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{g}^j
-= u^i v_j \delta^i_j
-= u_i v^i = u^i v_i$$
+$$\boldsymbol{u} \cdot \boldsymbol{v} = u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{g}^j = u^i v_j \delta^i_j = u_i v^i = u^i v_i$$
 
 ### Cross Product
-$$\boldsymbol{u} \times \boldsymbol{v} 
-  = (\boldsymbol{u} \times \boldsymbol{v})_k 
-    \boldsymbol{g}^k\\
-  (\boldsymbol{u} \times \boldsymbol{v})_k
-  = (\boldsymbol{u} \times \boldsymbol{v}) 
-    \cdot \boldsymbol{g}_k
-  = u^i v^j 
-    (\boldsymbol{g}_i \times \boldsymbol{g}_j) 
-      \cdot \boldsymbol{g}_k\\
-  \mathrm{let} \  \varepsilon_{i j k}
-    = \boldsymbol{g}_i \times \boldsymbol{g}_j) 
-      \cdot \boldsymbol{g}_k
-  \Rightarrow 
-  (\boldsymbol{u} \times \boldsymbol{v})_k
-  = u^i v^j \boldsymbol{\varepsilon}_{i j k}$$
+$$\boldsymbol{u} \times \boldsymbol{v} = (\boldsymbol{u} \times \boldsymbol{v})_k \boldsymbol{g}^k\\(\boldsymbol{u} \times \boldsymbol{v})_k = (\boldsymbol{u} \times \boldsymbol{v}) \cdot \boldsymbol{g}_k = u^i v^j (\boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k\\ \mathrm{let} \  \varepsilon_{i j k} = \boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k \Rightarrow (\boldsymbol{u} \times \boldsymbol{v})_k = u^i v^j \boldsymbol{\varepsilon}_{i j k}$$
 
 ## 鸽
 为了新开一个东西, 我现在决定先鸽一下哈. 
