@@ -1,0 +1,191 @@
+---
+layout: post
+title:  "Benseral Bases and Tensor Notation"
+date:   2021-11-15 18:10:40 +0800 
+categories: jekyll update
+math: true
+---
+# 第二章
+现在发现了线性代数真是重要, 学了以后竟然可以看懂了. 
+
+## General Bases
+for any fixed set of **noncoplanar** vectors, 
+即互不共面的一组矢量, 就可以构成线性空间的一组基. 
+而判断是否为一组基的方式就可以利用线代课上学的行列式:   
+$$\mathrm{det}(\boldsymbol{g}_i) \neq 0$$
+
+(这里做一个小小的注记: 我这本书中的向量的角标好像和线性代数中的不同, 
+和线代中的行向量的角标在下面$\boldsymbol{A}_{(i)}$不同, 
+这本书中的角标在下面的应该是列向量$\boldsymbol{g}_i$. 
+应该是这样的, 虽然书上没有详细的这样规定的样子, 
+但是我发现不这样的话, 就会很奇怪. 也许是我弄错了. )
+
+于是用简单的线性代数知识就会知道, 
+线性空间中的任一向量都可以表示为基矢的线性组合:    
+$$\forall \boldsymbol{v} \in \langle \boldsymbol{g}_i \rangle, 
+  \boldsymbol{v} = \sum v^i \boldsymbol{g}_i $$
+
+(这里在加一个注记, 在张量里面的讨论, 除了特殊说明外, 
+上面的标记都是角标而不是乘幂. 
+并且这里的角标写在上面是为了后面用的, 
+也是为了和下面的行向量的系数区分开来. )
+
+(当然, 有列向量就会有行向量:     
+$$\forall \boldsymbol{v} \in \langle \boldsymbol{g}_i \rangle, 
+  \boldsymbol{v} = \sum v_i \boldsymbol{g}^i $$
+)
+
+### Einstein Summation Convention
+为了简化标记, 
+伟大的Einstein创造了一种杰出的"偷懒"方法, 
+即Einstein Summation Convention:    
+> The summation convention applies only 
+> when one **dummy index** 
+> is "on the roof", and the other 
+> is "in the cellar".   
+> 
+> "Dummy" means that this symbol
+> for index can be replaced 
+> by any other symbol 
+> without affecting 
+> the value of the sum. 
+
+翻译过来就是在上标和下标中同时出现的指标就是"dummy index", 
+这样的指标就是可以换成新的不同的标号来求和:    
+$$\sum v^i \boldsymbol{g}_i = v^i \boldsymbol{g}_i\\
+  \sum a_k v^i \boldsymbol{g}_i = 
+  a_k \sum v^i \boldsymbol{g}_i = 
+  a_k v^i \boldsymbol{g}_i$$
+
+### Reciproal Base Vectors
+一个朴素的想法: 
+
+假如我们想要有一种很好的运算方式, 就是当我们做向量点乘的时候, 
+最好有像在平面直角坐标系中的那样的简单的形式:   
+$$u^i \boldsymbol{g}_i \cdot v_j \boldsymbol{v}^j
+  = u^i v_i$$
+
+(一点注记: 上面的等式不一定是成立的, 正确的写法是
+$u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{v}^j$, 
+具体的原因就是可能会存在像这样的情况: 
+$\boldsymbol{g}_i \cdot \boldsymbol{v}^j \neq 0,
+i \neq j$, 但是这样不是超级麻烦么. )
+
+(所以, )这样的话我们就会有一种朴素的需要: 
+$\boldsymbol{g}_i \cdot \boldsymbol{v}^j=0, 
+i \neq j$
+
+为了达到这样的结果, 不妨就先来一个小操作: 
+
+先把这组列向量基记为: 
+$A = (\boldsymbol{g}_1, \boldsymbol{g}_2, 
+  \cdots, \boldsymbol{g}_n)$
+
+对应的行向量的基记为: 
+$B = \left( \begin{array}{l}
+  \boldsymbol{g}^1 \\
+  \boldsymbol{g}^2 \\
+  \cdots\\
+  \boldsymbol{g}^n
+\end{array} \right)$
+
+于是可以得到:   
+$$B A =
+\left(\begin{array}{llll}
+  \boldsymbol{g}^1 \cdot \boldsymbol{g}_1 
+  & \boldsymbol{g}^1 \cdot \boldsymbol{g}_2 
+  & \cdots 
+  & \boldsymbol{g}^1 \cdot \boldsymbol{g}_n \\
+
+  \boldsymbol{g}^2 \cdot \boldsymbol{g}_1 
+  & \boldsymbol{g}^2 \cdot \boldsymbol{g}_2 
+  & \cdots 
+  & \boldsymbol{g}^2 \cdot \boldsymbol{g}_n \\
+
+  \cdots & \cdots & \cdots & \cdots \\
+
+  \boldsymbol{g}^n \cdot \boldsymbol{g}_1 
+  & \boldsymbol{g}^n \cdot \boldsymbol{g}_2 
+  & \cdots 
+  & \boldsymbol{g}^n \cdot \boldsymbol{g}_n \\
+\end{array}
+\right)$$
+
+然后假如这个朴素的想法能够实现的话, 
+就会发现$B A$矩阵的元素除了对角线上的元素, 
+其他所有的元素都应该是$0$, 那么这就是一个单位矩阵$E_n$, 
+所以不难看出这两个$A$和$B$是互逆的. 
+
+所以就得到了已知一组基, 求另外一组基的方法了, 
+**就是求出对应的逆矩阵**, 完事. 
+
+(感觉这就是为什么赵爹上课的时候, 
+会讲到一个让我迷幻的$\delta^i_j$
+对应单位矩阵的东西了. )
+
+好的, 有了上面的这个规定, 就可以引入数学符号来表示: 
+$$\boldsymbol{g}^i \dot \boldsymbol{g}_j 
+  = \delta^i_j 
+  = \left\{ \begin{array}{ll}
+    1 & \mathrm{if} \quad i = j\\
+    0 & \mathrm{if} \quad i \neq j
+  \end{array} \right.$$  
+
+($\delta^i_j$就是**Kronecker Delta**. )
+
+下面的出现的矢量就都是这样规定的两组矢量了. 
+
+### The Roof and Cellar Compoents of Vector
+现在回到$v_i$和$v^i$的区别, 
+书中的说法是$v_i$就叫做cellar components, 
+$v^i$就叫做roof components, 
+很形象. 
+
+虽然这个不是正式的名称. 
+正式的名称就是大名鼎鼎的**covariant**$v_i$和
+**contravariant**$v^i$. 
+确实, 目前这些名字对我来说也很meaningless, 
+摘录一下作者的吐槽: 
+> ("covariant" and "contravariant" are) names
+> that seem to me awkward and meaningless. 
+> "Roof" and "cellar" also have mnemonic value 
+> in matrix theory where $A^i_j$ is sometimes
+> used to denote the element of a matrix $A$
+> that sits in the $i$th row and $j$th column. 
+
+那么自然可以想到一个已知基底来求分量的方法:    
+$$v^i \boldsymbol{g}_i \cdot \boldsymbol{g}_j = v^j$$
+
+这样的话就很简单可以得到$v^j$分量了. 
+
+同理,    
+$$v_j = \boldsymbol{v} \cdot \boldsymbol{g}_j$$
+
+## Let's Get Calculation
+### Dot Product
+$$\boldsymbol{u} \cdot \boldsymbol{v} 
+= u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{g}^j
+= u^i v_j \delta^i_j
+= u_i v^i = u^i v_i$$
+
+### Cross Product
+$$\boldsymbol{u} \times \boldsymbol{v} 
+  = (\boldsymbol{u} \times \boldsymbol{v})_k 
+    \boldsymbol{g}^k\\
+  (\boldsymbol{u} \times \boldsymbol{v})_k
+  = (\boldsymbol{u} \times \boldsymbol{v}) 
+    \cdot \boldsymbol{g}_k
+  = u^i v^j 
+    (\boldsymbol{g}_i \times \boldsymbol{g}_j) 
+      \cdot \boldsymbol{g}_k\\
+  \mathrm{let} \  \varepsilon_{i j k}
+    = \boldsymbol{g}_i \times \boldsymbol{g}_j) 
+      \cdot \boldsymbol{g}_k
+  \Rightarrow 
+  (\boldsymbol{u} \times \boldsymbol{v})_k
+  = u^i v^j \boldsymbol{\varepsilon}_{i j k}$$
+
+## 鸽
+为了新开一个东西, 我现在决定先鸽一下哈. 
+
+:p
