@@ -12,6 +12,27 @@ categories: jekyll update
 所以我会用`ruby`来学习`python`, 并且尽量找一种可以把`python`
 代码用`ruby`来写的做法. 
 
+## 没什么关系的前言
+这真的不知道该高兴呢还是伤心, 感觉`python`超级受欢迎, 
+有很多的支持和帮助, 结果就导致了文档到处都有. 
+一个库有一个库的文档, 分散(确切的来说, 
+应该是被不同的"友好"的组织发布)在不同的地方. 
+查找起来就很让人不爽了. 
+
+但是`ruby`虽然有一些看起来很官方的文档, 
+`rdoc`简直就是天堂. 不得不佩服`ruby`程序员. 
+
+> 程序员笑话: 程序员最讨厌的事情就是看没有注释和文档的代码, 
+> 以及写注释和文档. 
+
+(但是这是不是因为`ruby`实在是太冷门了? 
+感觉完全没有人想要在它身上捞烂钱. 所以除了官方, 
+其他人也没什么动力来搞它? 好像也不是, 
+因为以前还是有神仙的. )
+
+(所以自学`python`等价于在网上看视频, 看书, 看教材...
+自学`ruby`等于看文档, 看源码, 看命... ?)
+
 ## Python Basis
 ### 运算符, 赋值, 类型
 目测和`ruby`是大同小异的
@@ -223,6 +244,7 @@ print(x)   # => 3
 ```ruby
 def func(x, y=0)
   print(x+y)
+  return x, y
 end
 ```
 
@@ -249,6 +271,8 @@ end
 
 ### 数据结构
 #### 列表 List
+这一节写的比较乱, 以后再改吧. 
+
 在`ruby`里面叫`Array`
 * 定义列表: `list = ["a", 1, ["a", "asd"]]`
 * 访问元素: 
@@ -383,6 +407,14 @@ s.endwith(string)
 # => ['a', 'b', 'c']
 ```
 
+`ruby`里面也有类似的函数
+```ruby
+element.join(separator=$,)
+# if element.kind_of?(Array)
+
+"string".split(patten)
+# 可以直接传入正则表达式来匹配
+```
 #### 漂亮格式
 ```python
 "string".rjust(length)   # 按长度length扩张字符串, 右对齐
@@ -425,6 +457,17 @@ match.group(index)
 # index = 0或者不输入:  返回匹配的全部文本
 # index >= 1:         返回匹配组
 ```
+
+在`ruby`里面的正则表达式写起来比较简单: 
+```ruby
+"to match words".match /\w+/
+"to match words" =~ /\w+/
+
+$~ # 返回最后一次的匹配结果
+```
+
+具体的我觉得`ruby`的文档写的足够详细了, 应该是够用了. 
+[ruby3.0.2 regexp](https://ruby-doc.org/core-3.0.2/Regexp.html)
 ### FileIO
 #### Basic
 有一个很坑爹的地方: 
@@ -529,8 +572,110 @@ except Exception as err:
 ```
 ##############2021.11.17 先停一下 下次继续################
 ```
+
+```python
+assert condition, "massage"
+# 当condition不成立的时候就抛出message然后退出程序
+# 可以不用加上message
+# assert没法用try和except来处理
+
+# 在用-O选项启动的时候就会跳过assert
+```
+
+#### 日志
+```python
+import logging
+```
+目前好像没有什么会用到日志的需求, 
+所以就不再学下去了. 
+
+#### 调试器
+可以设置断点和查看代码中的变量值. 目前还不是很会. 
+### Command Line
+系统调用传入的参数在`python`
+```python
+import sys
+
+sys.argv        # 一个包含参数的列表
+```
 ### Web
+不愧是流行的语言, `python`在这些方面真的是很完善. 
+爬虫的框架真的超级多:
+* `webbrowser`
+* `requests`
+* `Beautiful Soup`
+* `selenium`
 #### HTTP
+之所以用`http`这个标题, 
+是因为我觉得上面的这些框架都和`ruby`的`net/http`很像. 
+
+(虽然`python`的这些框架都很便利. )
+
+##### webbrowser
+```python
+import webbrowser
+webbrowser.open("url")
+```
+##### request
+```python
+import request
+res = request.get("url") # 获得网页
+res.raise_for_status()   # 检查下载的文件
+# 假如有问题的话就会抛出异常, 否则就什么也不做
+# 比如会放出requests.exceptioins.HTTPError
+# 书里面建议在get后面都加上这一句话
+# 在ruby里面的open-uri好像是只要有问题, 直接就爆炸(报错)
+
+# 下载的文件要保存到电脑中时, 就要用二进制写入的模式
+# 和ruby不同的地方是, ruby的open-uri在小文件的时候会返回String类, 
+# 里面包含网页文件的数据, 在大文件的时候, 则会返回IO对象
+file = open(path, 'wb')
+# file.write(res)
+for buff in res.iter_content(size):
+  file.write(buff)
+file.close
+```
+
+据说这里有一个老梗, 
+大概是因为`python`的`urllib`写得实在是太复杂了, 
+所以虽然它一直在更新, 但是还是挡不住广大的群众使用`urllib`. 
+
+(悲惨的是, `ruby`里面几乎也没什么好的, 
+有一个比较早的`open-uri`, 现在几乎都没更新了, 
+也没有很好的功能, 要访问的话还是用`net\http`厉害, 
+但是我觉得`open-uri`在简单使用的话还是可以接受的. )
+##### BeautifulSoup
+(我知道了解一点`HTML`语言和`javascript`等的东西很重要, 
+但是我目前遇到的爬虫往往是静态网页, 所以暂时没有动态网页的需要, 
+假如遇到了的话再说吧, 现在就用三脚猫功夫来糊弄一下先. :p)
+
+```python
+import bs4
+
+# 假如有一个res = requests.get(url)
+p = bs4.BeautifulSoup(res)  # 处理
+e = p.select("div")         # CSS选择器
+str(e)                      # 输出
+e.get('id')                 # tag上的标志attr
+e.attrs                     # attr的一个字典
+```
+
+实际上这个模块和`ruby`中的`nokogiri`是很像的, 
+虽然在**ruby cookbook**里面提供了一个HTML的库, 
+但是那个库太旧了, 并且也不好用. 
+
+(哦, 其实如果正则表达式很强的话, 可以直接用正则表达式来, 
+当然, 一般是用来处理很小的或者是一点点的匹配任务. )
+
+##### selenium
+好像是一种通过调用游览器内部提供的接口, 
+进行自动化遥控游览器来操作网页, 实际上很值得学习. 
+
+(我记得好像有无头版本的...)
+
+```
+##############2021.11.18 再停一下 去搞ruby################
+```
 #### E-Mail
 ### Data
 #### CSV
