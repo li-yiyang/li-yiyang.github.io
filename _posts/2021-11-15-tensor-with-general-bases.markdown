@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Benseral Bases and Tensor Notation"
-date:   2021-11-15 18:10:40 +0800 
+date:   2021-11-26 21:29:21 +0800 
 categories: jekyll update
 math: true
 ---
@@ -30,10 +30,21 @@ $$\forall \boldsymbol{v} \in \langle \boldsymbol{g}_i \rangle,
 并且这里的角标写在上面是为了后面用的, 
 也是为了和下面的行向量的系数区分开来. )
 
-(当然, 有列向量就会有行向量:     
-$$\forall \boldsymbol{v} \in \langle \boldsymbol{g}_i \rangle, 
+(这里在加一个注记: 就是我们考虑的这个玩意就是相当于一时函数, 
+魔法吧? $$\mathrm{def} f( \boldsymbol{e}_i ) = u_i \quad \mathrm{therefore} f( \boldsymbol{v} ) = v_i f( \boldsymbol{e}_i )$$ )
+
+(当然, 有列向量就会有行向量: $$\forall \boldsymbol{v} \in \langle \boldsymbol{g}_i \rangle, 
   \boldsymbol{v} = \sum v_i \boldsymbol{g}^i $$
 )
+
+(这里可以想象一下: 
+$$\left( \begin{array}{lll}\boldsymbol{g}_1 & \boldsymbol{g}_2 & \boldsymbol{g}_3 \end{array} \right) \left( \begin{array}{l} \boldsymbol{\alpha}_1 \\ \boldsymbol{\alpha}_2 \\ \boldsymbol{\alpha}_n \end{array} \right) = \sum_i \alpha_i \boldsymbol{g}_i$$
+这样的话就会得到一个很好的对线性代数中的对向量和矩阵运算的理解. )
+
+(这里插入一个说明, 之前的张量的笔记实际上是和坐标系无关的, 
+因为实际上是一个抽象的概念. 但是为什么还要分量呢? 
+明明分量和坐标系的选取是有关的, 并且分量还很丑. 
+这是因为这样子能算啊, 傻孩子. )
 
 ### Einstein Summation Convention
 为了简化标记, 
@@ -81,7 +92,7 @@ i \neq j$
 $ A = (\boldsymbol{g}_1, \boldsymbol{g}_2, \cdots, \boldsymbol{g}_n) $
 
 对应的行向量的基记为: 
-$B = \left( \begin{array}{l} \boldsymbol{g}^1 \\ \boldsymbol{g}^2 \\ \cdots\\ \boldsymbol{g}^n \end{array} \right)$
+$$B = \left( \begin{array}{l} \boldsymbol{g}^1 \\ \boldsymbol{g}^2 \\ \cdots\\ \boldsymbol{g}^n \end{array} \right)$$
 
 于是可以得到:   
 $$B A = \left(\begin{array}{llll} \boldsymbol{g}^1 \cdot \boldsymbol{g}_1 & \boldsymbol{g}^1 \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^1 \cdot \boldsymbol{g}_n \\ \boldsymbol{g}^2 \cdot \boldsymbol{g}_1 & \boldsymbol{g}^2 \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^2 \cdot \boldsymbol{g}_n \\ \cdots & \cdots & \cdots & \cdots \\ \boldsymbol{g}^n \cdot \boldsymbol{g}_1 & \boldsymbol{g}^n \cdot \boldsymbol{g}_2 & \cdots & \boldsymbol{g}^n \cdot \boldsymbol{g}_n \\ \end{array} \right)$$
@@ -123,6 +134,12 @@ $v^i$就叫做roof components,
 > used to denote the element of a matrix $A$
 > that sits in the $i$th row and $j$th column. 
 
+(但是又有说协变和逆变的概念是在坐标系变换的时候出现的一个概念, 
+假如和坐标系变化相同的就是协变, 比如伽利略变换的不变性之类的? 
+
+这里还有一件事, 你可以试一试这样理解, 协变是在自己向量空间的变化, 
+逆变是变化到对偶空间的东西. )
+
 那么自然可以想到一个已知基底来求分量的方法:    
 $$v^i \boldsymbol{g}_i \cdot \boldsymbol{g}_j = v^j$$
 
@@ -136,9 +153,39 @@ $$v_j = \boldsymbol{v} \cdot \boldsymbol{g}_j$$
 $$\boldsymbol{u} \cdot \boldsymbol{v} = u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{g}^j = u^i v_j \delta^i_j = u_i v^i = u^i v_i$$
 
 ### Cross Product
-$$\boldsymbol{u} \times \boldsymbol{v} = (\boldsymbol{u} \times \boldsymbol{v})_k \boldsymbol{g}^k\\(\boldsymbol{u} \times \boldsymbol{v})_k = (\boldsymbol{u} \times \boldsymbol{v}) \cdot \boldsymbol{g}_k = u^i v^j (\boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k\\ \mathrm{let} \  \varepsilon_{i j k} = \boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k \Rightarrow (\boldsymbol{u} \times \boldsymbol{v})_k = u^i v^j \boldsymbol{\varepsilon}_{i j k}$$
+$$\boldsymbol{u} \times \boldsymbol{v} = (\boldsymbol{u} \times \boldsymbol{v})_k \boldsymbol{g}^k\\(\boldsymbol{u} \times \boldsymbol{v})_k = (\boldsymbol{u} \times \boldsymbol{v}) \cdot \boldsymbol{g}_k = u^i v^j (\boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k\\ \mathrm{let} \  \varepsilon_{i j k} = (\boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k \Rightarrow (\boldsymbol{u} \times \boldsymbol{v})_k = u^i v^j \boldsymbol{\varepsilon}_{i j k}$$
 
-## 鸽
-为了新开一个东西, 我现在决定先鸽一下哈. 
+上面的东西还是很好懂的. 
 
-:p
+补充一个: 
+
+$$\varepsilon^{ijk} \varepsilon_{pqr} \equiv \left| \begin{array}{lll} \delta^i_p & \delta^i_q & \delta^i_r \\ \delta^j_p & \delta^j_q & \delta^k_r \\ \delta^k_p & \delta^k_q & \delta^k_r \end{array} \right|$$
+
+## A Second Order Tensor Has Four Sets of Components in General. 
+把张量和向量的乘法类比为之前的那个投影: 
+
+$$\boldsymbol{T} \boldsymbol{v} = \boldsymbol{T} (v^i \boldsymbol{g}_i) = v^i \boldsymbol{T} \boldsymbol{g}_i$$
+
+可以发现这个时候, $\boldsymbol{T} \boldsymbol{g}_i$
+就好像是一个新的$\boldsymbol{g}'_i$的基底. 
+(诶, 这个时候是不是可以说张量就是一个换基底的玩意. )
+于是就把$\boldsymbol{T} \boldsymbol{g}_i$记为基底的形式:
+$\boldsymbol{T}_i$. 
+
+对于一个基底(也就是另一种程度上的向量)来说, 
+又可以把它分割成几个基底的线性组合: 
+
+$$\boldsymbol{T}_i = T_{i j} \boldsymbol{g}^j$$
+
+于是
+
+$$\boldsymbol{T} = T_{i j} \boldsymbol{g}^i \boldsymbol{g}^j$$
+
+当然不是只有这样的一种分解方法. 
+
+$$T^{ij} = \boldsymbol{g}^i \cdot \boldsymbol{T} \boldsymbol{g}^j\\ T^i_{\cdot j} = \boldsymbol{g}^i \cdot \boldsymbol{T}\boldsymbol{g}_j\\ T^{\cdot i}_{j} = \boldsymbol{g}_j \cdot \boldsymbol{T} \boldsymbol{g}^i$$
+
+注意到这里的 $$T^{\cdot i}_{j}$$ 和 $$T^i_{\cdot j}$$ 是不一样的. 
+(可以用之前的投影还有坐标变换的思想来看, 相当于是不同的基底, 
+经过了张量的变换, 在不同的坐标系下面的分量. 实际的意义不一样. )
+但是什么时候会相等呢? 

@@ -90,6 +90,18 @@ $\bar{\boldsymbol{v}}
 ### 数乘 - Multiplication of a Vector $\boldsymbol{v}$ by a Scalar $\alpha$
 Think about similar triangles, and it would be easy. 
 
+数乘的话可以看作是向量空间和域的一个二元运算: 
+
+$$V \times \mathfrak{K} \rightarrow V$$
+
+其中满足单位元, 结合律, 分配律: 
+
+$$e \boldsymbol{v} = \boldsymbol{v}\\
+a ( b \boldsymbol{v} ) = ( a b ) \boldsymbol{v} \\
+a ( \boldsymbol{v} + \boldsymbol{u} ) = 
+a \boldsymbol{v} + a \boldsymbol{u}\\
+( a + b ) \boldsymbol{v} = a \boldsymbol{v} + b \boldsymbol{v}$$
+
 ### 点乘&叉乘 - Dot Product & Cross Product
 没有太大问题吧? 
 
@@ -108,6 +120,8 @@ $$(\boldsymbol{a} \times \boldsymbol{b})
 (我的记忆方法: 远交近攻)
 
 ## 张量 - Tensor
+应该是二阶张量. 
+
 考虑一个投影: 
 $$\mathrm{Proj}_{\boldsymbol{u}} \boldsymbol{v}
   = (\boldsymbol{v} \cdot \bar{\boldsymbol{u}})
@@ -118,36 +132,42 @@ $$\mathrm{Proj}_{\boldsymbol{u}}
   = \bar{\boldsymbol{u}} \bar{\boldsymbol{u}}$$
 
 从这里可以看出为什么说"并矢", 就是把两个向量排在一起, 
-就是一个张量了. 
+就是一个二阶张量了. 
 
-用这样的方式来理解张量感觉方便一点, 但是作者又在序言里面说, 
+用这样的方式来理解二阶张量感觉方便一点, 但是作者又在序言里面说, 
 二阶张量就是一种线性的算符, 将矢量映射成矢量. 
 
 (我觉得这个更妙, 因为这样相当于是说很多的运算都可以用张量来说明了. 
 比如后面的$\boldsymbol{\omega} \times$
 就可以看成是一个斜对称的二阶张量. )
 
-### 张量的种类
+### 二阶张量的种类
 * symmetric 对称的 $\mathcal{T} = \mathcal{T}^T$
 * skew(antisymmetric) 斜对称 $\mathcal{T} = - \mathcal{T}^T$
 * singular $\exists \boldsymbol{v} \neq \boldsymbol{0}, 
             \quad
             \mathcal{T} \boldsymbol{v} = \boldsymbol{0}$
 
-运用人类的心智, 可以将任何一个张量分解为对称和斜对称的: 
+运用人类的心智, 可以将任何一个二阶张量分解为对称和斜对称的: 
 $$\mathcal{T} = \frac{1}{2} (\mathcal{T} + \mathcal{T}^T)
               + \frac{1}{2} (\mathcal{T} - \mathcal{T}^T)$$
 
-注意, 张量的相等就是
+注意, 二阶张量的相等就是
 $$\mathcal{S} = \mathcal{T}
   \Leftrightarrow
   \boldsymbol{u} \cdot \mathcal{S} \boldsymbol{v}
   = \boldsymbol{u} \cdot \mathcal{T} \boldsymbol{v}, 
   \quad \forall \boldsymbol{u}, \boldsymbol{v}$$
 
-张量的转置就是: 
+(和映射的相等类比. )
+
+二阶张量的转置就是: 
 $$\boldsymbol{u} \cdot \mathcal{T} \boldsymbol{v}
   = \boldsymbol{v} \cdot \mathcal{T}^T \boldsymbol{u}$$
+
+(显然, 可以发现二阶张量可以想成这样: 
+
+$$ \mathcal{T} = \boldsymbol{u} \boldsymbol{v} \Rightarrow \mathcal{T}^T = ( \boldsymbol{u} \boldsymbol{v} )^T = \boldsymbol{v}^T \boldsymbol{u}^T$$ )
 
 ## Trace
 $$\mathrm{tr}(\boldsymbol{u} \boldsymbol{v})
@@ -167,3 +187,22 @@ $$\mathrm{tr}(\boldsymbol{u} \boldsymbol{v})
 分量形式还有一点点运算技巧留到下次. 
 
 (逃)
+
+```
+========2021.11.29=======
+```
+
+## 注: 关于张量
+张量实际上就是满足在变换过程中仍然线性的东西. 
+
+## 补 -- 关于二阶张量的一些运算
+$$ \mathcal{T} = \boldsymbol{u} \boldsymbol{v} \\ \mathcal{T} \boldsymbol{v} = \boldsymbol{u} \boldsymbol{v} \cdot \boldsymbol{w} = \boldsymbol{u} ( \boldsymbol{v} \cdot \boldsymbol{w} )$$
+
+可以发现, 二阶张量就是一个投影, 然后换了一个新的基底. 
+这样就和作者的观点呼应了. 
+
+$$ \boldsymbol{u} \times \sim \left(\begin{array}{lll}
+  0 & - u_x & u_y \\
+  u_z & 0 & - u_x \\
+  - u_y & u_x & 0
+\end{array} \right) $$
