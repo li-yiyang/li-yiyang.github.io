@@ -220,17 +220,17 @@ categories: jekyll update
 嗯, 就是实验仪器的操作. 
 
 ## 还是看图吧
-![紫外分光光度计]({{ site.github.url }}/_img/iGEM/experiment/wrong-output.png "虽然结果是有一点点的问题的, 因为图像的曲线甚至跑到了0一下, 这也太扯了. ")
+![紫外分光光度计]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/wrong-output.png "虽然结果是有一点点的问题的, 因为图像的曲线甚至跑到了0一下, 这也太扯了. ")
 
-![浓度]({{ site.github.url }}/_img/iGEM/experiment/later-a-better-output.png "后来重新测了一次, 结果稍微正常一点了, 至少曲线的大字形状是对的, 只是A260/A230这一块还是有一点点问题. ")
+![浓度]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/later-a-better-output.png "后来重新测了一次, 结果稍微正常一点了, 至少曲线的大字形状是对的, 只是A260/A230这一块还是有一点点问题. ")
 
-![电泳的装置]({{ site.github.url }}/_img/iGEM/experiment/electrophoresis.png "电泳的装置, 仔细看的话在电极上有气泡的产生, 电解水了属于是. ")
+![电泳的装置]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/electrophoresis.png "电泳的装置, 仔细看的话在电极上有气泡的产生, 电解水了属于是. ")
 
-![电泳实验的拍摄]({{ site.github.url }}/_img/iGEM/experiment/electrophoresis-photo-taking.jpeg "拍摄电泳实验的照片用到了紫外光, 因为染料再紫外光照射下会发光. 本来是可以用高级的设备的, 但是好像出了故障, 所以只好原始一点了. ")
+![电泳实验的拍摄]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/electrophoresis-photo-taking.jpeg "拍摄电泳实验的照片用到了紫外光, 因为染料再紫外光照射下会发光. 本来是可以用高级的设备的, 但是好像出了故障, 所以只好原始一点了. ")
 
-![电泳实验的拍摄之二]({{ site.github.url }}/_img/iGEM/experiment/electrophoresis-picture.png "好看...")
+![电泳实验的拍摄之二]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/electrophoresis-picture.png "好看...")
 
-![电泳的结果]({{ site.github.url }}/_img/iGEM/experiment/output.jpg "很酷的结果, 我们组的是从左数第七条, 有一组好像点漏了. ")
+![电泳的结果]({{ site.github.url }}/_img/iGEM/experiment/2021-11-30/output.jpg "很酷的结果, 我们组的是从左数第七条, 有一组好像点漏了. ")
 
 ## 后记
 这一次图片拍的太少了, 并且我也懒得画, 
