@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "STC89C52RC"
-date:   2021-11-29 22:52:47 +0800
+date:   2021-12-12 10:06:42 +0800
 categories: jekyll update
 ---
 # 又是一篇踩坑记
@@ -113,7 +113,7 @@ void main()
 这里点了两盏灯, 这两个灯对应的引脚分别是`P27`, `P26`, 
 (怎么知道的? 看一个叫做电路原理图的东西就好. )
 
-![电路原理图]({{ site.github.url }}/_img/STC89C52RC.jpg "电路原理, 看LED模块就好. ")
+![电路原理图]({{ site.github.url }}/_img/STC89C52RC/STC89C52RC.jpg "电路原理, 看LED模块就好. ")
 
 代码的大概意思就是将`LED1`和`LED2`这两个关键词用头文件里面定义过的
 `P2_7`, `P2_6`代替. 
@@ -198,3 +198,105 @@ Disconnected!
 实际情况: 只会点个灯...
 
 QAQ
+
+## 2021.12.12 - 关于串口通信
+啊, 现在学了一些串口通信的知识, 所以在这里补充一下. 
+
+### 没有意义的原理介绍
+虽然不能这样说, 但是实际上我真的不是很会这个原理. 
+
+大概是这样的吧, 就是两台机器之间要如何传递信息, 
+我们首先就要有一个信号传输的通道, 在这里就是数据线连接. 
+然后就是要有一套大家都认可的通信标准, 
+可以想象成要对上行话, 所以就是这么样子. 
+
+(具体实现的话, 以后再钻研. )
+
+### 代码实现
+怎么说呢, 从抄代码开始吧. 
+
+```C++
+#include <8052.h>
+
+// 定义一个类似于全局变量的receive变量, 
+// 用来电脑通过串口发送给单片机的数据
+unsigned char receive;
+
+// serial_initialize函数是用于初始化
+// 输入的参数baud表示波特率(9600)
+void serial_initialize(unsigned int baud)
+{
+  TMOD |= 0x20;            // 计数器工作方式为2
+  SCON =  0x50;            // 工作方式为1
+  PCON =  0x80;            // 波特率加倍
+  TH1  =  baud;            // 初始的值设置
+  TL1  =  baud;
+  ES   =  1;               // 打开接受中断
+  TR1  =  1;               // 打开计数器
+}
+
+void serial_receive_and_respond() __interrput 4
+{
+  unsigned int rec_data;
+
+  RI       = 0;            // 清除接受中断标志位
+  rec_data = SBUF;         // (局部)储存接受的数据
+  receive  = rec_data;     // 存储数据
+  SBUF     = rec_data;     // 将接收到的数据放回发送寄存器
+  while(!TI);              // 等待发送完成
+  TI = 0;                  // 清除发送完成标志位
+}
+
+void main()
+{
+  serial_initialize(0xfa); // 初始化, 波特率为9600
+  // codes...
+}
+```
+
+大意应该就是每次有信息发送过来就开启中断, 
+然后在单片机里面处理相应的信息就好了. 
+
+### mac的坑
+又到了这个万年坑了. 
+
+在windows上有很多的工具以及参考资料, 但是在mac上嘛, 
+很少, 所以我只好去找linux类的工具了. 
+
+我用的串口通信工具是`minicom`, 安装的方法是: 
+
+```
+brew install minicom
+```
+
+安装完了以后先看一下自己的单片机接在哪里: 
+
+```
+ls /dev/tty.*
+```
+
+然后我的设备在电脑上的挂载的名字叫
+`tty.usbserial-1110`(虽然我觉得名字完全不重要, 
+因为会变. ) 然后就是要进入`minicom`的设置里面, 
+告诉程序要在哪里去接受信息, 去用怎么样的波特率:
+
+```
+minicom -s
+```
+
+![settings]({{ site.github.url }}/_img/STC89C52RC/minicom-s.png "在终端中输入`minicom -s'就可以进入设置, (只是输入`minicom'的话就只是用默认的设置进行连接), 然后用方向键滚到相应的地方. ")
+
+![serial-port]({{ site.github.url }}/_img/STC89C52RC/serial-port.png)
+
+然后在`A`处修改地址, 在`E`处修改波特率. 
+![baud]({{ site.github.url }}/_img/STC89C52RC/comm-param.png "按下对应的键就可以设置对应的波特率了")
+
+最后要注意, 为了让电脑可以输入, 
+要在`F`的硬件输入流那里选择`No`.
+
+(建议保存设置, 然后选择`Exit`退出设置, 进入连接. )
+
+(还有一个坑, 在mac里面`Meta`键对应的是`esc`. )
+
+(要退出的话要按`esc-X`, 暴力退出的话, 会出错. )
+
