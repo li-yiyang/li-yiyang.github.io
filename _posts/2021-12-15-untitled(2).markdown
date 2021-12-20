@@ -1,0 +1,385 @@
+---
+layout: post
+title:  "Untitled(2)"
+date:   2021-12-15 15:23:09 +0800 
+categories: jekyll update
+---
+# Untitled (02)
+这里记录一些打ctf中遇到的很多的东西和技术. 
+
+## 反编译
+得到一个程序, 程序可以运行, 
+但是程序并不一定会告诉我们它是怎么运行的, 
+因为一般来说程序是一个黑箱模型. 
+
+但是这不代表我们不可以把程序给"解剖"了再研究. 
+
+但是假如没有很好的工具的话, 直接强开程序的话, 
+一般的结果就是得到一堆乱码. 或者可以用十六进制查看, 
+在mac上的工具是`hexdump`. 
+```
+0000000 3a 30 33 30 30 30 30 30 30 30 32 30 30 30 36 46
+0000010 35 0a 3a 30 33 30 30 35 46 30 30 30 32 30 30 30
+```
+这就是看出来的结果. 
+(虽然和乱码是没什么区别的. 但是据说会有用. )
+
+(确实很有用, 可以试试直接编辑里面的一部分东西, 
+可以做到魔改程序的效果, 比如说更改打印输出的结果, 破解程序之类的. )
+
+虽然一般解剖的结果都丑得不得了, 并且甚至还会有些程序, 
+很厉害, 会"反抗"(就是有很多混淆的操作). 
+
+但是总而言之, 解剖就完事了. 
+
+下面是一些解剖程序的工具的推荐:
+
+### IDA PRO
+好用的东西, 虽然很丑, 并且在mac m1上破解版几乎已经消失了. 
+但是免费版本也可以支持简单的伪代码反汇编, 所以还是可以用的. 
+
+### Hopper Disassembler
+好东西, 长得很mac风格, 虽然没有那么强大. 
+但是免费的版本除了不能保存和设置断点, 
+其他所有的都可以啊. 这不是爽爆? 
+
+### Ghidra
+可以看作是一个开源的`ida`, 不是很会, 刚刚接触. 
+据说很强. 
+
+## 汇编语言
+很多时候得到的反汇编结果就是以汇编语言的方式来表示的. 
+因为有时候直接的程序反汇编的结果不会很人性化, 
+所以了解汇编会比较方便一点. 
+
+并且汇编语言据说在很多的时候都很有用, 学了不亏. 
+
+但是我现在只能看懂很短的汇编, 对长的东西还是吃不消, 看不懂. 
+
+### x86
+这个教程太多了, 网上一大堆. 搜就完事了, 
+不过一般是`Intel`的语法, 很少有另外一种`AT&T`的语法的教程. 
+
+#### Intel-syntax
+`Intel`语法看上去很清楚, 没有像`At&T`语法的`%`或是别的什么符号. 
+
+有一个区别就是`Intel`的语法是`指令 目的, 源`的类型. 
+要注意方向. 就是不要搞错了. 
+
+#### AT&T-syntax
+和`Intel`的语法的区别是`指令 源, 目的`的类型, 
+稍微好理解一点. 但是寄存器就有点麻烦. 虽然不知道该不该这样说, 
+但是原则上和`Intel`的差不了太多. 
+
+有一个简单快捷的[网站](https://csiflabs.cs.ucdavis.edu/~ssdavis/50/att-syntax.htm)
+来教这个, 姑且算是够用吧. 
+
+### ARM
+不得不说, 感觉真的要把`arm`架构吹爆, 因为看起来就很简单, 
+并且最重要的是我可以用这个来很轻松地解决
+(假的, 只能解决简单的. )汇编. 
+但是看懂应该不是问题. 
+
+## GDB
+非常好用的一个调试的工具. 
+
+这个东西的想法就是, 我可以在程序运行的时候(几乎)任意地按下暂停键, 
+并且还可以轻松地查看内存里面的东西以及(任意地, 应该)修改. 
+
+这个里面有很多的好东西可以介绍. 这里只能介绍一些我用过的简单的功能. 
+
+打开程序进行调试模式. 
+
+```
+>> gdb ./test
+```
+
+设置一个断点. (这里在`main`函数这里设置了断点, 也就是说, 
+在程序运行到`main`函数的时候, 还没有运行, 但是已经进入了栈, 
+这个时候就停止运行, 等待进一步调试. )
+
+```
+(gdb) break main
+```
+
+查看函数信息, 寄存器信息, 查看反编译的程序, 设置反编译的语法. 
+
+```
+(gdb) info functions
+(gdb) info registers
+(gdb) disas
+(gdb) set disassembly-favor intel
+```
+
+运行程序, 运行单条指令, 在停止的时候继续运行, 停止运行, 退出. 
+```
+(gdb) run
+(gdb) step
+(gdb) continue
+(gdb) stop
+(gdb) quit
+```
+
+修改寄存器, 跳转到某个地址运行(星号表示取地址了). 
+
+```
+(gdb) set $rip=0x...
+(gdb) jump *0x...
+```
+
+
+(注: 这个`test`的东西可以看后面. 
+反正就是一个类似于`hello world`的东西)
+
+(注: 其实有命令的缩写, 网上有教程很多的, 不过目前没看到很好的. 
+总之就是多查吧. )
+
+## UTM 虚拟机
+感觉这个才是我真正想讲的东西. 
+
+(注: 如果你不是`mac`作死用户的话, 还是用`windows`下的虚拟机吧, 
+后者太舒服了, `vm player`就很不错了, 简直可以说是超贴心的. )
+
+因为最近为了做一个`i836`就是32位的`x86`的程序的逆向, 
+终于在虚拟机里安装了一个新的, 刚好可以记录一下. 
+
+### 安装过程
+首先要下载[虚拟机](https://mac.getutm.app)和系统镜像. 
+镜像建议不要选太激进的(呵, 为了精简而删得只有几`mb`的系统我有点怕), 
+也不要选太友好的(安装完就接近十个G的巨无霸, 还有图形界面的就很...). 
+
+(因为现在`x86`的架构系统少得可怜, 
+之前的`ubuntu server`早就停止支持了, 所以我用的是`debian`, 
+[这个](https://www.debian.org)还有支持, 不错. )
+
+然后在`UTM`里面选择`Start form Scratch`, 
+然后主要要修改的地方有: 
+
+* `System`里面的`Architecture`, 就是系统的架构
+* `Drive`里面分配硬盘
+  * 分一个`Removable`的用来放安装镜像文件
+  * 在分一个`10G`的`IDE`的硬盘
+* `Network`里面: 
+  * `Network Mode`选择`Emulated VLAN`模拟`VLAN`
+  * `Emulated Network Card`选`virtio-net-pci`
+  * `Port Forward`里新建一个`Guset Port`设为`22`, 
+    `Host Port`则为`2200`. 
+
+(注: 那个显示模式可以选. 但是好像不是所有的系统都支持. 
+就算了吧. )
+
+然后(选择安装镜像)就可以启动再安装了. 应该没问题了. 
+
+### SSH
+#### 安装
+`open-ssh`在`ubuntu server`里面应该是有的. 所以可以直接用. 
+
+但是在`debian`里面没有, (假如没有的话, 就要安装). 
+检查有没有的方式就是: 
+
+```
+systemctl status ssh
+```
+
+假如有`active(running)`的提示的话就好了. 
+
+你说没有? 简单. 直接来一梭子: 
+
+```
+sudo apt-get install openssh-server
+```
+
+然后: 
+
+```
+systemctl start ssh
+```
+
+#### 连接
+电脑和虚拟机的连接可以用`ssh`来搞. 虽然没有图形界面, 但是很方便. 
+只要填好自己系统的用户名和之前设置的端口就好了. 
+
+```
+ssh user_name@127.0.0.1 -p 2200
+```
+
+#### 文件传输
+可以利用`scp`命令来拷贝文件. 很方便的. 
+
+```
+scp local_file user_name@127.0.0.1:remote_location
+```
+
+### ZSH
+这个是一个命令行的神器, 确切来说就是一个终端吧. 
+
+配置嫌麻烦的话可以直接上`oh-my-zsh`, 但是这样不符合我作的本质. 
+所以我参考了[这里](https://zhuanlan.zhihu.com/p/347772529), 
+配了一个简单版的, 毕竟目前没有太多的用处, `linux`也不敢说会用, 
+还在学. 
+
+首先是安装`zsh`, 包管理器来一炮: 
+
+```
+sudo apt-get install zsh
+```
+
+然后安装几个插件: 
+```
+# 自动补全
+git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/plugins/zsh-autosuggestions
+
+# 语法高亮
+git clone https://github.com/zsh-users/zsh-syntax-highlighting ~/.zsh/plugins/zsh-syntax-highlighting
+```
+
+国内的话, 可以试试镜像站点
+`https://hub.fastgit.org/zsh-users/zsh-autosuggestions`
+还有
+`https://hub.fastgit.org/zsh-users/zsh-syntax-highlighting`. 
+不过好像有些时候还挺快的, 看天气吧. 
+
+然后修改`~/.zshrc`的文件(就是配置文件)(可能要`sudo`): 
+```
+vim ~/.zshrc
+```
+
+```
+# 启用插件
+source ~/.zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+source ~/.zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# 启用彩色提示符
+autoload -U colors && colors
+
+# 每次刷新提示符
+setopt prompt_subst
+
+# 设置提示符, 这里就有很多可以自定义的东西
+PROMPT='( %{$fg[green]%}%n%{$reset_color%}|%{$fg[yellow]%}%1~%{$reset_color%}%{$fg[blue]%}$(git branch --show-current 2&> /dev/null | xargs -I branch echo "(branch)")%{$reset_color%} ) '
+```
+
+最后一般选择把`zsh`设置为默认的终端. 
+
+```
+chsh -s /bin/zsh
+```
+
+完事. (退出后重开就是了, 或者直接`zsh`玩. )
+
+### VIM
+文本编辑器, 据说用得溜的话是很强的, 可惜我不是很擅长. 
+
+* 打开或者新建文件: `vim file_name`
+* 进入`vim`后有不同的模式, 按`esc`键会回到普通的模式
+* 在普通模式下按`i`键会进入编辑模式, 可以输入代码
+* 在普通模式下按`j`, `k`可以上下移动光标, `h`, `l`可以左右移动
+* 在普通模式下按`x`删除光标所在的字符, 按`r`可以替换字符, 
+  按`dd`可以删除行, 按`c`是剪切行, 按`p`是粘贴到下一行, 按`u`是撤销
+
+目前会的就这么点. 
+
+(注: 可以试试编辑`~/.vimrc`文件来配置, 比如我用`ruby`比较多, 
+习惯用两个空格来缩进, 所以我就`set tabstop=2`来配置. 
+不过其他的就不知道了. )
+
+### VSCode
+从零开始写代码的话, 用这玩意很方便的, 并且还是图形界面, 香啊. 
+
+插件也很多, 补全(虽然有时候很闹心), 但是很棒. 
+
+## Others
+### LINUX SIMPLE
+我只会一点点的`linux`的操作. 
+
+不过好像只要会一点点的文件游览技术就够了吧? 
+毕竟我好像平时也只会用到这些. 
+
+(详细的话, 有一个
+[网站](https://linuxtools-rst.readthedocs.io/zh_CN/latest/base/index.html)
+很不错. )
+
+* `man` 命令, 查找东西的时候很好用, 比如遇到一个不知道的(系统)函数, 
+  自己不是很清楚, 就`man function`一下. 类似还有: 
+  * `man -k`关键词搜索
+  * `whatis`返回简要的介绍说明, `info`可以返回更具体的介绍
+* 文件管理
+  * `mkdir`新建文件夹
+  * `rm`删除文件, 删除文件夹的话用`rm -r`, 删除非空文件夹`rm -rf`. 
+    (温馨提示, 在根目录下执行`rm -rf *`会有奇效, 
+    建议理解了上面说明的酌情在虚拟机内运行. )
+  * `mv source dest`移动文件(也可以用来重命名就是了), 
+    `cp source dest`复制
+  * `pwd`当前所在位置
+  * `cd`打开文件夹(`cd ..`打开上级文件夹)
+  * `ls`列出当前文件夹中的东西, `ls -a`列出所有, 
+    `ls -lah`还可以看文件权限
+  * `chmod`修改文件权限, 比如`chmod a+x test`为`test`设置可执行
+  * `find`查找文件, 看起来很强, 没用过
+  * `grep`文本搜索, 配合`objdump`食用很好. 
+
+### LTRACE
+`ltrace`是一个好东西, 可以看到程序对系统的函数库的调用关系. 
+虽然不一定十分好用, 但是有些时候可以从里面得到一些思路, 
+比如说有什么`memcmp`之类的调用, 就可以理解为是有一个比较判断, 
+这样的话就可以有一些突破口了. (比如在那个条件判断上干一票. )
+
+举个例子: 
+
+```
+>> ltrace ./test 
+__libc_start_main(0xaaaace33b76c, 1, 0xffffda82f578, 0xaaaace33b790 <unfinished ...>
+puts("Test"Test
+)                                                  = 5
+__cxa_finalize(0xaaaace34c008, 0xaaaace33b720, 0x10d88, 0xffffaf594a78) = 0xffffaf5617a0
++++ exited (status 0) +++
+```
+
+`test`是下面的文件编译的程序. 
+
+```C++
+#include <stdio.h>
+  
+int main()
+{
+        printf("Test\n");
+        return 0;
+}
+```
+
+可以看到有一个`puts`函数的调用. 
+
+### FILE
+`file`命令可以看出这个文件是什么东西, 是什么类别之类的东西. 
+
+举个例子: 
+
+```
+>> file test
+test: ELF 64-bit LSB shared object, ARM aarch64, version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-aarch64.so.1, BuildID[sha1]=dee186d96a475fe75a8c030063698e57c64d1396, for GNU/Linux 3.7.0, not stripped
+```
+
+可以看到这里面的有一个`ARM aarch64`的标志, 表示这个程序是`arm`架构的,
+等等. 
+
+### OBJDUMP
+类似一个反编译的东西, 通过这个可以看到一些信息. 
+
+举个例子: 
+
+```
+>> objdump -D test | grep \<main\> -A10
+000000000000076c <main>:
+ 76c:   a9bf7bfd        stp     x29, x30, [sp, #-16]!
+ 770:   910003fd        mov     x29, sp
+ 774:   90000000        adrp    x0, 0 <_init-0x5d0>
+ 778:   9120c000        add     x0, x0, #0x830
+ 77c:   97ffffb5        bl      650 <puts@plt>
+ 780:   52800000        mov     w0, #0x0                        // #0
+ 784:   a8c17bfd        ldp     x29, x30, [sp], #16
+ 788:   d65f03c0        ret
+ 78c:   d503201f        nop
+```
+
+### 等等
+虽然目前我就只用了这些(虽然也不太熟). 以后再多接触吧, 笑. 
