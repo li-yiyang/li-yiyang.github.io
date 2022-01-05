@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Why's (poignant) Guide to Ruby(3)"
-date:   2021-11-29 17:29:19 +0800
+date:   2022-01-05 16:03:15 +0800
 categories: jekyll update
 ---
 # Them What Make the Rules and Them What Live the Dream
@@ -530,3 +530,313 @@ todays_wished.grant( "antlers" )
 
 好的, 现在我们回过头来再看看, 确保你自己把上面的例子搞懂了. 
 我们的`WishMaker`的类就是我们的魔法如何实现的大纲了. 
+当然了, 这个并不是完完全全的真正的代码, 有很多的东西都被隐藏在背后. 
+(因为你真的直接扔到ruby里面运行的话, 显然是不可以运行的, 
+ruby会用像是看中二病一样的眼神看着你, 然后说, 啊, 
+我不知道什么是`endertromb`, 对不起, 噗. )
+但是我要说, 虽然我们不能告诉电脑如何像精灵一样实现我们的愿望, 
+但是我们可以让电脑去告诉小精灵如何实现我们的愿望 -- 
+只要你准备好了那些书面文件, 因为精灵们就好那一口. 
+
+首先, `todays_wishes`就是创建了一个小精灵的实例, 
+然后我们向它许了一个愿望, 给我们一个鹿角. 
+(我绝对不想听到什么你通过这个例子得到了一个鹿角什么的, 
+假如你真的得到了的话, 那么就快到草地上欢呼雀跃吧. 
+你的美梦成真了. )
+
+上面的代码里面由两个部分组成: 
+
+1. 定义了一些东西
+2. 对这些东西施加操作(Putting those things into action.)
+   
+什么是ruby中的**action**(操作)? 就是我们的**Methods**(方法). 
+也许你现在对ruby语言中的这个定义还有一点点懵. 那么简单地介绍一下吧: 
+我们可以用`def`来定义方法, 用`class`来定义类. 
+
+在这一点上, 没准是时候告诉你了: 
+**在ruby里, 所有东西都是对象**. 
+
+```ruby
+number = 5
+print number.next                   # prints '6'
+
+phrase = 'wishing for antlers'
+print phrase.length                 # prints '19'
+
+todays_wishes = WishMaker.new
+todays_wishes.grant( "antlers" )
+```
+
+所以, 必然的, 每个对象的背后都有一个对应的对象的类. 
+
+```ruby
+print 5.class                       # prints 'Integer'
+print 'wishing for antlers'.class   # prints 'String'
+print WishMaker.new.class           # prints 'WishMaker'
+```
+
+Dr. Cham没能够在那大平原上看到什么wish maker的踪迹, 
+这是因为wish makers都待在距离他现在所在的这个平原很远的Sedna峡谷里. 
+在那个陡峭的山谷里, 沿着峭壁向下, 就是一片灌木林. 
+当你到了那个地方了之后, 你需要把自己的愿望写在一张小小的纸上
+(written on a small 1" x 6" slip), 然后卷成一小卷, 
+然后从山谷顶上扔下去 -- 希望运气好的话, 它能够落到一只蜥蜴的背上, 
+正好落到它小小的, 细长的角上. 
+
+比方说你的愿望真的完成了这般的壮举. 好吧, 那么可惜的是, 
+在那扭曲的灌木丛中的, 那些火蜥蜴, 它们尖叫着在灌木丛中赛跑, 
+踏过那些腐烂的木头 -- 这些宝贵的木头在很久以前还是一座教堂, 
+屹立在峡谷的边缘上, 但是在一次火蜥蜴的赛跑中, 被不小心**推倒了**, 
+然后对于那些在教堂里头的那*饱经沧桑*的神父, 自然不用说, 
+对那些该死的恼人的两栖动物深恶痛绝到了极点, 
+一定会用他那被祝福了的神圣的金链子活活勒死那些怪物们, 
+然后将它们留作自己的一年一度的*Getting To Know You*早餐来吃. 
+然后... (哦, 不! ) 神父踩到了你珍贵的愿望纸条! 
+你的纸条恰好被卡在了鞋子的花纹里面. 
+然后更惨的是, **盗贼们来了**! 这些盗贼们最爱对他人**施加酷刑**, 
+他们拿着利刃威逼, 一寸一寸地从头到脚地剥夺神父身上的财宝 -- 
+谁能够顶得住这样的酷刑呢? 
+然后当(可怜的)神父终于只剩下那一双薄薄的皮鞋时, 
+贪婪的盗贼们仍然不肯放过他, 
+他们将这珍贵的**牛皮鞋**捧在手中, 欢呼祝福自己的好运气. 
+然后在欢呼庆祝完毕后, 这些盗贼轻轻地划着自己的笨重的**独木舟** -- 
+这些独木舟上装满了财宝, 沉得几乎都要随时沉没了. 
+他们兴奋地有些飘飘然了, 关掉了船上的发动机, 
+在平静的水流中慢慢地划着自己的小船. 
+但是你的愿望纸条的奇幻之旅并没有到此结束, 它现在卡在鞋底上, 
+而这鞋子却是被随意地松松垮垮地挂在一个盗贼的腰带上的. 
+突然之间, 一条**毛茸茸的鲤鱼**从水中一跃而出, 
+好巧不巧地撞到了那双鞋上 -- 一口吞了下去. 
+哼, 就让那些盗贼们慌张吧, 慌张有什么用呢? 
+他们又不能够追着那只鞋子冲进水中. 假如他们能够做到的话, 
+没准他们可以看到海底的数千万根光纤交织形成的海底电缆. 
+等等, 那条鱼在哪里? 哦, 
+那条鱼现在正**卡**在这Endertromb星球的核心的**外围** -- 
+然后这个核心所做的就是一口将那条鱼**吞入**自己的内部, 
+然后你的愿望纸条**才最终到了它的最终归宿之中**. 
+
+> And let’s say your wish makes it that far. 
+> Well, then, down the twisted wood goes the skinny salamander, 
+> scurrying through the decaying churches 
+> which had been pushed over that steep canyon ledge once 
+> and for all. And the expired priest inside, 
+> who weathered the fall as well, 
+> will kill the little amphibian — strangle it to death 
+> with a blessed gold chain — and save it for the annual 
+> Getting To Know You breakfast. 
+> He’ll step on your precious little wish and, 
+> when the thieves come, that slip will still be there, 
+> stuck on his sole. Of course, the thieves’ preferred method of 
+> torture is to cut a priest in thin deli-shaved slices from top 
+> to bottom. Who can cull evidence from that? 
+> And when they chop that last thin slice of shoe sole, 
+> they’ll have that rubber scalp in hand for good luck 
+> and good times. But they canoe much too hard, these thieves. 
+> They slap their paddles swiftly in the current to get that 
+> great outboard motor mist going. But the shoe sole is on 
+> a weak chain, tied to one man’s belt. And a hairy old carp leaps, 
+> latches on to that minute fraction of footwear. 
+> And the thieves can try, but they don’t see underwater. 
+> If they could, they’d see that mighty cable, 
+> packed with millions of needly fiber optics. 
+> Indeed, that fish is a peripheral plugged right 
+> into the core workings of the planet Endertromb. 
+> All it takes is one swallow from that fish 
+> and your wish is home free!
+
+嗯, 这就是孩子们的愿望是如何成真的(艰辛之路). 
+
+在我女儿的管风琴老师讲完了有关wish maker的故事后, 
+他有讲起了有关这个星球的mind reader的事情. 
+
+```ruby
+require 'endertromb'
+class MindReader
+  def initialize
+    @minds = Endertromb::scan_for_sentience
+  end
+  def read
+    @minds.collect do |mind|
+       mind.read
+    end
+  end
+end
+```
+
+就像你之前看到的那些东西一样, `initialize` 方法将会在一个新的
+`MindReader` 类的对象被创建的时候被调用. 
+这个`initialize`方法将会收集扫描这个星球上的思念体的意识. 
+看起来这些思念体好像是被储存在一个数组中的, 
+因为接下来他们将会通过一个`collect`方法经过递归来处理. 
+
+在上面的故事里, 
+wish maker和mind reader都用到了一个叫做`Endertromb`的类. 
+这个类是通过`require 'endertromb'`这条命令, 
+来从`endertromb.rb`文件里面调用的.
+实际上, 这个文件里面就恰好定义了`Endertromb`的类的东西. 
+通常的, 你需要调用其他的类来完成你的程序. 
+接下来这本书的部分将要探索很多有趣的ruby中可以导入的类. 
+
+(注: 大概是因为why没有写完就消失了的原因, 
+这本书没有完全写完一开始想要讲的东西. )
+
+### Dr. Cham Ventures Inside
+Dr. Cham慢慢地走近了那个城堡, 因为我们之前说了, 
+这个星球是一个可以读心的星球, 所以他的所有内心活动, 
+他迈出的每一步, 都正被这颗星球所感知 -- 心如死灰的感情. 
+他沉重地踏上了大门前的台阶, 
+然后穿过了入口的那曾经漂亮的拱门 -- 
+现在却破旧得好像是在大声哭诉自己被遗弃的命运. 
+
+Dr. Cham站在门口, 沉默的风儿拍打在他的面颊上, 
+终于, 他敲开了门. 
+
+![blocky whale greeting](https://poignant.guide/images/castle-1.jpg "像素鲸的问候")
+
+看着那只鲸鱼慢慢地鼓得像只气球一样地浮起来, 
+Dr. Cham顿时感到了一丝庆幸, 还好不是一只张牙舞爪, 
+迫不及待地想要和自己玩耍的巨鹰来开门; 也幸好, 
+从门口中探出的不是一只巨大的老鼠的脑袋; 
+或者是什么一人大小的龙卷风. 只是一只笨拙的鲸鱼罢了. 
+
+"这个城堡可不是个令人省心的地方. " Dr. Cham说到. 
+
+一开始, 他还以为自己进入了一个十分昏暗的走廊之中. 
+当时当他的眼睛逐渐地适应了周遭的环境之后, 
+他惊奇地发现自己所在的这个入口竟然连接着一条隧道. 
+这个城堡的大门直直的对着这条用长长的扁石板造就的隧道. 
+这条隧道的一部分形成了走廊一样的结构, 另外一些部分变得狭窄, 
+突出, 最后形成了高高的尖顶. 
+
+许多小得几乎只能够装下一抱(armful)的卷心菜的冰箱散落在地上, 
+不知道为什么, 他们的门都不见了, 里面的溢出的灯光点亮了走廊. 
+Dr. Cham好奇的瞥向一个冰箱之中, 里面的光均匀地洒在其中, 
+落在冰块上面. 
+
+他伸手抓了一把冰块, 感受着冰块黏在他手掌上的感觉, 
+然后双手合拢不停地搓揉着, 融化的冰水淌下了他的手中. 
+终于, 他用这冰水享受到了一次小小的沐浴 -- 
+距离上一次的沐浴是隔了多久了? 十年? 还是三十年? 
+
+沿着道路, 四下七零八落地躺着一卷卷的布料, 穿过了这些, 
+不一会儿, 一个由明亮的像素风的瓷器制成的洞穴出现在了他的眼前.
+
+他发现了一个在洞穴中的隐秘的房间. 房间里排满了巨大的空龟壳, 
+甚至墙上也点缀着不少龟壳. 他迷惑地看着这个房间, 
+这里曾经是什么? 他有点想要做到龟壳上, 就像是做到凳子上一样, 
+休息一下; 但是突然又转念一想, 万一会有什么蜘蛛从龟壳中出来, 
+于是放弃了休息的想法, 继续前进了. 
+
+### Meal in a Castle’s Pocket
+他一路沿着隧道前行, 脚下的主路分成了几条支路, 
+又最终在一个巨大的空空荡荡的山洞中汇合了. 
+他发现了这个地方的环境有一些共同的主题: 
+有几个房间被一个像是泵一样的机器聚在一起, 
+而在另外的一个地区, 眼前全是遍地的布料和一缸一缸的胶水. 
+听着声音, 他摸索着来到了一个充满毛绒织品和枕头的洞穴 -- 但是,
+这是一条死胡同: 弯曲的墙壁上在于视线齐平的高度上
+却刻了一个小房间. 
+
+他走进了那堵墙, 然后在那个正方体形状的洞里, 
+发现了两只坐在桌子上饱餐的食蚁兽. 
+
+它们默默地看了一眼Dr. Cham, 却仍然没有停下自己进食的小爪子, 
+对着它们面前足足有两倍于自身身材的蚁穴展开了猛烈的进攻: 
+敲开蚁穴的大门, 努力地探出自己的身子去舔食...
+
+当它们终于停下了自己嘴里的工作后, 盯着自己手上的叉子. 
+Dr. Cham觉得是时候说些什么了: "你们好啊, 小家伙们. "
+(这里原文是Hello, little puppets, 虽然和后面的故事有关, 
+但是我觉得翻译成小木偶的话有点怪. )
+
+"我真希望我的侄女Hannah能够在这里看到你们这些小家伙, "
+他看着其中较小的一只食蚁兽(因为它看起来好像有点好说话的样子),
+说到, "她一定会觉得你们是一个绝妙的木偶表演. " 他瞥向了餐厅, 
+橱柜上有着一排一排的盘子, 手巾. 一台机器里面蹦出来一只只
+小小的兔子, 小兔子手中又捧着一盘盘浇着奶油的鲜艳的面条,  
+从机器里探出上半身来... 在房间的后面的半开着一扇门, 透过门缝, 
+Dr. Cham只能或隐或现地看见几张椅子和一闪而过的摩托. 
+
+"大概所有的孩子都想要一个这样的梦幻小屋吧", 他说到. "我之前说了, 
+我侄女Hannah也有一个小小的针织玩偶, 假如放在一台纺织机边上的话, 
+就好像是在纺织一般 -- 哦, 不是, 我只是在做比喻罢了, 洋娃娃不会纺织. "
+
+其中一只食蚁兽打开了地上的活板门, 然后点亮里面的按钮, 
+于是一个小小的投影机从地上升了起来. 另一只食蚁兽静静地坐着, 看着Dr. Cham. 
+
+"但是Hannah老是跑到他的洋娃娃屋里玩耍, 把自己的纺织作品都小心翼翼地包起来. 
+她喜欢把这些展示给他妈妈看. 因为我妹妹很会用缝纫来给娃娃做衣服, 
+所以Hannah总会很高兴地为她的娃娃换上妈妈做的衣服. 
+
+"然后她喜欢和娃娃说: '娃娃, 你看, 你可爱的外表真适合这样漂亮衣服. 
+你绝对会被警官长邀请到他的州长大厦的晚会去的. ' 哦, 
+她还有一个穿着警官衣服扮演警官长角色的娃娃. 只是他长得实在是太瘦小了, 
+估计要再多来点结结实实的塑料才能够看起来像是个真正的警官长. "
+
+那个负责放映机的食蚁兽装上了电影胶卷, 然后将投影机对准了后墙. 
+电影机的胶卷慢慢地转了起来, 那只食蚁兽选了一张凳子坐了下来. 
+渐渐地, 墙上出现了一个绿色的正方形投影, 一只食蚁兽仍然盯着Dr. Cham. 
+
+"你们的电影竟然是彩色的, " Dr. Cham 说到, "多么可爱的小生命啊. "
+
+影片继续播放着: 一个蓝色的正方形. 接着是红色的圆圈. 然后又是一个橙色的方形. 
+那只食蚁兽移开了自己的视线, 然后看向了慢慢变成一个粉色三角形的屏幕, 
+继续品尝着自己的盘中食. 
+
+一个紫色的星形. 一个红色的方形. 无声的影片静静地播放着, Dr. Cham
+可以听见投影仪转动的静静的噪音. 好像是一个缓缓转动的八音盒 -- 
+它的齿轮在音轨上拨动, 轻轻地弹奏...
+
+"好啦, 希望你们能享受你们的晚餐, " Dr. Cham如此说道, 然后他礼貌的点了点头, 
+沿着来时的路走了出去. 
+
+### Another Dead End Where Things Began
+于是Dr. Cham发现自己有一次地在城堡的隧道中迷失了方向. 
+周围的东西都看起来十分的陌生. 但是他并不慌 -- 毕竟是在另外一个星球, 
+不管怎样都是一种迷路嘛. 
+
+他打算穿过隧道, 试试看能不能重新回忆起来时的路, 但是在好奇心的驱使下, 
+他打算干脆直接开始探索脚下的这块新土地. 于是沿着一条隧道, 渐渐地深入, 
+慢慢地走向隧道的深处... 脚下的地面逐渐变得陡峭起来, 
+以至于他只好小心翼翼地依靠在隧道的边上, 每一步都迈得十分小心. 
+因为这个星球的重力感觉和地球没有什么大区别, 所以他便得以轻松地滑了下去. 
+
+尽管不知道自己身在何方, 他却有一种迷之自信, 大概他已经离开了这个城堡的边界了. 
+自从他进入城堡的大门后, 他已经在这个深邃漫长的隧道中漫步了将近一个多小时了, 
+渐渐地, 隧道转了个弯. 看着这个拐弯, 他抱着"柳暗花明又一村"的想法, 
+认为没准在过了这个弯后, 就会遇到一个新的房间, 没准是个什么可以探出的窗口, 
+好让自己可以透过这个窗口可以看到窗外的风景. 突然他的脑中闪过一个念头: 
+没准自己不应该沿着这条路走着么深的. 于是最后只好抱着
+"啊, 希望没有什么冬眠的怪兽在前面等着我吧"的想法继续前进了. 
+
+然后就看到了一个死胡同. 一个黑漆漆的死胡同. 
+
+![at the end of the tunnel: a computer and a book](https://poignant.guide/images/dr.cham-4.gif "在隧道的尽头, 是一台神奇机器和一本书")
+
+因为他有很多的时间, 所以他好好地读了读那本书. 
+他读到了小狐狸和他们追击偷走自己的小卡车的小豪猪的故事. 
+他也读到了小精灵和火腿的故事. 他看到了自己的漫画, 然后看到了有关自己的故事. 
+他也甚至学会了ruby语言. 最后他看到了故事的结尾. 
+
+如果我是他的话, 我估计没法忍受这件事. 但是他却可以. 
+然后他在心中默默地记下了接下去的故事. 
+
+在神奇机器的显示器上, Dr. Cham看到一个闪烁着的`irb`提示符. 就像是Dr. Cham一样, 
+你没准可以认出`irb`的提示符就是我们在
+[The Tiger’s Vest](https://poignant.guide/book/expansion-pak-1.html)
+(注: 我翻译了这个, 竟然还是我第一个翻译的文章诶. )
+(这篇文章是这本书的第一个拓展部分, 讲的主要是关于Interactive Ruby的简单介绍)
+
+就像是刚刚他用自己的双脚来探索城堡的隧道一样, 
+他现在开始尝试着用`irb`的终端(prompt 提示符)来探索这台神奇机器. 
+他把之前的书返回了原来的地方. 因为他再也不需要这本书了. 
+接下去的故事都不过是他是否要使用ruby的故事了. 
+
+于是他在终端中输入了: 
+
+```
+irb> Object::constants
+  => ["Marshal", "String", "Dir", "LoadError", "Float", ... and so on ]
+```
+
+这行代码将会
