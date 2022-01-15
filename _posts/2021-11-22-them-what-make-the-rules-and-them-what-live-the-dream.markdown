@@ -839,4 +839,108 @@ irb> Object::constants
   => ["Marshal", "String", "Dir", "LoadError", "Float", ... and so on ]
 ```
 
-这行代码将会
+这行代码将会列出所有的top-level(顶层)的常量. 并且由于类常常会以常数的形式被列出, 
+所以在这个数组中就会被输出, 所以你就可以看到上面的结果. 
+并且我们就可以利用这样的方式来随时随地地看到在ruby中载入了什么东西. 
+
+他扫了一眼上面的数组: 
+`Marshal`, `String`, `Dir`, `LoadError`, `Float`... 这些都是ruby自带的类. 
+
+但是慢慢地往下看, 发现了一些陌生的东西: 
+
+```
+... "Struct", "Values", "Time", "Elevator", "Range" ...
+```
+
+等等, `Elevator`? 这个好像可不是什么在正经ruby里面的东西. 
+看起来没准这个就是一个突破口. 他打算试试: 
+
+```
+irb> Elevator::methods
+  => ["method", "freeze", "allocate", ... another long list ... ]
+irb> Elevator::class_variables
+  => ['@@diagnostic_report', '@@power_circuit_active', '@@maintenance_password']
+irb> Elevator::constants
+  => []
+```
+
+看起来`Elevator`类有一堆的方法(methods). 
+大多数方法看起来就像是和ruby中的其他正常的对象(object)一样. 举个例子, 
+`freeze` 和 `allocate` 方法是所有Ruby中的对象都会有的普通的方法. 
+(`Elevator::freeze`方法会组织`Elevator`类被改变. 而`Elevator::allocate`方法, 
+则会以不调用`initialize`方法的方式新建一个`Elevator`类的对象, 也就是说, 
+是新建一个没有初始化过的对象. )
+
+但是`class_variables`的输出确让Dr. Cham感到有点意思, 看起来这个电梯有些智能. 
+但是因为`constants`是一个空数组, 所以在`Elevator`中没有什么嵌套的类. 
+(虽然我觉得一般的想法是这个类里面没有常量, 而类也同时是常量的一种吧? )
+
+于是他试了试新建一个`Elevator`的对象: 
+
+```
+irb> e = Elevator::new
+ArgumentError: wrong number of arguments (0 for 1), requires a password
+        from (irb):2:in `initialize'
+        from (irb):2:in `new'
+        from (irb):2
+        from :0
+```
+
+(嗯, 要一个密码啊... )于是他试了试几个密码: 
+
+```
+irb> e = Elevator::new( "going up" )
+AccessDeniedError: bad password
+irb> e = Elevator::new( "going_up" )
+AccessDeniedError: bad password
+irb> e = Elevator::new( "stairs_are_bad" )
+AccessDeniedError: bad password
+irb> e = Elevator::new( "StairsAreBad" )
+AccessDeniedError: bad password
+```
+
+就是瞎猜. 呃, 等等! `maintenance_password`, 在前面的`class_varibles`里面列出过: 
+
+```
+irb> Elevator::maintenance_password
+NoMethodError: undefined method `maintenance_password' for Elevator:Class
+        from (irb):1
+        from :0
+```
+
+哈? 出错了. 这是因为实例变量只能够在对象里面被调用, 而类变量也只在类里面能调用. 
+那么我们该怎么办呢? (虽然我们也不是没有... )
+
+```
+irb> class Elevator
+irb>   def Elevator.maintenance_password
+irb>     @@maintenance_password
+irb>   end
+irb> end
+  => nil
+irb> Elevator::maintenance_password
+  => "stairs_are_history!"
+```
+
+好的, 现在(正如你所见的)他得到了密码. 
+
+
+(上面那个看起来很神奇的操作就是一个ruby的特性, 因为ruby可以让我们在任何时候, 
+都打开一个类进行修改等等. ) Dr. Cham向`Elevator`类中加入了一个新的方法. 
+和你以为的重新定义`Elevator`类的想法不同, Ruby会直接把你的改动加入到已有的类中. 
+
+类变量往往会用两个艾特号`@@`来放在前面. 但是一个点号`.`实际上也是可以的, 
+因为`Elevator`本身就是一个类, 所以在程序执行`Elevator.mainentenance_password`时, 
+Ruby会去确认你是否在调用一个类的方法. 
+所以`@@`的前缀可以让我们的类名字变得更加直观. 
+
+(感觉这一段说得有些不太清楚, 但是我也get不到那个点... )
+
+> Class methods are usually called with the double colon. 
+> But, a period is fine as well. Since Elevator is a class itself, 
+> Ruby will figure that if you call Elevator.maintenance_password, 
+> you’re calling a class method. The double colon simply helps 
+> make class methods obvious to the reader.
+
+所以就像这样. 类的方法会有一点点的特殊. 通常你不会想要在一个类里面直接存放信息. 
+但是
