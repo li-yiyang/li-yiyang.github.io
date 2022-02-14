@@ -2,7 +2,7 @@
 layout: post
 title:  "狭义相对论"
 date:   2021-12-12 17:21:59 +0800 
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 只是一个简单的整理

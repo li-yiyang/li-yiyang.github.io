@@ -2,7 +2,7 @@
 layout: post
 title:  "Ruby : Understanding Computation"
 date:   2022-01-13 11:12:50 +0800
-categories: jekyll update
+categories: ruby
 math: true
 ---
 # 计算的本质 -- 读书记录

@@ -2,7 +2,7 @@
 layout: post
 title:  "限制性内切酶酶切实验"
 date:   2021-12-05 19:01:34 +0800
-categories: jekyll update
+categories: igem
 ---
 # 寄一次实验 - 装模作样把它写成实验记录的样子...
 这是装模作样的实验记录的第二次记录, 这次的实验怎么说呢, 有点手忙脚乱了. 

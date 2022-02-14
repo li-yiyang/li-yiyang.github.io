@@ -2,7 +2,7 @@
 layout: post
 title:  "Lagrange Mechanics"
 date:   2021-10-29 11:14:16 +0800 
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 拉格朗日力学

@@ -2,7 +2,7 @@
 layout: post
 title:  "Gragon Ball"
 date:   2021-11-01 22:02:27 +0800
-categories: jekyll update
+categories: manga
 ---
 # Gragon Ball
 考试完了就开始放荡. 匆匆地看完了七龙珠. 不得不说, 鸟山明老师赛高! 

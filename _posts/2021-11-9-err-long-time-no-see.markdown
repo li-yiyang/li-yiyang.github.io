@@ -2,7 +2,7 @@
 layout: post
 title:  "Err, Long Time No See..."
 date:   2021-11-09 21:30:02 +0800 
-categories: jekyll update
+categories: notes
 math: true
 ---
 # Long Time No See

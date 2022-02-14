@@ -2,7 +2,7 @@
 layout: post
 title:  "Mechanics The End"
 date:   2022-01-03 11:12:50 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 力学 The End

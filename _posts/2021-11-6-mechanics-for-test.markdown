@@ -2,7 +2,7 @@
 layout: post
 title:  "Mechanics Preparing for Mid-Term Death"
 date:   2021-11-06 11:25:46 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # Mechanics Preparing for Mid-Term Death

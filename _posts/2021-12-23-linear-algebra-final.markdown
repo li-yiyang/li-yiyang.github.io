@@ -2,7 +2,7 @@
 layout: post
 title:  "Linear Algebra First Semester The End"
 date:   2022-01-05 22:51:07 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # ~~线性代数~~

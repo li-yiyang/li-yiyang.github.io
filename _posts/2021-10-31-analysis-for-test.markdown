@@ -2,7 +2,7 @@
 layout: post
 title:  "微积分的期中准备"
 date:   2021-10-31 16:42:19 +0800 
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 微积分的临时抱佛脚

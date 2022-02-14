@@ -2,7 +2,7 @@
 layout: post
 title:  "质粒DNA的提取, 浓度测定, 成分测定"
 date:   2021-11-30 11:04:12 +0800
-categories: jekyll update
+categories: igem
 ---
 # iGEM 实验的外行人的记录
 生物和化学, 高中都没学. 为何还是头铁上了iGEM? 

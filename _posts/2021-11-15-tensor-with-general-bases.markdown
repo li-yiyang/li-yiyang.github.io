@@ -2,7 +2,7 @@
 layout: post
 title:  "Benseral Bases and Tensor Notation"
 date:   2021-11-26 21:29:21 +0800 
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 第二章

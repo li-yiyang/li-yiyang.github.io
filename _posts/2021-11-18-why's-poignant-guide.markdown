@@ -2,7 +2,7 @@
 layout: post
 title:  "Why's (poignant) Guide to Ruby"
 date:   2021-11-18 18:06:32 +0800
-categories: jekyll update
+categories: ruby why's_(poignant)_guide_to_ruby
 ---
 # Why's (poignant) Guide to Ruby
 假如你不知道`_why`, 那很正常, 因为这本来就应该是他的愿望. 

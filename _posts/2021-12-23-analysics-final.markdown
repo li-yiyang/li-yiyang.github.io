@@ -2,7 +2,7 @@
 layout: post
 title:  "Analysics First Semester The End"
 date:   2022-01-04 12:14:03 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 微积分期末复习

@@ -2,7 +2,7 @@
 layout: post
 title:  "The First Draft!"
 date:   2021-10-28 21:19:28 +0800
-categories: jekyll update
+categories: jekyll
 ---
 
 # The First Draft

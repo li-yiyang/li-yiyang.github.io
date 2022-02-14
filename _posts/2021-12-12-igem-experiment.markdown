@@ -2,7 +2,7 @@
 layout: post
 title:  "实验 - 制平板, 跑电泳, PCR, 感受态细胞"
 date:   2021-12-12 19:00:41 +0800
-categories: jekyll update
+categories: igem
 ---
 # 自曝
 惭愧, 这次(主要)的实验我完全没有什么真实感, 

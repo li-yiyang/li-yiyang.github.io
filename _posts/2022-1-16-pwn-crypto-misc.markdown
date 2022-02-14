@@ -2,7 +2,7 @@
 layout: post
 title:  "PWN & Crypto & Misc"
 date:   2022-01-21 22:05:26 +0800 
-categories: jekyll update
+categories: ctf
 ---
 # PWN & Crypto & Misc
 > 乱花渐欲迷人眼, 浅草才能没马蹄. 

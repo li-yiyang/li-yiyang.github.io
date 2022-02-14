@@ -2,7 +2,7 @@
 layout: post
 title:  "Why's (poignant) Guide to Ruby(2)"
 date:   2021-11-20 19:03:15 +0800
-categories: jekyll update
+categories: ruby why's_(poignant)_guide_to_ruby
 ---
 #  \$\$\$ DWEMTHY_S ARRAY ^!^ A RUBY MINI_DUNGEON ^!^ ONLY 60 LINES OF CODE ^!^ DWEMTY IS WATCHING ^!^ A STALE BREATH IS ON YOUR NAPE, IS IT NOT ?? ^!^ DWEMTHY COMETH \$\$\$ :: Why's (Poignant) Guide to Ruby 
 ![Dwenthy's Array](https://poignant.guide/images/dwemthy-header-dissolve.png)

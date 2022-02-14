@@ -2,7 +2,7 @@
 layout: post
 title:  "Why's (poignant) Guide to Ruby(3)"
 date:   2022-01-05 16:03:15 +0800
-categories: jekyll update
+categories: ruby why's_(poignant)_guide_to_ruby
 ---
 # Them What Make the Rules and Them What Live the Dream
 ![under the title](https://poignant.guide/images/chapter.poignant.guide-5.jpg)

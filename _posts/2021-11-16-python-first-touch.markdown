@@ -2,7 +2,7 @@
 layout: post
 title:  "First Touch of Python"
 date:   2021-11-16 16:02:19 +0800 
-categories: jekyll update
+categories: python
 ---
 # First Touch of Python
 `Python`千千万, 到处都在吹, 我也知道它很好, 只是我不爱. 

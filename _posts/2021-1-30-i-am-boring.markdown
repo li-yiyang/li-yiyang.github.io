@@ -2,7 +2,7 @@
 layout: post
 title:  "无聊的小游戏制作[进行中...]"
 date:   2022-02-04 19:42:11 +0800
-categories: jekyll update
+categories: ruby
 ---
 # Ruby & Gosu Make A Game
 之前的博客基本上是学习的笔记的记录, 感觉自己输出的有点少了, 

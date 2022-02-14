@@ -2,7 +2,7 @@
 layout: post
 title:  "物理学讨论小组 - 看见更加的微观世界"
 date:   2021-11-10 21:37:42 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 看见更加的微观世界

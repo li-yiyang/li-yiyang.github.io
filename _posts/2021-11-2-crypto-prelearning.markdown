@@ -2,7 +2,7 @@
 layout: post
 title:  "Crypto Pre-learning"
 date:   2021-11-02 22:50:49 +0800
-categories: jekyll update
+categories: ctf
 ---
 # 初学一点点的Crypto
 小菜狗开始学Crypto... 看到题目就瑟瑟发抖, 躺倒在地, 再起不能. 

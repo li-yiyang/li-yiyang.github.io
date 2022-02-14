@@ -2,7 +2,7 @@
 layout: post
 title:  "物理讨论小组 - 电子的发现"
 date:   2021-11-04 14:54:13 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # 电子的发现

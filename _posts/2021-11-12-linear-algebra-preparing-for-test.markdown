@@ -2,7 +2,7 @@
 layout: post
 title:  "Linear Algebra Preparing for Test"
 date:   2021-11-12 18:09:53 +0800
-categories: jekyll update
+categories: notes
 math: true
 ---
 # Prepare for Linear Algebra
