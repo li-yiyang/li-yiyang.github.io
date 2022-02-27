@@ -1,7 +1,7 @@
 ---                                                                     
 layout: post
 title:  "Golang PickUP"
-date:   2022-02-26 11:52:20 +0800 
+data: 2022-02-27 21:15:01 +0800
 categories: notes golang
 ---
 # Golang PickUP
@@ -404,6 +404,19 @@ func main() {
 	abstract_func(an_obj)
 }
 
+/*
+  然后对于结构体, 还可以进行嵌套地使用:
+  struct net_struct struct {
+    object
+    str string
+  }
+  然后可以像这样调用:
+  net_struct.object.index
+  等等. 并且嵌套在里面的结构的方法也能够在外面的结构体使用:
+  net_struct.func_1()
+  那么问题来了, 为什么要叫这个概念为 composition ?
+  看不出来为什么要加上一个新的概念的理由.
+	*/
 {% endhighlight %}
 </details>
 
@@ -448,4 +461,389 @@ func f(arg int) (int, error) {
 }
 ```
 
+后来发现还有一个叫做 panic 的东西, 和正经的中断很像: 
 
+先看一个 ruby 的报错: `raise "I was a bad guy. "`, 
+然后是 go 的 panic: `panic("I was a good guy. ")`. 
+嗯, 就是这样. 
+
+然后有类似 C 里面的处理(Unix)系统信号的函数: 
+
+```go
+import (
+  "os/signal"
+  "syscall"
+)
+
+func main() {
+  // 信号通过 channel 出来
+  sigs := make(chan os.Signal, 1)
+  // 用一个函数捕捉信号, 然后送到 channel 里面
+  signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+  // 然后就编辑函数进程来处理浙西乱七八糟的信号...
+}
+```
+
+## GoRoutine
+先看代码: 
+
+<details><summary> 点点点点点点 </summary>
+
+{% highlight go %}
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func f(from string) {
+	// 这里我选了一个比较离谱的 i 值,
+	// 原因是这样才能够更好地看到多线程的交替输出的效果
+	for i := 0; i < 3; i++ {
+		fmt.Println(from, ":", i)
+	}
+}
+
+func main() {
+	fmt.Println("GoRoutine")
+
+	f("no routine")
+
+	go f("in a routine")
+	go f("another routine")
+
+	time.Sleep(time.Second)
+	fmt.Println("done")
+
+	/*
+		  然而, 上面的两个函数实际上并没有什么交流,
+		  比如说, 假如我想要干一些鸟事, 比如写爬虫,
+		  就需要在不同的爬虫线程里面交换信息, 防止重复爬取
+			然后我们就可以利用 channels 来联系两个进程.
+	*/
+	// make(chan val-type)
+	// make(chan val-type, buff_size)
+	// 传入 buff_size 来设置缓冲大小, 虽然目前看不出来怎么用
+	message := make(chan string)
+	// 用 channel <- value 来发送数据到通道里面去
+	go func() {
+		message <- "value"
+		message <- "yes"
+	}()
+
+	// 用 <-channel 的方式从通道里面得到数据
+	msg := <-message
+	fmt.Println(msg)
+	msg = <-message
+	fmt.Println(msg)
+
+	/*
+		  并且 <-channel 会让程序为进程在子进程没有运行完前会停下来等等
+		  好像这个叫做阻塞通道
+		  可以利用这个特性来保证所有的通道运行完了之后才让程序结束
+			方法是这样的:
+			func main() {
+				done := make(chan bool)
+				// 其他的所有的代码
+				<-done
+				// 用上面的 <-done 的方式来保证所有的东西才结束
+			}
+	*/
+	c1 := make(chan string)
+	c2 := make(chan string)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		c1 <- "start one"
+		time.Sleep(2 * time.Second)
+		c1 <- "done one"
+	}()
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		c2 <- "start two"
+		time.Sleep(2 * time.Second)
+		c2 <- "done two"
+	}()
+
+	for i := 0; i < 4; i++ {
+		select {
+		case msg1 := <-c1:
+			fmt.Println(msg1)
+		case msg2 := <-c2:
+			fmt.Println(msg2)
+		}
+	}
+
+	/*
+		可以创作一些只读只写的进程:
+		func write_only(ping chan<- string, msg string) {
+			pings <- msg
+		}
+		func read_only(ping chan<- string) {
+			msg := <-pings
+			return msg
+		}
+	*/
+
+	/*
+		非阻塞通道的写法: 前面说的阻塞通道, 就是假如没有得到输入的话, 就要一直等下去,
+		但是可以换一种思路, 除非我收到了输入, 否则我就不管了, 我就直接运行下去.
+		(欸, 为什么我觉得有一种中断的感觉...)
+		select {
+		case msg := <-channel:
+			// ...
+		default:
+			// 这里就是假如程序运行到这里没有得到 channel 的信号的话,
+			// 就直接运行这里的代码
+		}
+	*/
+
+	/*
+		通道遍历: 假如通道里面有一堆的数据, (哪怕通道关闭了), 也可以用这样的方式来历遍:
+		for elem := range channel {
+			// ...
+		}
+	*/
+
+  /*
+    超时处理: 
+      先了解一些关于时间的操作: 
+      * 就是超级简单的等待: time.Sleep(sec * time.Second)
+      * 定时器: 
+        timer := time.NewTime(sec * time.Second)
+        // 等待直到定时器结束
+        <-timer.C
+        // 感觉这样的操作, 其实也不是不能自己实现... 定义一个结构, 
+        // 然后在这个结构里面开一个通道, 然后利用通道的阻塞效果...
+        // 管它呢
+      * 打点器: (笑死, 这个翻译, 太形象了, 打点计时器... )
+        ticker := time.NewTicker(sec * time.Second)
+        for {
+          select {
+          case t := <-ticker.C:
+            // 这个时候的 t 就是时间, Time.now
+          default: 
+            // ...
+          }
+        }
+    然后就是关于超时的处理: 
+    select {
+    case res := <-channel:
+      // ...
+    case <-time.After(sec * time.Second):
+      // 超过时间没有收到的话, 就会触发这个分支
+    }
+  */
+
+	// 关闭通道
+	// 关了之后就不能往里面写数据了
+	close(c1)
+	close(c2)
+}
+
+{% endhighlight %}
+
+</details>
+
+我觉得这个看起来真香, 虽然我之前 ruby 里面的 Thread 一直没能理解, 
+然后最后就只好在一堆的 bug 之中, 灰溜溜的跑路, 最后不得不去写单线程. 
+(据说现在引入了 Fiber, 但是我没有试过, 以后有时间了之后试试. )
+
+但是上面的感觉更像是每一个线程对应一个通道, 但是假如我想搞点~~薯条~~, 
+哦, 不是, ~~我想搞很多的薯条, 非常非常多的那种~~, 就是我要处理超级多的线程, 
+然后来一个大统领来管理这些线程. 不错. 
+
+<details><summary> 最简单的版本 </summary>
+
+{% highlight go %}
+package main
+
+func worker(id int, jobs <-chan int, results chan<- int) {
+	for j := range jobs {
+		// ...
+	}
+}
+
+func main() {
+	// 新建通道
+
+	// 新建分支
+	for w := 1; w <= 3; w++ {
+		go worker(w, job_channel, results_channel)
+	}
+
+	// 发放任务
+	for job_id := 0; job_id <= job_number; job_id++ {
+		// job_channel <- mission
+	}
+
+	close(job_channel)
+
+	// 收集结果
+	for job_id := 0; job_id <= job_number; job_id++ {
+		// result := <- result_channel
+	}
+}
+{% endhighlight %}
+</details>
+
+上面的感觉有点没能体现高级的地方, 所以折叠了. 
+下面的是利用了一个叫做 WaitGroup 的东西来搞的, 感觉有点意思
+
+```go
+package main
+
+import (
+	"fmt"
+	"sync"
+	"time"
+)
+
+func main() {
+	var waitgroup sync.WaitGroup
+
+	for i := 1; i <= 5; i++ {
+		// 告诉 waitgroup 增加了一个要等待的线程
+		waitgroup.Add(1)
+		go func() {
+			// 利用了闭包的东西
+			defer waitgroup.Done()
+			// do something
+		}()
+	}
+
+	// 等待 waitgroup 里面所有的东西都执行完毕
+	waitgroup.Wait()
+}
+```
+
+嗯, 相比前面折叠的东西, 这个更加简单一点. 虽然感觉... 差不多? 
+
+但是假如是同时进行一个读写变量的操作? 
+嗯... 怎么觉得单看上去的话和 ruby 里面的 Mutex 一样...
+
+<details><summary> 锁住变量的水分, 让它保持鲜嫩 </summary>
+
+{% highlight go %}
+package main
+
+import (
+	"fmt"
+	"sync"
+	"sync/atomic"
+)
+
+type mutex_var struct {
+	// 重点是下面的 sync.Mutex 的变量
+	// 可以有锁状态和解锁的状态
+	mu sync.Mutex
+	// 其实其他的变量是什么都挺无所谓的
+	variable string
+}
+
+// 因为互斥锁不能复制, 所以要用指针来传递函数, 
+// 反之出现尴尬
+func (v *mutex_var) edit_string(new_str string) {
+	// 对于 v, 因为要使用, 所以要锁定
+	v.mu.Lock()
+	// defer 关键词告诉程序, 在函数运行结束后将变量解锁
+	defer v.mu.Unlock()
+	// 其实个人觉得, 这个互斥锁防君子不防小人, 
+	// 就是所有程序在想要修改 v 的时候, 先看看锁是否打开, 
+	// 然后再决定是否修改, 嗯...
+	v.variable = new_str
+}
+
+func main() {
+	// 利用的是一个原子计数器 
+	// 原子计数器的作用就是为了防止同时写的情况的出现
+	var adder uint64
+	
+	mutex_v := mutex_var{
+		variable: "string",
+	}
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(1)
+
+		go func() {
+			for c := 0; c < 1000; c++ {
+				// 将计数器进行一个加
+				atomic.AddUint64(&adder, 1)
+				// 其实应该是填写一些新的东西的
+				mutex_v.edit_string("string")
+			}
+			wg.Done()
+		}()
+
+		wg.Wait()
+		fmt.Println("adder: ", adder)
+	}
+}
+{% endhighlight %}
+
+</details>
+
+差不多够用了, 虽然我知道, 多线程对我目前是没什么用的, 
+还是文件处理之类的朴素的东西好...
+
+## 排序
+算法总是要会的吧? 好像不用, 对于水平低下, 从未学过算法的我, 
+只知道 ruby 里面有一个排序算法叫 `[3, 1, 2].sort`, 再高级一点就只有, 
+`[3, 1, 2].sort { |a, b| a > b }`之类的. 或者就是`sort_by`. 就, 没了...
+
+所以, 就... 折叠了吧... 
+
+<details><summary> 排序... 在搞算法的那些人眼里... 就是个调包而已 </summary>
+
+{% highlight go %}
+import "sort"
+
+// 简简单单的排序
+iarr := []int{3, 1, 2}
+sort.Ints(iarr)
+sarr := []string{"a", "c", "b"}
+sort.Strings{sarr}
+
+// 自定义排序, 感觉就是利用了前面的通用函数的感觉
+// 主要要对排序的东西定义 Len, Swap, Less 三个函数
+// 然后 sort 包就会利用这三个函数来排序
+type the_type []string
+func (arr the_type) Less(i int, j int) bool {
+  // 其实感觉很像是 ruby 的 sort 的带 block 的模式
+  return len(s[j]) < len(s[j])
+}
+{% endhighlight %}
+</details>
+
+## 文件读写
+需要调用一个 `os` 包. 然后在代码里面就: 
+
+```go
+// 这里我就想到了一个问题, 假如有想我一样的菜鸟, 
+// 忘了写代码的时候加上 err 检查, 然后错误地读了文件
+// 那不是会很糟糕? 
+r_data, r_err := os.ReadFile("file/path")
+check(r_err)
+// 用 string 函数将这些读取的东西转换为字符串
+fmt.Print(string(r_data))
+
+// 麻了, 写文件的模式还是这种... 看来还要记住? 
+// 应该是有的查的... 没错, 就是unix的 32 位模式数...
+// 就是这样: -rwxrwxrwx, 
+// 分别表示是否是目录, 所有者权限, 用户组权限, 其他人权限
+const WRITE_MODE = 0644
+w_data := []byte("a string, which would be translated into byte and write to file")
+w_err := os.WriteFile("file/path", w_data, 0644)
+```
+
+不得不说, 上面的操作实在是比较简单, 想要高级一点的, 更底层一点的, 
+还是用 `os.Open(file_path)` 和 `os.Create(file_path)`. 因为没用过, 
+所以就这样云过去吧... 
+
+## 假装我已经把该学的学了
+嗯, 所以到时候学习的时候遇到什么东西再临时抱佛脚算了, 摆烂... 
