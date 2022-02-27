@@ -2,7 +2,7 @@
 layout: post
 title:  "Golang PickUP"
 date:   2022-02-26 11:52:20 +0800 
-categories: notes japanese
+categories: notes golang
 ---
 # Golang PickUP
 咳, 计科导要用, 迫于生活, 不得不学. 为了防止以后学go让我太累, 
@@ -297,5 +297,155 @@ func point_func(input *int) {
 {% endhighlight %}
 
 </details>
+
+(说实话, 上面的东西基本就是照抄, 加上一点点的自己的注释, 
+烂得很, 所以还是要写一点自己的东西的, 以免沦为大自然的搬运工. )
+
+参考 [wiki](https://zh.wikipedia.org/wiki/指令式編程), 
+大部分的编程语言有这样的特性: 
+* 运算语句, 然后还有储存(赋值)语句, 将运算结果储存起来
+* 循环语句, 反复执行. 
+* 条件判断语句
+* 无条件判断跳转语句
+
+基本上掌握了这些就可以进行一个程序的编写了, 然后个人理解, 
+计算机就是在进行一个运算的过程. 然后不同的数据在不同的声明下可能有不同的意义, 
+比如字符`"Lucky Me"`, 可能在另一种观点下就是一串排列得比较好的数而已: 
+`76, 117, 99, 107, 121, 32, 77, 101`, 仅此而已. 
+
+然后在计算机中, 这样的数据被放在不同的地方, 叫做寄存器里面. 
+寄存器里面数据根据不同的读法和使用方式从而拥有了不同的意义. 
+字符串, 小数(浮点数)等等数据类型更像是根据不同的数据进行一个解读. 
+比如可以将字符和数进行一个一一映射, 可以将浮点数分成整数部分和小数部分
+等等操作, 这样的操作根据不同的规则有了不同的实现. 这些数据储存在寄存器里, 
+每个寄存器都有特定的编号, 然后计算机根据这些编号(地址)去访问数据, 
+修改数据等等. 然后对于数组, 切片之类的东西更像是一种将原来的单个的数据组合起来, 
+这样的组合方法有点像是讲对应的寄存器的编号列在一起, 然后在要用的时候, 
+根据编号去访问数据所对应的寄存器, 然后取得数据. 
+
+然后, 我认为就对最基本的编程了解了大概了. 接下去再来一些之前不是很了解的, 
+(就是以前学的时候从来没有用过的)
+
+## 结构
+感觉结构有点类似于 ruby 里面的对象, 之前在做逆向的题目的时候遇到的结构, 
+给我的感觉都很像是一堆数据, 函数什么的打包在一个东西里面. 
+所以姑且先这样理解. 
+
+<details><summary> 继续工作, 我是大自然的搬运工(bushi </summary>
+
+{% highlight go %}
+package main
+
+import "fmt"
+
+/*
+  接口, 虽然我觉得有点像是通用函数的一个东西,
+  是有点像是 python 的 len() 函数之类的定义的手法?
+  或者像是 ruby 的 duck type 思想?
+  有点像是为了将结构的类型的特点消除.
+*/
+type interface_func interface {
+	func_1() int
+	func_2() string
+}
+
+type object struct {
+	name  string
+	index int
+}
+
+type another_obj struct {
+	name string
+	size int
+}
+
+// 给 object 类定义了一个方法
+func (obj object) func_1() int {
+	return obj.index + 2
+}
+
+func (obj object) func_2() string {
+	return "Hello" + obj.name
+}
+
+/*
+	个人感觉上面两种方法超级像, 就是类型有点不一样.
+	又, 在调用方法的时候, 会出现值和指针的转换,
+	假如想要避免在调用方法的时候产生拷贝, 可以利用指针来调用方法.
+*/
+
+func (a_obj another_obj) func_1() int {
+	return a_obj.size + 6
+}
+
+func (a_obj another_obj) func_2() string {
+	return "Oh? I don't know you, " + a_obj.name
+}
+
+func abstract_func(obj interface_func) {
+	fmt.Println(obj)
+	fmt.Println(obj.func_1())
+	fmt.Println(obj.func_2())
+}
+
+func main() {
+	fmt.Println("Stuct")
+
+	// 利用类似的手法进行一个初始化,
+	// 然后没有直接声明的东西就是默认为0
+	obj := object{name: "Name"}
+	obj.index = 0
+	an_obj := another_obj{name: "Name_2", size: 99}
+
+	fmt.Println("index of obj", obj.func_1())
+	fmt.Println("index of obj", obj.func_2())
+
+	abstract_func(obj)
+	abstract_func(an_obj)
+}
+
+{% endhighlight %}
+</details>
+
+虽然不知道这样的理解是否正确, 但是我觉得结构简直就是 ruby 里面的对象, 
+对象的 instance varible, 比如`@name`, `@life`等等. 所以目前还是, 
+就这样简单地理解一下. (虽然感觉自己是在用一个复杂的东西来理解简单的东西, 
+或者是, 用更高层的结构去理解基础的结构... 毕竟这两个东西还是有点不一样. )
+
+## Error!
+怎么说呢, 有点感觉 go 的错误处理有点, 感觉像是一开始写代码一堆报错中断, 
+然后苦不堪言, 希望有一种能不管所有的报错, 先给我运行了之后, 然后我想看结果, 
+中间有点报错我可以接受... 于是我就会在 ruby 里面这样乱写: 
+
+```ruby
+def edit_file(files)
+  files.each do |f|
+    File.rename(f, f + ".yes")
+  end
+end
+
+begin
+  edit_file("test.txt")
+rescue
+  puts "Although there might be a error, but i don't care. "
+end
+```
+
+虽然最后我发现了一个坑爹的情况, 那就是很有可能因为我这样的智障操作, 
+导致了我接下来的代码爆炸了, 结果... 我还以为程序可以运行, 就只能, 
+在我之前的狗屎代码里面疯狂 debug. 
+
+嗯, 接下来回到 go 的部分, 嗯, go 没有类似于 ruby 和 C 之类的 interrupt
+类似的东西. 它, 就是, 嗯, 很朴素的, 不报错, 然后将自己的报错信息, 
+用多返回值的形式返回: 
+
+```go
+func f(arg int) (int, error) {
+	if arg == 0 {
+		return -1, errors.New("the arg is 0")
+	}
+	return 1 / arg
+}
+```
 
 
