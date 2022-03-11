@@ -72,6 +72,12 @@ Ghidra 是一个 NSA(National Security Agency) 开发的一个逆向工具,
 上面的说明, 准备好[JDK](https://adoptium.net/releases.html?variant=openjdk11&jvmVariant=hotspot),
 然后执行`ghidraRun`的脚本. 
 
+(注: 假如你不知道什么是`JDK`, `JRE`, `JVM`的话, 可以试试去 Google 一下, 
+我提供一个一点点的解释: `JDK` 是 Java Develop Kit 的缩写, 
+`JRE` 是 Java Runtime Environment 的缩写, `JVM` 则是 Java Visual Machine
+的缩写. 不过说了这么些应该是很难懂的... 但是假如玩过我的世界的 Java 版的话, 
+嗯, 应该是清楚的. )
+
 (Tips: 可以把这个脚本扔到macOS的shortcut里面, 然后以后就可以快速打开了. 呃, 
 其他系统随意? )
 
@@ -250,3 +256,58 @@ int main(void)
 上面的大概就是一个简单的教程了, 先写到这里. 感觉可能是不如 IDA 热门吧, 
 又或者是还不够强大, 网上的教程数量感觉比较少. 待我出去看看有没有什么好资料, 
 学会一点点之后再补充. 
+
+## 拓展
+找到了一个看起来比较有用的文章(实际上应该是相当有用了, 因为很多都是我不会的, 
+嗯, 学, 都可以学. )
+
+下面就类似与一个笔记(或者摘要的东西了), 原本的网址如下: 
+[原版网页第一篇](https://www.shogunlab.com/blog/2019/04/12/here-be-dragons-ghidra-0.html), 
+[原版网页第二篇](https://www.shogunlab.com/blog/2019/12/22/here-be-dragons-ghidra-1.html), 
+[翻译](https://bbs.pediy.com/thread-257445.htm). 
+
+### 文件管理
+* 在项目窗口`File`选择`Batch Import...`可以批量导入文件
+  (虽然我都是鼠标拖放导入的... )
+
+### 主要窗口
+* `Program Tree`里面可以查看程序的各个 sections, 嗯, 据说这对于PWN十分有帮助
+* `Symbol Trees` 里面是程序导入, 导出, 还有函数, 标签, 类, 命名空间. 
+* `Data Type`窗口里面是程序里面用到的数据的类型(可以查看 Show reference)
+* `Listing`窗口里面可以查看反汇编代码
+  (可以通过右上角的 Edit the listing fields 来修改 Listing 窗口的排版内容)
+* `Window -> Function Graph` 可以显示函数的图形模式(类似于流程图一样的东西)
+* `Window -> Function Call Trees` 可以显示函数调用了什么其他的函数. 
+* `Window -> Fuction Call Graph` 可以显示函数调用其他函数的图像(类似于流程图)
+* `Decomplie`反编译窗口
+* `Window -> Script Manager` 可以查看, 使用脚本(这些脚本可以用来帮助逆向)
+  (虽然我还没有用过... 不过看起来非常的香. 可以运行 python 的脚本, 
+  但是需要 Jython. )
+
+### 一些操作
+* 在符号上面右键可以`Show References to`(快捷键`<C-S-F>`), 
+  可以看到函数的被调用关系. 
+* 在符号上面双击可以跳转到符号所指向(大概)的地址, 比如查看储存在内部的字符, 
+  或者是 call 的函数等等. 
+* 在`Listing`(或者`Decomplie`窗口)右键点击数值可以选择`Convert`来转换数值格式, 
+  比如选择十进制`Unsigned Decimal`, 十六进制`Unsigned Hex`或者别的什么的. 
+  (感觉有点像是改变显示方式)
+* 在`Listing`里面看到放在内存里面的一堆数据, 比如说一堆字节数组, 
+  可以选中, 右键, `Data -> string` 就能够变成字符串的类型. 
+  (或者也可以在这段数据的头部也可以右键修改)
+* `Window -> Memory Map` 内存映射, 可以设置反汇编的二进制文件的装载的基址
+  (没用过, 不是很懂. )
+
+### 帮助
+* Gihdra 有一个叫做 Tip of the Day 的东西, 在启动的时候会给一些提示, 
+  还是挺有用的. (尤其是在学习的时候)
+* `F1`帮助: 在大多数的界面里面(呃, 假如你不确定的话, 用鼠标点一点, 
+  就相当于聚焦在这个界面上了)按下`F1`, 就会打开一个对于这个界面功能说明的
+  帮助文档. 
+
+## 更多的资源
+嗯, ~~全球最大同性交友网站诚不欺我.~~ 果然, 以后想要学什么东西, 
+先去找找那些`awesome-xxx`的项目, 里面的资源实在是十分丰富. 
+
+先留下[链接](https://github.com/AllsafeCyberSecurity/awesome-ghidra), 
+然后以后再慢慢看... 
