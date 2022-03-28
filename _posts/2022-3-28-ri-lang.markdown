@@ -1,0 +1,457 @@
+---
+layout: post
+title:  "Computer Toys"
+date:   2022-03-28 19:15:01 +0800
+categories: ruby
+---
+# Computer Toy: Fibonacci Computer: Ruby
+因为计算机科学导论里面要做一个模拟计算机CPU执行
+大概20次类似汇编指令的事情, 并且还要给出每一步的计算机状态, 
+这个就让我很悲哀了. 我一个超过九九乘法表的运算都十分无力的菜狗, 
+做这种事分需要耐心的事情简直就是超级大危机. 
+
+于是, 为了发扬计算机的任劳任怨, 又超级细心的特色. 
+所以我决定自己做一个模拟CPU, 用来执行计科导里面出现的奇怪指令集. 
+(好吧, 做到最后我发现计科导课程里面的指令集和寄存器设定比较坑, 
+因为虽然限制了位宽度, 但是没有运算溢出的特性, 
+导致位宽度的设定有点鸡肋. 然后寄存器和内存有点不适合用来模拟实际的栈. 
+不过总体上来说还是能够成的. )
+
+## 最简单的版本
+嗯, 就是课上的模式. 
+
+![演示]({{ site.github.url }}/_img/computer-toys/machine/fibonacci.jpg "Okay")
+
+这个的大概思路是将代码读入一个`@code`数组, 然后将内存放在`@memory`数组中, 
+将`@register`看作一个哈希表, 因为类似汇编语言的语法非常简单, 
+所以可以用简单的匹配方式来进行运算和执行. 
+
+我将指令用 **lambda** 的方式储存起来, 这样就可以执行了. 
+
+这里省略代码了. 
+
+## 我膨胀了
+因为能够实现最简单的运行, 所以我就想着能不能实现更加牛一点的效果, 
+比如说能够变得更加稍微像真实的计算机一样, 于是我根据一点点朴素的想法, 
+实现了一个比较水的简单汇编CPU的模拟. 
+
+![效果]({{ site.github.url }}/_img/computer-toys/machine/machine.jpg "还行吧")
+
+
+<details>
+<summary> 
+核心代码, 因为太年轻了, 写的不是很适合扔到Github上, 
+所以就这样展开看看吧.  
+</summary>
+  {% highlight ruby %}
+# machine.rb
+
+# 重新实现了虚拟机, 
+# 将虚拟机当作是理想机器, 又如下的特性: 
+#   * 无限位宽, 不存在溢出问题
+#   * 代码和数据是两种类型的东西, 
+#     也就是不存在将数据当作代码来执行的问题
+#     (其实是不太对的一件事, 之后会想办法解决)
+
+MAX_MEMORY = 1024
+
+# 虚拟机类, 初始化的时候载入代码, 
+# 也同时支持利用 +load_code+ 方法来载入代码
+# 执行代码分为两种方式, 一种是直接+step+来按步执行内存里面的代码, 
+# 一种是通过调用+execute+来直接执行代码. +run+命令会在之后重新加入. 
+# 本次重构修改了读写以及对代码的美观程度有了比较好的提升, 
+# 对于指令的实现也做了比较友好的优化
+class Machine
+  def initialize(code, config = {})
+    load_config(config)
+    load_code(code)
+    load_instructions
+  end
+
+  # 为了更好地输出结果到网页或者终端上, 
+  # 提供一个输出接口
+  def output(mode = :control)
+    res = []
+
+    if mode == :control
+      pc = @register[:PC]
+      flags = @register[:FLAGS]
+      flags = flags > 0 ? ">" : (flags < 0 ? "<" : "=")
+
+      res << "ASM Code: "
+      res << "    #{@memory[pc + 1]}" if pc < @max_memory - 1
+      res << " -> #{@memory[pc]}"
+      res << "    #{@memory[pc - 1]}"
+      res << "Registers: "
+      res << "FLAGS: #{flags}  PC: #{pc}"
+      res << "AX: #{@register[:AX]} SP: #{@register[:SP]} BP: #{@register[:BP]}"
+      res << "R0: #{@register[:R0]} R1: #{@register[:R1]} R2: #{@register[:R2]}"
+    elsif mode == :memory
+      i = 0
+      @memory.each do |m|
+        res << "#{i}: #{m}" if m
+        i += 1
+      end
+    end
+    
+    return res
+  end
+
+  # 单步执行
+  def step
+    execute(@memory[@register[:PC]])
+    @register[:PC] -= 1 if @step
+    @step = true
+  end
+
+  # 运行代码
+  def execute(code)
+    raise "Invaild Operation! " unless code.is_a? String
+    i, s, d = code.gsub(/\[.+\]/){|m| m.gsub(/\s/, "")}.gsub(",", "").split(" ")
+    raise "No Instruction! " unless @instructions.include? i.to_sym
+    @instructions[i.to_sym].call(s, d)
+  end
+
+  # 读数据
+  def read(a)
+    case a
+    # 输入的是一个数字, 
+    # 对应的是类似于MOV 2, R0之类的命令
+    when /^\d+$/
+      return a.to_i 
+    # 访问地址的时候
+    when /^M\[(.+)\]$/
+      exp = Regexp.last_match[1].to_s.gsub(/R0|R1|R2|PC|FLAGS|AX|BP|SP/) do |m|
+        @register[m.to_sym]
+      end
+      # 这个地方又可能会有危险, 因为用到了eval函数
+      return @memory[eval(exp)]
+    # 读到的是寄存器的时候
+    else
+      return @register[a.to_sym]
+    end
+  end
+
+  # 写数据
+  # 将能写的寄存器写死了, 防止写入不存在的寄存器
+  def write(a, v)
+    case a
+    when /^M\[(.+)\]$/
+      exp = Regexp.last_match[1].to_s.gsub(/R0|R1|R2|PC|FLAGS|AX|BP|SP/) do |m|  
+        @register[m.to_sym]  
+      end
+      @memory[eval(exp)] = v
+    else
+      @register[a.to_sym] = v
+    end
+  end
+
+  # 处理一些配置
+  def load_config(config)
+    # 默认的内存是 1024, 不过对于理想机器来说, 
+    # 这个就只是说能够放下 1024 个数量的东西罢了
+    @max_memory = config[:max_memory] || MAX_MEMORY
+    @step = true
+  end
+
+  # 往内存里面载入代码
+  def load_code(code)
+    # 内存清空, 并设置最大内存
+    @memory = Array.new(@max_memory)
+
+    # 为了支持直接用手写汇编的特性, 
+    # 提供 +tag+ 跳转的功能
+
+    # 标签
+    tag = {}
+    # 当前载入虚拟机内存的地址
+    load_num = @max_memory - 1
+    code.each_line do |l|
+      if (i = l.index("//"))
+        @memory[load_num] = l[0...i]
+        label = l[(i + 2)..].strip.to_sym
+        tag[label] = load_num
+      else
+        @memory[load_num] = strip_tag(l, tag)
+      end
+      load_num -= 1
+    end
+
+    # 寄存器归位
+    # 寄存器设计的时候借鉴了 x86, 
+    # 将寄存器简化了一点
+    # 以后更新寄存器设计的时候, 要记得更新write和read方法
+    @register = {
+      AX: 0, SP: load_num, BP: load_num, 
+      FLAGS: 0, PC: @max_memory - 1, R0: 0, R1: 0, R2: 0
+    }
+  end
+
+  # 载入指令集
+  # 以后考虑去模拟不同类型的指令
+  def load_instructions
+    @instructions = {
+      # 赋值操作
+      MOV: -> (a, b) { write(b, read(a)) }, 
+
+      # 四则运算
+      # 对于除法进行一个特别说明: 假如除数为零, 被除数也变成零 
+      ADD: -> (a, b) { write(b, read(b) + read(a)) }, 
+      SUB: -> (a, b) { write(b, read(b) - read(a)) }, 
+      MUL: -> (a, b) { write(b, read(b) * read(a)) }, 
+      DIV: -> (a, b) { (v_a = read(a)) != 0 ? write(b, read(b) / v_a) : write(b, 0) }, 
+      INC: -> (a, b) { @instructions[:ADD]["1", a] }, 
+      DEC: -> (a, b) { @instructions[:SUB]["1", a] }, 
+
+      # 控制流
+      JMP: -> (a, b) { @register[:PC] = read(a); @step = false },
+      CMP: -> (a, b) { @register[:FLAGS] = read(b) - read(a) },
+      JL: -> (a, b) { @instructions[:JMP][a, b] if @register[:FLAGS] < 0 },
+      JE: -> (a, b) { @instructions[:JMP][a, b] if @register[:FLAGS] = 0 },
+
+      # 栈操作
+      PUSH: -> (a, b) { @register[:SP] -= 1; @memory[@register[:SP]] = read(a) },
+
+      # 什么也不做
+      HALT: -> (a, b) { @step = false }
+    }
+  end
+
+  # 处理跳转的标签
+  # 这里用的方法就是粗暴地替换, 
+  # 所以需要跳转的tag不是保留关键词, 否则会出现bug
+  # 这个之后会想办法修正
+  def strip_tag(code, tag)
+    tag.each do |tag, addr|
+      code = code.gsub(tag.to_s, addr.to_s)
+    end
+    code.strip
+  end
+end
+  {% endhighlight %}
+</details>
+
+<details>
+<summary>
+网页和网页设计的代码
+</summary>
+{% highlight html %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+
+    <title>Fibonacci Computer Emulator</title>
+
+    <link rel="stylesheet" type="text/css" href="style/style.css">
+
+    <script src='app/jquery-3.3.1.min.js'></script> 
+    <script type="text/javascript" src="app/main.js"></script>
+  </head>
+  <body>
+    <h1>Fibonacci Computer : Ruby</h1>
+    <div class="box">
+      <strong>Code</strong><button id="load">LOAD</button><br>
+      <textarea id="code">MOV 0, R0</textarea><br>
+      
+    </div>
+    <div class="box">
+      <strong>Controls</strong>
+      <button id="step">STEP</button>
+      <!-- <button id="run">RUN</button> -->
+      <br>
+      <div id="loaded_code">
+      </div>
+    </div>
+    <div class="box">
+      <strong>Memories</strong><button id="memory">LOAD MEMORY</button>
+      <div class="message" id="memories"></div>
+    </div>
+    <div class="box">
+      <strong>Ref</strong><br>
+      <div class="message">
+        <div>MOV [source], [destination] # mov source to destination</div>
+        <div>ADD [source], [destination] # add source to destination</div>
+        <div>SUB [source], [destination] # sub destination by source</div>
+        <div>MUL [source], [destination] # multiply destination with source</div>
+        <div>DIV [source], [destination] # divide destination by source, 
+          note that if you divide by zero, the result would be zero. </div>
+        <div>INC [destination] # increase by one</div>
+        <div>DEC [destination] # decrease by one</div>
+        <div>CMP [a], [b] # b - a -&gt; FLAG</div>
+        <div>J<CONDITION>  [tag]    # jl if FLAG &lt; 0, je if =</div>
+        <div>PUSH [value] # push value to stack</div>
+        <div>HALT # do nothing</div>
+      </div>
+    </div>
+    <div class="box">
+      <strong>About</strong>
+      <div class="message">
+        This project was originally from my computer class, 
+        which is called Fibonacci Computer. However, in the 
+        class, the teacher only told us that we, human should 
+        perform the assemble-like code, which I thought was 
+        terrible. <br>
+        Therefore, I made this toy machine to help me with
+        those codes. And because the original one does not
+        support many features a real computer would have, so
+        I made a few changes on it. <br>
+        If you want to use the original version, please see
+        my old one. <br>
+        And I'm working on a compiler for it. <br>
+        Author: <a href="https://li-yiyang.github.io">凉凉</a><br>
+      </div>
+    </div>
+    <script src="test.js"></script>
+  </body>
+</html>
+{% endhighlight %}
+</details>
+
+<details>
+<summary>
+CSS样式设计
+</summary>
+{% highlight css %}
+* {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+  background-color: #7B0019;
+}
+
+h1 {
+  margin-left: auto;
+  margin-right: auto;
+  width: 80%;
+  max-width: 40em;
+  color: white;
+}
+
+.box {
+  background-color: #47002E;
+  width: 80%;
+  max-width: 40em;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 2em;
+  border: 2px solid #30001B;
+}
+
+div strong {
+  color: white;
+  margin-left: 5%;
+  margin-right: 5%;
+  font-size: 150%;
+}
+
+button {
+  height: 2em;
+}
+
+#code {
+  background-color: #FFD9EF;
+  width: 90%;
+  height: 15em;
+  margin-left: 5%;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  color: #6800A0;
+}
+
+#loaded_code {
+  background-color: #FFD9EF;
+  width: 90%;
+  margin-left: 5%;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  color: #6800A0;
+}
+
+.message {
+  background-color: #FFD9EF;
+  width: 90%;
+  margin-left: 5%;
+  margin-bottom: 1em;
+  margin-top: 1em;
+  color: #6800A0;
+}
+
+{% endhighlight %}
+</details>
+
+(没准以后可以写一个编译器. 然后把简单的代码编译成我实现的这个汇编, 
+嗯, 有点搞头. 我觉得也不是不行嘛. )
+
+简单的一个想法: 
+
+```text
+# MOV M[SP + INDEX1], AX # 载入变量
+# ADD M[SP + INDEX2], AX # 加法
+# MOV AX, M[SP + INDEX1] # var_1 += var_2
+# 减法, 乘法, 除法同理   #
+# 故四则运算实现完毕     #
+#                        #
+# 条件控制流             #
+# CMP 0, AX              # AX 为表达式中的演算结果
+# JE [tag]               # if AX == 0     
+#                        #                   
+# 循环的实现             # while true
+# ADD ... // WHILE       # while内部的代码
+# CMP 0, AX              # 计算条件判断   
+# JE WHILE               # 跳转
+# 然后把 for 语句包装为  # i = 0; while i < 10; i++
+#                        #
+# 函数调用的参数传递     # 用栈来传递
+```
+
+## 网页设计
+这是我第一次接触网页设计, 写的很是丑陋. QAQ
+不过感觉这样试过一次之后感觉还行, 估计之后可以试试. 
+
+又: 我用的是[opal](http://opalrb.com)作为javascript的一个代替, 
+现在可以直接通过ruby代码来生成javascript来控制页面. 真棒. 
+何必要用javascript呢. 
+
+虽然只能说现在还差得远呢. 
+
+## 一个简单的demo
+<iframe src="{{ site.github.url }}/_img/computer-toys/machine/toy/index.html" style="width:90%;height:30em;margin-left:5%"></iframe>
+
+上面的demo加入不知道有什么可以试的话, 不妨看看这里的一些例子: 
+
+```text
+MOV 0, R1
+MOV R1, M[R0]
+MOV 1, R1
+MOV R1, M[R0 + 1]
+MOV 2, R2
+MOV 0, R1 // LOOP
+ADD M[R0 + R2 - 2], R1
+ADD M[R0 + R2 - 1], R1
+MOV R1, M[R0 + R2 - 0]
+INC R2
+CMP 10, R2
+JL LOOP
+HALT
+```
+
+(计算兔子级数)
+
+```text
+MOV 1, R1
+MOV 1, R2
+INC R2 // LOOP
+MUL R2, R1
+CMP 5, R2
+JL LOOP
+HALT
+```
+
+(计算阶乘)
+
+又: 这个demo我应该不会再更新了. 作为历史性质的东西来用吧. 
+(为什么不上传针对上课的版本呢? 因为那个写得太草了. )
+
+接下去去实现编译器... 希望可以成功. 
