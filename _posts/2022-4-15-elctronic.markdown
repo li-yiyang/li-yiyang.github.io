@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Elctronic"
-date:   2022-04-26 08:46:40 +0800
+date:   2022-04-29 09:54:23 +0800
 math: true
 categories: notes
 ---
