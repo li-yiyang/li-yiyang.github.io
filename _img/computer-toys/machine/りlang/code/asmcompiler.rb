@@ -109,7 +109,7 @@ def compile_calculate(env, head, body)
       else
         raise "Compile Error"
       end
-    elsif atom.is_a? Integer
+    elsif atom.is_a? IntegerNumber
       env[:asm] << "MOV #{atom}, AX"
     else
       raise "Compile Error"
@@ -211,7 +211,7 @@ def compile_func_call(env, func_name, func_arg)
       elsif offset = env[:var].index(arg)
         env[:asm] << "MOV M[SP + CX + #{offset}], AX"
       end
-    elsif arg.is_a? Integer
+    elsif arg.is_a? IntegerNumber
       env[:asm] << "MOV #{arg}, AX"
     else
       raise "Compile Error"
@@ -248,7 +248,7 @@ def compile_let(env, name, value)
     else
       raise "Compile Error"
     end
-  elsif value.is_a? Integer
+  elsif value.is_a? IntegerNumber
     env[:asm] << "MOV #{value}, AX"
   end
   env[:asm] << "MOV AX, M[SP + #{off || env[:var].length - 1}]"
