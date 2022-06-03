@@ -27,6 +27,8 @@ categories: learning
       - [中国剩余定理 Chinese Remainder Problem:](#中国剩余定理-chinese-remainder-problem)
       - [Integer Exercise](#integer-exercise)
     - [Rational Number Arthmetic](#rational-number-arthmetic)
+      - [Exercise](#exercise)
+    - [Field](#field)
 
 ## Integers, Rational Numbers and Fields
 ### Integers
@@ -57,6 +59,8 @@ $$\forall a, b \neq 0, \exist! q \ s.t. \  a = q b + r, 0 \leq r \leq \vert b\ve
 * 互素消除: $c \vert  (a b) \wedge \gcd(a, c) = 1 \rightarrow c \vert  b$
 * 素因子: $c \vert  (a b) \wedge \mathrm{prime}\ c \rightarrow c \vert  a \vee c \vert  b$
 * 互素因子: $a \vert  c \wedge b \vert  c \wedge \gcd$
+
+> Note: 同余就是一种等价类的表现方式. 
 
 #### 最大公约数 (Greatest Common Divisor Algorithm)
 $\gcd (a, b) = d > 0 \Leftrightarrow \forall e((e\vert a \wedge e\vert b) \rightarrow e\vert d)$    
@@ -105,6 +109,10 @@ Tail Recursion 尾递归优化: 对于那些函数在尾部有调用自身的函
 代码写得有点丑...
 
 > 互素 (relatively prime): $\gcd(a, b) = 1$
+
+> 可以这样构造$\mathbb{Z}/m$环上的逆元:     
+> $$c a \equiv 1 (\mathrm{mod}\ m)$$    
+> 思路如下, $c a = k m + 1$, 于是可以利用`ext-gcd`计算出$c a + k m = 1 \Rightarrow c = (\mathrm{car}\ (\mathrm{cdr}\ (\mathrm{ext-gcd}\ a\ m)))$, 于是得到`inv-mod`过程. 
 
 #### 算术基本定理 Fundamental Theorem of Arithmetic
 任一整数均可进行素因子分解: $n = \prod^s_n p_i^{n_i}$
@@ -306,4 +314,101 @@ $$\left\{\begin{array}{lll} x & \equiv & x_1 (\mathrm{mod} m_1) \\ x & \equiv & 
 </details>
 
 <p>嗯, 编写了这个sum函数之后, 上面的想法就是我突然之间想到的, 觉得精妙无比, 特此记录下这些狗屁文字. 估计这样的理解可能是十分肤浅的一种理解了. </p>
+</details>
+
+配合一下`add`函数, 就能够得到一个计算程序了: 
+
+```scheme
+(define (add a b)
+  (cond
+    ((integer? a) (add (frac a 1) b))
+    ((integer? b) (add a (frac b 1)))
+    (else
+      (let ((a-num (car (cdr a)))
+            (a-dem (car (cddr a)))
+            (b-num (car (cdr b)))
+            (b-dem (car (cddr b))))
+        (frac (+ (* a-num b-dem)
+                 (* b-num a-dem))
+          (* a-dem b-dem))))))
+
+(define-syntax diff
+  (syntax-rules ()
+    ((_ a)
+     (if (integer? a)
+       (frac (- a) 1)
+       ((let ((a-num (car (cdr a)))
+              (a-dem (car (cddr a))))
+          (frac (- a) 1)))))
+    ((_ a b ...)
+     (add a (diff b ...)))))
+
+(define (prod a b)
+  (cond
+    ((integer? a) (prod (frac a 1) b))
+    ((integer? b) (prod a (frac b 1)))
+    (else
+      (let ((a-num (car (cdr a)))
+            (a-dem (car (cddr a)))
+            (b-num (car (cdr b)))
+            (b-dem (car (cddr b))))
+        (frac (* a-num b-num)
+              (* a-dem b-dem))))))
+
+(define (quot a b)
+  (cond
+    ((integer? a) (quot (frac a 1) b))
+    ((integer? b) (quot a (frac b 1)))
+    (else
+      (let ((a-num (car (cdr a)))
+            (a-dem (car (cddr a)))
+            (b-num (car (cdr b)))
+            (b-dem (car (cddr b))))
+        (frac (* a-num b-dem)
+              (* a-dem b-num))))))
+```
+
+于是就能够这样: 
+
+```scheme
+(sum (frac 3 2) 5 6)
+;; => (add (frac 3 2) (add (frac 5 1) (frac 6 1)))
+(eval (sum (frac 3 2) 5 6))
+;; => (frac 25 2)
+```
+
+但是还不够, 还要有符号计算能力. 那么什么是符号计算能力? 就是对表达式的化简和处理能力. 比如`(simplify '(add m (frac n d)))`这样的东西. 
+
+那么, 就重新来过吧? 简单的思路就是构造一个化简函数, 处理输入的表达式. (不过好像这一块被留到了后面介绍, 所以先做练习, 看完第二章(Automatically Simpilfy)如果没有讲的话再重新自己写. )
+
+#### Exercise
+1. $\gcd(a, b) = \gcd(c, d) = \gcd(b, d) = 1 \Rightarrow \gcd(a d + b c, b d) = 1$    
+  看着像是分数$((\mathrm{add} (\mathrm{frac} a b)$, 但是可以说分数的加法就能够处理这个问题了吗? 思考了一下, 发现有些多余.    
+  **Proof**: 反证法, 只需证明$\nexists k > 1 s.t. k \mid (a d + c b) \wedge k \mid b d$. 首先有$k \nmid b, k \nmid d$(因为$k > 1$), 所以$k \mid a, k \mid b$, 但是$\gcd(a, b) = 1$, 所以矛盾. 
+2. (上一个问题的继续)上面给出了一个分数的表达的可能性. 那么下面的情况也行: $$\frac{a\ \mathrm{iquot}(d, g) + c\ \mathrm{iquot}(b, g)}{l}$$    
+  其中$l$为$lcm(a, b)$, $g$为$gcd(a, b)$. 好吧, 这个问题是个水问题, 因为$lcm = \frac{b d}{\gcd(b, d)}$, 所以就没有问题了. 
+
+(总觉得好少哦... 喔吼吼. )
+
+### Field
+关于域, [线性代数]({{ site.github.url }}/notes/linear-algebra-final/)课上讲过. (还是上个学期的东西呢...)
+
+<details>
+<summary>域的定义(没有新的东西)</summary>
+
+<ul>
+<li>Closure Properties 对加法和乘法的封闭性. </li>
+<li>Commutative Properties 加法和乘法的交换律. </li>
+<li>Associative Properties 加法和乘法的结合律. </li>
+<li>Distributive Properties 加法和乘法的分配律. </li>
+<li>Identities 加法的零元, 乘法的单位元. </li>
+<li>Inverses 加法的负元和乘法的逆元. </li>
+</ul>
+
+<p>上面的是域的公理化(Field Axioms)的定义. 通过这样的定义, 可以得到如下的推论: </p>
+<ol>
+<li>单位元和零元在域中</li>
+<li>任意域中元素, 存在唯一对应的逆元和负元. </li>
+</ol>
+
 </details>

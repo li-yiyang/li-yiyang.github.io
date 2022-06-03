@@ -28,6 +28,13 @@
   (iter-ext-gcd a b 1 0 0 1))                 ;; initial condition
 
 
+(define (inv-mod a m)                         ; inverse item of a in m ring
+  (let ((egcd (ext-gcd a m)))
+    (if (= (car egcd) 1)
+        (car (cdr egcd))
+        '())))
+
+
 (define (prime? n)                            ; Test if prime
   (cond
     ((= n 0) #f)
@@ -133,27 +140,75 @@
 
 ;; Rational Number
 ;; number type not down yet...
-
-(define (frac a b)                            ; MPL FracOp
-  (let ((d (gcd a b)))
-    (if (> d 0)
-      (list 'frac (/ a d) (/ b d))
-      (list 'frac (/ (- a) d) (/ (- b) d)))))
-
-(define-syntax sum
-  (syntax-rules ()
-    ((_) 0)
-    ((_ e0)
-     (if (integer? e0) (frac e0 1) e0))
-    ((_ e1 e2 ...)
-     (if (integer? e1)
-       (list 'add (frac e1 1) (sum e2 ...))
-       (list 'add e1 (sum e2 ...))))))
-
-(define (tofrac int)                          ; convert int to frac
-  (if (integer? int)
-    (list int 1)
-    int))
-
-
-
+;
+;(define (frac a b)                            ; MPL FracOp
+;  (let ((d (gcd a b)))
+;    (if (> d 0)
+;      (list 'frac (/ a d) (/ b d))
+;      (list 'frac (/ (- a) d) (/ (- b) d)))))
+;
+;(define-syntax sum
+;  (syntax-rules ()
+;    ((_) 0)
+;    ((_ e0)
+;     (if (integer? e0) (frac e0 1) e0))
+;    ((_ e1 e2 ...)
+;     (if (integer? e1)
+;       (list 'add (frac e1 1) (sum e2 ...))
+;       (list 'add e1 (sum e2 ...))))))
+;
+;(define (tofrac int)                          ; convert int to frac
+;  (if (integer? int)
+;    (list int 1)
+;    int))
+;
+;(define (add a b)                             ; add
+;  (cond
+;    ((integer? a) (add (frac a 1) b))
+;    ((integer? b) (add a (frac b 1)))
+;    (else
+;      (let ((a-num (car (cdr a)))
+;            (a-dem (car (cddr a)))
+;            (b-num (car (cdr b)))
+;            (b-dem (car (cddr b))))
+;        (frac (+ (* a-num b-dem)
+;                 (* b-num a-dem))
+;          (* a-dem b-dem))))))
+;
+;(define-syntax diff
+;  (syntax-rules ()
+;    ((_ a)
+;     (if (integer? a)
+;       (frac (- a) 1)
+;       ((let ((a-num (car (cdr a)))
+;              (a-dem (car (cddr a))))
+;          (frac (- a) 1)))))
+;    ((_ a b ...)
+;     (add a (diff b ...)))))
+;
+;(define (prod a b)
+;  (cond
+;    ((integer? a) (prod (frac a 1) b))
+;    ((integer? b) (prod a (frac b 1)))
+;    (else
+;      (let ((a-num (car (cdr a)))
+;            (a-dem (car (cddr a)))
+;            (b-num (car (cdr b)))
+;            (b-dem (car (cddr b))))
+;        (frac (* a-num b-num)
+;              (* a-dem b-dem))))))
+;
+;(define (quot a b)
+;  (cond
+;    ((integer? a) (quot (frac a 1) b))
+;    ((integer? b) (quot a (frac b 1)))
+;    (else
+;      (let ((a-num (car (cdr a)))
+;            (a-dem (car (cddr a)))
+;            (b-num (car (cdr b)))
+;            (b-dem (car (cddr b))))
+;        (frac (* a-num b-dem)
+;              (* a-dem b-num))))))
+;
+;
+;
