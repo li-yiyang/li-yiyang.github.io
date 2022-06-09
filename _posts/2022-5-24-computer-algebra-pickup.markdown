@@ -411,4 +411,10 @@ $$\left\{\begin{array}{lll} x & \equiv & x_1 (\mathrm{mod} m_1) \\ x & \equiv & 
 <li>任意域中元素, 存在唯一对应的逆元和负元. </li>
 </ol>
 
+<p>域中的运算: 
+<ul>
+<li>减法, 除法: 通过与负元, 逆元的加法和乘法来定义. </li>
+<li></li>
+</ul>
+</p>
 </details>
