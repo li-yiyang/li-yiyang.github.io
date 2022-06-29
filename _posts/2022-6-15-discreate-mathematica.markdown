@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Discreate Mathematica The End"
-date: 2022-06-29 16:43:53 +0800
+date: 2022-06-29 16:48:57 +0800
 math: true
 categories: notes
 ---
@@ -194,11 +194,11 @@ categories: notes
   * 既约剩余系: 在完全剩余系的基础上加上一个和$m$互素的条件. 即任意和$m$互素的元素都能在既约剩余系中找到等价类. $$\{\bar{1}, \cdots, \bar{r}, \cdots \bar{m-1}\}, (r, m) = 1$$
 * 模逆元: $c a \equiv 1 (\mathrm{mod} m)$    
   计算方法: $(a, m) = 1 = \varphi a + \psi m \Rightarrow c = \varphi$
-* $\mathbb{Z}/_{m} + c = \mathbb{Z}/_{m}$: 给完全剩余系加上一个偏移量仍然是完全剩余系
+* $$\mathbb{Z}/_{m} + c = \mathbb{Z}/_{m}$$: 给完全剩余系加上一个偏移量仍然是完全剩余系
 * 既约剩余系加上$k m$的便宜量仍为既约剩余系(显然)
 * $(a, m) = 1$, 于是$S$为完全(既约)剩余系的充要条件是$aS$为完全(既约)剩余系    
-* $\mathbb{Z}/_{m_1} + m_1 \mathbb{Z}/_{m_2} = \mathbb{Z}/_{m_1 m_2}$
-* $m = m_1 m_2, (m_1, m_2) = 1$, 于是$\bar{x} = m_2 \bar{x}^{(1)} + m_1 \bat{x}^{(2)}$为完全(既约)剩余系. 
+* 理论基础: $$\mathbb{Z}/_{m_1} + m_1 \mathbb{Z}/_{m_2} = \mathbb{Z}/_{m_1 m_2}$$
+* $m = m_1 m_2, (m_1, m_2) = 1$, 于是$\bar{x} = m_2 \bar{x}^{(1)} + m_1 \bar{x}^{(2)}$为完全(既约)剩余系. 
 * 中国剩余: 解同余方程. 
 
 ### 同余方程
@@ -278,8 +278,8 @@ $\sum_i^8 d(v_i) = 8 \times 5 = 2 \vert E(G) \vert \Rightarrow \vert E(G) \vert 
 
 只要证明不存在和$m$既约但是又不在$r_i$中的数即可. (不知道这个能不能作为结论用. )
 
-> $\sum_{x \mathrm{mod} m} \left\{\frac{a x + b}{m}\right\} = \frac{1}{2}(m-1), (a, m) = 1$    
-> $\sum_{x \mathrm{mod} m, (x, m) = 1} \left\{\frac{a x}{m}\right\} = \frac{1}{2} \phi(m), (a, m) = 1$
+> $$\sum_{x \mathrm{mod} m} \left\{\frac{a x + b}{m}\right\} = \frac{1}{2}(m-1), (a, m) = 1$$    
+> $$\sum_{x \mathrm{mod} m, (x, m) = 1} \left\{\frac{a x}{m}\right\} = \frac{1}{2} \phi(m), (a, m) = 1$$
 
 其实用到的结论就是$(a, m) = 1, a \mathbb{Z}/m = \mathbb{Z}/m$, 以及对于完全剩余系来说, 加一个便宜量不会变, 于是就变成对完全(既约)剩余系的求和. 
 
