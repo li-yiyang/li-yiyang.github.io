@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Themodynamics The End"
-date: 2022-06-17 09:23:20 +0800
+date: 2022-07-06 11:56:07 +0800
 math: true
 categories: notes
 ---
