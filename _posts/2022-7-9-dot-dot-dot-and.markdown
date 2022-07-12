@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Dot, Dot, Dot and …"
-date: 2022-07-09 13:18:01 +0800
+date: 2022-07-12 17:18:26 +0800
 math: true
 categories: physics
 ---
