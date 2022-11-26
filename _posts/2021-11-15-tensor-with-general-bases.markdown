@@ -1,10 +1,14 @@
 ---
 layout: post
 title:  "Benseral Bases and Tensor Notation"
-date:   2021-11-26 21:29:21 +0800 
+date:   2022-08-23 23:08:51 +0800
 categories: notes
 math: true
 ---
+```plain
+[2022/8/23]: 开始更新... 
+```
+
 # 第二章
 现在发现了线性代数真是重要, 学了以后竟然可以看懂了. 
 
@@ -189,3 +193,81 @@ $$T^{ij} = \boldsymbol{g}^i \cdot \boldsymbol{T} \boldsymbol{g}^j\\ T^i_{\cdot j
 (可以用之前的投影还有坐标变换的思想来看, 相当于是不同的基底, 
 经过了张量的变换, 在不同的坐标系下面的分量. 实际的意义不一样. )
 但是什么时候会相等呢? 
+
+## 稍微回顾一下
+
+[2022/08/23] 重新来继续看... emmmm... 不知道算不算不忘初心了, 乐. 
+不过发现之前写文档的代码风格和自己之前写的东西都有点忘了, 所以现在
+稍微回顾一下: 
+
+* 有向线段 -- 向量: 
+  * 加法
+  * 数乘
+* 二阶张量 -- 2 rank Tensor: 
+  * 并矢: 如 $$\mathrm{Proj}_{\boldsymbol{u}} = \boldsymbol{u} \boldsymbol{u}$$, 
+	其中 $$\mathrm{Proj}_{\boldsymbol{u}} \boldsymbol {v} = \boldsymbol{v} \cdot \boldsymbol{u} \boldsymbol{u}$$. 
+	( 嗯, 这个投影的例子可以用来理解各种各样的后面的操作. 还是挺重要的. )
+  * 对称, 斜对称, singular( 零元 )
+
+上面的部分有点像是整体的操作, 下面的就是细分到分量的运算. 
+
+* 用 $v^i \boldsymbol{g}_i$ 来表示一个向量, 其中使用到了爱因斯坦求和约定: 
+  对上标和下标同时出现的东西进行历遍求和. 
+* 点乘: $$\boldsymbol{u} \times \boldsymbol{v} = u^i v_j \boldsymbol{g}_i \cdot \boldsymbol{g}^j = u_i v_i$$, 其中 $$\boldsymbol{g}_i \cdot \boldsymbol{g}^j = \delta^j_i$$. 
+* 叉乘: $\boldsymbol{u} \times \boldsymbol{v} = u^i v^j \boldsymbol{\varepsilon}_{i j k}$ .
+  其中 $$\boldsymbol{\varepsilon}_{i j k} = (\boldsymbol{g}_i \times \boldsymbol{g}_j) \cdot \boldsymbol{g}_k = \left\{\begin{array}{ll} +J & 偶置换 (i, j, k)\\ -J & 奇置换 \\ 0 & 有两个以上的角标相同\end{array}\right.$$ . 其实也就是做了一个投影换基的操作.   
+  类似的 $$\boldsymbol{\varepsilon}^{i j k} = \left\{\begin{array}{ll} +J^{-1} & 偶置换 (i, j, k)\\ -J^{-1} & 奇置换 \\ 0 & 有两个以上的角标相同\end{array}\right.$$, 其中 $J = \det G$
+* ( 二阶 ) 张量的表示: (A Second Order Tensor Has Four Sets of Components in General)  
+  目前我是这样理解的: 还是将其认为是一种投影, 不过是一种更加有趣的投影方式:   
+  $$\boldsymbol{T} \boldsymbol{v} = v^i \boldsymbol{T} \boldsymbol{g}_i\ \mathrm{or}\ v_i \boldsymbol{T} \boldsymbol{g}^i$$  
+
+那么大概就是这样吧, 先这样. ( 感觉是不是应该再做点题目才好... 算了, 我没有那么好学, 
+还是看看美好的物理部分, 用实例来学吧. )
+
+### 一点点用来记忆的例题
+( 注: 上面的基底都是单位基底 )
+
+> 已知基底 $\boldsymbol{g}_i$, 求向量$\boldsymbol{v}$的表示$(v^i)$:   
+> 其实就是解线性方程组, 就是 $\boldsymbol{v} = \boldsymbol{g}_i v^i$, 然后解出结果就好. 
+
+> 已知基底, 求 reciproal base (对偶基).  
+> 因为对偶基之间满足 $\boldsymbol{g}^i \cdot \boldsymbol{g}_j = \delta^i_j$, 所以有 $G^{-1} = (\boldsymbol{g}_j)$, 其中 $G = (\boldsymbol{g}^i)$, 于是问题变成求逆矩阵的问题. 
+
+> 求一个张量的四组分量:  
+> 比如已知了 $\boldsymbol{T} \boldsymbol{v} \sim (-2v_x + 3v_x, - v_z, v_x, + 2 v_y)$, 
+> 还有给出的基底  
+> 
+> $$\left(\begin{array}{lll} \boldsymbol{g}_1 & \boldsymbol{g}_2 & \boldsymbol{g}_3 \end{array}\right) = \left(\begin{array}{lll} 1 & 0 & -1\\ -2 & 1 & -2 \\ 2 & 1 & 1\end{array}\right)$$  
+> 
+> (注: 这里有一个约定, 写的时候差点忘了, 在这本书中, 应该是用下标来表示列向量, 上标来表示行向量. 形式上是这样, 原则上应该不是这样的... )  
+> 于是:   
+> 
+> $$\boldsymbol{T}\boldsymbol{g} = \left(\begin{array}{lll}-2 & - & 3\\ 0 & 0 & -1\\ 1 & 2 & 0\end{array}\right) \left(\begin{array}{lll} 1 & 0 & -1 \\ -1 & 1 & -2\\ 2 & 1 & 1\end{array}\right) = \left(\begin{array}{lll} 4 & 3 & 5 \\ -2 & -1 & -1 \\ -1 & 2 & -5\end{array}\right)$$
+> 
+> ( 注: 实际计算了之后发现了指标的一个好处了, 上面的 $\boldsymbol{T}\boldsymbol{g}_i$ 
+> 就像是指标表述的那样, 是一个列向量. 指标表示了这个向量的性质... 大概吧. 在形式上是这样的. )
+> 
+> ... emmm... 还是有点不太理解, 先放一下...
+
+> 换基底: 
+
+## 用牛顿力学来学张量的微积分
+### Newton's Law in Cartesian Components
+把位矢写成分量的形式: 
+
+$$\boldsymbol{x} = \boldsymbol{x}_x + \boldsymbol{x}_y + \boldsymbol{x}_z$$
+
+于是牛二就可以写成 $\boldsymbol{f} = m \ddot{\boldsymbol{x}}_i, (i = x, y, z)$. 
+
+### Newton's Law in Plane Polar Coordinates
+位矢 $\boldsymbol{x} = \hat{\boldsymbol{x}}(r, \theta) = r \cos \theta \boldsymbol{e}_x + r \sin \theta \boldsymbol{e}_y$ 写成分量的形式: $\boldsymbol{x} = \hat{\boldsymbol{x}}(\boldsymbol{u}^j) = \hat{x}^i(\boldsymbol{u}^j)\boldsymbol{e}_i$. 
+
+其中 $\boldsymbol{u}$ 代表着在 Plane Polar Coordinates 下的向量坐标, 
+$u^j$ 代表其不同的分量. 然后 $\hat{\boldsymbol{x}}$ 表示新基底下的
+向量. 
+
+于是新基的基底 (可以叫做 cellar base vectors) 就是
+$$\boldsymbol{g}_i = \frac{\partial \boldsymbol{x}}{\partial u^i} = \frac{\partial x^k}{\partial u^i} \boldsymbol{e}_k$$. 
+自然的, 得到 Jaccobi 矩阵: $$J(\boldsymbol{g}_j, \cdots) = \det[x^i_{,j}]$$.
+于是就可以用这样的方法来计算在该基底下的各种各样的向量的基: 
+$$v_i = \boldsymbol{v} \cdot \boldsymbol{g}$$. 以及其导数等. 
