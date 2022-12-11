@@ -91,11 +91,12 @@ pkg-config --libs --cflags gtk+-3.0
 #define HEIGHT 200
 
 int main (int argc, char *argv[]) {
-  GtkWidget *window;
   gtk_init(&argc, &argv);
-  window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  
+
+  GtkWidget* window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   gtk_widget_set_size_request(window, WIDTH, HEIGHT);
+  gtk_window_set_title(GTK_WINDOW(window), "Basic Example");
+  g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
   
   gtk_widget_show_all(window);
   gtk_main();
@@ -119,6 +120,86 @@ gcc main.c `pkg-config --libs --cflags gtk+-3.0` -o main
 
 ## 接下来? 
 这个只是一个记录怎么做的一个小记录. 之后再更新吧.
+
+### Glade
+在我以前用 [Shoes](http://shoesrb.com) 写一些简单的小玩具的时候,
+我就幻想过能否直接有一个程序能够所见即所得地编辑 GUI. 
+因为那样真的超级方便. 
+
+而 Glade 的操作基本上就是干的就是这样的事情. 在 macOS 上:
+
+```shell
+brew install glade
+```
+
+安装完后, 使用:
+
+```shell
+glade
+```
+
+来运行. 可以看到一个比较简约的界面: 
+
+![glade.png]({{ site.github.url }}/_img/pieces/glade.png "不过我讨厌这个设计出现在我的电脑上, 不是因为其不好看, 我觉得还是很好看的, 就是 UI 和我的电脑 macOS 不匹配. ")
+
+新建文件后, 可以按照: 搭建窗口 - 选择窗口布局 - 添加元件的一个逻辑来编辑. 
+
+1. 搭建窗口: 选择 Toplevel - GtkWindow 可以创建一个窗口. 
+2. 选择窗口布局: 在创建的窗口下, 选择 Containers - GtkFixed 然后添加到刚创建的窗口中
+3. 添加元件: 通过 Control 或者 Display 的选项下拉菜单来添加元件
+
+于是就能够得到嵌套关系: 
+
+```text
++--- GtkWindow
+ +--- GtkFixed
+  +--- GtkButton
+  +--- GtkLabel
+  +--- ...
+```
+
+对于每个关系, 都能够通过右侧的属性菜单来编辑属性, 设置 `id`. 
+其中需要注意的两点: 
+
+* `id` 是用来在程序中访问对应元素的名字
+* `signal` 是让该元件聆听特定信号的事件, 
+  类似于 javascript 中的 `addEventListener`.
+  
+在编辑好后保存为 `.glade` 文件. 编写代码: 
+
+```c
+ GtkBuilder *builder = gtk_builder_new();
+
+  if (gtk_builder_add_from_file(builder, "gui.glade", NULL) == 0) {
+    printf("Error. \n");
+    return 0;
+  }
+
+  GtkWidget *welcome_window = GTK_WIDGET(gtk_builder_get_object(builder, "welcome_window"));
+  GtkWidget *quit_button = GTK_WIDGET(gtk_builder_get_object(builder, "quit_button"));
+
+  g_signal_connect(welcome_window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
+  g_signal_connect(quit_button, "clicked", G_CALLBACK(on_quit_button_clicked), NULL);
+```
+
+即可用来控制程序了. 
+
+(不过对于我要做的东西来说, 可能有点没用, 不如自己直接去写. 
+并且在我的 mac 上, 不知道是不是因为使用不当, 闪退并且操作不太舒服.
+最坑爹的事情是, 文档太少了, 所以学得不太明白. )
+
+所以换回之前脱裤子放屁的那个做法. 
+
+主要参考的连接:
+* [【Ruby】10分でGladeを使って作るRuby/GTK3 GUIアプリ](https://qiita.com/kojix2/items/d9da8e08757dcc6b1a7d)
+* [Glade 3 でGUI開発](https://www.nslabs.jp/glade.rhtml)
+* [GTK Glade C Programming Tutorial](https://web.archive.org/web/20210507031457/https://prognotes.net/gtk-glade-c-programming/)
+
+### Handmake GTK Code
+这一部分主要是参考了 [入門 GTK+](http://iim.cs.tut.ac.jp/member/sugaya/GTK+/files/gtkbook-20210127.pdf) 以及 [ZetCode](https://zetcode.com/gui/gtk2/)
+(为什么是日语的呢? 也不是我想学, 而是那个教程写得实在是傻瓜, 
+几乎把所有的操作都截图了. 反正只看代码, 看看截图, 大概就好了. 
+而后面的是一个英文的教程. 不过有一个中文的 [翻译](https://www.kancloud.cn/apachecn/zetcode-zh/1950310))
 
 ## 参考
 * [How do you run Ubuntu Server with a GUI?](https://askubuntu.com/questions/53822/how-do-you-run-ubuntu-server-with-a-gui)

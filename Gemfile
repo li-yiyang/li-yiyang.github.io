@@ -30,3 +30,8 @@ gem "wdm", "~> 0.1.1", :platforms => [:mingw, :x64_mingw, :mswin]
 
 
 gem "webrick", "~> 1.7"
+
+# [2022/12/9] add support for org
+gem 'jekyll-org', '>= 1.1.0'
+
+gem "pygments.rb", "~> 2.3"

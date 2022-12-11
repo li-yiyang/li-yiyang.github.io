@@ -1,0 +1,117 @@
+#+layout: post
+#+title: Org-mode and Jekyll
+#+date: 2022-12-10
+#+math: true
+#+categories: jekyll
+* 来点有意思的, 没错, 就是 Org-mode
+作为一个虚假的 Emacer, 我最近被 org-mode 种草了. 
+于是我想要在之后好好了解一下 org-mode 以及用它来写博客,
+而不是 markdown. (嘿嘿嘿... )
+
+于是我做了一些小小的配置, 主要参考的是: [[https://ifritjp.github.io/blog/site/2019/01/17/setup-jekyll.html][org-mode で blog]] 这个网站.
+其中使用到的插件为 [[https://github.com/eggcaker/jekyll-org][jekyll-org]], 并且最后加上我的一点点丢人现眼的,
+微不足道的配置和测试.
+
+** 配置
+*** Jekyll Side
+只需要做两件事情:
+1. 修改 ~_config.yml~ 文件
+   + 在 ~plugins~ 下面添加一行: ~jekyll-org~ 即可
+
+     #+begin_src yaml
+       plugins:
+         - jekyll-org
+     #+end_src
+
+   + (optional) 为 org-mode 添加 liquid tag 支持:
+
+     #+begin_src yaml
+       org:
+         liquid: true
+     #+end_src
+
+     等价于为每个文件都启用 ~#+liquid: enabled~ 的 prompt.
+2. 修改 ~Gemfile~ 文件
+   + 添加
+     #+name: Gemfile
+     #+begin_src ruby
+       gem 'jekyll-org', '>= 1.1.0'
+       gem "pygments.rb", "~> 2.3" # optional for syntax highlighting
+     #+end_src
+
+     或者可以直接命令行运行: ~bundle add jekyll pygments.rb~
+   + 关于语法高亮, 因为 ~minima~ 主题 (就是我用的这个) 自带高亮,
+     所以只确保 ~bundle add pygments.rb~. 
+
+然后就是快乐的使用体验了. 
+
+*** Org-mode
+相比 markdown 的 yaml 配置:
+
+#+begin_src yaml
+  layout: post
+  title: Title
+  date: 2022-12-04 12:00:00 +0800
+  math: true
+  categories: notes
+#+end_src
+
+在 org 下, 和一般 tag 一样:
+
+#+begin_src org
+  ,#+layout: post
+  ,#+title: Org-mode and Jekyll
+  ,#+date: 2022-12-05
+  ,#+math: true
+  ,#+categories: jekyll
+#+end_src
+
+*** 一些其他的配置
+**** 站内链接
+这个目前我还不知道该如何实现.
+因为在 markdown 方面, 我使用的方式是
+~site.github.url~ 来指出网页的根地址,
+然后写相对地址. 
+
+目前的方式仍然是用老的那一套,
+缺点就是没法在本地很好地处理相对跳转. 
+
+(就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. )
+
+**** 数学公式
+可以参考之前的一个笔记: [[{{ site.github.url }}/notes/analysis-for-test/#考完后的katex小教程][考完后的katex小教程]].
+然后在文档中添加: ~#+math: true~. 
+
+* 测试 <<test>>
+因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分.
+
++ 数学公式
+
+  $$A + B = C$$
+
+  以及行内公式 $x = f(x)$.
++ 代码
+
+  #+begin_src ruby
+    5.times do |i|
+      puts "I am lucky!"
+    end
+  #+end_src
+
++ 图片插入
+
+  [[{{ site.github.url }}/_img/meme/see-isnt-these-what-you-want.png]]
+
++ 链接跳转, 跳转至 [[test][测试]], 貌似不行... 
+
+* Org-mode
+让我来介绍一下为什么我会想要使用 org-mode 吧.
+
+契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素,
+基本就是运行个代码就能够解决的问题. 所以我写了一个程序,
+能够自动读取 (生成) 代码, 然后将运行的结果输出,
+最后用 pdf 导出的一个程序.
+
+(看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题,
+但是我写的十分的丑陋, 并且还很难用. 如果有)
+
