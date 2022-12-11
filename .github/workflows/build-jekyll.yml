@@ -1,32 +1,15 @@
 name: Jekyll Deploy
 
-on:
-  push:
-    branches:
-      # deploy on updates on main
-      - main
-  schedule:
-    # redeploy every morning to update unpublished pages
-    - cron: "0 2 * * *"
+on: [push]
 
-jobs:
-  deploy:
+jobs: 
+  build_and_deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache gems
-        uses: actions/cache@v1
-        with:
-          path: vendor/gems
-          key: ${{ runner.os }}-build-${{ hashFiles('**/Gemfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-
+      - uses: actions/checkout@v1
       - name: Build & Deploy to GitHub Pages
-        uses: DavidS/jekyll-deploy@main
-        env:
-          JEKYLL_ENV: production
-          GH_PAGES_TOKEN: ${{ secrets.GH_PAGES_TOKEN }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ secrets.GITHUB_REPOSITORY }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+        uses: BryanSchuetz/jekyll-deploy-gh-pages@master
