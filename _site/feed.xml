@@ -1,0 +1,3639 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://0.0.0.0:4000/" rel="alternate" type="text/html" /><updated>2022-12-11T04:21:28+00:00</updated><id>http://0.0.0.0:4000/feed.xml</id><title type="html">My Blog</title><subtitle>某不知名的很硬的双非学校的物理系学生的无聊博客</subtitle><entry><title type="html">Org-mode and Jekyll</title><link href="http://0.0.0.0:4000/jekyll/org-test/" rel="alternate" type="text/html" title="Org-mode and Jekyll" /><published>2022-12-10T00:00:00+00:00</published><updated>2022-12-10T00:00:00+00:00</updated><id>http://0.0.0.0:4000/jekyll/org-test</id><content type="html" xml:base="http://0.0.0.0:4000/jekyll/org-test/"><![CDATA[<h1>来点有意思的, 没错, 就是 Org-mode</h1>
+<p>作为一个虚假的 Emacer, 我最近被 org-mode 种草了.
+  于是我想要在之后好好了解一下 org-mode 以及用它来写博客,
+  而不是 markdown. (嘿嘿嘿&#8230; )</p>
+<p>于是我做了一些小小的配置, 主要参考的是: <a href="https://ifritjp.github.io/blog/site/2019/01/17/setup-jekyll.html">org-mode で blog</a> 这个网站.
+  其中使用到的插件为 <a href="https://github.com/eggcaker/jekyll-org">jekyll-org</a>, 并且最后加上我的一点点丢人现眼的,
+  微不足道的配置和测试.</p>
+<h2>配置</h2>
+<h3>Jekyll Side</h3>
+<p>只需要做两件事情:</p>
+<ol>
+  <li>修改 <code>_config.yml</code> 文件
+    <ul>
+      <li>在 <code>plugins</code> 下面添加一行: <code>jekyll-org</code> 即可
+<div class="highlight"><pre><span></span><span class="nt">plugins</span><span class="p">:</span>
+  <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">jekyll-org</span>
+</pre></div>
+      </li>
+      <li>(optional) 为 org-mode 添加 liquid tag 支持:
+<div class="highlight"><pre><span></span><span class="nt">org</span><span class="p">:</span>
+  <span class="nt">liquid</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+        <p>等价于为每个文件都启用 <code>#+liquid: enabled</code> 的 prompt.</p>
+      </li>
+    </ul>
+  </li>
+  <li>修改 <code>Gemfile</code> 文件
+    <ul>
+      <li>添加
+<div class="highlight"><pre><span></span><span class="n">gem</span> <span class="s1">&#39;jekyll-org&#39;</span><span class="p">,</span> <span class="s1">&#39;&gt;= 1.1.0&#39;</span>
+<span class="n">gem</span> <span class="s2">&quot;pygments.rb&quot;</span><span class="p">,</span> <span class="s2">&quot;~&gt; 2.3&quot;</span> <span class="c1"># optional for syntax highlighting</span>
+</pre></div>
+        <p>或者可以直接命令行运行: <code>bundle add jekyll pygments.rb</code></p>
+      </li>
+      <li>关于语法高亮, 因为 <code>minima</code> 主题 (就是我用的这个) 自带高亮,
+        所以只确保 <code>bundle add pygments.rb</code>.</li>
+    </ul>
+  </li>
+</ol>
+<p>然后就是快乐的使用体验了.</p>
+<h3>Org-mode</h3>
+<p>相比 markdown 的 yaml 配置:</p>
+<div class="highlight"><pre><span></span><span class="nt">layout</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">post</span>
+<span class="nt">title</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Title</span>
+<span class="nt">date</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2022-12-04 12:00:00 +0800</span>
+<span class="nt">math</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">categories</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">notes</span>
+</pre></div>
+<p>在 org 下, 和一般 tag 一样:</p>
+<div class="highlight"><pre><span></span>#+layout: post
+#+title: Org-mode and Jekyll
+#+date: 2022-12-05
+#+math: true
+#+categories: jekyll
+</pre></div>
+<h3>一些其他的配置</h3>
+<h4>站内链接</h4>
+<p>这个目前我还不知道该如何实现.
+  因为在 markdown 方面, 我使用的方式是
+  <code>site.github.url</code> 来指出网页的根地址,
+  然后写相对地址.</p>
+<p>目前的方式仍然是用老的那一套,
+  缺点就是没法在本地很好地处理相对跳转.</p>
+<p>(就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. )</p>
+<h4>数学公式</h4>
+<p>可以参考之前的一个笔记: <a href="/notes/analysis-for-test/#考完后的katex小教程">考完后的katex小教程</a>.
+  然后在文档中添加: <code>#+math: true</code>.</p>
+<h1>测试 &lt;&lt;test&gt;&gt;</h1>
+<p>因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分.</p>
+<ul>
+  <li>数学公式
+    <p>$$A + B = C$$</p>
+    <p>以及行内公式 $x = f(x)$.</p>
+  </li>
+  <li>代码
+<div class="highlight"><pre><span></span><span class="mi">5</span><span class="o">.</span><span class="n">times</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+  <span class="nb">puts</span> <span class="s2">&quot;I am lucky!&quot;</span>
+<span class="k">end</span>
+</pre></div>
+  </li>
+  <li>图片插入
+    <p><img src="/_img/meme/see-isnt-these-what-you-want.png" alt="/_img/meme/see-isnt-these-what-you-want.png" /></p>
+  </li>
+  <li>链接跳转, 跳转至 <a href="test">测试</a>, 貌似不行&#8230;</li>
+  <li>发布到 Github Page 上:
+    <p>唉, 因为 Github Page 并不支持自定义的插件, 所以效果一言难尽.
+      所以我打算使用 <a href="https://taoalpha.github.io/blog/2015/05/29/tech-use-jekyll-plugin-with-github-page/">这篇文章</a> 中提到的方法来实现.</p>
+  </li>
+</ul>
+<h1>Org-mode</h1>
+<p>让我来介绍一下为什么我会想要使用 org-mode 吧.</p>
+<p>契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素,
+  基本就是运行个代码就能够解决的问题. 所以我写了一个程序,
+  能够自动读取 (生成) 代码, 然后将运行的结果输出,
+  最后用 pdf 导出的一个程序.</p>
+<p>(看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题,
+  但是我写的十分的丑陋, 并且还很难用. 如果有)</p>]]></content><author><name></name></author><category term="jekyll" /><summary type="html"><![CDATA[来点有意思的, 没错, 就是 Org-mode 作为一个虚假的 Emacer, 我最近被 org-mode 种草了. 于是我想要在之后好好了解一下 org-mode 以及用它来写博客, 而不是 markdown. (嘿嘿嘿&#8230; ) 于是我做了一些小小的配置, 主要参考的是: org-mode で blog 这个网站. 其中使用到的插件为 jekyll-org, 并且最后加上我的一点点丢人现眼的, 微不足道的配置和测试. 配置 Jekyll Side 只需要做两件事情: 修改 _config.yml 文件 在 plugins 下面添加一行: jekyll-org 即可 plugins: - jekyll-org (optional) 为 org-mode 添加 liquid tag 支持: org: liquid: true 等价于为每个文件都启用 #+liquid: enabled 的 prompt. 修改 Gemfile 文件 添加 gem &#39;jekyll-org&#39;, &#39;&gt;= 1.1.0&#39; gem &quot;pygments.rb&quot;, &quot;~&gt; 2.3&quot; # optional for syntax highlighting 或者可以直接命令行运行: bundle add jekyll pygments.rb 关于语法高亮, 因为 minima 主题 (就是我用的这个) 自带高亮, 所以只确保 bundle add pygments.rb. 然后就是快乐的使用体验了. Org-mode 相比 markdown 的 yaml 配置: layout: post title: Title date: 2022-12-04 12:00:00 +0800 math: true categories: notes 在 org 下, 和一般 tag 一样: #+layout: post #+title: Org-mode and Jekyll #+date: 2022-12-05 #+math: true #+categories: jekyll 一些其他的配置 站内链接 这个目前我还不知道该如何实现. 因为在 markdown 方面, 我使用的方式是 site.github.url 来指出网页的根地址, 然后写相对地址. 目前的方式仍然是用老的那一套, 缺点就是没法在本地很好地处理相对跳转. (就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. ) 数学公式 可以参考之前的一个笔记: 考完后的katex小教程. 然后在文档中添加: #+math: true. 测试 &lt;&lt;test&gt;&gt; 因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分. 数学公式 $$A + B = C$$ 以及行内公式 $x = f(x)$. 代码 5.times do |i| puts &quot;I am lucky!&quot; end 图片插入 链接跳转, 跳转至 测试, 貌似不行&#8230; 发布到 Github Page 上: 唉, 因为 Github Page 并不支持自定义的插件, 所以效果一言难尽. 所以我打算使用 这篇文章 中提到的方法来实现. Org-mode 让我来介绍一下为什么我会想要使用 org-mode 吧. 契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素, 基本就是运行个代码就能够解决的问题. 所以我写了一个程序, 能够自动读取 (生成) 代码, 然后将运行的结果输出, 最后用 pdf 导出的一个程序. (看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题, 但是我写的十分的丑陋, 并且还很难用. 如果有)]]></summary></entry><entry><title type="html">统计力学部分</title><link href="http://0.0.0.0:4000/notes/stastic-mechanics/" rel="alternate" type="text/html" title="统计力学部分" /><published>2022-12-04T03:06:05+00:00</published><updated>2022-12-04T03:06:05+00:00</updated><id>http://0.0.0.0:4000/notes/stastic-mechanics</id><content type="html" xml:base="http://0.0.0.0:4000/notes/stastic-mechanics/"><![CDATA[<h1 id="热力学统计物理---统计力学部分">热力学统计物理 - 统计力学部分</h1>
+<p>虽然还早, 但是因为这学期网课学得实在是太烂, 
+不得不在写作业的时候回顾一下.</p>
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+<p><strong>Table of Contents</strong></p>
+
+<ul>
+  <li><a href="#热力学统计物理---统计力学部分">热力学统计物理 - 统计力学部分</a>
+    <ul>
+      <li><a href="#简单的大纲">简单的大纲</a></li>
+      <li><a href="#微观状态等可能">微观状态等可能</a></li>
+      <li><a href="#分布">分布</a>
+        <ul>
+          <li><a href="#boltzmann-distribution">Boltzmann Distribution</a></li>
+          <li><a href="#配分函数">配分函数</a></li>
+          <li><a href="#maxwell-boltzmann-speed-distribution">Maxwell-Boltzmann Speed Distribution</a></li>
+          <li><a href="#fermi-diac">Fermi-Diac</a></li>
+          <li><a href="#bose-einstein">Bose-Einstein</a></li>
+          <li><a href="#maxwell-boltzmann">Maxwell-Boltzmann</a></li>
+        </ul>
+      </li>
+      <li><a href="#examples">Examples</a>
+        <ul>
+          <li><a href="#态密度">态密度</a></li>
+          <li><a href="#dilute-gas">Dilute Gas</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<!-- markdown-toc end -->
+
+<h2 id="简单的大纲">简单的大纲</h2>
+<ul>
+  <li><strong>Principles</strong>: Every possible configuration of a system under
+constraints is equally probable.<br />
+微观状态等可能.</li>
+  <li><strong>Distribution</strong>
+    <ul>
+      <li><strong>Distribution Functions</strong></li>
+      <li><strong>Boltzmann Distribution</strong>: 波尔兹曼分布</li>
+      <li><strong>Fermi-Dirac Distribution</strong>: 费米 - 狄拉克分布, 费米气体</li>
+      <li><strong>Bose-Einstein Distribution</strong>: 玻色 - 爱因斯坦分布, 玻色 - 爱因斯坦气体</li>
+    </ul>
+  </li>
+  <li><strong>Density of States</strong>: 态密度</li>
+  <li><strong>Dilute gases</strong>: 稀薄气体</li>
+</ul>
+
+<h2 id="微观状态等可能">微观状态等可能</h2>
+<blockquote>
+  <p><strong>The averaging principle</strong>:<br />
+All accessible microstates are equally likely.</p>
+</blockquote>
+
+<p>理论力学学过, 描述一个系统: 
+$H(q_1, q_2, \cdots, q_n, p_1, p_2, \cdots, p_n)$.</p>
+
+<p>那么对于一个描述完整的系统, 其中的 $q_i$, $p_i$ 可能的取值空间,
+即在一个相空间中 (的一个部分). 那么在可能的相空间中的每一点,
+出现的概率都是一样的.</p>
+
+<blockquote>
+  <p>如对于一个振动解: $E_n = (n + \frac{1}{2})\hbar \omega$, 
+那么对于每个能量态上的可能性: 
+$\propto A_n = \pi \sqrt{2 E_n / k}\sqrt{2mE_n} = \frac{2\pi E_n}{\omega}$.
+于是 $\Delta A = h$.</p>
+</blockquote>
+
+<p>这样的一个系统, 在宏观观测的时候, 并不能观测到所有的信息, 
+即 $H(q_i, p_i) \mapsto S(U, V, N_i, \cdots)$ 是一个满射但不是单射.</p>
+
+<p>于是对于一个宏观观测的系统, 对应的应该就是所有的微观观测的结果:</p>
+
+\[P(S(U, V, N_i, \cdots)) = \sum P(H(q_i, p_i) \mapsto S(U, V, N_i, \cdots))\]
+
+<blockquote>
+  <p>对于一个微观状态数为 $2$ 的一个系统, 
+其微观可能的状态只有 $\uparrow$ 或者 $\downarrow$. 
+于是对于一个宏观分布: $P(n_1\uparrow, n_2\downarrow)$, 
+其对应的微观状态数为 $\Omega = \frac{(n_1+n_2)!}{n_1!n_2!}$.</p>
+</blockquote>
+
+<p>对于两个系统, $S_1, \Omega_1$ 和 $S_2, \Omega_2$ 来说, 
+其平衡时应有 $S_1 + S_2, \Omega_1 \times \Omega_2$. 
+于是猜测有 $S = k_B \mathrm{ln}\Omega$.</p>
+
+<h2 id="分布">分布</h2>
+
+\[f(\varepsilon_i) = \frac{1}{B e^{\varepsilon_i/k_BT} \begin{array}{ll}+1 &amp; (FD)\\+0 &amp; (MB)\\-1 &amp; (BE)\end{array}},\qquad \mathrm{where}\ e^{\alpha} = e^{\mu/k_BT} = \frac{1}{B} = A\]
+
+<p>($\Delta n_i = \omega(\varepsilon_i) f(\varepsilon)$)</p>
+
+<h3 id="boltzmann-distribution">Boltzmann Distribution</h3>
+
+\[n_i = \frac{N}{\sum_j e^{\beta\varepsilon_j}} e^{\beta\varepsilon_i}\]
+
+<p>其中 $\beta = -\frac{1}{k_B T}$</p>
+
+<p>Boltzmann 分布将相空间对能量进行分划:</p>
+<ul>
+  <li>
+    <p>每个能量上 $\varepsilon_i$ 有 $n_i$ 个粒子, 
+于是有数量和能量守恒:</p>
+
+\[\sum_i n_i = N, \sum_i n_i \varepsilon_i = E\]
+  </li>
+  <li>
+    <p>对应 ${n_j}$ 的宏观分布的微观状态数为:</p>
+
+\[\Omega({n_j}) = \frac{N!}{\prod_j n_j!}\]
+  </li>
+  <li>
+    <p>在宏观上取最大可能的分布, 即对应 $\Omega$ 最大的宏观状态. 
+方法就是利用拉格朗日乘子法来做:</p>
+
+\[L = \mathrm{ln}\Omega + \alpha (\sum n_i - N) + \beta (\sum n_i \varepsilon_i - E) \Rightarrow \frac{\partial L}{\partial n_i} = 0\]
+
+    <p>其中对 $\Omega$ 做对数, 方便计算. 并且可以使用 Stirling 公式,
+$\lim_{x \rightarrow \infty} \mathrm{ln}x! = x\mathrm{ln}x$.</p>
+
+    <p>于是得到 $n_i = e^{\alpha + \beta \varepsilon}$. 
+回带到方程中可以得到解.</p>
+
+    <p>其中, 利用 $(\frac{\partial S}{\partial E})_{V,N} = k_B (\frac{\partial \mathrm{ln}\Omega}{\partial E}) = \frac{1}{T}$ 得到 $\beta$.</p>
+  </li>
+</ul>
+
+<h3 id="配分函数">配分函数</h3>
+<p>引入配分函数 (Zustandssumme, the sum over all states):</p>
+
+\[Z = \sum_j e^{\beta\varepsilon_j}\]
+
+<details>
+<summary>一些没用但很有用的小知识</summary>
+der Zustand: 状况, 情况; die Summe: 和, 总数; s: 连接用的
+</details>
+
+<p>于是:</p>
+
+<ul>
+  <li>
+    <p>Boltzmann 分布中:</p>
+
+\[n_i = \frac{N}{Z} e^{\beta\varepsilon}\]
+  </li>
+  <li>
+    <p>能量</p>
+
+\[U = \sum n_i \varepsilon_i = \frac{N}{Z} \frac{\partial Z}{\partial \beta} = N \frac{\partial \mathrm{ln}Z}{\partial \beta}\]
+
+    <p>于是可以在能量的基础上计算得到热容: $C_V = \frac{\partial U}{\partial T}$</p>
+  </li>
+  <li>
+    <p>系统<br />
+对于一个系统的能量分划的标准: $\varepsilon = \sum_i \varepsilon_i$, 
+可以看作是多个子系统的和. 假设每个子系统 $\varepsilon_i$ 的能量取值,
+都是满足相同分布的一个随机变量. 那么对于这样的系统, 其配分函数为:</p>
+
+\[Z_i = \sum_i e^{\beta\epsilon_i}\]
+
+    <p>以双态的系统为例: 一个粒子能量分布取值有 $\epsilon_{\downarrow}$ 和 
+$\epsilon_{uparrow}$ 两个能级. 那么对于有两个这样的粒子组成的系统, 
+应该有 $\varepsilon = \epsilon_{\downarrow, \uparrow}, \epsilon_{\uparrow, \uparrow}, \epsilon_{\uparrow, \downarrow}, \epsilon_{\downarrow, \downarrow}$</p>
+
+    <p>于是 $Z = \sum e^{\beta\varepsilon} = Z_i \times Z_i$</p>
+
+    <p>于是可以得出, 对于可以区分的粒子的系统, 其 $Z = \prod_i Z_i = [Z_1]^N$,
+而对于不可区分的全同粒子, $Z = \frac{[Z_1]^N}{N!}$</p>
+  </li>
+  <li>
+    <p>自由能<br />
+利用热力学中的勒让德变换可以得到:</p>
+
+\[F = U - TS = - N k_B \mathrm{ln}Z\]
+
+    <p>于是还能够反过来写出 $S$ 的表达式:</p>
+
+\[S = \frac{1}{T} (U - F) = \frac{N}{T} (\frac{\partial }{\partial \beta} + k_B)\mathrm{ln}Z\]
+
+    <p>或者是:</p>
+
+\[S = - (\frac{\partial F}{\partial T})_{V,N}\]
+  </li>
+  <li>
+    <p>简并能级 Degenerate Energy Level</p>
+
+    <p>举一个例子, 对于钠黄光的一个能级 
+$\varepsilon_i = (n + \frac{1}{2})\hbar\omega$ 可能对应不只一条能级,
+或者说, 因为能级区分不大, 实际其中有多个能级 ($\omega_i$ 个). 
+但是这些能级被简单当作一个能量来处理, 所以就叫做简单合并.</p>
+
+    <p>于是本来应该写成 
+$Z = \cdots + e^{\beta\varepsilon_i^{(1)}} + e^{\beta\varepsilon_i^{(2)}} + \cdots + e^{\beta\varepsilon_i^{(\omega_i)}} + \cdots$,
+现在就要变成: $Z = \cdots + \omega_i e^{\beta\varepsilon_i} + \cdots$.</p>
+
+    <p>于是现在的配分函数就变成了:</p>
+
+\[Z = \sum_i \omega_i e^{\beta\varepsilon_i}\]
+
+    <p>并且之前的结论还是成立的.</p>
+
+    <details>
+<summary>一个不靠谱的解释</summary>
+<p>
+  之前我一直难以理解这个概念, 于是我说, 差不多得了. 
+  欸, 这概念还真的就是差不多得了的意思. 
+</p>
+<p>
+  在维基百科上是这样介绍的: 
+  简并是指被当作同一较粗糙物理状态的两个或多个不同的较精细物理状态. 
+</p>
+<p>
+  好冷的笑话... 
+</p>
+</details>
+  </li>
+  <li>
+    <p>态密度 DOS<br />
+对于不同的能级 $\varepsilon_i$, 对应有不同的能量简并度 $\omega_i$,
+于是做两者之间的映射关系: $\omega(\varepsilon_i)$.</p>
+
+    <p>于是:</p>
+
+\[Z = \sum_i \omega(\varepsilon_i) e^{\beta\varepsilon_i}\]
+
+    <p>拓展到连续能量分布, 就变成:</p>
+
+\[Z = \int_0^\infty \omega(\varepsilon) e^{\beta\varepsilon} \mathrm{d}\varepsilon\]
+
+    <p>具体的态密度在 <a href="#态密度">下面</a> 会记录.</p>
+  </li>
+</ul>
+
+<h3 id="maxwell-boltzmann-speed-distribution">Maxwell-Boltzmann Speed Distribution</h3>
+<p>由配分函数的结论可以得到: 
+$n_i = \frac{N}{Z} \omega_i e^{\beta\varepsilon_i}$</p>
+
+<p>连续化, 得到 $n(v)\mathrm{d}v = \frac{N}{Z} \omega(v) e^{\beta \varepsilon(v)}\mathrm{d}v$. 
+其中, $\omega(v)$ 通过 $\omega(p)$ 来计算得到.</p>
+
+<p>于是有:</p>
+
+\[n(v) \mathrm{d}v = \frac{N}{Z} \frac{V m^2}{2\pi^2\hbar^3} v^2 e^{-mv^2/(2k_BT)}\mathrm{d}v\]
+
+<ul>
+  <li>平均速度: $\sqrt{\frac{8k_BT}{\pi m}}$</li>
+  <li>方均速度: $\frac{3k_BT}{m}$</li>
+  <li>最概然速度: $\sqrt{\frac{2k_BT}{m}}$</li>
+</ul>
+
+<h3 id="fermi-diac">Fermi-Diac</h3>
+<details>
+<summary>Indistinguishability and Quantum Mechanics</summary>
+<p>
+对于一个系统, 可以用 $\psi(1, 2)$ 来表示有两个粒子的系统. 
+那么交换这两个粒子, 再交换回来, 应该是对称的一个操作, 即:
+</p>
+
+$$\psi(1, 2) = e^{i\delta}\psi(2, 1) = e^{i\delta}e^{i\delta}\psi(1, 2) \Rightarrow e^{i\delta} = \pm 1$$
+
+<p>
+于是对于不同的 $e^{i\delta}$, 对应的结果也不同: 
+</p>
+
+<p>
+$e^{i\delta} = -1$, 于是 $\psi(1, 1) = - \psi(1, 1) = 0$, 
+即不存在相通能级的粒子, 即 Pauli Exclusion Principle. 
+对应 Fermions. 
+</p>
+
+<p>
+$e^{i\delta} = 1$, 于是可以交换, 对应 Bosons. 
+</p>
+</details>
+
+<p>对于 Fermions, 每个能量状态下的粒子只有 $0$ 或者 $1$ 个. 
+于是对于简并度为 $\omega_i$ 的能级 $\varepsilon_i$, 
+拥有 $n$ 个粒子的可能性为 $t_i = \frac{\omega_i!}{n_i!(\omega_i - n_i)!}$.
+于是总的状态数就变成了: $\Omega = \prod t_i$.</p>
+
+<p>于是类比 Boltzmann 分布中的推导方式, 可以得到:</p>
+
+\[\sum_i \mathrm{ln}(\frac{\omega_i - n_i}{n_i}) + a + b \varepsilon_i = 0\]
+
+\[\Rightarrow n_i = \frac{\omega_i}{e^{-a-b\varepsilon_i} + 1}\]
+
+<p>其中, $b = \beta$, 将 $a$ 写作 $-\beta\mu$.</p>
+
+<p>因为一般研究的是分布函数 (distribution function), 
+定义 $f = n_i / \omega$ 为平均每个状态下有的粒子数 
+(average number of particles in a state)</p>
+
+<p>于是得到 Fermi-Dirac 分布:</p>
+
+\[f_{FD}(\varepsilon) = \frac{1}{e^{(\varepsilon - \mu)/k_BT} + 1}\]
+
+<h3 id="bose-einstein">Bose-Einstein</h3>
+<p>和 Fermions 不同的是, 每个能量状态下的粒子可以有任意多个, 
+所以在简并度为 $\omega_i$ 的能级 $\varepsilon_i$, 
+拥有 $n$ 个粒子的可能性为 $t_i = \frac{(n_i + \omega_i - 1)!}{n_i!(\omega_i - 1)!} \approx \frac{(n_i + \omega_i)!}{n_i! \omega_i!}$.</p>
+
+<p>于是同理也能得到:</p>
+
+\[\sum_i \mathrm{ln}\frac{n_i + \omega_i}{n_i} + a + b\varepsilon = 0\]
+
+\[\Rightarrow f_{BE}(\varepsilon) = \frac{1}{e^{(\varepsilon - \mu) / k_BT} - 1}\]
+
+<h3 id="maxwell-boltzmann">Maxwell-Boltzmann</h3>
+
+\[t_i = \frac{(n_i + \omega_i)!}{n_i! \omega_i!} \approx \frac{\omega_i^{n_i}}{n_i!}\]
+
+\[\Rightarrow f_{MB}(\varepsilon) = \frac{1}{e^{(\varepsilon - \mu)/k_BT} + 0}\]
+
+<h2 id="examples">Examples</h2>
+<h3 id="态密度">态密度</h3>
+<p>就怎么找到一个态密度函数.</p>
+
+<ul>
+  <li>一维驻波<br />
+对于一维驻波, 限制在 $a$ 的区域内, 其半波长为 $\frac{\lambda_n}{2} = \frac{a}{n}$. 
+于是其动量为 $p_n = \frac{h n}{2a}$.</li>
+  <li>
+    <p>态密度<br />
+简单的计算是这样的:</p>
+
+\[\omega(\varepsilon)\mathrm{d}\varepsilon = \omega(\boldsymbol{p})\vert\mathrm{d}\boldsymbol{p}\vert\]
+
+    <p>其中, 用这样的假定: 被考察的系统被限制在体积 $V = a^3$ 的一个立方体内. 
+于是 $\vert\mathrm{d}\boldsymbol{p}\vert = (\Delta p_x)(\Delta p_y)(\Delta p_z) = \frac{h^3}{V}$.</p>
+
+    <p>而 $\omega(\boldsymbol{p})$ 的计算可以这样来, 首先假定均匀,
+即动量方向, 或者说波矢指向是球对称的, 那么就可以有:</p>
+
+\[\omega(k)\mathrm{d}k = \frac{V}{\pi^3} \times \frac{1}{8}4\pi k^2\mathrm{d}k\]
+
+    <p>于是最终得到: $\omega(p) = \frac{V p^2}{2\pi^2\hbar^3}$</p>
+
+    <p>(相当于是做了一个 $\omega \rightarrow \boldsymbol{p}$ 的一个换元. 
+对易关系就是 $\varepsilon = \varepsilon(p)$ 这样的一个东西. 当然,
+也不一定就一定是 $p$, 比如根据对称性是空间分布对称, 或者别的什么,
+有一个 $\chi$ 满足均匀分布, 那么就应该可以类似来做. 也就是说, 
+前面的这些操作就是为了将不均匀分布的 $\varepsilon$ 变换成一个均匀的,
+容易计算 $\omega(\chi)$ 的东西. )</p>
+
+    <p>于是就有:</p>
+
+\[\omega(\varepsilon) = V\frac{p^2}{2\pi^2\hbar^3}(\frac{\mathrm{d} \varepsilon}{\mathrm{d} p})^{-1}\]
+
+    <ul>
+      <li>
+        <p>自由气体: $\varepsilon(p) = \frac{p^2}{2m}$</p>
+
+\[\omega(\varepsilon) = \frac{V}{4\pi^2}(\frac{2m}{\hbar^2})^{3/2}\varepsilon^{1/2}\]
+      </li>
+      <li>
+        <p>光子气体 (电辐射): $\varepsilon = p c$</p>
+
+\[\omega(\varepsilon) = V\frac{\varepsilon^2}{2\pi^2\hbar^3c^3}\]
+      </li>
+      <li>
+        <p>固体中的声子: $\varepsilon = p v_S$, 其中 $v_S = \nu \lambda$</p>
+
+        <p>利用 $\omega(\lambda)$ 来计算即可.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<h3 id="dilute-gas">Dilute Gas</h3>
+<p>即不考虑粒子之间的相互作用.</p>
+
+<p>一般的操作步骤:</p>
+<ol>
+  <li>
+    <p>计算 DOS</p>
+
+\[\omega(\varepsilon) = \omega(\zeta)(\frac{\mathrm{d} \varepsilon}{\mathrm{d} \zeta})^{-1}\]
+
+    <p>一般是根据 $\omega(\zeta)$ 均匀分布的东西来计算的.</p>
+    <ul>
+      <li>$\omega(p) = \frac{V p^2}{2\pi^2\hbar^3}$</li>
+      <li>$\omega(\lambda) = \frac{8\pi V}{\lambda^4}$</li>
+    </ul>
+  </li>
+  <li>
+    <p>然后计算得到一个粒子的配分函数</p>
+
+\[Z = \int_0^\infty \omega(\varepsilon) e^{\beta\varepsilon}\mathrm{d}\varepsilon\]
+  </li>
+  <li>于是就知道了对一个系统的配分函数
+    <ul>
+      <li>全同粒子: $Z = [Z_1]^N/N!$</li>
+      <li>非全同粒子: $Z = [Z_1]^N$</li>
+    </ul>
+  </li>
+  <li>然后就能够计算得到 $U, F, S, C_V, \cdots$
+    <ul>
+      <li>$E = \frac{\partial}{\partial\beta} \mathrm{ln}Z$</li>
+      <li>$C_V = (\frac{\partial E}{\partial T})_{V, N}$</li>
+      <li>$F = - k_B T \mathrm{ln} Z_N$</li>
+      <li>$S = -(\frac{\partial F}{\partial T})$</li>
+      <li>$P = - (\frac{\partial F}{\partial V})_{T, N}$</li>
+    </ul>
+  </li>
+</ol>
+
+<ul>
+  <li>
+    <p>理想单原子气体<br />
+根据 $\omega(p)$ 可以计算得到 $\omega(\varepsilon) = \frac{V}{4\pi^2} (\frac{2m}{\hbar^2})^{3/2}\varepsilon^{1/2}$.</p>
+
+    <p>于是可以简单计算得到对一个粒子的配分函数:</p>
+
+\[Z_1 = \int_0^\infty \omega(\varepsilon)e^{\beta\varepsilon}\mathrm{d}\varepsilon = V (\frac{2\pi m}{\beta h^2})\]
+
+    <p>拓展到多粒子的系统:</p>
+
+\[Z = \frac{V^N}{N!} (\frac{2\pi m}{\beta h^2})^{3N/2}\]
+
+    <p>于是就能计算得到</p>
+
+\[E = \frac{\partial}{\partial\beta} \mathrm{ln}Z \Rightarrow = \frac{3}{2}N k_B T\]
+  </li>
+  <li>
+    <p>在单原子的基础上的拓展:<br />
+考虑单个粒子的配分函数, 其为 $Z_1 = \sum e^{\beta(\varepsilon_{trans} + \varepsilon_{rot} + \varepsilon_{vib})} = Z_{trans} \times Z_{rot} \times Z_{vib}$</p>
+
+    <p>于是拓展计算即可. 其中 $Z_{trans}$ 即为单原子平动的结果, 
+而其他的则分别对应转动, 振动的结果:</p>
+    <ul>
+      <li>$Z_{rot}$:
+        <ul>
+          <li>$\omega_J = 2J+1$</li>
+          <li>$\varepsilon_J^{rot} = J(J + 1)\hbar^2$</li>
+        </ul>
+      </li>
+      <li>$Z_{vib}$</li>
+    </ul>
+
+    <p>于是这样还能给出能量在不同温度下的解放</p>
+  </li>
+</ul>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[热力学统计物理 - 统计力学部分 虽然还早, 但是因为这学期网课学得实在是太烂, 不得不在写作业的时候回顾一下.]]></summary></entry><entry><title type="html">GTK in macOS</title><link href="http://0.0.0.0:4000/misc/gtk-in-macos/" rel="alternate" type="text/html" title="GTK in macOS" /><published>2022-12-01T01:58:29+00:00</published><updated>2022-12-01T01:58:29+00:00</updated><id>http://0.0.0.0:4000/misc/gtk-in-macos</id><content type="html" xml:base="http://0.0.0.0:4000/misc/gtk-in-macos/"><![CDATA[<h1 id="gtk-in-macos">GTK in macOS</h1>
+<p>本来应该是要吐槽 macOS 上的环境的搭建很麻烦的.
+然而最终发现只有我才是小丑.</p>
+
+<h2 id="超级简要的介绍">超级简要的介绍</h2>
+<p>GTK 是一个图形库, 可以提供一些 GUI 控件的支持.</p>
+
+<p>不过因为刚开始学, 所以不太会.</p>
+
+<p>在 macOS 上安装 GTK 的库, 可以用 homebrew 来很方便地做到:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>brew <span class="nb">install </span>gtk+3
+</code></pre></div></div>
+
+<p>在安装完毕后, 通过:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pkg-config <span class="nt">--libs</span> <span class="nt">--cflags</span> gtk+-3.0
+</code></pre></div></div>
+
+<p>来检验安装的结果. 这两步应该是比较方便的.</p>
+
+<p>因为 GUI 的这个操作的逻辑有点类似于后端运行, 然后前端渲染的感觉 
+(<a href="https://en.wikipedia.org/wiki/X_Window_System">XServer</a>). 
+所以在 macOS 上, 需要再安装一个 <a href="https://www.xquartz.org">XQuartz</a>,
+来渲染 GUI.</p>
+
+<p>在安装完毕后, 可以使用 <code class="language-plaintext highlighter-rouge">xeyes</code> 来查看效果. 
+如果不出意外的话, 那么你就能够看到一双傻乎乎的眼睛了.</p>
+
+<h3 id="脱裤子放屁的做法">脱裤子放屁的做法</h3>
+<p>不过一开始我以为我搞错了, 于是舍近求远, 干了些蠢事:</p>
+
+<p>在 UTM 虚拟机中安装 Linux (可以参考 
+<a href="/ctf/untitled(2)/">之前的记录</a>).</p>
+
+<p>一个简单的操作可以是这样的:</p>
+
+<ol>
+  <li>安装 Ubuntu Server, 选择 minium 安装</li>
+  <li>安装桌面环境: <code class="language-plaintext highlighter-rouge">sudo apt install -no-install-recommends ubuntu-desktop</code></li>
+  <li>安装 GTK 环境: <code class="language-plaintext highlighter-rouge">sudo apt install libgtk-3-dev</code></li>
+</ol>
+
+<p>然后一个简单的想法就是可以直接在虚拟机里面配置编辑环境了,
+但是我不是很喜欢 Ubuntu 的桌面和操作, 并且也不是很会美化配置,
+于是舍近求远, 选择在 macOS 上通过 XQuartz <code class="language-plaintext highlighter-rouge">ssh -Y</code> 来连接虚拟机,
+通过 SSHF 来访问文件. 方法如下:</p>
+
+<ul>
+  <li>连接虚拟机:
+    <ol>
+      <li>首先安装 XQuartz</li>
+      <li>然后连接到虚拟机: <code class="language-plaintext highlighter-rouge">ssh -Y -p &lt;port-number&gt; &lt;usr&gt;@&lt;host&gt;</code></li>
+      <li>在虚拟机中执行 <code class="language-plaintext highlighter-rouge">xeyes</code> 我们就能够看到一个小眼睛了</li>
+    </ol>
+  </li>
+  <li>SSHF 来挂载远程的硬盘
+    <ol>
+      <li>首先安装 <a href="https://osxfuse.github.io">macfuse</a><br />
+(不过安装的时候要打开 System Kernel Extension)</li>
+      <li>然后安装 <a href="https://osxfuse.github.io">sshfs</a></li>
+      <li>在终端中使用: 
+<code class="language-plaintext highlighter-rouge">sshfs -p &lt;port-number&gt; &lt;usr&gt;@&lt;host&gt;:&lt;remote-path&gt; &lt;local-path&gt;</code>
+来将 <code class="language-plaintext highlighter-rouge">&lt;remote-path&gt;</code> 挂载到本地, 并且映射到 <code class="language-plaintext highlighter-rouge">&lt;local-path&gt;</code> 中,
+其中, <code class="language-plaintext highlighter-rouge">&lt;local-path&gt;</code> 需要是一个空文件夹.</li>
+    </ol>
+  </li>
+</ul>
+
+<p>于是就能够在本地编辑文档并轻松同步了.</p>
+
+<p>(注: 这个方法在最后被放弃了, 因为实在是多此一举. )</p>
+
+<h3 id="emacs-flycheck-配置">Emacs Flycheck 配置</h3>
+<p>在 Emacs 的配置中加入 <code class="language-plaintext highlighter-rouge">flycheck-pkg-config</code> 来提供 header 帮助,
+否则就会在编辑的时候出现恼人的报错提醒.</p>
+
+<div class="language-elisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">use-package</span> <span class="nv">flycheck-pkg-config</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>然后在每个项目中, 使用 <code class="language-plaintext highlighter-rouge">M-x flycheck-pkg-config</code>,
+然后输入对应的 lib, 比如 <code class="language-plaintext highlighter-rouge">gtk+-3.0</code> 来往 
+<code class="language-plaintext highlighter-rouge">flycheck-clang-include-path</code> 等变量中加入项目的库的地址.</p>
+
+<h2 id="编写并编译">编写并编译</h2>
+<p>一个简单的程序如下:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;gtk/gtk.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define WIDTH 300
+#define HEIGHT 200
+</span>
+<span class="kt">int</span> <span class="nf">main</span> <span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">*</span><span class="n">argv</span><span class="p">[])</span> <span class="p">{</span>
+  <span class="n">gtk_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">argc</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">argv</span><span class="p">);</span>
+
+  <span class="n">GtkWidget</span><span class="o">*</span> <span class="n">window</span> <span class="o">=</span> <span class="n">gtk_window_new</span><span class="p">(</span><span class="n">GTK_WINDOW_TOPLEVEL</span><span class="p">);</span>
+  <span class="n">gtk_widget_set_size_request</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="n">WIDTH</span><span class="p">,</span> <span class="n">HEIGHT</span><span class="p">);</span>
+  <span class="n">gtk_window_set_title</span><span class="p">(</span><span class="n">GTK_WINDOW</span><span class="p">(</span><span class="n">window</span><span class="p">),</span> <span class="s">"Basic Example"</span><span class="p">);</span>
+  <span class="n">g_signal_connect</span><span class="p">(</span><span class="n">window</span><span class="p">,</span> <span class="s">"destroy"</span><span class="p">,</span> <span class="n">G_CALLBACK</span><span class="p">(</span><span class="n">gtk_main_quit</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
+  
+  <span class="n">gtk_widget_show_all</span><span class="p">(</span><span class="n">window</span><span class="p">);</span>
+  <span class="n">gtk_main</span><span class="p">();</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>编译:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>gcc main.c <span class="sb">`</span>pkg-config <span class="nt">--libs</span> <span class="nt">--cflags</span> gtk+-3.0<span class="sb">`</span> <span class="nt">-o</span> main
+</code></pre></div></div>
+
+<p>然后运行:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./main
+</code></pre></div></div>
+
+<p>这样我们就能够看到一个最最朴实无华的界面了.</p>
+
+<h2 id="接下来">接下来?</h2>
+<p>这个只是一个记录怎么做的一个小记录. 之后再更新吧.</p>
+
+<h3 id="glade">Glade</h3>
+<p>在我以前用 <a href="http://shoesrb.com">Shoes</a> 写一些简单的小玩具的时候,
+我就幻想过能否直接有一个程序能够所见即所得地编辑 GUI. 
+因为那样真的超级方便.</p>
+
+<p>而 Glade 的操作基本上就是干的就是这样的事情. 在 macOS 上:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>brew <span class="nb">install </span>glade
+</code></pre></div></div>
+
+<p>安装完后, 使用:</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>glade
+</code></pre></div></div>
+
+<p>来运行. 可以看到一个比较简约的界面:</p>
+
+<p><img src="/_img/pieces/glade.png" alt="glade.png" title="不过我讨厌这个设计出现在我的电脑上, 不是因为其不好看, 我觉得还是很好看的, 就是 UI 和我的电脑 macOS 不匹配. " /></p>
+
+<p>新建文件后, 可以按照: 搭建窗口 - 选择窗口布局 - 添加元件的一个逻辑来编辑.</p>
+
+<ol>
+  <li>搭建窗口: 选择 Toplevel - GtkWindow 可以创建一个窗口.</li>
+  <li>选择窗口布局: 在创建的窗口下, 选择 Containers - GtkFixed 然后添加到刚创建的窗口中</li>
+  <li>添加元件: 通过 Control 或者 Display 的选项下拉菜单来添加元件</li>
+</ol>
+
+<p>于是就能够得到嵌套关系:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>+--- GtkWindow
+ +--- GtkFixed
+  +--- GtkButton
+  +--- GtkLabel
+  +--- ...
+</code></pre></div></div>
+
+<p>对于每个关系, 都能够通过右侧的属性菜单来编辑属性, 设置 <code class="language-plaintext highlighter-rouge">id</code>. 
+其中需要注意的两点:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">id</code> 是用来在程序中访问对应元素的名字</li>
+  <li><code class="language-plaintext highlighter-rouge">signal</code> 是让该元件聆听特定信号的事件, 
+类似于 javascript 中的 <code class="language-plaintext highlighter-rouge">addEventListener</code>.</li>
+</ul>
+
+<p>在编辑好后保存为 <code class="language-plaintext highlighter-rouge">.glade</code> 文件. 编写代码:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="n">GtkBuilder</span> <span class="o">*</span><span class="n">builder</span> <span class="o">=</span> <span class="n">gtk_builder_new</span><span class="p">();</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">gtk_builder_add_from_file</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="s">"gui.glade"</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Error. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="n">GtkWidget</span> <span class="o">*</span><span class="n">welcome_window</span> <span class="o">=</span> <span class="n">GTK_WIDGET</span><span class="p">(</span><span class="n">gtk_builder_get_object</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="s">"welcome_window"</span><span class="p">));</span>
+  <span class="n">GtkWidget</span> <span class="o">*</span><span class="n">quit_button</span> <span class="o">=</span> <span class="n">GTK_WIDGET</span><span class="p">(</span><span class="n">gtk_builder_get_object</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="s">"quit_button"</span><span class="p">));</span>
+
+  <span class="n">g_signal_connect</span><span class="p">(</span><span class="n">welcome_window</span><span class="p">,</span> <span class="s">"destroy"</span><span class="p">,</span> <span class="n">G_CALLBACK</span><span class="p">(</span><span class="n">gtk_main_quit</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
+  <span class="n">g_signal_connect</span><span class="p">(</span><span class="n">quit_button</span><span class="p">,</span> <span class="s">"clicked"</span><span class="p">,</span> <span class="n">G_CALLBACK</span><span class="p">(</span><span class="n">on_quit_button_clicked</span><span class="p">),</span> <span class="nb">NULL</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>即可用来控制程序了.</p>
+
+<p>(不过对于我要做的东西来说, 可能有点没用, 不如自己直接去写. 
+并且在我的 mac 上, 不知道是不是因为使用不当, 闪退并且操作不太舒服.
+最坑爹的事情是, 文档太少了, 所以学得不太明白. )</p>
+
+<p>所以换回之前脱裤子放屁的那个做法.</p>
+
+<p>主要参考的连接:</p>
+<ul>
+  <li><a href="https://qiita.com/kojix2/items/d9da8e08757dcc6b1a7d">【Ruby】10分でGladeを使って作るRuby/GTK3 GUIアプリ</a></li>
+  <li><a href="https://www.nslabs.jp/glade.rhtml">Glade 3 でGUI開発</a></li>
+  <li><a href="https://web.archive.org/web/20210507031457/https://prognotes.net/gtk-glade-c-programming/">GTK Glade C Programming Tutorial</a></li>
+</ul>
+
+<h3 id="handmake-gtk-code">Handmake GTK Code</h3>
+<p>这一部分主要是参考了 <a href="http://iim.cs.tut.ac.jp/member/sugaya/GTK+/files/gtkbook-20210127.pdf">入門 GTK+</a> 以及 <a href="https://zetcode.com/gui/gtk2/">ZetCode</a>
+(为什么是日语的呢? 也不是我想学, 而是那个教程写得实在是傻瓜, 
+几乎把所有的操作都截图了. 反正只看代码, 看看截图, 大概就好了. 
+而后面的是一个英文的教程. 不过有一个中文的 <a href="https://www.kancloud.cn/apachecn/zetcode-zh/1950310">翻译</a>)</p>
+
+<h2 id="参考">参考</h2>
+<ul>
+  <li><a href="https://askubuntu.com/questions/53822/how-do-you-run-ubuntu-server-with-a-gui">How do you run Ubuntu Server with a GUI?</a></li>
+  <li><a href="https://stackoverflow.com/questions/20098862/how-to-install-gtk-on-osx-for-use-with-g-gcc-compiler">How to install gtk on OSX for use with g++/gcc compiler</a></li>
+  <li><a href="https://github.com/Wilfred/flycheck-pkg-config">flycheck-pkg-config Github</a></li>
+  <li><a href="https://jitaku.work/it/category/gui/gtk-plus/">GTK+3入門(C言語)</a></li>
+  <li><a href="http://iim.cs.tut.ac.jp/member/sugaya/GTK+/files/gtkbook-20210127.pdf">入門 GTK+</a></li>
+</ul>]]></content><author><name></name></author><category term="misc" /><summary type="html"><![CDATA[GTK in macOS 本来应该是要吐槽 macOS 上的环境的搭建很麻烦的. 然而最终发现只有我才是小丑.]]></summary></entry><entry><title type="html">十一月二十六日晴</title><link href="http://0.0.0.0:4000/pieces/i-wandering-wangdering/" rel="alternate" type="text/html" title="十一月二十六日晴" /><published>2022-11-26T04:34:18+00:00</published><updated>2022-11-26T04:34:18+00:00</updated><id>http://0.0.0.0:4000/pieces/i-wandering-wangdering</id><content type="html" xml:base="http://0.0.0.0:4000/pieces/i-wandering-wangdering/"><![CDATA[<h1 id="十一月二十六日晴">十一月二十六日晴</h1>
+<p>杂记, 如是而已.</p>
+
+<h2 id="晴">晴</h2>
+<p>封又解封, 在痛苦的摆烂中看见晴朗的天空, 
+太阳并没有多么耀眼, 高对比度, 是这样的. 
+于是写了一些假的故事, 聊以自慰. 
+继续走着看得见终点的路, 大概?</p>
+
+<h2 id="封又解封">封又解封</h2>
+<p>封寝室只封了昨天一天, 今天从摆烂的被窝里将自己腐烂的身体支棱起来, 
+突然发现没准还是封着舒适, 至少给了我们一个不得不停下来的理由.</p>
+
+<p>只是这个理由可能并没有多么强大. 是晚上的活动, 明天的课程, 
+将要来到的作业, 未来的规划, 家里的事情, 学校的事情, 学习, 
+考试, 那么还有论文, 读得怎么样了? 担心, 完成了么? 去做了么?</p>
+
+<p>赶 ddl 的人们惊异地说: 这是什么提前完成. 突然想到我的奶奶,
+熟柿子的时候总是舍不得吃, 除非烂了或是快烂了才吃掉它们, 
+等着留给别人吃 – 可别人在哪里呢? 他们都散在外面守着自己的烂柿子吧.</p>
+
+<p>好像确实有这样的说法, 人要有长远的未来规划, 这么看倒是一种奢望了. 
+那难道是活在当下么? 好像也是一种奢望. 好像大家都是穿越者, 
+战战兢兢地活在一瞬后的未来: 就像是科幻小说里面的俗套剧情一样,
+为了闭合因果链, 所以回到过去遵守因果.</p>
+
+<p>又突然想到所谓的克苏鲁神话, 掌握科技的人们在面对本应该确定的东西的时候,
+却是那么的无助和弱小的恐惧. 以及会让人疯掉的三体里面的那个智子.</p>
+
+<p>不过我对克苏鲁和智子的恐怖之处并不感到特别多的同感. 说到底, 
+前者不过是新的一种对科学的迷信在新的体系下的崩盘, 
+而后者则是做实验的人没有控制环境变量.</p>
+
+<p>哦, 还是挺恐怖的. 对科学力量的迷信, 科学又不是万能的. 
+以及环境变量也并不容易控制. (真要说我做的实验, 
+那环境变量估计是完全没法看了. ) 如果再有一些明明发生了环境变量的改变, 
+却仍要求做出一样的结果的实验的对 “科学力量” 必定胜利的迷信的事情, 
+那我觉得最后做实验的科研人员以及长久以来的科学定律, 
+总有一个要被击垮.</p>
+
+<h2 id="痛苦的摆烂">痛苦的摆烂</h2>
+<p>其实并不是摆烂让人痛苦, 而是不知道该摆什么而痛苦.</p>
+
+<p>突然想到一个故事, 赛博朋克的世界里面并没有什么机械飞升, 
+反而是人们为了工作出卖了自己的身体, 
+连外生殖器都被替换为工作的机械, 除了电击神经, 无法享乐.</p>
+
+<p>虽然很扯, 但是看看我的长辈们, 突然又心生恐惧. 
+然而我并不知道该摆什么, 囿于不决中, 时间它又悄悄地溜走, 
+重新回到工作的时刻.</p>
+
+<h2 id="晴朗的天空">晴朗的天空</h2>
+<p>做核酸的时候, 楼下排队, 太阳很亮, 却很温暖. 干冷的风, 
+吹拂裤管, 不太寒冷, 十分自然.</p>
+
+<p>饱和度很高, 对比度很强, 枝叶闪亮, 摇曳晃动, 寝室的影子,
+打在树上, 黄色的光, 橙色的叶, 棕褐色的枝干, 蓝色的天. 
+黒灰的路面上, 是低沉的引擎声丝丝地响着, 白色的小轿车, 
+后备箱开, 男人关掉了引擎, 从车上下来, 小轿车轻轻的振动, 
+那个男人接过了试管袋.</p>
+
+<p>前面的人排成列, 后面的人排成列, 中间的我是一个, 
+看着一个人走过, 看着一个人走来, 看着一个人伫立, 
+看着一个人骑车载着小孩, 有保暖防风大袄裹挟.</p>
+
+<p>帮检测员打开了试管盖子, 被扫描了身份证件, 张嘴, 闭嘴, 
+带上口罩. 重新回到了寝室里面, 故事在此回到流水账 – 
+是毫无意义的流水账. 但是流水仿佛也会静止, 
+这下连流水账的意义都没有了.</p>
+
+<h2 id="太阳并没有多么耀眼">太阳并没有多么耀眼</h2>
+<p>太阳的温度很高, 太阳的亮度很强, 我们在它的照耀之下.</p>
+
+<h2 id="高对比度">高对比度</h2>
+<p>非黒及白, 二值化算法</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="no">ARGV</span><span class="p">.</span><span class="nf">empty?</span>
+  <span class="nb">puts</span> <span class="s2">"Usage: + image-file-path"</span>
+  <span class="nb">puts</span> <span class="s2">"+ image-file-path + threshold (default 135)"</span>
+  <span class="nb">exit</span>
+<span class="k">end</span>
+ 
+<span class="nb">require</span> <span class="s1">'rmagick'</span>
+<span class="kp">include</span> <span class="no">Magick</span>
+ 
+<span class="n">binarization</span> <span class="o">=</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">color</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">mid</span> <span class="o">=</span> <span class="p">((</span><span class="n">color</span><span class="p">.</span><span class="nf">red</span> <span class="o">/</span> <span class="mi">257</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">color</span><span class="p">.</span><span class="nf">green</span> <span class="o">/</span> <span class="mi">257</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">color</span><span class="p">.</span><span class="nf">blue</span> <span class="o">/</span> <span class="mi">257</span><span class="p">))</span> <span class="o">/</span> <span class="mi">3</span>
+  <span class="k">return</span> <span class="n">mid</span> <span class="o">&gt;</span> <span class="n">threshold</span> <span class="p">?</span> <span class="s2">"#fff"</span> <span class="p">:</span> <span class="s2">"#000"</span>
+<span class="p">}</span>
+ 
+<span class="n">file_path</span> <span class="o">=</span> <span class="no">ARGV</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">threshold</span> <span class="o">=</span> <span class="p">(</span><span class="no">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">||</span> <span class="mi">135</span><span class="p">).</span><span class="nf">to_i</span>
+<span class="n">img</span> <span class="o">=</span> <span class="no">Image</span><span class="p">.</span><span class="nf">read</span><span class="p">(</span><span class="n">file_path</span><span class="p">).</span><span class="nf">first</span>
+ 
+<span class="p">(</span><span class="mi">0</span><span class="o">...</span><span class="n">img</span><span class="p">.</span><span class="nf">rows</span><span class="p">).</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+  <span class="p">(</span><span class="mi">0</span><span class="o">...</span><span class="n">img</span><span class="p">.</span><span class="nf">columns</span><span class="p">).</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">j</span><span class="o">|</span>
+    <span class="n">color</span> <span class="o">=</span> <span class="n">img</span><span class="p">.</span><span class="nf">pixel_color</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span>
+    <span class="n">img</span><span class="p">.</span><span class="nf">pixel_color</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">binarization</span><span class="p">[</span><span class="n">color</span><span class="p">,</span> <span class="n">threshold</span><span class="p">])</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+ 
+<span class="n">img</span><span class="p">.</span><span class="nf">write</span><span class="p">(</span><span class="s2">"output.png"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>我有点想要学学数字图像处理, 但是最近都没有什么时间和动力. 
+只能做一些像这样的简单的东西.</p>
+
+<p><img src="/_img/pieces/output-of-girl-lying-on-the-desk.png" alt="output" title="这张图片可以在 pixiv 上找到. 不过对我来说, 应该谈不上什么侵权不侵权的问题. " /></p>
+
+<h2 id="是这样的">是这样的</h2>
+<p>其实我写了一半之后发现自己的精神状态可能并没有像文字中表现得那么不堪. 
+突然想到, 这样的傻逼文字就像是中二病患者, 只不过我的故事里面, 
+没有什么恶龙和魔王, 勇者和公主, 魔法大剑和骑士精神罢了.</p>
+
+<blockquote>
+  <p>小时不识月, 为赋新词, 强将月说愁.</p>
+</blockquote>
+
+<h2 id="假的故事">假的故事</h2>
+<p>也许有时候大家只是缺一个停下来的理由. 至少我是这么想的.</p>
+
+<p>外面是热火朝天, 而我在打算关闭引擎.</p>
+
+<p>也许这样说有点突兀, 但是现在我正在一场山地越野之中. 
+虽然大家都是高手, 可难耐昨夜大雨如注, 赛方却道一切依旧, 
+知否知否, 应是泥泞污臭, 可奈何观众心向往之, 可谓众志成城,
+山一般的铁一样的城墙, 倒也是人心所向, 为人民之意志了.</p>
+
+<p>所以我们出发了, 倒也不是什么为了胜利的荣光, 只是挣钱吃饭,
+不想揣摩人心向背而已.</p>
+
+<p>于是不出意外的话, 是卡在这泥泞之中了. 只是奇怪的是, 
+没人停下来把车子挖出来, 反倒是所有人都给足了马力想从泥土里出来. 
+泥水点点, 迸溅起几多米, 相机转播, 人潮为之呐喊助威, 好生热血.</p>
+
+<p>于是我关闭了引擎, 轰鸣声呜咽了下去, 却发现了其他人与我仍是相对静止.</p>
+
+<h2 id="聊以自慰">聊以自慰</h2>
+<p>油脂, 是有味道的一种臭味.</p>
+
+<p>每次她从理发店里回来都是这样一种臭味. 小孩子的鼻子虽然不太灵敏, 
+但是对这般离奇的气味, 也是毫无抵抗之力的. 
+所以我讨厌在这种时候待在屋子里.</p>
+
+<p>然而, 常常是在中午的下午, 午觉在朦朦胧胧中结束, 
+仿佛是被一只手捏住了鼻子, 空气中的气息让人在缺氧的梦醒之时异常难受.</p>
+
+<p>然后我醒了.</p>
+
+<p>从寝室的枕头上爬起, 口水润湿了枕套, 淡淡的有一股油脂的味道.</p>
+
+<p>于是我呕吐了, 吐在恶臭油脂的枕套上, 酸味也盖不住油脂的臭味. 
+面红耳赤, 油脂受热烧了起来. 室友连忙拿起洗发液喷射灭火, 
+嗯, 清爽去屑控油配方, 然而火焰越烧越大, 这个时候大家已经不在担心着火了,
+却想起了未来.</p>
+
+<p>于是我们坐下来讨论起了责任分配, 讨论起了灾害损失, 
+然后发现上课的时间和 ddl 将至, 于是重新坐回了座位, 
+打开电脑登上了网课, 同时开了小窗写着论文, 
+任凭火焰的噼啪声被报警器掩盖, 导员在 QQ 里私戳着做核酸.</p>
+
+<p>咳咳.</p>
+
+<p>我又醒了.</p>
+
+<p>在澡堂, 洗头. 柠檬香型二十八块整微信支付. 当月进账五十八, 
+系疫情发货不了的退款. 聊以自慰, 这玩意写着去屑, 
+大抵是管用的. 头发随着水流下, 冲到下水道里的沟中.</p>
+
+<p>水停了. 超时的澡堂关闭了.</p>
+
+<p>我又醒了.</p>
+
+<p>想起曾经的同桌, 脸很软, 眼神很不爽, 重要的是有一股牛奶的香味. 
+有三头六臂, 学习很好, 难望项背. 忽地有一天打算遁入空门, 
+于是交了申请书后便消失从学校里消失了. 于是一段时间再未相见.</p>
+
+<p>一次学校春游, 遂算好排列组合, 就差没叮嘱雷公电母莫要不识抬举. 
+于是悄悄地在边上一看, 只觉其生活甚是自然, 不愧是超脱达观之人,
+遂心生自卑之情: 我这样的俗人, 只知些什么加减乘除, 之乎者也,
+那能够与其高攀?</p>
+
+<p>遂悄悄退去, 从边门而出, 未料及山路险陡, 坠而落.</p>
+
+<p>于是我又又又醒了.</p>
+
+<p>在这里打字, 编写着神经病的文章, 聊以自慰.</p>
+
+<h2 id="看得见终点的路">看得见终点的路</h2>
+<p>其实我很喜欢王小波, 他的书和故事感觉有一种邪门歪道的美感. 
+倒也不是因为他的书里面有一些让修道院里的孩子飘飘的刺激描写 –
+那些东西, 早就在美国的小说里面到处都是了. 
+而是因为他的书里面的故事有一种邪门的趣味性.</p>
+
+<p>就好像是一条看得见终点却又看不见终点的路. 在注定要走的路上,
+走出了一条奇怪的路.</p>
+
+<h2 id="大概">大概?</h2>
+<p>大概就这样吧. 再写下去也不知道写什么, 本来就是一篇流水账神经病文章, 
+结果写成了这个鸟样子.</p>
+
+<p>故事基本半真半假, 瞎写的部分为主, 真的部分较少. 
+毕竟百无聊赖, 活在精神的时代.</p>]]></content><author><name></name></author><category term="pieces" /><summary type="html"><![CDATA[十一月二十六日晴 杂记, 如是而已.]]></summary></entry><entry><title type="html">Boook: 制作自己的 LaTeX 文档风格</title><link href="http://0.0.0.0:4000/misc/make-my-latex-class/" rel="alternate" type="text/html" title="Boook: 制作自己的 LaTeX 文档风格" /><published>2022-11-03T14:56:21+00:00</published><updated>2022-11-03T14:56:21+00:00</updated><id>http://0.0.0.0:4000/misc/make-my-latex-class</id><content type="html" xml:base="http://0.0.0.0:4000/misc/make-my-latex-class/"><![CDATA[<h1 id="boook-制作自己的-latex-文档风格">Boook: 制作自己的 LaTeX 文档风格</h1>
+<p>关于我为什么制作 LaTeX 文档 Class? 好吧, 其实就是闲的蛋疼. 
+虽然网上已经有很多很好看的现成的 LaTeX 类了. 
+(比如 <a href="https://github.com/ElegantLaTeX/ElegantBook">Elgantbook</a>,
+后面的文章很多是建立在这个的基础上的. 另一个值得参考的是
+<a href="http://tutex.tug.org/pracjourn/2005-4/hefferon/hefferon.pdf">这个</a>).
+以及, LaTeX 的一些<a href="http://latexref.xyz/index.html">文档</a> 等等, 
+都是很好的参考.</p>
+
+<p>但是作为一个技术, 学了总是不会吃亏. 
+(虽然学的这个行为就已经是吃亏本身了. )</p>
+
+<p>不过好在网上这类的教程感觉都不是很详细, 大多数的教程都是教你如何下载包, 
+使用现成的包和代码. 虽然这样很方便, 也很新手友好 (大概). 但是, 
+想要更进一步就有一些为难了.</p>
+
+<p>(Tips: 一个很好的方法就是看别人的代码, 然后改. 
+虽然我看了代码之后发现了一个很痛苦的事情: 那就是, 
+可能是因为我的境界不够, 所以会觉得别人的代码很混乱吧… 
+我tmd根本看不懂啊!!! )</p>
+
+<h2 id="基本">基本</h2>
+<p>虽说是自己写, 但是也不全然是自己写, 更像是写一个整合器, 
+把别人的已经写好的代码重新调用, 然后按照自己喜欢的风格来, 
+最后得到一个新的结果.</p>
+
+<p>(Note: 虽说是基本, 但是默认已经学会使用简单的 LaTeX 操作了, 
+毕竟这些在网上到处都有. )</p>
+
+<h3 id="class-的基本结构">Class 的基本结构</h3>
+<p>我的目标是要做到能够在写文档的时候, 只需要:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\documentclass</span><span class="na">[lang=cn]</span><span class="p">{</span>boook<span class="p">}</span>
+<span class="k">\title</span><span class="p">{</span>the Boook<span class="p">}</span>
+<span class="nt">\begin{document}</span>
+I am Lucky. 
+<span class="nt">\end{document}</span>
+</code></pre></div></div>
+
+<p>就能够有一个很好的主题. 这个时候, <code class="language-plaintext highlighter-rouge">document</code> 制定了文档的类型, 
+也就是我要写的 Class. 一般它会被存放在 <code class="language-plaintext highlighter-rouge">.cls</code> 文件里面.</p>
+
+<p>而一个 <code class="language-plaintext highlighter-rouge">.cls</code> 文件, 其开头类似于:</p>
+
+<ul>
+  <li>Identification: 声明自己是什么</li>
+</ul>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\NeedsTeXFormat</span><span class="p">{</span>LaTeX2e<span class="p">}</span>
+<span class="k">\ProvidesClass</span><span class="p">{</span>boook<span class="p">}</span>[2022/10 ver.book boook]
+
+<span class="c">% codes...</span>
+</code></pre></div></div>
+
+<p>大概就是在说: 我的文件需要的 <code class="language-plaintext highlighter-rouge">TeX</code> 版本是 <code class="language-plaintext highlighter-rouge">LaTeX2e</code>, 
+  我的类名称叫做 <code class="language-plaintext highlighter-rouge">boook</code>. 目前的版本是 <code class="language-plaintext highlighter-rouge">2022/10</code> 的 <code class="language-plaintext highlighter-rouge">ver.book</code>, 
+  以及对应的一些说明.</p>
+
+<blockquote>
+  <p>Note: 有一个非常奇怪且离谱的错误, 就是在后面加了 <code class="language-plaintext highlighter-rouge">[]</code> 
+之后, 编译可能会通不过, 这个时候你可以试试看删掉它. 
+虽然一开始我确实出现过了这个问题.<br />
+你可以参考这个 <a href="https://tex.stackexchange.com/questions/274650/missing-inserted-for-ifnum">问题(stackexchange)</a></p>
+</blockquote>
+
+<ul>
+  <li>Preliminary declarations: 加载 Package 等等的东西, 
+定义命令和其他的一堆可选项. 比如 <code class="language-plaintext highlighter-rouge">LoadClass</code>, <code class="language-plaintext highlighter-rouge">RequirePackage</code>.</li>
+  <li>Options: 定义一些类的选项, 比如 <code class="language-plaintext highlighter-rouge">DeclareOption</code> 之类的.</li>
+  <li>更多的定义, 比如一些使用的操作, <code class="language-plaintext highlighter-rouge">newcommand</code>, <code class="language-plaintext highlighter-rouge">renewcommand</code>.</li>
+</ul>
+
+<p>然后接下去就要对这个类里面有什么进行一个说明. (当然, 是用代码).</p>
+
+<h3 id="简单的代码">简单的代码</h3>
+<p>一般来说, 代码好像并不会特别多和特别复杂. 唯一麻烦的地方就是, 
+LaTeX 的代码特别没有美感. 写起来非常的让人心灰意冷. 
+代码上没有标识符和注记符, 格式和形式上也有特别麻烦的要求…</p>
+
+<p>所以就只需要知道一些最基本的代码, 然后剩下的就在实际使用中看着办吧:</p>
+
+<ul>
+  <li>加载已经写好的 Package, 类似于 Ruby 的 <code class="language-plaintext highlighter-rouge">require 'gem_name'</code>.<br />
+对于调用的 Package, 可以在 <a href="https://ctan.org">CTAN</a> 上找文档.</li>
+</ul>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\RequirePackage</span><span class="p">{</span>PackageName<span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>定义新的命令, 以及重新改变原本的命令.</li>
+</ul>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\newcommand</span><span class="p">{</span><span class="k">\commandName</span><span class="p">}</span>[numberOfArgs]<span class="p">{</span>code<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\commandName</span><span class="p">}{</span>code<span class="p">}</span>
+</code></pre></div></div>
+
+<ul>
+  <li>条件判断, 名字里面一般带一个 <code class="language-plaintext highlighter-rouge">if</code>…</li>
+  <li>啊, 好麻烦啊, 还是直接开始吧.</li>
+</ul>
+
+<h2 id="设计">设计</h2>
+<p>嘛, 设计才是老大. 虽然我不是很懂设计, 但是我想要一个什么垃圾东西, 
+多少心里还是有点数的.</p>
+
+<p><img src="/_img/pieces/boook.png" alt="boook" title="好吧, 这个设计一点也不出彩, 甚至很平庸, 不如直接用现成的. " /></p>
+
+<p>至于之后的一些细节就留给之后吧.</p>
+
+<h2 id="开始">开始</h2>
+<p>因为我也没有见过很好的代码结构(阅历太少), 所以只能够按自己的规范来了, 
+自己胡乱建立一个规范结构, 让之后的我再修改吧. (加油吧, 之后的我. )</p>
+
+<p>于是我的结构是这样的:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">% ----- header -----</span>
+<span class="k">\NeedsTeXFormat</span><span class="p">{</span>LaTeX2e<span class="p">}</span>
+<span class="k">\ProvidesClass</span><span class="p">{</span>boook<span class="p">}</span>[2022/10 version.book boook]
+
+<span class="c">% ----- load class -----</span>
+<span class="k">\LoadClass</span><span class="p">{</span>book<span class="p">}</span> <span class="c">% use book as default</span>
+
+<span class="c">% ----- requirements -----</span>
+<span class="k">\RequirePackage</span><span class="p">{</span>
+  kvoptions, <span class="c">% for key value option</span>
+  etoolbox,  <span class="c">% for more function ablilities</span>
+  <span class="c">% more packages</span>
+<span class="p">}</span>
+
+<span class="c">% ----- options -----</span>
+
+<span class="c">% ----- commands -----</span>
+
+</code></pre></div></div>
+
+<p>这里载入了两个 Package, <code class="language-plaintext highlighter-rouge">kvoptions</code> 和 <code class="language-plaintext highlighter-rouge">etoolbox</code>, 
+用于简化配置的书写, 比较方便. (分别在 CTAN 上的链接: 
+<a href="https://ctan.org/pkg/kvoptions">kvoptions</a>, 
+<a href="https://ctan.org/pkg/etoolbox">etoolbox</a>)</p>
+
+<p>并且使用 <code class="language-plaintext highlighter-rouge">book</code> 类 (latex 自带的类型) 来提供默认的缺省, 
+可以不必所有都自己设置 (不然就太累了. )</p>
+
+<blockquote>
+  <p>Note: 关于 <code class="language-plaintext highlighter-rouge">book</code> 类, 
+可以去查看在 CTAN 上的<a href="https://mirror-hk.koddos.net/CTAN/macros/latex/base/classes.pdf">文档</a>. 
+看了那个文档之后, 我只能说下面的都可以不用看了, 
+我写的都是渣渣, 不如直接看官方文档, 会比较规范上手.</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: 将 <code class="language-plaintext highlighter-rouge">LoadClass</code> 的类提前到 RequirePackages 的前面, 
+是因为像我这样写 RequirePackage 的话, 没有给这些包默认值,
+如果在 LoadClass 前面调用包就会出现闹人的报错提醒: 
+<code class="language-plaintext highlighter-rouge">! Package geometry Error: \paperheight (0.0pt) too short.</code>.
+所以让它们闭嘴的最好办法就是提前给一个预设, 
+之后的 code 部分就是在预设上进行编辑和拓展了.</p>
+</blockquote>
+
+<p>接下来就是 <code class="language-plaintext highlighter-rouge">option</code> 的设置, 因为经常会看到的:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\documentclass</span><span class="na">[lang=cn, math]</span><span class="p">{</span>boook<span class="p">}</span>
+</code></pre></div></div>
+
+<p>通过方括号传递的参数可以一定程度上修改文档的属性. 
+虽然一开始不应该添加太多的选项, (因为不方便编写), 
+但是实际中就是有这么多的选项和需求…</p>
+
+<p>不过前面导入的两个 Package 中的 <code class="language-plaintext highlighter-rouge">kvoptions</code> 可以帮忙简化设置, 
+(虽然也没有简化到哪里去就是了).</p>
+
+<p>比如说要对多语种进行一个支持, <code class="language-plaintext highlighter-rouge">lang=en</code>, 或者是
+<code class="language-plaintext highlighter-rouge">lang=cn</code> 都可以. 那么就可以设置:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">% ----- options -----</span>
+<span class="k">\SetupKeyvalOptions</span><span class="p">{</span>                        <span class="c">% set up kvoptions</span>
+  family=BOOOK, prefix=BOOOK@, setkeys=<span class="k">\kvsetkeys</span><span class="p">}</span>
+<span class="k">\newcommand</span><span class="p">{</span><span class="k">\ekv</span><span class="p">}</span>[1]<span class="p">{</span><span class="k">\kvsetkeys</span><span class="p">{</span>BOOOK<span class="p">}{</span>#1<span class="p">}}</span> <span class="c">% quick binding</span>
+
+<span class="k">\DeclareStringOption</span><span class="na">[en]</span><span class="p">{</span>lang<span class="p">}</span>              <span class="c">% {default}{name}</span>
+<span class="k">\DeclareVoidOption</span><span class="p">{</span>en<span class="p">}{</span><span class="k">\ekv</span><span class="p">{</span>lang=en<span class="p">}}</span>       <span class="c">% valid k-v pairs</span>
+<span class="k">\DeclareVoidOption</span><span class="p">{</span>cn<span class="p">}{</span><span class="k">\ekv</span><span class="p">{</span>lang=cn<span class="p">}}</span>
+
+<span class="k">\DeclareDefaultOption</span><span class="p">{</span>
+  <span class="k">\PassOptionsToClass</span><span class="p">{</span><span class="k">\CurrentOption</span><span class="p">}{</span>book<span class="p">}}</span>
+<span class="k">\ProcessKeyvalOptions*\relax</span>
+</code></pre></div></div>
+
+<p>第一个命令初始化了 <code class="language-plaintext highlighter-rouge">kvoptions</code> 的操作, 
+而第二个命令为 <code class="language-plaintext highlighter-rouge">kvoptions</code> 里面的 <code class="language-plaintext highlighter-rouge">kvsetkeys</code> 命令做了一个快捷链接. 
+(就是为了方便输入而已, 因为名字太长了. )</p>
+
+<p>接下来是对一组 key - value 来进行一个设置, 这里通过 <code class="language-plaintext highlighter-rouge">DeclareVoidOption</code>
+来设置有效的输入对, 用 <code class="language-plaintext highlighter-rouge">DeclareStringOption</code> 来声明默认值.</p>
+
+<p>最后的两个代码语句是用来告诉程序, Option 的设置已经完成了, 
+接下去就要把已经设置好的东西载入到 <code class="language-plaintext highlighter-rouge">book</code> 类中. 
+(因为是在基本的类进行的拓展开发)</p>
+
+<p>这样在后面的代码部分就能够通过逻辑判断来根据不同的输入来改变代码逻辑:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">% ----- code -----</span>
+<span class="k">\ifdefstring</span><span class="p">{</span><span class="k">\BOOOK</span>@lang<span class="p">}{</span>cn<span class="p">}{</span>
+  <span class="c">% codes</span>
+<span class="p">}{</span><span class="k">\relax</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>因为使用了 <code class="language-plaintext highlighter-rouge">kvoptions</code> 包, 所以访问变量的时候通过 <code class="language-plaintext highlighter-rouge">\BOOOK@lang</code>
+就能够找到那个变量. 差不多这样. 那么继续.</p>
+
+<blockquote>
+  <p>Note: 在进一步之前的一个小提示.<br />
+为了方便你确认自己真的是修改了, 并且修改对了代码, 一个简单的做法就是: 
+写一个 <code class="language-plaintext highlighter-rouge">.tex</code> 文件然后用它来调用你的 <code class="language-plaintext highlighter-rouge">.cls</code> 文件. 然后看看效果.<br />
+不过高手估计不会这么做, 毕竟太蠢了, 没有技术含量.</p>
+</blockquote>
+
+<h3 id="a-little-tricky-chinese">A Little Tricky Chinese</h3>
+<p>乐, 对中文这样的字符输入, 实际上并不太友好, 需要稍微设置一下才能够好用. 
+那么对于中文, 需要做的就是引入 <code class="language-plaintext highlighter-rouge">ctex</code>
+(<a href="https://ctan.org/pkg/ctex">CTAN</a>) 来支持中文的输入:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\ifdefstring</span><span class="p">{</span><span class="k">\BOOOK</span>@lang<span class="p">}{</span>cn<span class="p">}{</span>
+  <span class="k">\RequirePackage</span><span class="na">[UTF8, scheme=plain]</span><span class="p">{</span>ctex<span class="p">}</span>
+  <span class="k">\xeCJKsetup</span><span class="p">{</span>AutoFakeBold=true<span class="p">}</span>
+<span class="p">}{</span><span class="k">\relax</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>这里通过 <code class="language-plaintext highlighter-rouge">schem=plain</code> 的方式来把 <code class="language-plaintext highlighter-rouge">ctex</code> 中自带的信息给去掉了,
+(为了下一步能够更好地自定义. )</p>
+
+<p>接下来设置相应的字体 (我对字体没什么感觉, 所以用的就是 ctex
+中的设置), 或者可以用 <code class="language-plaintext highlighter-rouge">fontset=none</code> 来删除 ctex 的预设值, 
+然后自己写字体对应关系. 下面是 Elegantbook 中的一段设置:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\RequirePackage</span><span class="na">[UTF8, scheme=plain, fontset=none]</span><span class="p">{</span>ctex<span class="p">}</span>
+<span class="k">\setCJKmainfont</span><span class="na">[BoldFont={FZHei-B01},ItalicFont={FZKai-Z03}]</span><span class="p">{</span>FZShuSong-Z01<span class="p">}</span>
+<span class="k">\setCJKsansfont</span><span class="na">[BoldFont={FZHei-B01}]</span><span class="p">{</span>FZKai-Z03<span class="p">}</span>
+<span class="k">\setCJKmonofont</span><span class="na">[BoldFont={FZHei-B01}]</span><span class="p">{</span>FZFangSong-Z02<span class="p">}</span>
+<span class="k">\setCJKfamilyfont</span><span class="p">{</span>zhsong<span class="p">}{</span>FZShuSong-Z01<span class="p">}</span>
+<span class="k">\setCJKfamilyfont</span><span class="p">{</span>zhhei<span class="p">}{</span>FZHei-B01<span class="p">}</span>
+<span class="k">\setCJKfamilyfont</span><span class="p">{</span>zhkai<span class="p">}</span>[BoldFont=<span class="p">{</span>FZHei-B01<span class="p">}</span>]<span class="p">{</span>FZKai-Z03<span class="p">}</span>
+<span class="k">\setCJKfamilyfont</span><span class="p">{</span>zhfs<span class="p">}</span>[BoldFont=<span class="p">{</span>FZHei-B01<span class="p">}</span>]<span class="p">{</span>FZFangSong-Z02<span class="p">}</span>
+<span class="k">\newcommand*</span><span class="p">{</span><span class="k">\songti</span><span class="p">}{</span><span class="k">\CJKfamily</span><span class="p">{</span>zhsong<span class="p">}}</span>
+<span class="k">\newcommand*</span><span class="p">{</span><span class="k">\heiti</span><span class="p">}{</span><span class="k">\CJKfamily</span><span class="p">{</span>zhhei<span class="p">}}</span>
+<span class="k">\newcommand*</span><span class="p">{</span><span class="k">\kaishu</span><span class="p">}{</span><span class="k">\CJKfamily</span><span class="p">{</span>zhkai<span class="p">}}</span>
+<span class="k">\newcommand*</span><span class="p">{</span><span class="k">\fangsong</span><span class="p">}{</span><span class="k">\CJKfamily</span><span class="p">{</span>zhfs<span class="p">}}</span>
+</code></pre></div></div>
+
+<p>虽然可以替换, 那么还是懒得搞那么麻烦了, 目前作为一个自学的尝试, 
+先简单一些.</p>
+
+<details>
+<summary> 更多的中文的设置 </summary>
+<p>
+虽然一般来说, 上面那么多的设置应该就够用了, 
+但是如果你观察生成的文档的话, 就会发现一些 "关键词", 
+比如 Contents 之类的并没有被处理. 
+所以一个简单的想法就是把他们翻译了: 
+</p>
+
+
+<figure class="highlight"><pre><code class="language-latex" data-lang="latex"><span class="c">%% commands for the particular label name specific</span>
+<span class="c">%% to different languages</span>
+<span class="k">\ifdefstring</span><span class="p">{</span><span class="k">\BOOOK</span>@lang<span class="p">}{</span>cn<span class="p">}{</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\contentsname</span><span class="p">}{</span>目录<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\listtablename</span><span class="p">}{</span>表格目录<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\listfigurename</span><span class="p">}{</span>插图目录<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\thepart</span><span class="p">}{</span>第<span class="k">\zhnumber</span><span class="p">{</span><span class="k">\arabic</span><span class="p">{</span>part<span class="p">}}</span>部分<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\figurename</span><span class="p">}{</span>图<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\tablename</span><span class="p">}{</span>表<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\bibname</span><span class="p">}{</span>参考文献<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\appendixname</span><span class="p">}{</span>附录<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\indexname</span><span class="p">}{</span>索引<span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\proofname</span><span class="p">}{</span>证明<span class="p">}</span>
+<span class="p">}{</span><span class="k">\relax</span><span class="p">}</span></code></pre></figure>
+
+
+<p>
+虽然但是, 如果你有一些特殊的爱好的话, 想要保留不翻译这些, 
+可以写一些代码来跳过, 比如设置语言是 mix 之类的. 
+</p>
+</details>
+
+<h3 id="文档尺寸">文档尺寸</h3>
+<p>嗯, 不能忘了, 我是要一个 b6paper 尺寸的小书呢. 
+在声明文档尺寸的细节前, 可能还需要了解一下有哪些是需要声明的. 
+使用的是一个叫做 <code class="language-plaintext highlighter-rouge">geometry</code> 的包 (<a href="https://mirror.aarnet.edu.au/pub/CTAN/macros/latex/contrib/geometry/geometry.pdf">文档链接</a>).</p>
+
+<p><img src="/_img/pieces/geometry.png" alt="geometry" title="这个还挺直观好理解的" /></p>
+
+<p>所以需要声明一下文档的尺寸:</p>
+
+<p>用 <code class="language-plaintext highlighter-rouge">RequirePackage</code> 增加一个 <code class="language-plaintext highlighter-rouge">geometry</code> 的 Package, 
+然后在 <code class="language-plaintext highlighter-rouge">code</code> 部分增加下面的代码.</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\geometry</span><span class="p">{</span>
+  paper=b6paper,
+  inner=25mm,
+  outer=15mm,
+  top=15mm,
+  bottom=10mm,
+  headheight=8mm,
+  headsep=5mm,
+  footskip=7mm,
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>(Note: 关于文档的尺寸, 可以参考这个
+<a href="https://papersizes.io/b/">链接(papersizes.io)</a>)</p>
+
+<h3 id="封面">封面</h3>
+<p>里面可能可以不是很好看, 但是至少封面要酷吧. 
+那么放一张图片在封面上, 然后加上一些文字, 
+装模作样认为自己还算是设计了个能看的封面了吧. 
+と、そんな感じ.</p>
+
+<p>这个时候就需要重新设计一个命令 <code class="language-plaintext highlighter-rouge">maketitle</code>:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\renewcommand*</span><span class="p">{</span><span class="k">\maketitle</span><span class="p">}{</span> <span class="c">%</span>
+<span class="nt">\begin{titlepage}</span>
+  <span class="k">\newgeometry</span><span class="p">{</span>margin=0in<span class="p">}</span>
+  <span class="k">\parindent</span>=0pt
+  <span class="k">\includegraphics</span><span class="na">[width=\linewidth]</span><span class="p">{</span>cover.png<span class="p">}</span>
+  
+  <span class="nt">\begin{huge}</span>
+	<span class="k">\@</span>title
+  <span class="nt">\end{huge}</span>
+<span class="nt">\end{titlepage}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>解释:</p>
+<ul>
+  <li>用 <code class="language-plaintext highlighter-rouge">\renewcommand</code> 来重新定义在 book 中就已经定义过的命令;</li>
+  <li>用 <code class="language-plaintext highlighter-rouge">titlepage</code> 环境来定义一个封面环境.</li>
+  <li>在封面环境中, 取消普通的对齐 (因为封面需要不一样的边距, 
+毕竟大家应该都想要一个没有边框的封面).</li>
+  <li>去掉段落前面的缩进 (否则的话就会看到图片有一个位移)</li>
+  <li>使用 <code class="language-plaintext highlighter-rouge">graphicx</code> 包 (需要在前面的 RequirePackage 部分载入,
+CTAN <a href="https://ctan.org/pkg/graphicx">链接</a>) 中的
+<code class="language-plaintext highlighter-rouge">includegraphics</code> 命令载入封面图片, 这里的图片宽度和文档同宽.</li>
+  <li>然后再加上一个大号的标题.</li>
+</ul>
+
+<p>于是这个时候, 就做好了一个最基本的, 超级丑的一个. 
+因为太丑了, 所以还是不放上效果图了.</p>
+
+<p>不过从这里开始就可以使用 git 进行版本控制了, 
+虽然 git 可能不是很好学, 但是可以有效防止你在狗屎一样的代码里面折腾.</p>
+
+<h4 id="封面的初步美化">封面的初步美化</h4>
+<ul>
+  <li>
+    <p><strong>让图片大小确定</strong>:</p>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\includegraphics</span>[
+  width=<span class="k">\linewidth</span>,
+  height=0.85<span class="k">\textheight</span>,
+<span class="c">% keepaspectratio</span>
+]<span class="p">{</span>cover.png<span class="p">}</span>
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>虽然这种把图片大小写死, 一旦用的图片大小不合适的话, 
+就会被强制缩放的操作是很傻逼的, 但是我目前还不知道能无伤缩放的方法.</p>
+
+<p>不过对于完美主义者, 可以将代码里面的 <code class="language-plaintext highlighter-rouge">keepaspectratio</code> 打开,
+或者改变使用的图片的大小. ( 其实可以用 options 的方法来做, 
+之后可以增加. )</p>
+<ul>
+  <li><strong>让标题和在下方处于一个合理的位置</strong>:<br />
+因为一开始只是用了一个 huge 的 title, 看起来就很丑,</li>
+  <li>
+    <p>所以一个简单的方法就是让它在下方的上方居中:<br />
+使用 <code class="language-plaintext highlighter-rouge">\vfill</code> 命令可以添加一个自动的高度上的空格来在竖直方向上居中,
+而同理, 使用 <code class="language-plaintext highlighter-rouge">\hfill</code> 命令可以添加一个自动的宽度来在水平方向上居中.
+( vertical, horizonal )</p>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="c">% center vertiially</span>
+  <span class="k">\vfill</span>
+  <span class="k">\@</span>title
+  <span class="k">\vfill</span>
+</code></pre></div>    </div>
+
+    <p>或者</p>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="c">% center horizonally</span>
+  <span class="k">\hfill</span> <span class="k">\@</span>title <span class="k">\hfill</span>
+</code></pre></div>    </div>
+
+    <blockquote>
+      <p>Note: 注意因为 LaTeX 的特性, 实际上这里的书写是否换行都是无所谓的,
+但是为了方便看代码, 所以我写成了这种鸟样子.</p>
+    </blockquote>
+
+    <ul>
+      <li>但是, 这样一般不会很高级. 所以可能还需要一些更加细致的操作, 
+  这个时候, 就能够使用 <code class="language-plaintext highlighter-rouge">\hspace{}</code>, <code class="language-plaintext highlighter-rouge">\vspace{}</code> 等的命令来控制位置.</li>
+    </ul>
+
+    <blockquote>
+      <p>Note: 实际上, <code class="language-plaintext highlighter-rouge">\hfill</code> 命令其实等价于 <code class="language-plaintext highlighter-rouge">\hspace{\fill}</code>.
+并且除了占位置, 这些 space 命令还能够接受负的长度单位, 
+来做到向负方向移动的目的.</p>
+    </blockquote>
+
+    <p>不过如果是为了对齐的话, 还能够使用无边框的表格来达到目的:</p>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nt">\begin{tabular}</span><span class="p">{</span>l<span class="p">}</span> <span class="c">% `l` for left align</span>
+    subtitle<span class="k">\\</span>
+    author name<span class="k">\\</span>
+    <span class="c">% ...</span>
+  <span class="nt">\end{tabular}</span>
+</code></pre></div>    </div>
+
+    <p>或者是使用 <code class="language-plaintext highlighter-rouge">minipage</code> 环境来构建一个独立的区域. 
+  ( 这个的操作给我的感觉就像是 HTML 里面的 <code class="language-plaintext highlighter-rouge">div</code> 了)</p>
+    <ul>
+      <li>大概这些操作就能够用来排版了</li>
+      <li><strong>其他的一些小小细节</strong>:</li>
+      <li>页码: 一般来说, 对书本的封面应该是不会记录在正式的页码里面的, 
+  但是目前的版本却会将封面记作第一页. 
+  一个简单的操作就是给封面一个额外的记录页码的方式:</li>
+    </ul>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">\pagenumbering</span><span class="p">{</span>Alph<span class="p">}</span>
+</code></pre></div>    </div>
+    <ul>
+      <li>链接: 如果你使用了像 <code class="language-plaintext highlighter-rouge">hyperref</code> 这样的包用来提供链接, 
+  一个可能的操作就是在前面加入 <code class="language-plaintext highlighter-rouge">\hypersetup{pageanchor=false}</code> 
+  来取消对封面的链接记录.</li>
+    </ul>
+
+    <blockquote>
+      <p>Note: 关于 <code class="language-plaintext highlighter-rouge">hyperref</code> 的设置, 我参考的是 ElegantBook 
+里面的设置. 做了一点点小修改. 更多的设置可以看下面的
+<a href="#目录">目录</a> 部分的设置.</p>
+      <ul>
+        <li>更多用户可以自定义的内容. 比如常常可以在 LaTeX 文档里面看到:</li>
+      </ul>
+    </blockquote>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">\title</span><span class="p">{</span>boook<span class="p">}</span>
+  <span class="k">\subtitle</span><span class="p">{</span>the booooooooook<span class="p">}</span>
+  <span class="k">\author</span><span class="p">{</span>凉凉<span class="p">}</span>
+</code></pre></div>    </div>
+
+    <p>这样的东西, 来自定义文档的信息.</p>
+
+    <p>一个简单的操作就是定义一个赋值命令, 然后在通过变量的访问来修改:</p>
+
+    <div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="c">% \global\let\@varName\@empty =&gt; 清空变量</span>
+  <span class="c">% \gdef{\@varName}{varVal} =&gt; 设置变量</span>
+  <span class="k">\newcommand</span><span class="p">{</span><span class="k">\subtitle</span><span class="p">}</span>[1]<span class="p">{</span><span class="k">\gdef\@</span>subtitle<span class="p">{</span>#1<span class="p">}}</span>
+  <span class="c">% ...</span>
+</code></pre></div>    </div>
+    <ul>
+      <li><strong>搞点颜色</strong>:<br />
+  使用 <code class="language-plaintext highlighter-rouge">xcolor</code> Package (<a href="https://ctan.org/pkg/xcolor">CTAN</a> 
+  就能够帮助文档设置颜色.</li>
+      <li>添加颜色: 在文档中使用 <code class="language-plaintext highlighter-rouge">\definecolor{name}{RGB}{r,g,b}</code>
+  就能够添加对应 <code class="language-plaintext highlighter-rouge">name</code> 名字的颜色.</li>
+      <li>设置文字颜色: <code class="language-plaintext highlighter-rouge">\color{name}</code> 可以使用对应名字的颜色.</li>
+    </ul>
+
+    <blockquote>
+      <p>Note: 有一些包, 比如 <code class="language-plaintext highlighter-rouge">xcolor-material</code> 之类的, 
+就会把一些颜色提前定义好, 用的时候只需要查手册, 
+然后输入名字即可, 很方便. (虽然我不用就是了)</p>
+      <ul>
+        <li><strong>字体</strong>:<br />
+  这个目前先不管了. 因为我没有想法…</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>Note: 为了防止你在 titlepage 中做得任何修改和设定影响到之后的页面,
+一个合适的做法就是在 titlepage 结束后加入几个命令: 
+<code class="language-plaintext highlighter-rouge">\restoregeometry</code>, <code class="language-plaintext highlighter-rouge">\thispagestyle{empty}</code>, 
+<code class="language-plaintext highlighter-rouge">\pagenumbering{abric}</code>.</p>
+    </blockquote>
+  </li>
+</ul>
+
+<p>于是我们就能够得到一个最简单的封面:</p>
+
+<p><img src="/_img/pieces/titlepage.jpg" alt="titlepage" title="虽然还有各种各样的小缺陷, 但是目前还是可以过得去的一个封面. " /></p>
+
+<details>
+<summary>Some Codes (你可以在我的 Github 仓库里面找到这个代码)</summary>
+
+<figure class="highlight"><pre><code class="language-latex" data-lang="latex"><span class="k">\renewcommand*</span><span class="p">{</span><span class="k">\maketitle</span><span class="p">}{</span> <span class="c">%</span>
+<span class="nt">\begin{titlepage}</span> <span class="c">% specify the title page</span>
+<span class="k">\newgeometry</span><span class="p">{</span>margin=0in<span class="p">}</span>
+<span class="k">\pagenumbering</span><span class="p">{</span>Alph<span class="p">}</span> <span class="c">% not counting title page into normal page</span>
+<span class="k">\hypersetup</span><span class="p">{</span>pageanchor=false<span class="p">}</span>
+<span class="k">\parindent</span>=0pt <span class="c">% no paragraph indent</span>
+<span class="k">\ifcsname</span> @cover<span class="k">\endcsname</span> <span class="c">% set cover image</span>
+<span class="k">\includegraphics</span>[ <span class="c">% the best of the image size should be 1476*1870 300dpi</span>
+width=<span class="k">\linewidth</span>,
+height=0.9<span class="k">\textheight</span>,
+<span class="c">% keepaspectratio % force resize the image for better alignment</span>
+]<span class="p">{</span><span class="k">\@</span>cover<span class="p">}</span> 
+<span class="k">\else</span> <span class="c">% if user not provide cover image, will try using default cover image</span>
+<span class="k">\ClassWarning</span><span class="p">{</span>boook<span class="p">}{</span>No Cover Image provided, Trying on default cover.png<span class="p">}</span>
+<span class="k">\includegraphics</span>[
+width=<span class="k">\linewidth</span>,
+height=0.9<span class="k">\textheight</span>,
+<span class="c">% keepaspectratio</span>
+]<span class="p">{</span>cover.png<span class="p">}</span>
+<span class="k">\fi</span>
+<span class="c">% below is the main title part</span>
+<span class="k">\vfill</span>
+<span class="k">\hspace</span><span class="p">{</span>5mm<span class="p">}</span>
+<span class="nt">\begin{minipage}</span>[c]<span class="p">{</span>0.65<span class="k">\linewidth</span><span class="p">}</span> <span class="c">% title subtitle author</span>
+<span class="nt">\begin{huge}</span><span class="k">\textbf</span><span class="p">{</span><span class="k">\ifcsname</span> @title<span class="k">\endcsname</span> <span class="k">\@</span>title<span class="k">\else</span> Title <span class="k">\fi</span><span class="p">}</span><span class="nt">\end{huge}</span>
+<span class="k">\vfill</span>
+<span class="k">\hspace</span><span class="p">{</span>2mm<span class="p">}</span> <span class="k">\ifcsname</span> @subtitle<span class="k">\endcsname</span> <span class="k">\color</span><span class="p">{</span>dimgray<span class="p">}</span><span class="k">\textbf</span><span class="p">{</span><span class="k">\@</span>subtitle<span class="p">}</span> <span class="k">\fi</span>
+<span class="k">\hspace</span><span class="p">{</span>0.5mm<span class="p">}</span><span class="k">\color</span><span class="p">{</span>lightgray<span class="p">}</span> <span class="k">\textbf</span><span class="p">{</span>|<span class="p">}</span> 
+<span class="nt">\begin{small}</span><span class="k">\color</span><span class="p">{</span>darkgray<span class="p">}</span><span class="k">\@</span>author<span class="nt">\end{small}</span>
+<span class="nt">\end{minipage}</span>
+<span class="k">\hspace</span><span class="p">{</span>7mm<span class="p">}</span>
+<span class="nt">\begin{minipage}</span>[c]<span class="p">{</span>0.2<span class="k">\textwidth</span><span class="p">}</span> <span class="c">% logo page</span>
+<span class="k">\vfill</span>
+<span class="k">\ifcsname</span> @logo<span class="k">\endcsname</span>
+<span class="k">\includegraphics</span>[
+width=<span class="k">\linewidth</span>,
+height=0.2<span class="k">\textheight</span>,
+keepaspectratio
+]<span class="p">{</span><span class="k">\@</span>logo<span class="p">}</span> 
+<span class="k">\else</span>
+<span class="k">\ClassWarning</span><span class="p">{</span>boook<span class="p">}{</span>No Cover Image provided, Trying on default logo.png<span class="p">}</span>
+<span class="k">\includegraphics</span>[
+width=<span class="k">\linewidth</span>,
+height=0.2<span class="k">\textheight</span>,
+keepaspectratio
+]<span class="p">{</span>logo.png<span class="p">}</span>
+<span class="k">\fi</span>
+<span class="k">\vfill</span>
+<span class="nt">\end{minipage}</span>
+<span class="k">\vfill</span>
+<span class="k">\vfill</span>
+<span class="nt">\end{titlepage}</span>
+<span class="k">\restoregeometry</span>
+<span class="k">\thispagestyle</span><span class="p">{</span>empty<span class="p">}</span>
+<span class="k">\pagenumbering</span><span class="p">{</span>arabic<span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+</details>
+
+<h3 id="目录">目录</h3>
+<blockquote>
+  <p>Note: 你可以发现, 我设计的顺序就是按照一本书打开阅读的顺序来的,
+虽然可能并不是非常的专业和严谨, 并且设计的顺序和代码的组织方式
+我会尽可能地去做到. 不过万一遗漏了的话, 也没办法.</p>
+</blockquote>
+
+<p>对于目录, 没什么想法, 就希望能够有一个好看点的跳转链接: 
+默认的跳转是一个红色的方框 – 挺丑的. 于是就可以使用 <code class="language-plaintext highlighter-rouge">hyperref</code>
+包 (<a href="https://ctan.org/pkg/hyperref">CTAN</a>) 来自定义链接颜色.</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\hypersetup</span><span class="p">{</span>linktoc=all, linkcolor=<span class="k">\color</span><span class="p">{</span>black<span class="p">}}</span>
+</code></pre></div></div>
+
+<p>设置了链接所有, 以及使用黑色来表示链接颜色.</p>
+
+<details>
+<summary>settups for hyperref</summary>
+
+<figure class="highlight"><pre><code class="language-latex" data-lang="latex"><span class="c">%% belowing code mainly from ElgantBook</span>
+<span class="k">\hypersetup</span><span class="p">{</span>
+breaklinks,
+unicode,
+linktoc=all,
+bookmarksnumbered=true,
+bookmarksopen=true,
+pdfkeywords=<span class="p">{</span>BOOOK<span class="p">}</span>,
+colorlinks,
+linkcolor=darkgray,
+citecolor=darkgray,
+urlcolor=darkgray,
+plainpages=false,
+pdfstartview=FitH,
+pdfborder=<span class="p">{</span>0 0 0<span class="p">}</span>,
+linktocpage
+<span class="p">}</span></code></pre></figure>
+
+</details>
+
+<h3 id="接下来是各种各样的东西了-我好累">接下来是各种各样的东西了… 我好累</h3>
+<p>到了目前这个阶段, 本来应该可以说基本能够用了, 
+但是仔细一看 (指我把这个用到了我之前的那个一个项目
+(<a href="https://github.com/li-yiyang/magic_the_book">magic the book</a>,
+不过这个学期应该是没有时间继续做这个项目了) 
+上面的时候, 疯狂地报错, 因为缺少了很多的环境, 
+比如练习环境之类的; 以及疯狂的溢出, 因为我的废话和代码都写得太长了,
+b6paper 的小尺寸看来不太适合这个书籍的排版. )</p>
+
+<h4 id="chapter-section-等标题的特性">Chapter Section 等标题的特性</h4>
+<p>参考的是 <a href="https://tex.stackexchange.com/questions/94729/how-to-customize-chapter-heading-style">stackexchange</a>
+上面的相应的问题, 使用的是 <code class="language-plaintext highlighter-rouge">titleformat</code> 命令. 
+(来自 <code class="language-plaintext highlighter-rouge">titlesec</code> 包(<a href="https://ctan.org/pkg/titlesec">CTAN</a>))</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\titleformat</span><span class="p">{</span>⟨command⟩<span class="p">}</span>[⟨shape⟩]<span class="p">{</span>⟨format⟩<span class="p">}{</span>⟨label⟩<span class="p">}{</span>⟨sep⟩<span class="p">}{</span>⟨before⟩<span class="p">}</span>[⟨after⟩]
+</code></pre></div></div>
+
+<p>虽然但是, 我懒得做得很精致了, 所以我就直接抄了 <code class="language-plaintext highlighter-rouge">titlesec</code> <a href="http://tug.ctan.org/tex-archive/macros/latex/contrib/titlesec/titlesec.pdf">文档</a>
+的默认示例代码. 稍微修改增加了一些颜色的设置…</p>
+
+<h4 id="页码-页眉">页码, 页眉</h4>
+<p>虽然但是, 这个时候我又开始懒了. 我的做法就是删除: 
+一口气把能删掉的东西都删掉. 因为太麻烦了.</p>
+
+<p>使用 <code class="language-plaintext highlighter-rouge">fancyhdr</code> 包来删除掉原本带有的各种设置. 
+主要是参考了其<a href="https://mirror-hk.koddos.net/CTAN/macros/latex/contrib/fancyhdr/fancyhdr.pdf">文档</a>
+中的一些代码:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\fancyhf</span><span class="p">{}</span> <span class="c">% remove former style</span>
+<span class="k">\fancyhead</span><span class="p">{}</span> <span class="c">% clear all header fields</span>
+<span class="k">\fancyfoot</span><span class="p">{}</span> <span class="c">% clear all footer fields</span>
+<span class="k">\ifdefstring</span><span class="p">{</span><span class="k">\BOOOK</span>@geomode<span class="p">}{</span>digital<span class="p">}{</span>
+    <span class="k">\fancyfoot</span><span class="na">[C]</span><span class="p">{</span><span class="k">\thepage</span><span class="p">}</span> <span class="c">% for digital geomode, center the page number</span>
+  <span class="p">}{</span> <span class="c">% default</span>
+    <span class="k">\fancyfoot</span><span class="na">[LE,RO]</span><span class="p">{</span><span class="k">\thepage</span><span class="p">}</span> <span class="c">% for default geomode, even page left, odd page right</span>
+  <span class="p">}</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\headrulewidth</span><span class="p">}{</span>0pt<span class="p">}</span> <span class="c">% no rule</span>
+<span class="k">\renewcommand</span><span class="p">{</span><span class="k">\footrulewidth</span><span class="p">}{</span>0pt<span class="p">}</span>
+</code></pre></div></div>
+
+<h4 id="图片的标题和对齐">图片的标题和对齐</h4>
+<p>我希望能通过尽可能简单的方法就能够往文档中插入图片, 
+并且这样的图片满足比较好的性质. 比如能够通过:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\image</span><span class="p">{</span>image-path<span class="p">}</span> <span class="c">% plain centered image</span>
+<span class="k">\image</span><span class="na">[caption]</span><span class="p">{</span>image-path<span class="p">}</span> <span class="c">% with caption</span>
+</code></pre></div></div>
+
+<p>于是我的做法就是定义一个新的命令来实现, 
+其中检测可选变量是否为空的方法来源于网络 (见代码注)</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\newcommand</span><span class="p">{</span><span class="k">\image</span><span class="p">}</span>[2][]<span class="p">{</span>
+<span class="nt">\begin{figure}</span>[!htbp]
+  <span class="k">\centering</span>
+  <span class="k">\includegraphics</span>[
+    width=0.618<span class="k">\textwidth</span>,
+    height=0.147<span class="k">\textheight</span>,
+    keepaspectratio
+  ]<span class="p">{</span>#2<span class="p">}</span>
+  <span class="c">% test var if empty</span>
+  <span class="c">%% from https://tex.stackexchange.com/questions/53068/how-to-check-if-a-macro-value-is-empty-or-will-not-create-text-with-plain-tex-co</span>
+  <span class="k">\def\temp</span><span class="p">{</span>#1<span class="p">}</span><span class="k">\ifx\temp\empty</span>
+  <span class="k">\else</span>
+    <span class="k">\caption</span><span class="p">{</span>#1<span class="p">}</span>
+  <span class="k">\fi</span>
+<span class="nt">\end{figure}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>尽管还有一些不太美观… 但是目前就这样吧. 
+假如用户需要自己添加图片的话, 可以通过:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">\begin{figure}</span>
+  <span class="k">\includegraphics</span><span class="na">[size options]</span><span class="p">{</span>path-to-img<span class="p">}</span>
+  <span class="k">\caption</span><span class="p">{</span>...<span class="p">}</span>
+<span class="nt">\end{figrue}</span>
+</code></pre></div></div>
+
+<h4 id="表格">表格</h4>
+<p>一个简单的操作就是: 直接使用 <code class="language-plaintext highlighter-rouge">tabularx</code> (<a href="https://ctan.org/pkg/tabularx">CTAN</a>)
+来添加表格. 为了方便我使用, 
+我已经直接将其添加到了我的 RequirePackage 中了.</p>
+
+<h4 id="代码">代码</h4>
+<p>作为一个普通的计算机爱好者, 来点代码肯定是一个必要项了. 
+我希望能够通过简单的方法就能够给文档带来很便捷插入代码的方法.</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">\begin{code}</span><span class="p">{</span>ruby<span class="p">}</span>
+  until enough?
+    # do something
+  end
+<span class="nt">\end{code}</span>
+</code></pre></div></div>
+
+<p>为了实现这个操作, 我使用的是一个叫做 <code class="language-plaintext highlighter-rouge">minted</code> 代码包. 
+定义了一个新的环境:</p>
+
+<div class="language-latex highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">\newenvironment</span><span class="p">{</span>code<span class="p">}</span>[1]
+ <span class="p">{</span><span class="k">\VerbatimEnvironment</span> <span class="c">% use this to avoid other formatts distrubting</span>
+  <span class="nt">\begin{minted}</span>[tabsize=2,breaklines]<span class="p">{</span>#1<span class="p">}}</span>
+ <span class="p">{</span><span class="nt">\end{minted}</span><span class="p">}</span>
+</code></pre></div></div>
+
+<p>注意到其中有一个操作: <code class="language-plaintext highlighter-rouge">\VerbatimEnvironment</code>, 
+是用来防止其他的环境, 比如说 CJK 环境中的字体等等, 
+让输出错误.</p>
+
+<p>不过实际上 <code class="language-plaintext highlighter-rouge">minted</code> 的表现感觉不是特别的好. 
+比如没有办法让用户方便地自定义临时文件的输出文件夹.</p>
+
+<p>如果你使用 <code class="language-plaintext highlighter-rouge">-output-directory</code> 参数编译文档的话, 
+会出现错误, 因为 <code class="language-plaintext highlighter-rouge">minted</code> 的默认输出文件夹不会跟着走.</p>
+
+<p>(好吧, 如果不是很在意的话, 可能也没关系了. )</p>
+
+<p>并且在编译的时候, 需要带上 <code class="language-plaintext highlighter-rouge">-shell-escape</code> 的参数来编译.</p>
+
+<p>对于一般的用户, 可能这样的操作并不是一个刚需, 
+所以我觉得还是为文档添加一个 <code class="language-plaintext highlighter-rouge">code</code> 的 option
+可能会显得更加人性化.</p>
+
+<h4 id="tikz">Tikz</h4>
+<p>因为最近还在学习 <code class="language-plaintext highlighter-rouge">tikz</code> 包的使用, 所以我将其也导入到了
+RequirePackage 中了.</p>
+
+<h2 id="后记">后记</h2>
+<h3 id="项目">项目</h3>
+<p>可以在 <a href="https://github.com/li-yiyang/boook">boook</a> 
+这里找到 boook 的项目. 我应该尽可能地把这个项目写得比较规范了. 
+如果觉得上面的写得跟狗屎一样, 还能够看看我狗屎一样的代码 :).</p>
+
+<h3 id="我不是大佬-我是菜狗">我不是大佬, 我是菜狗</h3>
+<p>在大学里有一个好处就是可以清晰且正确地认识到自己是个菜狗. 
+那句话是怎么说的来着? 差生文具多是吧. 大概我也就是这样了.</p>
+
+<p>相比那些受过严谨的培训, 可以快速上手, 
+并且愿意在某个项目上死磕的大佬. 我感觉我就像是一个耍耍小聪明,
+走着野路子的三流的业余爱好者 (甚至可能都称不上).
+(这点你可以从越来越短, 越来越肤浅的这篇文章看出… )</p>
+
+<h3 id="自动化-一个不切实际的想法">自动化: 一个不切实际的想法</h3>
+<p>作为一个懒惰的鸟人, 看到这个坑爹配置书写就很不爽, 
+所以在写这些坑爹玩意的时候, 我脑子里真的是想着怎么样才能改变这个, 
+比如像 Lisp 一样, 重新为它 wrap 一个形式.</p>
+
+<p>不过太菜了, 干不来. 只能写一个帮助生成的文档了…</p>
+
+<h3 id="之后">之后?</h3>
+<p>应该会在有时间的时候更进的… 不过如果我没有什么别的特别的需求,
+或者是没有什么别人的要求的话, 我觉得应该是不会更新了. 
+就这样吧. 大学生精神状态可好了… 可好了…</p>]]></content><author><name></name></author><category term="misc" /><summary type="html"><![CDATA[Boook: 制作自己的 LaTeX 文档风格 关于我为什么制作 LaTeX 文档 Class? 好吧, 其实就是闲的蛋疼. 虽然网上已经有很多很好看的现成的 LaTeX 类了. (比如 Elgantbook, 后面的文章很多是建立在这个的基础上的. 另一个值得参考的是 这个). 以及, LaTeX 的一些文档 等等, 都是很好的参考.]]></summary></entry><entry><title type="html">Optics</title><link href="http://0.0.0.0:4000/notes/optics/" rel="alternate" type="text/html" title="Optics" /><published>2022-10-30T08:08:52+00:00</published><updated>2022-10-30T08:08:52+00:00</updated><id>http://0.0.0.0:4000/notes/optics</id><content type="html" xml:base="http://0.0.0.0:4000/notes/optics/"><![CDATA[<h1 id="光学">光学</h1>
+<p>怎么说吧, 说难不难, 说简单不简单.</p>
+
+<h2 id="数学">数学</h2>
+<ul>
+  <li>
+    <p>Eular Equation:</p>
+
+\[e^{i \theta} = \cos \theta + i\sin \theta\]
+  </li>
+  <li>
+    <p>解析拓展<br />
+可以用来对表达式进行展开, 同样的可以用来定义算符函数: 
+$f(D) = \sum \cdots$, 比如: $e^{\mathrm{d}/ \mathrm{d}x} = 1 + \mathrm{d}/ \mathrm{d}x + \cdots$.</p>
+  </li>
+  <li>
+    <p>傅里叶展开</p>
+
+\[f(x) = \frac{a_0}{2} + \sum_{j=1}^{\infty}(a_j\cos\frac{2\pi jt}{T}+b_j\sin\frac{2\pi jt}{T})\]
+
+    <p>傅里叶变换</p>
+
+\[f(t) = \int_{0}^{\infty}F(\omega)e^{-i\omega t-\varepsilon\vert \omega \vert}\mathrm{d}\omega, F(\omega)\frac{1}{2\pi}\int_{-\infty}^{\infty}f(t)e^{i\omega t-\varepsilon\vert t\vert}\mathrm{d}t, \varepsilon \rightarrow 0\]
+  </li>
+</ul>
+
+<h2 id="光的传播">光的传播</h2>
+<p>首先, <strong>光是电磁波</strong>: (可见光范围 $380 \sim 780 nm$)</p>
+
+<p>一般用电场分量来代表电磁波, 如简单的单色平面波:</p>
+
+\[\boldsymbol{E} = \boldsymbol{E}_0 \cos(\omega t - \boldsymbol{k} \cdot \boldsymbol{r} + \psi_0)\]
+
+<p>波矢方向 $\boldsymbol{k} = -\nabla\psi$, 
+磁场与电场正交: $\boldsymbol{B} = \frac{\boldsymbol{k} \times \boldsymbol{E}}{\sqrt{\varepsilon \mu}}$,
+于是能流密度 $\langle \boldsymbol{S} \rangle_t = |\boldsymbol{E}| \frac{n}{2\mu_0 c} \frac{\boldsymbol{k} }{k} $.</p>
+
+<p>这样的理想平面波应该有:</p>
+<ul>
+  <li>增幅 $\boldsymbol{E}_0$ 为常量</li>
+  <li>相位梯度 $\boldsymbol{k} = - \nabla \psi$ 为常量</li>
+</ul>
+
+<p>对于不同尺度下的问题, 需要考虑和用来分析的手段也不一样:</p>
+<ul>
+  <li>$\rho &gt; 10^3 \lambda$: 这个时候几乎不衍射, 可以用几何光学来近似</li>
+  <li>$\rho \sim \lambda, 10^3 \lambda$: 这个量级之间, 考虑衍射</li>
+  <li>$\rho &lt; \lambda$: 这个量级衍射图样趋于消失, 以光的散射为主.</li>
+</ul>
+
+<h3 id="几何光学">几何光学</h3>
+<h4 id="费马原理">费马原理</h4>
+
+\[\delta L = \delta\int_P^Q n \mathrm{d}l = 0\]
+
+<blockquote>
+  <p>证明就利用一个简单的公式:</p>
+
+\[\varphi(Q) - \varphi(P) = -\int_P^Q \nabla \varphi \cdot \mathrm{d} l\]
+
+\[\boldsymbol{a} \cdot \boldsymbol{b} \leq \|\boldsymbol{a}\|\|\boldsymbol{b}\| \Rightarrow - \nabla \varphi \cdot \mathrm{d}\boldsymbol{l} \leq \|\nabla\varphi\| = n k \mathrm{d}l\]
+
+  <p>于是完工.</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: 用流体的角度来看, 光在一个流管内传播, 光线和能流密度相切, 
+流管里面的能量不会流出. 光强与截面乘积为不变量.<br />
+这样就可以得到一些几何光学的结论了.</p>
+</blockquote>
+
+<h4 id="几何光学光束">几何光学光束</h4>
+<p>如果增幅变化缓慢, 相位梯度变化缓慢, 那么可以认为一束光就是平面波.</p>
+
+<blockquote>
+  <p>考虑在 \(\boldsymbol{e}_\alpha, \boldsymbol{e}_\beta\) 
+的基上对电场分量进行分解: \(E_\alpha + E_\beta\).</p>
+  <ul>
+    <li>增幅变化缓慢: 
+\(\mathrm{max} \{\vert\frac{\partial \varphi}{\partial \alpha}\vert\} \gg \mathrm{max} \{\frac{1}{A_\alpha} \frac{\partial A_\alpha}{\partial \beta}\}\)</li>
+    <li>相位变化缓慢: \(\mathrm{max} \{\frac{\partial \varphi}{\partial \alpha}\} \gg \mathrm{max} \{(\frac{\partial \varphi}{\partial \beta})\}\)</li>
+  </ul>
+</blockquote>
+
+<h4 id="光线方程">光线方程</h4>
+
+\[\frac{\mathrm{d}^2 \boldsymbol{r}}{\mathrm{d}\tau^2} = n\nabla n = - \nabla V_{=C - \frac{1}{2} n^2}\]
+
+\[\frac{\mathrm{d} }{\mathrm{d} s} (n \frac{\mathrm{d} \boldsymbol{r} }{\mathrm{d} s} ) = \nabla n\]
+
+<p>前一个的可以和粒子的运动方程类比, 计算起来会比较简单, 
+后一个和前一个等价就是了.</p>
+
+<blockquote>
+  <p>证明方法就是利用 $-\nabla \varphi = nk\frac{\mathrm{d} \boldsymbol{r} }{\mathrm{d} s}$.<br />
+然后两边除一个 $k$, 再对 $s$ 进行一次导数即可.</p>
+</blockquote>
+
+<h3 id="波动光学">波动光学</h3>
+<h4 id="标量波">标量波</h4>
+<p>用复数来描述标量波: (这里的记号是 $e^{-i\varphi}$ )</p>
+
+\[\tilde{U}(P) = A(P)e^{-i(\omega t + \varphi_0(P))}\]
+
+<p><strong>波前</strong></p>
+
+<p>使用波前来描述波的性质.</p>
+
+<ul>
+  <li>平面波: $e^{-i \boldsymbol{k}\cdot\boldsymbol{r}}$</li>
+  <li>球面波: $\frac{A_0}{r} e^{-i \boldsymbol{k}\cdot\boldsymbol{r}}$</li>
+  <li><strong>共轭波</strong></li>
+</ul>
+
+<blockquote>
+  <p>球面波的平面波近似条件:</p>
+  <ul>
+    <li>傍轴条件: $z^2 \gg \rho^2$</li>
+    <li>远场条件: $e^{i \frac{\pi \rho^2}{z \lambda}} \approx 1$</li>
+  </ul>
+
+  <p>Note: 一般这样的 $\gg$ 可以用 $50 \sim 100$ 倍来简单近似, 
+不过貌似作业里面用 $50$ 的比较多.</p>
+
+  <p>记忆: 若将球面波视为沿 $z$ 轴传播的一束平面波 $e^{i k z}$ 的话, 
+对球面波的 $r$ 有展开 $r = z + \rho^2/z - \cdots$, 
+傍轴条件对应 $ \frac{A_0}{r} \approx \frac{A_0}{z}$,
+远场条件对应 $e^{ikr}=e^{ikz}$.</p>
+</blockquote>
+
+<h4 id="菲涅耳-基尔霍夫积分">菲涅耳-基尔霍夫积分</h4>
+
+\[U(P) = \frac{-i}{\lambda} \oiint_{\Sigma}(\frac{\cos\theta + \cos\theta_0}{2}) U(Q) \frac{e^{i k r}}{r} \mathrm{d} S\]
+
+<h4 id="互补原理">互补原理</h4>
+<p>假如有两个互补屏, 那么经过它们的衍射结果相同: $I_{+} = I_{-}$.</p>
+
+<h4 id="衍射系统">衍射系统</h4>
+<p>选择一个波面, 其包含的包括光源所在的空间为照明空间, 其外为衍射空间, 
+在衍射空间中的点 $P$ 感受到的光强就是该波面上的子波源在这一点的光强的
+贡献的统计平均.</p>
+
+<ul>
+  <li>
+    <p>夫琅和费衍射: 相对衍射屏接受场和光源都满足远场条件, 
+通过凸透镜将光源聚焦在成像面上 (或者在远处接收)</p>
+
+    <p><strong>单缝夫琅和费衍射</strong>:</p>
+
+\[A \propto \int_{-1}^{1} \frac{\mathrm{d}x}{2} e^{-ikx\sin\theta} = \frac{\sin(k\sin\theta)}{\sin\theta} \Rightarrow I = I_0 (\frac{\sin(k\sin\theta)}{\sin\theta})^2\]
+
+    <p><strong>圆孔的夫琅和费衍射</strong>:</p>
+
+\[U(P) = \frac{- i A}{F \lambda} e^{ikL_0} 2\pi\int_0^a \mathrm{d}\rho\rho e^{-ik\rho\cos\phi\sin\theta} = \frac{\pi a^2}{F\lambda}\frac{2J_1(\gamma)}{\gamma}, \gamma = ka\sin\theta, J_1: Bessel\]
+
+    <blockquote>
+      <p>反正也没法继续算了, 知道一下结论: $\theta = 0 \Rightarrow I = (\frac{\pi a^2}{F\lambda})^2 I_0$, 半角 $0.61 \frac{\lambda}{a}$
+其中 $F$ 为透镜焦距</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>菲涅耳衍射: 都不满足远场条件</p>
+
+    <p><strong>圆孔菲涅耳衍射</strong>:</p>
+
+\[U(P) = \frac{-i}{2\lambda} \iint \frac{e^{ikr_1}}{r_1}(\cos\theta_1 + \cos\theta_2)_{\approx F(0) = \frac{1}{r}} \frac{e^{ikl}}{r+l} \mathrm{d}l\]
+
+    <p>实际上可以直接用半波带方法会比较快:</p>
+
+\[n = \frac{\rho^2}{2} (\frac{1}{a} + \frac{1}{b})\]
+
+    <p><strong>半无穷大屏菲涅耳衍射</strong>:</p>
+
+    <p>同上, 也能够用积分来做. 就是比较麻烦而已</p>
+  </li>
+</ul>
+
+<h4 id="波的矢量性---菲涅尔">波的矢量性 - 菲涅尔</h4>
+<p>将光分成 $s$ 波和 $p$ 波 (垂直 straight, 平行 parallel 分量),
+在分界面上有电磁场连续方程: $\varepsilon E, \mu H$, 
+并且利用 $\sqrt{\varepsilon} E = \sqrt{\mu} H, n = \sqrt{(\varepsilon/\mu)/(\varepsilon_0/\mu_0)} \Rightarrow H = n E$ 
+来将所有的 $H$ 都用 $E$ 来标识. 
+于是有方程:</p>
+
+\[\begin{array}{lll}
+  r_s &amp; = &amp; \frac{n_1 \cos i_1 - n_2 \cos i_2}{n_1 \cos i_1 + n_2
+  \cos i_2}\\
+  t_s &amp; = &amp; \frac{2 n_1 \cos i_1}{n_1 \cos i_1 + n_2 \cos i_2}\\
+  r_p &amp; = &amp; \frac{n_2 \cos i_1 - n_1 \cos i_2}{n_1 \cos i_2 + n_2 \cos i_1}\\
+  r_s &amp; = &amp; \frac{2 n_1 \cos i_1}{n_1 \cos i_2 + n_2 \cos i_1}
+\end{array}\]
+
+<blockquote>
+  <p>Note: 记不住的话…</p>
+
+\[\begin{array}{lll}E_{1,s} + E_{1,s}' &amp; = &amp; E_{2,s}\\E_{1,p} - E_{1,p}' &amp; = &amp; E_{1,p}\\ n_1 (E_{1,s} - E_{1,s}') &amp; = &amp; n_2 E_{2,s}\\n_1(E_{1,p}+E_{1,p}') &amp; = &amp; n_2 E_{2,p}\end{array}\]
+</blockquote>
+
+<p>上面的都是对光的增幅 (电场振幅) 的东西, 对于光强 (功率) 来说, 
+则是:</p>
+
+\[R_p = \vert r_p \vert^2, R_s = \vert r_s \vert, T_p = \frac{n_2}{n_1} \vert t_p \vert^2, T_s = \frac{n_2}{n_1} \vert t_s\vert^2\]
+
+\[R + T = 1, T \cos i_2 + R \cos i_1 = \cos i_1, n_2 \vert t \vert^2 \cos i_2 + n_1 \vert r \vert^2 \cos i_1 = n_1 \cos i_1\]
+
+<p>对于临界情况:</p>
+
+<ul>
+  <li>布儒斯特角: $r_p = 0 \Rightarrow i_B = \tan^{-1}\frac{n_2}{n_1}$</li>
+  <li>临界角: $T = 0 \Rightarrow i_c = \sin^{-1}\frac{n_2}{n_1}$</li>
+  <li>正入射: $r_p = -r_s = \frac{n_2 - n_1}{n_2 + n_1}, t_p = t_s = \frac{2n_1}{n_2 + n_1}, R = (\frac{n_2 - n_1}{n_2 + n_1})^2, T = \frac{4n_1n_2}{(n_2 + n_1)^2}$</li>
+</ul>
+
+<p><strong>倒逆关系</strong>: 假如从 1 到 2 介质是 $t, r$, 
+那么从 2 到 1 是 $t’, r’$:</p>
+
+<p>\(r^2 + tt' = 1\)
+\(r' = -r\)</p>
+
+<blockquote>
+  <p>Note: 证明和记忆<br />
+$r’ = -r$: 相对轴做对称, 前者是能量</p>
+</blockquote>
+
+<blockquote>
+  <p>Note: 推广的斯托克斯倒逆关系</p>
+
+\[\vert r^2 \vert + t' t= 1, r^* t + r' t^* = 0\]
+
+  <p>这样的证明方法就是考虑共轭波的入射和反过来的轨迹,
+对这样的结果, 会有 $r r^* + t’ t^* = 1, r^* t + r’ t^* = 0$</p>
+</blockquote>
+
+<p><strong>全反射的相位变化</strong>:</p>
+
+<table>
+  <tbody>
+    <tr>
+      <td>入射角</td>
+      <td>切线分量</td>
+      <td>法相分量</td>
+    </tr>
+    <tr>
+      <td>$&lt;i_b$</td>
+      <td>$0$</td>
+      <td>$\pi$</td>
+    </tr>
+    <tr>
+      <td>$&gt;i_b,&lt;i_c$</td>
+      <td>$-\pi$</td>
+      <td>$0$</td>
+    </tr>
+    <tr>
+      <td>$&gt;i_c$</td>
+      <td>$(-\pi,0)$</td>
+      <td>$(0,\pi)$</td>
+    </tr>
+    <tr>
+      <td>$\pi/2$</td>
+      <td>$0$</td>
+      <td>$\pi$</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p>Note: 其实直接计算可以发现 $r_p = \vert r_p \vert e^{-i \delta \phi}$ 就能够知道相位变化了</p>
+</blockquote>
+
+<p>利用这个性质就能够发现, 经过反射可以导致 $p$, $s$ 波的
+方向变化, 从而有对偏振态的影响. 
+比如椭圆光经过反射, 让一个分量的光产生了相位差, 
+和另一个分量的光之间的相位相同或相差了 $\pi$, 
+那么就会从椭圆光变回线偏振光.</p>
+
+<h4 id="波的矢量性---光的在晶体中的传播">波的矢量性 - 光的在晶体中的传播</h4>
+<p>电磁波在晶体中传播, $\boldsymbol{S} = \boldsymbol{H} \times \boldsymbol{E}$, 但是非各向同性的介质中 $\boldsymbol{D} = \boldsymbol{\varepsilon}\boldsymbol{E}$ 不一定和 $\boldsymbol{E}$ 平行. 可能会有一个 $\alpha$ 夹角. 而 $\boldsymbol{k}$ 和 $\boldsymbol{D}, \boldsymbol{H}$ 垂直, 想要计算波矢, 也就是传播方向, 就需要知道 $\boldsymbol{D}$.</p>
+
+\[\boldsymbol{k} \times \boldsymbol{H} = - \omega \boldsymbol{D}, \boldsymbol{k} \times \boldsymbol{E} = \omega \mu \boldsymbol{H} \Rightarrow k^2 \frac{\varepsilon_0\boldsymbol{E}\cdot\boldsymbol{D}}{D^2} = k_0^2 = (\frac{\omega}{c})^2\]
+
+<p>在晶体中的传播分成 $o$ 光和 $e$ 光,</p>
+<ul>
+  <li>定义光线传播方向和光轴 (下记为 $z$ 轴) 的平面为主平面</li>
+  <li>定义 $o$ 光为振动方向和主平面垂直的光, 和光轴垂直, 所以传播方向没什么变化. 就是普通的折射定律就能够计算了.</li>
+  <li>
+    <p>定义 $e$ 光为振动方向和主平面平行的光, 在三维上面, 就是和 $z$ 轴平行的 $D_{ez}$ 分量和 $z$ 轴垂直, 但是在主平面上的 $D_{e\bot}$ 分量, 于是有:</p>
+
+\[D_{ez} = \varepsilon_0 n_e^2 E_ez, D_{e\bot} = \varepsilon_0n_o^2E_{e\bot} \Rightarrow \varepsilon_0 E_e \cdot D_e = \frac{D_{ez}^2}{n_e^2} + \frac{D_{e\bot}^2}{n_o^2} \Rightarrow (\frac{k_z^2}{n_o^2} + \frac{k_x^2+k_y^2}{n_e^2}) = k_0^2\]
+  </li>
+</ul>
+
+<blockquote>
+  <p>Note: 双轴晶体就略去了.</p>
+</blockquote>
+
+<p>同理, 可以计算光线相速度 $\boldsymbol{ v} = \frac{\boldsymbol{k}}{k}\frac{\omega}{k}$. 以及光线速度: $\boldsymbol{ v}_r = \frac{\boldsymbol{S} }{w}$</p>
+
+<p>( 啊, 这里好麻烦哦, 一个麻烦的地方就是要记住自己在考虑什么问题, 经常会把 $o$ 光还是 $e$ 光搞混, 这个时候, 一个帮助自己搞清楚自己到底在干什么的方法就是: 去想 $o$ 光就是 ordianary 光, 传播方向和各种结论都和普通的, 那种初级的结论一样, 那么为什么要为它伤脑筋呢? 所以关注 $e$ 光看起来会比较合理. )</p>
+
+<p>有了上面那段思考之后, 发现问题变得简单了: 什么垃圾晶体光学, 实际上对于单轴晶体来说, 问题很简单: 沿着 $z$ 轴和垂直 $z$ 轴的光的速度不一样, 分别记为 $n_e$ 和 $n_o$ 来表示. 对于直接规定垂直 $z$ 轴振动的 $o$ 光, 很显然, 是各项同性的, 而对于规定的 $e$ 光, 部分垂直, 部分平行, 所以光的传播和速度都会随着方向而改变:</p>
+
+<p>假设 $e$ 光的波矢和 $z$ 轴的夹角为 $\theta$, 那么沿着 $z$ 轴的分量和垂直 $z$ 轴的分量就要满足条件: $ (\frac{k_x}{n_e})^2 + (\frac{k_z}{n_o})^2 = k_0^2, k_x = k\sin\theta, k_z = k\cos\theta \Rightarrow v_p^2 = v_o^2\cos^2\theta + v_e^2 \sin^2\theta$</p>
+
+<p>但是波矢的方向是相速度的方向不是光线速度的方向, 光线速度的方向和等相位面垂直 ( 这个是几何的观点 ), 或者干脆直接从分量之间的关系来可能会更好记:</p>
+
+\[\frac{D_z}{D_x} = \frac{n_e^2}{n_o^2} \frac{E_z}{E_x} \Rightarrow \tan\theta = \frac{n_e^2}{n_o^2}\tan\xi\]
+
+<p>( 可惜上面分析了这么多, 只不过是光线在晶体里面的传播规律而已, 我想要知道的是光线从外面入射会发生什么的结论啊… )</p>
+
+<p>$o$ 光不看了, 只关心 $e$ 光:</p>
+
+<p>在分界面上, 考虑波矢的切向分量连续: $\boldsymbol{e}_n \times (\boldsymbol{k} - \boldsymbol{k}_1) = 0$. 然后经过漫长的计算, 应该可以得到结果. ( 太长了, 算了. )</p>
+
+<blockquote>
+  <p>双折射作图法: ( 不关心 $o$ 光, 这里是 $e$ 光的回合)<br />
+(平面光波入射, 主截面和入射面一致)</p>
+  <ol>
+    <li>画出界面, 光轴, 折射率圆 ( 对应空气, 半径为 $n_1$)和折射率椭圆 ( 对应 $e$ 光, 在光轴上和 $o$ 光的圆重合, 垂直光轴的那个轴的长度为 $n_e$）</li>
+    <li>画出过圆心的入射光线, 过入射光线和入射折射率圆交点作出界面法线, 连接圆心和法线于折射率椭圆的交点, 得到 $e$ 光波矢方向, 过波矢和折射率椭圆的交点作折射率</li>
+  </ol>
+</blockquote>
+
+<h2 id="光的统计">光的统计</h2>
+<p>两个光相加 ($I = \langle \tilde{U}(P) \rangle$):</p>
+
+\[I = I_1 + I_2 + 2\langle \tilde{U}_1^*(P)\tilde{U}_2(P)\rangle\]
+
+<p>可以发现, 在上面的 $\langle \tilde{U}_1^*(P)\tilde{U}_2(P)\rangle$ 部分, 是影响最终的光强的主要变动项. 引入相关系数 \(R = \frac{\langle \tilde{U}_1^*(P)\tilde{U}_2(P)\rangle}{\sqrt{\langle \vert\tilde{U}_1(P)\vert^2\rangle \langle \vert\tilde{U}_2(P)\vert^2\rangle}} = \mathrm{Cov}(I_1 I_2) \Rightarrow I(P) = I_1 + I_2 + 2\vert R\vert\sqrt{I_1(P)I_2(P)}\)</p>
+
+<p>影响最终光强结果的主要还是后面的平均项, 也就是统计的部分. 
+而根据对什么东西统计, 就会得到空间相干性和时间相干性的不同的结果.</p>
+
+<p>对于可视度: $\gamma = \frac{I_M - I_m}{I_M + I_m}$, 
+当 $\gamma = 0$ 的时候, 认为是非相干, $=1$ 时为完全相干.</p>
+
+<h3 id="空间相干性">空间相干性</h3>
+<p>在考虑空间相干性的时候, 使用波列模型来考虑问题: 
+认为一束光的相位 $\phi = \boldsymbol{k}\cdot \boldsymbol{x}+ \omega t + \delta$, 其中 $\delta$ 为单一频率的光随机涨落的相位差.</p>
+
+<p>对于一个良好的干涉光, 应该满足: $\vert T \frac{\partial}{\partial t}\delta(P)\vert\ll 1$, 即 $(\omega_1-\omega_2)T+T \frac{\partial }{\partial t} \delta(P,t)\vert\ll 1$. 即在一个周期里面相位变化应该不太大.</p>
+
+<p>于是得到干涉条件:</p>
+<ul>
+  <li>$\omega_1 \approx \omega_2$</li>
+  <li>光矢量不正交</li>
+  <li>相位差无明显涨落 $\frac{\partial }{\partial t} \delta(P)\ll 1$</li>
+</ul>
+
+<p>于是可以把光强写为: $I = I_0(1+\gamma\cos \delta(P))$</p>
+
+<h4 id="杨氏双缝干涉以及其他各种干涉">杨氏双缝干涉以及其他各种干涉</h4>
+<p>其实关键就是计算干涉的时候的相位差.</p>
+
+<h4 id="空间相干性的决定因素">空间相干性的决定因素</h4>
+<p>对于上面的 $R$ 部分, 可以发现 $\gamma = \vert R \vert\gamma_m$, 于是可以说, 要研究空间相干性的问题的话, 就只需要研究这个 $R$ 的影响因素即可.</p>
+
+<p><strong>对于光源宽度对空间相干性的影响</strong>:</p>
+
+\[d_0=1.22\frac{l\lambda }{b}\]
+
+<p>即对于一个圆型的光源 $b$, 其对应的相干区域应该不会超过那么大 $d_0$. 其中 $l$ 为距离. 或者干脆写成角度的形式:</p>
+
+\[\Delta \theta_0 = \frac{\lambda }{b}\]
+
+<h3 id="时间相干性">时间相干性</h3>
+<p>考虑迈克尔逊干涉仪中的两个光的叠加:</p>
+
+\[U_1 = \sqrt{\frac{T}{2\pi}}\int_0^{\infty}a(\omega)e^{i(kL_1-\omega t)}\mathrm{d}\omega, U_2 = \sqrt{\frac{T}{2\pi}}\int_0^{\infty}a(\omega)e^{i(kL_2-\omega t)}\mathrm{d}\omega\]
+
+<p>应该有相同的频谱, 因为是同一个光源分出来的两个光. 但是考虑 $\tau = \frac{L_1-L_2}{c}$ 也就是因为光程差引入的一个时间差. 于是前面的 \(\langle \tilde{U}_1^*(t)\tilde{U}_2(t)\rangle \Rightarrow \langle \tilde{U}_1^*(t)\tilde{U}_1(t+\tau)\rangle = \int_0^\infty\mathrm{d}\omega\vert a(\omega)\vert^2 e^{-i\omega\tau}=\int_0^\infty\mathrm{d}\omega I(\omega)e^{-i\omega \pi} = G(\tau)\) 称为光源的时间自相关函数, 即光场的归一化功率谱.</p>
+
+<p>可以写成:</p>
+
+\[I(\Delta L) = I(1+\gamma_M\int_0^\infty\mathrm{d}\omega i(\omega)\cos(\frac{\omega\Delta L}{c})), \gamma_M = \frac{2\sqrt{I_1I_2}}{I_1+I_2}\]
+
+<p>其中 $\gamma_M$ 为光强不相等时, 可能存在的最大条纹可视度. 
+对于不同的光源的光谱:</p>
+<ul>
+  <li>高斯型: $I(\omega)=\frac{I}{\sqrt{2\pi}\Gamma}e^{-\frac{(\omega - \omega_0)^2}{2\Gamma^2}} \Leftrightarrow G(\tau) = e^{-i\omega_0\tau}e^{-\frac{1}{2} \Gamma^2\tau^2}$</li>
+  <li>洛仑兹型: $I(\omega) = \frac{I}{\pi}\frac{\Gamma}{(\omega - \omega_0)^2+\Gamma^2} \Leftrightarrow G(\tau) = e^{-i\omega_0\tau}e^{-\Gamma\vert\tau\vert}$</li>
+  <li>理想单色光: $I = \delta(\omega-\omega_0) \Leftrightarrow G(\tau) = e^{-i\omega_0\tau}$</li>
+</ul>
+
+<p>并且其对应的相干时间 $\tau_c = \int_{-\infty}^{\infty}\vert G(\tau)\vert^2\mathrm{d}\tau \Rightarrow \vert G(\tau)\vert = e^{-(\pi/2)(\tau/\tau_c)^2}$:</p>
+<ul>
+  <li>高斯: $\tau_c = \frac{\sqrt{\pi}}{\Gamma } \approx \frac{4.174}{\Delta \omega} \Rightarrow \vert G(\tau)\vert = 0.2079$</li>
+  <li>洛仑兹: $\tau_c = \frac{1}{\Gamma} = \frac{2}{\Delta\omega} \Rightarrow \vert G(\tau)\vert = 0.3679$</li>
+</ul>
+
+<p>( 相干长度: $L_c \approx c\tau_c$ )</p>
+
+<h4 id="迈克尔逊干涉仪">迈克尔逊干涉仪</h4>
+<p>基本的原理就是改变两个臂之间的距离来产生光程差.</p>
+
+<ul>
+  <li>分波幅装置</li>
+  <li>两个光束传播方向垂直</li>
+  <li>光程差可以在大范围内调节</li>
+  <li>两个光路之间有较大的操作空间</li>
+</ul>
+
+<h4 id="波包">波包</h4>
+
+<h3 id="偏振">偏振</h3>
+<p>在偏振里面: $R = e^{i\delta}$</p>
+
+<ul>
+  <li>
+    <p>马吕斯</p>
+
+\[I(\alpha) = I_0 \cos^2\alpha\]
+  </li>
+  <li>检验和产生
+    <ol>
+      <li>使光通过 $\lambda/4$ 波晶片</li>
+      <li>测量表观偏振度, 为原来光波的偏振度</li>
+    </ol>
+  </li>
+  <li>等效表达</li>
+  <li>相干性</li>
+</ul>
+
+<h2 id="例题">例题</h2>
+<ul>
+  <li>光的本性
+    <blockquote>
+      <p>光是波: 
+$k = \frac{2\pi}{\lambda}, \nu = \frac{c}{\lambda} = \frac{1}{T},\lambda = \frac{\lambda_0}{n} $</p>
+    </blockquote>
+
+    <blockquote>
+      <p>已知光强或者辐射强度, 计算电场振幅或者方均根.</p>
+
+      <ul>
+        <li>一个激光功率 $100mW$, 截面光强分布为 $I(r) = I_0 E^{-r^2/r_0^2}$
+光束中心处电场振幅 $P = 2\pi \int_0^\infty I(r)r \mathrm{d}r = \pi r_0^2 I_0 \Rightarrow \frac{P}{\pi r_0^2} = I_0 = \frac{c \varepsilon_0 E_0^2}{2} \Rightarrow E_0 = \sqrt{\frac{2I_0}{c\varepsilon_0}}$.</li>
+        <li>地球大气外层太阳辐射强度为 $P/\Delta S \Rightarrow E_{r.m.s} = \sqrt{I / (c \varepsilon_0)}$.</li>
+      </ul>
+
+      <p>利用的结论是 $I = c \hat{\omega}$, 但是在平均的时候, 
+需要注意对不同的光会有不同的结果:</p>
+      <ul>
+        <li>单色光: $\hat{\omega} = \langle \varepsilon_0 E_0^2 \cos^2 \omega t \rangle_t$</li>
+        <li>太阳光(自然光, 非单色光): $\hat{\omega} = \hat{E^2}$, 只能得到方均根.</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>几何光学
+    <blockquote>
+      <p>计算三棱镜的最小偏向角的位置和折射率<br />
+(Note: 轴对称的时候最小, $\delta_m = 2 \arcsin(n\sin \frac{A}{2}) - A$)</p>
+    </blockquote>
+
+    <blockquote>
+      <p>折射率随着界面连续变化:</p>
+      <ul>
+        <li>$n_k \sin i_k = n_j \sin i_j$, 入射角连续变化</li>
+        <li>或者利用运动方程 $ \frac{\mathrm{d}^2 \boldsymbol{r}}{\mathrm{d}\tau^2}$ 来计算</li>
+        <li>对于圆柱型的, 上面的运动方程还能够类比角动量守恒来求解.</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>利用 $\frac{\mathrm{d}^2 \boldsymbol{r}}{\mathrm{d} \tau^2} = \frac{1}{2} n^2$ 来计算运动轨迹</p>
+
+\[n(z) = n_0 (1+az), a&gt;0 \Rightarrow z \approx \frac{1}{2} n_0^2 a \tau^2 + v_z \tau \Rightarrow 抛物线\]
+    </blockquote>
+  </li>
+  <li>利用半波带法计算振幅
+    <blockquote>
+      <p>遮罩屏: (平行光照明, 有这样的遮罩, 求中心光强)
+<img src="/_img/pieces/optics-problem-1.png" alt="optics-problem-1" title="这个看起来非常的难做, 但是有一些可以取巧的办法, 因为上面给的是半波带的孔洞. " />
+这个题目的关键应该就是如何数半波带了, 
+数了半波带之后用矢量合成的方法来计算</p>
+      <ul>
+        <li>(1): 包含了 $0, \lambda /4, \lambda /2, \lambda$ 波带, $A = \sqrt{2} A_0 \Rightarrow I = 2 I_0$</li>
+        <li>(3): 只有一部分的话, 可以看作有全部, 然后减去. $A \rightarrow A_0/2$</li>
+        <li>(5): 利用互补原理, 互补屏的光强相等</li>
+        <li>(6): 综合了属于是, 这样的话就是 $A \rightarrow A_0/4$</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>各种衍射问题的应用
+    <blockquote>
+      <p>圆孔衍射中暗环的数量:<br />
+就是将圆孔半径 $\rightarrow 0$, 中心出现暗点的次数.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>圆孔光轴上的光强: 
+$A = 2 A_0 \sin \frac{\delta}{2}, \delta = \frac{2\pi}{\lambda }\frac{\rho^2}{2b}$</p>
+    </blockquote>
+
+    <blockquote>
+      <p>针孔照相机的<strong>最佳成像</strong>:</p>
+      <ol>
+        <li>光轴光强最大 $ \rightarrow $ 奇数个半波带</li>
+        <li>一个物点一个光斑 $ \rightarrow $ 只有一个半波带
+$ \Rightarrow d = 2 \rho = 2 \sqrt{\nu \lambda}$<br />
+(Note: 这里的 $\rho$ 需要满足远场条件, 是用远场条件来算的. 
+类似的, 通过光导轨的长度来计算圆孔最佳直径也是这样的: $\frac{\rho^2}{z \lambda} \leq 0.01 \Rightarrow d \leq 0.1 \rho\sqrt{z \lambda}$)
+针孔照相机的<strong>像点位置</strong>:
+只包含一个半波带: $\rho_1 = \frac{d}{2}, \rho_1 = \frac{\lambda a b}{a + b}$</li>
+      </ol>
+    </blockquote>
+
+    <blockquote>
+      <p>用积分暴力算光强分布</p>
+    </blockquote>
+  </li>
+  <li>菲涅耳公式
+    <blockquote>
+      <p>光强计算</p>
+      <ul>
+        <li>光强为 $I_0$, $i_B$ 从 $n_1 \rightarrow n_2$, 计算光强<br />
+因为是 $i_B \Rightarrow r_p = 0 \Rightarrow r_s = \frac{n_1^2 - n_2^2}{n_1^2 + n_2^2} \mathrm{or} I_0 \cos i_1 = I_1 \cos i_1 + I_2 \cos i_2$.<br />
+后一个公式利用了能流密度(能量守恒)</li>
+        <li>圆偏振光的上题版本<br />
+$I = I_p + I_s$</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>相位差计算: (看 $r_s, r_p$ 的正负知相差是 $0 \mathrm{or} \pi$)</p>
+      <ul>
+        <li>线偏振光入射到直角等腰棱镜上, 发生两次反射, $s,p$ 振幅变化和相位变化.<br />
+振幅变换就是 $\frac{A_s}{A_p} = \vert \frac{r_s}{r_p}\vert^2$, 相位变化则是通过计算 $r_p = \vert r_p \vert e^{-i\phi}$ 来得到 $\phi$ 的变化.</li>
+        <li>圆偏振光从 $n_1 &gt; n_2$ 入射, 计算反射光的偏振态</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>双折射
+    <blockquote>
+      <p>计算 $e$ 光的各种信息<br />
+波长, 相速度, 光线速度, 和光轴夹角等等</p>
+      <ul>
+        <li>已知波矢方向和光轴方向的夹角 $\theta$, $ \Rightarrow \frac{1}{n(\theta)}=\sqrt{(\frac{\cos\theta }{n_0})^2 + (\frac{\sin\theta }{n_e} )^2}$, 然后是光线速度方向 $\tan\xi = \frac{n_o^2}{n_e}^2\tan\theta$, 以及是光线速度: $\frac{ v_ov_e}{\sqrt{ v_e^2\cos^2\xi + v_o^2\sin^2\xi}} = \frac{c}{\sqrt{n_0^2\cos^2\xi+n_e^2\sin^2\xi }} = \frac{c}{n_on_e} \sqrt{\frac{n_e^4+n_o^4\tan^2\theta }{n_e^2+n_o^2\tan^2\theta }}$</li>
+        <li>已知光线方向和光轴夹角 $\xi$, $ \Rightarrow \tan\theta =\frac{n_e^2}{n_o^2} \tan\xi$</li>
+        <li>光线速度和波矢的最大夹角</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>晶体光学原件
+    <ul>
+      <li>晶体棱镜: 用于产生和检验偏振光
+        <ul>
+          <li>
+            <p>分离器: 利用 $o$ 光 ( 或 $e$ 光)全反射, $e$ 光 ( 或 $o$ 光)部分透射的方法分离 $e,o$ 光得到偏振光.</p>
+
+            <blockquote>
+              <p>计算分束角, 计算棱镜夹角</p>
+            </blockquote>
+          </li>
+          <li>补偿器: 在光矢量正交分量之间引入线性相位差</li>
+          <li>波晶片: 厚度均匀, 光轴平行表面的单轴晶体薄片, 所以 $o$, $e$ 光在其中传播方向不改变, 但是因为光的相速度不一样, 所以会有相位差. $ \delta = \frac{2\pi}{\lambda}(n_e -n_o)d$
+            <blockquote>
+              <p>计算 $1/4$ 波晶片的厚度 $(n_e-n_o)d=(2k+1)\frac{\lambda }{4}$</p>
+            </blockquote>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>旋光: $\phi = \alpha d, \alpha = \frac{\pi}{\lambda} (n_L - n_R)$, 或者在溶液里面: $\phi = [\alpha]N_{浓度}d$</li>
+  <li>磁致旋光: $\phi = VBl$, 不可逆.</li>
+  <li>干涉
+    <blockquote>
+      <p>使用杨氏双缝来进行实验, 知道光源波长 $\lambda$, 双孔间距为$d$, 双孔到接受屏的距离$D$, 双孔到单孔的距离 $l$, 求弹孔移动 $s$ 之后, 中心干涉条纹移动的数目 $N$<br />
+这个其实就是考虑单孔移动 $s$ 后给系统增加的初始相位差 $\delta_0 = \frac{D}{l} s$, 于是就能够用 $N = \frac{\delta x}{\Delta x}$ 来计算移动的条纹数量.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>单缝倾斜 $\alpha$ 角度 ( 以光线传播方向为轴) 后, 干涉条纹的可视度的改变情况<br />
+一个简单的作法就是把单缝的倾斜看作是光源的变宽, 然后利用临界光源宽度: \(d_0=1.22\frac{l\lambda }{b}\) 来计算即可.
+或者干脆这样: 认为最上面的偏移量和最下面的偏移量对相位差的影响刚好是一个 $\lambda/2$</p>
+    </blockquote>
+
+    <blockquote>
+      <p>杨氏双缝干涉条纹的间隔的最小值, 已知单孔直径 $\phi$, 双孔到接受屏的距离为 $D$, 双孔到单孔的距离为$R$, 波长 $\lambda$<br />
+$d \leq 1.22 \frac{R\lambda}{\phi } \Rightarrow \Delta x = \frac{D}{d} \lambda$</p>
+    </blockquote>
+  </li>
+  <li>自相关函数
+    <blockquote>
+      <p>已知自相关函数, 求干涉迈克尔逊仪的性质:</p>
+      <ul>
+        <li>光强随臂长改变周期: $\Delta L = \frac{\lambda }{2}$, 其实就是臂移动速度和 $\lambda/2$ 的关系</li>
+        <li>可视度在 $L$ 下: $\gamma = \vert G(\tau = \frac{L}{c})\vert$</li>
+        <li>量程: 若可视度要大于 $0.5$, 求量程: $\gamma = \vert G(\tau = \frac{L}{c})\vert &gt; 0.5$</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>不同波长的光的影响: 有 $\lambda_1, \lambda_2$ 的光叠加在一起, 在迈克尔逊干涉仪里面, 求第一次干涉条纹消失的臂长差 $L$:</p>
+      <ul>
+        <li>时间相干性的观点 $I(\tau) = I_0 (1 + \frac{1}{2}(\cos\omega_1\tau + \cos\omega_2\tau))$</li>
+        <li>普通的观点: 认为是两个波长的干涉条纹相互抵消</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>估计激光光谱宽度: $\Delta \nu \tau \sim 1 \Rightarrow L = c\tau \Rightarrow \Delta \nu \sim\frac{1}{\tau} = \frac{c}{L}$</p>
+    </blockquote>
+  </li>
+  <li>偏振
+    <blockquote>
+      <p>自然光经过两个正交的偏振片, 在其中加入一个检偏器, 求:</p>
+      <ul>
+        <li>透射光最大值: 自然光, 过了第一个偏振片之后剩下 $ \frac{1}{2} I_0$, 过了第二个之后再过第三个, 注意每个的叠加就好了: $I=(1/2)I_0\cos^2\alpha\sin^2\alpha$</li>
+        <li>旋转一周消光量</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>透过检偏器的一束光光强随着透振方向改变, 测得最大光强和最小光强分别是 $5I_0, 3I_0$: $I(\alpha) = I_m + (I_M - I_m)\sin^2\alpha = I_M + (I_M - I_m)\cos^2\alpha$</p>
+    </blockquote>
+
+    <blockquote>
+      <p>计算光的偏振度: 把任意偏振光看作是自然光和椭圆偏振光的非相干叠加, 认为自然光光强 $I_0$, 椭圆偏振光光强 $I_p$, 椭圆长短轴比为 $\tan\theta$, 于是 $p = \frac{(\frac{1}{2} I_0 + \cos^2\theta I_p) - (\frac{1}{2} + \sin^2\theta I_p)}{(\frac{1}{2} I_0 + \cos^2\theta I_p) + (\frac{1}{2} + \sin^2\theta I_p)} = P\cos 2\theta$</p>
+    </blockquote>
+
+    <p>(Note: 偏振度: $P = \frac{I_L - I_R}{I_L+I_R}$, 表观偏振度 $p = \frac{I_M-I_m}{I_M+I_m} $)</p>
+  </li>
+</ul>
+
+<h2 id="后记">后记</h2>
+<p>淦, 为什么不带计算器?</p>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[光学 怎么说吧, 说难不难, 说简单不简单.]]></summary></entry><entry><title type="html">Static Physics</title><link href="http://0.0.0.0:4000/notes/static-physics/" rel="alternate" type="text/html" title="Static Physics" /><published>2022-10-26T07:21:13+00:00</published><updated>2022-10-26T07:21:13+00:00</updated><id>http://0.0.0.0:4000/notes/static-physics</id><content type="html" xml:base="http://0.0.0.0:4000/notes/static-physics/"><![CDATA[<h1 id="static-physics">Static Physics</h1>
+<p>上半个学期基本上在讲热力学, 虽然上学期刚学热学, 但是仍然学得跟狗屎一样.</p>
+
+<h2 id="five-postulate">Five Postulate</h2>
+<ol>
+  <li>Equilibrium States are completely and uniquely specified
+by $U, V, N$ macroscopically.<br />
+通过 $U, V, N$ 三个宏观量来描述平衡态.</li>
+  <li>Fundamental Equation: $S(U, V, N)$.<br />
+基本方程 $S(U, V, N)$, 通过最大熵定理来得到稳定态关系.</li>
+  <li>$S$ is extensive, $S$ is continuous and differentiable 
+w.r.t $U, V, N$, $S$ increase monotonically with $U$.<br />
+$S$ 是广延量, 及 $S(\lambda U, \lambda V, \lambda N) = \lambda S$,
+系统的 $S$ 为各组分的 $S_i$ 的和. $S$ 对 $U, V, N$ 连续可导, 
+且 $\frac{\partial S}{\partial U} &gt; 0$</li>
+  <li>A macroscopic system samples every permissible microstate 
+with <strong>equal probability</strong>.<br />
+宏观状态是等可能微观状态的和.</li>
+  <li>\((\frac{\partial U}{\partial S})_{V,N} \rightarrow 0 \Rightarrow S \rightarrow 0\).<br />
+实际上就是 $T = (\frac{\partial U}{\partial S})_{V,N} \rightarrow 0$ 时,
+熵消失.</li>
+</ol>
+
+<h2 id="fundamental-equations">Fundamental Equations</h2>
+<h3 id="intensive-parameters">Intensive Parameters</h3>
+<p>将公式变形成: $U(S, V, N)$. 然后有:</p>
+
+\[\left\{\begin{array}{lll} (\frac{\partial U}{\partial S})_{V, N} &amp; \equiv &amp; T\\ -(\frac{\partial U}{\partial V})_{S,N} &amp; \equiv &amp; P\\ (\frac{\partial U}{\partial N}) &amp; \equiv &amp; \mu_j\end{array}\right.\]
+
+<p>为强度量: $T(\lambda S, \lambda V, \lambda N) = T(S, V, N)$ 等. 
+可以将公式变形成微分形式:</p>
+
+\[\mathrm{d} U = T \mathrm{d} S - P \mathrm{d} V + \mu \mathrm{d} N = \mathrm{d} Q + \mathrm{d} W_M + \mathrm{d} W_C\]
+
+<p>对单位组分 $u = U/N, s = S/N, v = V/N$, 有:</p>
+
+\[\mathrm{d} u = T \mathrm{d} s - P \mathrm{d} v\]
+
+<p>(Note: 通过 $u(s,v)$ 来求 $U(S,V)$, 
+只需要把 $u = u(s,v) \Rightarrow U/N = u(S/N, V/N)$ 做替换即可. )</p>
+
+<p>这一方法可以写成抽象的定义:</p>
+
+<p>对于广延量的基本方程 $Y(X_0, X_1, \dots)$, 其中$Y, X_i$ 均为广延量. 
+其一阶导数为强度量, $F_i = \frac{\partial Y}{\partial X_i}$.</p>
+
+<p><strong>关于平衡时的强度量</strong>:</p>
+<ul>
+  <li>温度:
+    <ul>
+      <li>
+        <p>两系统相互达到平衡, 则有温度相等的结果:<br />
+显然, 平衡的时候有最大熵:</p>
+
+\[\mathrm{d} S = 0 \Rightarrow (\frac{\partial S^{(1)}}{\partial U^{(1)}} ) \mathrm{d} U_1 + (\frac{\partial S^{(2)}}{\partial U^{(2)}} ) \mathrm{d} U_2 = 0 \Rightarrow T^{(1)} = T^{(2)}\]
+      </li>
+      <li>
+        <p>同理, 也能够得到能量传递方向从高能量到低能量的结论:<br />
+有熵增:</p>
+
+\[\Delta S \simeq (\frac{1}{T^{(1)}} + \frac{2}{T^{(2)}}) \Delta U^{(1)} \Rightarrow T^{(1)} &gt; T^{(2)} \Leftrightarrow \Delta U^{(1)} &lt; 0\]
+
+        <p>其中使用了 $\Delta U^{(1)} = \Delta U^{(2)}$ 的结论.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>力学量: (压强)<br />
+证明方法同上:</p>
+
+\[\mathrm{d} S = (\frac{1}{T^{(1)}} - \frac{1}{T^{(2)}})\mathrm{d} U + (\frac{P^{(1)}}{T^{(1)}} - \frac{P^{(2)}}{T^{(2)}}) \mathrm{d} V^{(1)} \Rightarrow P^{(1)} = P^{(2)}\]
+  </li>
+  <li>
+    <p>化学量:</p>
+
+\[\mathrm{d} S = (\frac{1}{T^{(1)}} - \frac{1}{T^{(2)}})\mathrm{d} U - (\frac{\mu_1^{(1)}}{T^{(1)}} -\frac{\mu_1^{(2)}}{T^{(2)}}) \mathrm{d} N_1^{(1)} \Rightarrow \mu_1^{(2)} = \mu_1^{(1)}\]
+  </li>
+</ul>
+
+<p>也能够类似地得到差不多的一般结论:</p>
+
+<h4 id="eular-equation">Eular Equation</h4>
+<p>对于广延量有 
+$Y(\lambda X_0, \lambda X_1, \dots) = \lambda Y(X_0, X_1, \dots)$ 结论, 
+于是利用欧拉公式 (大概叫这个):</p>
+
+\[\frac{\partial Y(\lambda X_i)}{\partial \lambda} = Y(X_i) \Rightarrow Y(X_i) = X_i \frac{\partial Y(\lambda X_i)}{\partial \lambda X_i} \overset{\lambda = 1}{\Rightarrow} Y(X_i) = X_i \partial_{X_i} Y\]
+
+<p>(其中省略了求和, 用了一些简化注记, 方便我输入. )</p>
+
+<p>这样有什么用? 答案是这样虽然在结果上非常的没有用, 但是可以把
+广延量和强度量联系在一起 (而不是只是微分的形式) 如:</p>
+
+\[U = TS - PV + \mu N, S = \frac{1}{T} U + \frac{P}{T} V - \frac{\mu}{T} N\]
+
+<h4 id="gibbs-duhem-relation">Gibbs-Duhem Relation</h4>
+<p>\(S \mathrm{d} T - V \mathrm{d} P + N \mathrm{d} \mu = 0,\ \mathrm{or}\ \mathrm{d} \mu = -s \mathrm{d} T + v \mathrm{d} P\)</p>
+
+<p>推导的方式就是利用欧拉公式和广延量的公式即可. 
+一般性的结论:</p>
+
+<p>记 $P_i = \partial_{X_i} Y$ (这个 $P_i$ 的记法, 
+不知道会不会让人想到广义动量, 毕竟在形式上这个和广义动量那么像), 
+那么在欧拉公式的基础上:</p>
+
+\[Y = X_i P_i \Rightarrow \mathrm{d} Y = P_i \mathrm{d} X_i + X_i \mathrm{d} P_i\]
+
+<p>而又有一般的微分表达式: $\mathrm{d} Y = P_i \mathrm{d} X_i$</p>
+
+<p>于是不难得到 $X_i \mathrm{d} P_i = 0$</p>
+
+<h3 id="legendre-transformations">Legendre Transformations</h3>
+<p>一般的结论是这样的: 
+$Y(X_i) \Rightarrow \psi(X_0, \dots, P_i, \dots X_n) = Y - P_i X_i$,
+即对于一个基本方程 $Y(X_i)$, 通过 Legendre 变换可以将其变成和强度量
+$P_i$ 表示的方程.</p>
+
+<p>(在力学里面的 Legendre 变换: $L(q, \dot{q}) \rightarrow H(q, p) = p q - L$)</p>
+
+<p>一个一般的证明:</p>
+
+<p>首先规定:</p>
+
+\[Y = Y(X_0, X_i), P_k = \frac{\partial Y}{\partial X_k}\]
+
+\[P = \frac{Y - \psi}{X - 0} \Rightarrow \psi = Y - P X, \mathrm{d} \psi = - X \mathrm{d} P\]
+
+<p>于是就类似于力学里面的 $L \rightarrow H$ 的关系了.</p>
+
+<p>(注: 用 $Y[X_i]$ 来表示 $\psi = Y - P_i X_i$ 的一个变化. 方便记. )</p>
+
+<p>一般的结论可能过于抽象了点, 下面是热力学里面的各种结论:</p>
+
+<p><strong>Thermodynamic Potentials</strong>:</p>
+
+\[F = U[T] \Rightarrow \mathrm{d} F = - S \mathrm{d} T - P \mathrm{d} V + \mu \mathrm{d} N\]
+
+\[H = U[P] \Rightarrow \mathrm{d} H = T \mathrm{d} S + V \mathrm{d}P + \mu \mathrm{d}N\]
+
+\[G = U[T,P] \Rightarrow \mathrm{d} G = - S \mathrm{d} T - P \mathrm{d} V + \mu \mathrm{d} N\]
+
+\[\mathrm{d} U = T \mathrm{d} S - P \mathrm{d} V + \mu \mathrm{d} N\]
+
+<p>这四个势函数就是之后反复捣腾的东西, 总之之间的关系比较重要, 需要记住.</p>
+
+<p><strong>Generalized Massieu Functions</strong>:</p>
+
+<p>同样的方法, 应用到熵函数上可以得到:</p>
+
+\[S[\frac{1}{T}] = S - \frac{1}{T} U = - \frac{F}{T}\]
+
+\[S[\frac{P}{T}] = S - \frac{P}{T} V\]
+
+\[S[\frac{1}{T}, \frac{P}{T}] = S - \frac{1}{T} U - \frac{P}{T} V = - \frac{G}{T}\]
+
+<p>等等. (注: 这里应该需要找几个例子去继续了解一下. )</p>
+
+<h4 id="extremum-principle">Extremum Principle</h4>
+<p><strong>Helmholtz Potential Minimum Principle</strong>:<br />
+The equilibrium value of any unconstrained internal parameer in
+a system in diathermal contact with a heat reservoir minimizes
+the Helmholtz Potential over the manifold of states for which $T = T^r$.</p>
+
+<p><strong>Enthalpy Minimum Principle</strong>:<br />
+The equilibrium value of any unconstrained internal parameter in a 
+system in contact with a pressure reservoir minimizes the enthalpy
+over the manifold of states of constant pressure (equal to that of
+the pressure reservoir).</p>
+
+<p><strong>Gibbs Potential Minimum Principle</strong>:<br />
+The equilibrium value of any unconstrained internal parameter in a 
+system in contact with a thermal and a pressure reservoir minimizes
+the Gibbs potential at constant temperature and pressure.</p>
+
+<p>一般性的结论: 如果在强度量 $P_i$ 一定的情况下, 那么 $U[P_i]$
+在平衡的时候达到最大值. 证明方法:</p>
+
+<p>令热源 (reservoir) $U^r$, 有 $P_i^r$, 于是对于考虑的对象和热源组成的系统, 
+在平衡的时候应该有:</p>
+
+\[\mathrm{d}(U + U^r) = \mathrm{d} U - P^r_i \mathrm{d}X^r_i = 0 \Rightarrow \mathrm{d} (U - P^r_i X^r_i) = 0 \Rightarrow \mathrm{d} U[P_i] = 0\]
+
+<p>(注意, 这里用了平衡的时候, $P_i = P^r_i$ 相等的结果. )</p>
+
+<p>同理, 利用 $\mathrm{d}^2 U^{total} &gt; 0$, 也能够得到类似的结论.</p>
+
+<p>于是上面的那些最小势的结论就变成了:</p>
+<ul>
+  <li>$T \equiv T_0 \Rightarrow \mathrm{d} F = 0$</li>
+  <li>$P \equiv P_0 \Rightarrow \mathrm{d} H = 0$</li>
+  <li>$T, P \equiv = T_0, P_0 \Rightarrow \mathrm{d} G = 0$</li>
+</ul>
+
+<p>(Note: 同理, 也能够有对 Massieu Functions 的结论. 不过是 $S$ 最大理论. 
+因为有结论, 当 $S$ 极大时, $U$ 极小. )</p>
+
+<h4 id="potential-and-works">Potential and Works</h4>
+<p>上面那三个都是势能嘛, 所以他们的改变量就和能量挂钩.</p>
+
+<ul>
+  <li>$T \equiv T_0:\ \mathrm{d} W_{RWS} = - \mathrm{d} F$</li>
+  <li>$P \equiv P_0:\ \mathrm{d} Q = \mathrm{d} H$</li>
+  <li>$T, P \equiv T_0, P_0:\ \mathrm{d}G = \nu_j \mathrm{d} \tilde{N}$, 
+其中: 化学式为 $0 \rightleftarrows \sum\nu_j A_j$, 
+平衡的时候应该有: $ \frac{\mathrm{d}N_i}{\nu_i} = \mathrm{d} \tilde{N}$</li>
+</ul>
+
+<h2 id="maxwell-relations">Maxwell Relations</h2>
+<p>又是一个大头项目. 我老是记不住这里的东西. 太容易忘记了.</p>
+
+<p>基本的原理是这样的, 利用偏导数的可交换性得到:</p>
+
+\[\frac{\partial^2 U}{\partial X_i \partial X_j} = \frac{\partial^2 U}{\partial X_j \partial X_i} \Rightarrow \frac{\partial P_i}{\partial X_j} = \frac{\partial P_j}{\partial X_i}\]
+
+<p>这里用的一个条件就是 $\mathrm{d} U = T \mathrm{d} S - P \mathrm{d} V + \dots$.</p>
+
+<blockquote>
+  <p>Note: 如何记忆 Maxwell 关系:<br />
+虽然书中给了一个绝妙的办法, 但是时间来不及了, 所以, 
+我的记法是:</p>
+
+\[(\frac{\partial P_i}{\partial P_j})_{X_i} = (\frac{\partial X_j}{\partial X_i})_{P_j}\]
+
+  <p>即 Maxwell 关系可以将强度量和广延量的微分关系进行一个替换.</p>
+</blockquote>
+
+<p>利用 Maxwell 关系可以将微分关系用前面的 $c_P, \kappa$ 等的东西来表示. 
+是一个比较重要的部分. 主要的操作是这样的:</p>
+
+\[\begin{array}{llll} (\frac{\partial X}{\partial Y})_Z &amp; = &amp; 1/(\frac{\partial Y}{\partial X})_Z &amp; (a)\\ (\frac{\partial X}{\partial Y})_Z &amp; = &amp; (\frac{\partial X}{\partial W})_Z / (\frac{\partial Y}{\partial W})_Z &amp; (b)\\ (\frac{\partial X}{\partial Y})_Z &amp; = &amp; -(\frac{\partial Z}{\partial Y})_Z/(\frac{\partial Z}{\partial Z})_Z&amp;(c)\end{array}\]
+
+<ol>
+  <li>如果表达式中有势能项 ($U, F, H, G$), 就把他们拉到分子的位置上: 
+对于在分子位置上的势能, 利用 $Y = P_i \mathrm{d} X_i$ 来展开成微分形式,
+要注意 $Z$ 位置规定了那些量是常数, 也就是 $\mathrm{d}Z$ 为零.
+    <ul>
+      <li>比如在 $Y$ 处, 使用方法 $(a)$, 
+于是就是计算 $(\frac{\partial Y}{\partial X})_Z$</li>
+      <li>比如在 $Z$ 处, 使用方法 $(c)$, 
+于是就是分别计算两个 $\partial Z$ 的项即可</li>
+      <li>比如在 $X$ 处, 直接就解决了</li>
+    </ul>
+  </li>
+  <li>如果表达式里面有化学式 $\mu$, 那么将其移动到分子的位置上 (方法同 1 ), 
+再用 Gibbs-Duhem 换成 
+$\mathrm{d} \mu = -s \mathrm{d} T + v \mathrm{d} p$</li>
+  <li>如果表达式里面有熵 $S$, 将其移动到分子的位置上. (方法同 1 )
+如果能用 Maxwell 关系化简的话, 就可以化简了; 
+反之, 如果不能的话, 那么就在 $\partial S$ 下面的分母加上一个
+$\partial T$ (方法为 $(b)$), 这样的话, 就能够得到 $c_V$ 或 $c_P$ 了.</li>
+  <li>如果表达式里面有体积 $V$, 将其移动到分子的位置上 (同1),
+于是应该可以得到 $\alpha$ 或者 $\kappa_T$.</li>
+  <li>到此为止, 应该能够得到 $c_V, c_P, \alpha, \kappa_T$ 的表达形式. 
+然后用 $c_V = c_P - T v \alpha^2/\kappa_T$ 来替换 $c_V$, 
+最终就能够得到 $c_P, \alpha, \kappa_T$ 的表达式了.</li>
+</ol>
+
+<blockquote>
+  <p>Note:<br />
+上面这样操作的原因应该是因为二阶导数只和 $T, V, P, Q$ 
+即一些常见的可测量量有关. 上面的操作都是如何将势能量通过拆微分的方法, 
+移动到分子上来化简, 或者是利用 Gibbs-Duhem 公式来去掉 $\mu$ 
+这种没法化简的, 或者是把 $S$ 当作 $Q$ 来用的.<br />
+所以记不清做法的话, 就往这个方向这样努力吧… (悲)</p>
+</blockquote>
+
+<h3 id="second-derivatives">Second Derivatives</h3>
+<p>强度量都是一阶导数, 考虑二阶导数的量有:</p>
+
+\[\left\{\begin{array}{lllll} \alpha &amp; = &amp; \frac{1}{v} (\partial_T v)_P &amp; &amp;\\ \kappa &amp; = &amp; -\frac{1}{v}(\partial_P v)_T &amp; &amp;\\ c_P &amp; = &amp; T(\partial_T s) &amp; = \frac{T}{N} (\partial_T S)_P &amp; = \frac{1}{N} (\mathrm{d}_T Q)_P\end{array}\right.\]
+
+<h2 id="examples">Examples</h2>
+<h3 id="temperature-unit">Temperature Unit</h3>
+
+\[R = N_A k_B = 8.3144 J/mole \cdot K\]
+
+<h3 id="ideal-gas-and-others">Ideal Gas and Others</h3>
+<h4 id="ideal-gas">Ideal Gas</h4>
+<p>理想气体有状态方程和内能方程:</p>
+
+\[PV = NRT, U = cRT\]
+
+<p>想要求 Fundamental Equation, 即 $S = \cdots$. 
+使用欧拉公式得到的 $U = T S - P V + \mu N$, 
+于是得到 $S = \frac{1}{T} U + \frac{P}{T} V + \frac{\mu}{T} N$.</p>
+
+<p>利用状态方程和内能方程可以得到 $\frac{1}{T}, \frac{P}{T}$, 
+唯一需要算的就是 $\frac{\mu}{T}$, 认为是 $u,v$ 的函数 (显然). 
+然后就能够用 Gibbs-Duhem 方程来计算
+$\mathrm{d}(\frac{\mu}{T}) = \frac{\mathrm{d} \mu}{T} = \cdots$</p>
+
+<p>最终得到的结果如下:</p>
+
+\[S = N s_0 + N R \mathrm{ln} (\frac{U}{U_0})^c(\frac{C}{V_0})(\frac{N}{N_0})^{-(c+1)}, s_0 = (c+1)R - (\frac{\mu}{T})_0\]
+
+<p>整体的思路是这样的:</p>
+<ul>
+  <li>因为状态方程和内能方程中是用强度量 $P_i$ 来描述的, 
+所以想法就是利用欧拉公式来计算
+$S = \frac{1}{T} U + \frac{P}{T} V + \frac{\mu}{T} N$.</li>
+  <li>计算过程中, 因为化学量不知道, 但是知道 $T,P$, 
+所以用 Gibbs-Duhem 公式来计算 $\mu$.</li>
+</ul>
+
+<p><strong>理想气体的混合熵</strong>:<br />
+虽然混合熵有一个非常农民的解释方法:</p>
+
+<blockquote>
+  <p>Taking a single component process of free expansion:</p>
+
+  <p>Before expansion, the its initial micro distribution number $\Omega$ is
+$\Omega_i$, its micro distribution number of final state is $\Omega_f$.
+Consider the volume is divided into $n$ parts, a particle can choose to stay
+in space $i = 1, 2, \ldots, n$. Thus all the possible distribution should be
+$\underbrace{{ 1, \ldots, n } \times \cdots \times { 1, \ldots, n
+}}_{n_j}$. (in which the $n_j$ is the number of particles. )</p>
+
+  <p>The $\Delta S = k \ln \frac{\Omega_f}{\Omega_i} = - k \ln
+\frac{\Omega_i}{\Omega_f}$, taking that $\frac{\Omega_i}{\Omega_f} = P (N_j
+\ \mathrm{particles}\ \mathrm{in}\ \mathrm{space}\ i) = \left( \frac{V_i}{V}
+\right)^{n_j} \Rightarrow \Delta S_j = - k n_j \ln \frac{V_i}{V}$.</p>
+
+  <p>Therefore, the after the expansion $S_j’ = S_j + \Delta S_j$.</p>
+
+  <p>The mixing progress thould be $S_{\mathrm{mixing}} = \sum S_j’ = \sum S_j +
+\sum \Delta S_j$, $\sum \Delta S_j = - \sum k n_j \ln \left( \frac{V_j}{V}
+\right) = - \sum R N_j \ln \frac{V_j}{V} \overset{\ast}{=} - \sum R N_j \ln
+\frac{N_j}{N}$.</p>
+</blockquote>
+
+<p>(摘自我当时的笔记. 想法就是利用同等体积的混合不会产生熵变的前提, 
+然后利用熵是态函数, 构造一个先膨胀成等体积, 然后再混合的过程来计算熵变. )</p>
+
+<h4 id="ideal-van-der-waals-fluid">Ideal Van Der Waals Fluid</h4>
+<p>理想范德瓦尔斯气体状态方程:</p>
+
+\[P = \frac{RT}{v-b} - \frac{a}{v^2}\]
+
+<p>最终计算的结果应该是: $S = NR \mathrm{ln} ((v-b)(u+a/v)^c) + Ns_0$.</p>
+
+<blockquote>
+  <p>计算过程:</p>
+  <ul>
+    <li>由状态方程可以得到
+$\frac{P}{T} = \frac{R}{v-b} - \frac{a}{v^2} \frac{1}{T}$</li>
+    <li>尽管不能够像理想气体一样得到 $\frac{1}{T}$, 
+但是可以认为 $\frac{1}{T} = f(u,v)$</li>
+    <li>于是 $\mathrm{d} s = \frac{1}{T} \mathrm{d} u + \frac{P}{T} \mathrm{d} v$
+然后利用二阶偏导数的交换性来计算出 $f$ 的表达式</li>
+  </ul>
+</blockquote>
+
+<h4 id="electromagn-radiation">Electromagn Radiation</h4>
+<p>有状态方程和势函数方程:</p>
+
+\[U = bVT^4, P = \frac{u}{3V}\]
+
+<p>同上, 能够得到 $S = \frac{1}{T} U + \frac{P}{T} V \Rightarrow S = \frac{4}{3} b^{1/4} U^{3/4} V^{1/4}$.</p>
+
+<h4 id="rubber-band">Rubber Band</h4>
+<p>弹性绳的状态方程和势函数:</p>
+
+\[\mathcal{J} = bT \frac{L-L_0}{L_1-L_0}, U = cL_0T\]
+
+<p>于是还是利用欧拉方程, 能够得到 $S = S_0 + cL_0 \mathrm{ln} \frac{U}{U_0} - \frac{b}{2(L_1-L_0)} (L-L_0)^2$.</p>
+
+<h4 id="magentic-systems">Magentic Systems</h4>
+<p>有状态方程和势函数:</p>
+
+\[B_e = (\frac{\partial U}{\partial I})_{S,V,N}, U = TS - PV + B_e I + \mu N\]
+
+<p>注意到这时候有新的一个强度量: $B_e$, 以及与其对应的广延量 $I$. 
+所以在前面的 Gibbs-Duhem 方程里面就要有:</p>
+
+\[S \mathrm{d} T - V \mathrm{d} P + I \mathrm{d} B_e + N \mathrm{d} \mu = 0\]
+
+<p>这样的话, 就能够将一些量代掉. 最终的结果应该是:</p>
+
+\[U = NRT_0 \mathrm{exp}(\frac{S}{NR} + \frac{I^2}{N^2I_0^2})\]
+
+<blockquote>
+  <p>Note:<br />
+一个简单的结论是这样的, 因为状态方程和势函数一般是能够被测量的, 
+而熵函数 (基本方程) 则不是这样的. 为了从可测量量得到熵函数, 
+方法就是通过上面的欧拉方程来得到熵函数.<br />
+或者… 可以考虑用别的方法来, 比如 Maxwell 关系之类的.</p>
+</blockquote>
+
+<h2 id="热机">热机</h2>
+<h4 id="reversible-progress">Reversible Progress</h4>
+<p>可能需要了解一些热力学过程, 以及对应的一些参数的意义.</p>
+
+<p>(比如 $\gamma = \frac{c_P}{c_V} = \frac{s+2}{s}$, 经常忘. )</p>
+
+<h4 id="maximum-work-theorem">Maximum Work Theorem</h4>
+<p>由冷源 (<strong>R</strong>everible <strong>H</strong>eat <strong>S</strong>ource) 和热源形成一个系统, 
+对外界 (<strong>R</strong>everible <strong>W</strong>ork <strong>S</strong>ource) 做功.</p>
+
+<p>首先有能量守恒:</p>
+
+\[\mathrm{d} U + \mathrm{d} Q_{RHS} + \mathrm{d} W_{RWS} = 0\]
+
+<p>然后是有熵增条件:</p>
+
+\[\mathrm{d} S_{tot} = \mathrm{d} S + \frac{\mathrm{d} Q_{RHS}}{T_{RHS}} \geq 0\]
+
+<p>(Note: 这里的 $S_{tot}$ 即系统的整体的熵, 是由冷源和热源的熵变的和. )</p>
+
+<p>于是就能够得到最大功的表达式了.</p>
+
+<h4 id="carnot-cycle-and-other-cycles">Carnot Cycle and Other Cycles</h4>
+<p>emmm… 其实不同的循环不过就是不同的过程而已. 比较麻烦的就是如何计算. 
+如果用热学里面的方法直接暴力积分的话, 可能会非常难算. 
+不过已经知道熵函数的话:</p>
+
+<p>就能够用前面的 $\Delta W = T_{RHS} \Delta S - \Delta U$.</p>
+
+<p>(Note: 前面的 $S, T, U$ 这些都是表示的是工作介质的热力学量. 
+但是考虑的时候, 是考虑冷源和热源组成的系统的熵变. )</p>
+
+<p><strong>热机效率</strong></p>
+
+\[\varepsilon_e = 1-T_c/T_h\]
+
+<ul>
+  <li>
+    <p>Otto 循环:</p>
+
+\[\varepsilon_{Otto} = 1 - (\frac{V_B}{V_A})^{\frac{c_p - c_v}{c_v}}\]
+  </li>
+  <li>
+    <p>Brayton 循环:</p>
+
+\[\varepsilon_e = 1 - (\frac{P_A}{P_B})^{\frac{c_p - c_v}{c_p}}\]
+  </li>
+</ul>
+
+<h4 id="inversible-progress">Inversible Progress</h4>
+
+<h3 id="chemical-reaction">Chemical Reaction</h3>
+<p>首先是化学反应的平衡条件:</p>
+
+\[0 \rightleftarrows \sum_j \nu_j A_j \Rightarrow \sum_j \mu_j \nu_j = 0\]
+
+<h4 id="chemical-reactions-in-ideal-gases">Chemical Reactions in Ideal Gases</h4>
+
+\[\mu_j = RT[\phi_J(T) + \mathrm{ln} P + \mathrm{ln} x_j]\]
+
+<p>其中 $\mu_j$ 为一个化学式, $\phi$ 为温度函数, $x_j$ 为摩尔分数.</p>
+
+<p><strong>Equilibrium Constant</strong> 平衡常数:</p>
+
+\[\mathrm{ln} K(T) \equiv - \sum_J \nu_j \phi_j (T)\]
+
+\[\frac{\mathrm{d} H}{\mathrm{d} \tilde{N}} = - T \frac{\partial}{\partial T} (\sum v_j \mu_j)_{P, N_1, N_2} = R T^2 \frac{\mathrm{d}}{\mathrm{d} T} \mathrm{ln} K(T)\]
+
+<p>(啊… 实在是不太会, 我不会化学啊!!! 这就是高中化学的背刺么… )</p>
+
+<h3 id="stability-of-thermodynamic-systems">Stability of Thermodynamic Systems</h3>
+<p>对于稳定的热力学系统, 应该有: (对于单个量的变化)</p>
+
+\[(\frac{\partial^2 S}{\partial X_k^2})_{X_i} \leq 0 \Leftrightarrow S(X_k + \Delta X_k) + S(X_k - \Delta X_k) \leq 2 S(X_k)\]
+
+<p>即 $\delta S = 0, \delta^2 S \leq 0$ 的一个最大熵的平衡.</p>
+
+<p>对于多个量的变化, 用的是多元函数的判断方法, 即那个很难记的 Henssin 矩阵. 
+(或者用 $f(\boldsymbol{X} ) = \sum (-1)^k \frac{(\delta \boldsymbol{X} \cdot \nabla)^n f}{n!}$).</p>
+
+<p>(只能希望不会考到了就是了. )</p>
+
+<blockquote>
+  <p>两个的情况:</p>
+
+\[\frac{\partial^2 Y}{\partial X_i^2}\frac{\partial^2 Y}{\partial X_j^2} - \frac{\partial^2 Y}{\partial X_i \partial X_j} \geq 0\]
+</blockquote>
+
+<p>同样的方法也能够应用到势最大问题上面.</p>
+
+<h3 id="phase-transitions">Phase Transitions</h3>
+<h4 id="first-order-phase-transition">First Order Phase Transition</h4>
+<p>一阶相变, $G$ 不连续.</p>
+
+<blockquote>
+  <p>Note: 二阶相变, $G’$ 不连续</p>
+</blockquote>
+
+<p><strong>Latent Heat</strong><br />
+潜热, 就:</p>
+
+\[l_{LS} = T (s^{(L)} - s^{(S)}) = T \Delta s = \Delta h\]
+
+<p><strong>潜热的变化</strong></p>
+<ul>
+  <li>
+    <p>Clapeyron Equation</p>
+
+\[\frac{\mathrm{d} P}{\mathrm{d} T} = \frac{l}{T \Delta v}\]
+
+    <p>考虑在相变界面上的两个点: $A, B$, 在这个点上, 
+化学式发生了不连续的变化, 即 $\mu_P \rightarrow \mu_P’$. 
+在相变的时候, 应该有: $\mu_P = \mu_P’$. <br />
+证明的方法就是利用 Gibbs-Duhem 方程: 
+$\Delta \mu = v \mathrm{d} P - s \mathrm{d} T$, 
+然后 $\Delta \mu = \mu_B - \mu_A = \mu_B’-\mu_A’$<br />
+于是得到 $\frac{\mathrm{d} P}{\mathrm{d} T} = \frac{l}{T \Delta v} $.</p>
+  </li>
+</ul>
+
+<h2 id="exercise">Exercise</h2>
+<ul>
+  <li>
+    <p>Fundamental Equations</p>
+
+    <blockquote>
+      <p>检测 $S(U, V, N)$ 是否合理, 基本上就是在检测:</p>
+      <ul>
+        <li>$S(\lambda U, \lambda V, \lambda N) \overset{?}{=} \lambda S$</li>
+        <li>$\frac{\partial S}{\partial U} \overset{?}{&gt;} 0$</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>通过 $S(U, V, N)$ 来计算:</p>
+      <ul>
+        <li>$U, V, N$ 就直接化简即可, 如果知道表达式的话</li>
+        <li>$T, P, \mu$ 通过对 $U$ 进行一次求导<br />
+并且没准还能够通过这样的方式来计算得到状态方程.<br />
+(Note: 如果只有 $T, P$ 的话, 可以用 Gibbs-Duhem 公式来计算出 $\mu$, 
+如: $\mathrm{d}\mu = -T \mathrm{d}s + P \mathrm{d} v$, 然后积分, 
+得到结果. )</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>计算得到基本方程:</p>
+      <ul>
+        <li>知道 $T(S,V,N), P(S,V,N), \mu(S,V,N)$ 或者
+$T(s,v), P(s,v), \mu(s,v)$ 的形式<br />
+方法是直接利用欧拉公式: $U = T S - P V + \mu N$</li>
+        <li>只能知道两个上面的东西:<br />
+方法是利用 Gibbs-Duhem 公式得到第三个:
+$\mathrm{d} \mu = -s \mathrm{d}T + v \mathrm{d}P$</li>
+        <li>或者是直接暴力积分: $\mathrm{d} u = T \mathrm{d} s - P \mathrm{d} v$<br />
+比如已知 $PV^k = g(S) \Rightarrow \frac{\partial U}{\partial V} = - \frac{g(S)}{V^k} \Rightarrow U = \cdots$</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>计算平衡位置: (不过一般都伴随着对能量改变的计算)</p>
+      <ul>
+        <li>强度量相等<br />
+不过还是要搞清楚用来平衡的东西是啥. 比如有什么半透膜什么之类的, 
+不然可能会搞混.</li>
+        <li>熵最大</li>
+        <li>势最小</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>
+    <p>热机</p>
+    <blockquote>
+      <p>计算最大功和熵变:<br />
+一般的做法就是写出熵变 $\Delta S = \int \mathrm{d} U / T$, 
+然后利用熵增: $\Delta S \geq 0$ 得到温度的最小或最大. 
+于是能够得到 $W = -\Delta U$ 的最大.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>计算某一段过程的做功, 吸热等等之类的东西.</p>
+      <ul>
+        <li>一般的方法就是暴力积分, 如果路径都给的非常清晰的话</li>
+        <li>但是也有可能会遇到路径非常模糊不清, 描述十分奇怪的情况, 
+这个时候估计可以利用势函数的一个路径无关的特性, 直接计算端点.</li>
+        <li>或者可以试试看沿着某一条直线进行积分. 比如已知 $(\partial_X Y)_Z$, 
+没准可以利用走直线 (单解一个方向的偏微分) 的方式来求解变化量.</li>
+      </ul>
+    </blockquote>
+  </li>
+</ul>
+
+<h2 id="后记">后记</h2>
+<p>就这样吧…</p>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[Static Physics 上半个学期基本上在讲热力学, 虽然上学期刚学热学, 但是仍然学得跟狗屎一样.]]></summary></entry><entry><title type="html">理论力学 - 期中</title><link href="http://0.0.0.0:4000/notes/analysis-mechanics/" rel="alternate" type="text/html" title="理论力学 - 期中" /><published>2022-10-23T10:15:11+00:00</published><updated>2022-10-23T10:15:11+00:00</updated><id>http://0.0.0.0:4000/notes/analysis-mechanics</id><content type="html" xml:base="http://0.0.0.0:4000/notes/analysis-mechanics/"><![CDATA[<h1 id="理论力学---期中">理论力学 - 期中</h1>
+<p>这必须感谢大一的力学课, 目前学到的东西基本在赵爹课上都有讲过. 
+只是讲得更加细致一些.</p>
+
+<h2 id="数学">数学</h2>
+<ol>
+  <li>
+    <p>泰勒展开:</p>
+
+\[f(x_0 + x) = \sum_{k=0}^\infty \frac{f^{(k)}}{k!}(x - x_0)^k\]
+
+    <ul>
+      <li>$e^x = \sum_{k=0}^\infty \frac{x^k}{k!}$</li>
+      <li>$sin x = \sum_{k=0}^\infty (-1)^k \frac{x^{2k+1}}{(2k+1)!}$</li>
+    </ul>
+  </li>
+  <li>导数:
+    <ul>
+      <li>$\frac{\partial f}{\partial x} = \frac{\partial f}{\partial y} \frac{\partial f}{\partial x}$: 链式法则</li>
+      <li>$\frac{\partial f}{\partial \boldsymbol{s}} = \nabla f \cdot \frac{\boldsymbol{s}}{s}$: 方向导数<br />
+推广: $\nabla f = \frac{\partial f}{\partial \boldsymbol{r}}$</li>
+      <li>$\nabla$: 三角算子, 需要了解它在不同坐标系下的表现, 注意其矢量性和算符性即可.</li>
+      <li>$\nabla, \nabla \cdot, \nabla \times$: 梯度, 散度, 旋度</li>
+    </ul>
+  </li>
+  <li>
+    <p>坐标系及其变换:<br />
+<strong>指标</strong>: (详细的操作可以去参考之前的<a href="/notes/tensor-with-general-bases/">笔记</a>, 之后可能会有更新. 或者去找别的, 比如<a href="http://staff.ustc.edu.cn/~xtao/courses/ce/downloads/cc.pdf">ustc</a> (之前的笔记写得太水了, 还是不看了… ))</p>
+
+    <p>(注: 这里按照的是上面的 <a href="http://staff.ustc.edu.cn/~xtao/courses/ce/downloads/cc.pdf">ustc</a> 的规定. 可以看看下面的 <a href="#附录-曲线坐标系">附录: 曲线坐标系</a>, 这里就不写了. )</p>
+
+    <ul>
+      <li>球坐标系</li>
+      <li>柱坐标系</li>
+      <li>极坐标系</li>
+      <li>自然坐标系</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="牛顿">牛顿</h2>
+<h3 id="boldsymbolf--m-boldsymbola">$\boldsymbol{F} = m \boldsymbol{a}$</h3>
+<p>写了公式之后剩下的基本就是数学了. 比如 $\boldsymbol{a}$ 不同坐标系下的展开. 
+比如展开完了之后的运算.</p>
+
+<p>在 $\boldsymbol{a}$ 的展开里面, 主要就是对基底的求导:</p>
+
+<p>虽然可以通过 \(\dot{\boldsymbol{e}}_{q_j} = \frac{\partial}{\partial t}(\frac{1}{h_{q_j}} \frac{\partial r_i}{\partial q_j}) e_i\) 来计算, 
+但是并不是很方便的感觉…</p>
+
+<p>常见的有:</p>
+
+<ul>
+  <li>极坐标系 (柱坐标系): $\boldsymbol{a} = (\ddot{r} - r \dot{\theta}^2)e_r + (r^2\ddot{\theta} + 2 \dot{r}\dot{\theta})e_\theta$</li>
+  <li>球坐标系: 好复杂啊…</li>
+</ul>
+
+<h3 id="守恒定律">守恒定律</h3>
+<ul>
+  <li>动量 $\frac{\mathrm{d}\boldsymbol{p}}{\mathrm{d}t} = \boldsymbol{F}$</li>
+  <li>角动量 $\frac{\mathrm{d}\boldsymbol{L}}{\mathrm{d}t} = \boldsymbol{r} \times \boldsymbol{F}$</li>
+  <li>动能 $\frac{\mathrm{d}V}{\mathrm{d}\boldsymbol{r}} = \boldsymbol{F}$</li>
+</ul>
+
+<p>在拉格朗日方程里面, 守恒定律对应着运动积分:</p>
+<ul>
+  <li>可遗坐标: 
+$\frac{\partial L}{\partial q} = 0 \Leftrightarrow \frac{\mathrm{d}}{\mathrm{d} t} (\frac{\partial L}{\partial \dot{q}}) = 0$<br />
+对应的 $p = \frac{\partial L}{\partial \dot{q}}$ 为广义动量积分.</li>
+  <li>广义能量积分: 
+$\frac{\mathrm{d} H}{\mathrm{d} t} = -\frac{\partial L}{\partial t}$</li>
+</ul>
+
+<h2 id="拉格朗日">拉格朗日</h2>
+
+\[\frac{\mathrm{d}}{\mathrm{d}t}(\frac{\partial L}{\partial \dot{q}_i}) - \frac{\partial L}{\partial q_i} = 0\]
+
+<p>或者写成最小作用量原理的形式:</p>
+
+\[S = \int_{t_1}^{t_2} L \mathrm{d}t \Rightarrow \delta S = 0\]
+
+<p>利用 <strong>欧拉方程</strong> (和 $e^{i\theta}$ 那个不一样) 有:</p>
+
+\[\delta S = 0 \Leftrightarrow \frac{\partial F}{\partial y} - \frac{\mathrm{d}}{\mathrm{d} t} (\frac{\partial F}{\partial y'})\]
+
+<h3 id="约束">约束</h3>
+<p>对于 $n$ 个质点的系统, 有 $s$ 个约束, 那么系统的自由度为 $3n-s$. 
+即每增加一个约束, 减少一个自由度.</p>
+
+<p>利用拉格朗日乘子法可以计算得到约束力. 方法即是在 $L$ 中添加一个约束方程, 
+比如约束满足的方程是 $G(x_i, \dot{x}_i, t)$, 那么就让 $L’ = L + \lambda G$. 
+这样的话, 再计算出结果反代入约束中解出 $\lambda$ 即可.</p>
+
+<h3 id="虚功原理">虚功原理</h3>
+
+<p>对于一个约束: $f(\boldsymbol{r}, t) = 0$, 
+其对应的约束力 $\boldsymbol{N} = \lambda \nabla f(\boldsymbol{r}, t)$, 
+对一堆约束力, 有虚功原理:</p>
+
+\[\sum \lambda_i \nabla f_i \cdot \delta\boldsymbol{r} + \sum \boldsymbol{F}_j \cdot \delta \boldsymbol{r}_j = 0\]
+
+<p>(实功不一定为零, 只有稳定约束才是, 
+即 $-\lambda \frac{\partial f}{\partial t}\mathrm{d} t$)</p>
+
+<p><strong>达朗贝尔原理</strong>:</p>
+
+\[\sum(\boldsymbol{F}_i - m_i \ddot{\boldsymbol{r}}_{i}) = 0\]
+
+<h2 id="刚体">刚体</h2>
+<h3 id="欧拉角">欧拉角</h3>
+<p>转动矩阵: (绕的始终是随体坐标系)</p>
+
+<p>进动: (绕 $z$)</p>
+
+\[D = \left(\begin{array}{lll} \cos\phi &amp; \sin\phi &amp; 0\\ -\sin\phi &amp; \cos\phi &amp; 0\\ 0 &amp; 0 &amp; 1\end{array}\right)\]
+
+<p>章动: (绕 $x$)</p>
+
+\[C = \left(\begin{array}{lll} 1 &amp; 0 &amp; 0\\ 0 &amp; \cos\theta &amp; \sin\theta\\ 0 &amp; -\sin\theta &amp; \cos\theta\end{array}\right)\]
+
+<p>自转: (绕 $z$)</p>
+
+\[B = \left(\begin{array}{lll} \cos\psi &amp; \sin\psi &amp; 0\\ -\sin\psi &amp; \cos\psi &amp; 0\\ 0 &amp; 0 &amp; 1\end{array}\right)\]
+
+<p>上课时候用的转动矩阵顺序是 $A = BCD$</p>
+
+<h3 id="动力学方程">动力学方程</h3>
+<p>推导欧拉运动方程的时候, 除了矢量法 (emm… 几何不太好, 所以不会); 
+可以使用代数一点的方法来计算:</p>
+
+<p>对基底的变换来做. (刚体坐标系)</p>
+
+\[(\boldsymbol{\omega} \times \boldsymbol{r}_0) \mathrm{d} t = \boldsymbol{R}^{- 1}(\boldsymbol{R} (t + \mathrm{d} t) - \boldsymbol{R} (t)) \boldsymbol{r} \Rightarrow (\boldsymbol{\omega} \times) = \boldsymbol{R}^{- 1} \frac{\mathrm{d} \boldsymbol{R}}{\mathrm{d} t}\]
+
+<p>(地面坐标系)</p>
+
+\[\boldsymbol{\omega} \times \boldsymbol{r} \mathrm{d} t = (\boldsymbol{\omega}\times) \boldsymbol{R} \boldsymbol{r}_0 \mathrm{d} t = (\boldsymbol{R} (t + \mathrm{d} t) - \boldsymbol{R} (t)) \boldsymbol{r}_0 \Rightarrow (\boldsymbol{\omega}\times) = \frac{\mathrm{d} \boldsymbol{R}}{\mathrm{d} t} \boldsymbol{R}^{- 1}\]
+
+<p>一些更加有用的东西: (是指更多用来算的东西, 不是说好不好用)</p>
+
+\[\boldsymbol{J} = \sum m_i (\boldsymbol{\omega} \boldsymbol{r}_i^2 -\boldsymbol{r}_i(\boldsymbol{\omega}\cdot \boldsymbol{r}_i))\]
+
+\[\boldsymbol{I}_{ij} = \int_V \rho(r^2\delta_{ij} - x_ix_j)\mathrm{d}V\]
+
+<h2 id="中心力场">中心力场</h2>
+<p><strong>比内方程</strong>:</p>
+
+\[h^2u^2(\frac{\mathrm{d}^2 u}{\mathrm{d} \phi^2} + u) = -\frac{F}{m'}\]
+
+<p>其中 $h$ 为角动量, $u = \frac{1}{r}$, 其实证明并不是很难, 关键就在于如何把
+$\frac{\mathrm{d} }{\mathrm{d} t} \rightarrow \mathrm{d}\phi$, 
+就是利用角动量守恒以及来改变求导的底.</p>
+
+<p>(为了防止忘记一些结论: $r = \frac{p}{1-\varepsilon \cos\phi}$, 
+上面的 $p$ 叫做焦点参数, $\varepsilon$ 叫做离心率. )</p>
+
+<h2 id="exercise">Exercise</h2>
+<ul>
+  <li>
+    <p>坐标系及其变换</p>
+
+    <blockquote>
+      <p>写出运动坐标</p>
+    </blockquote>
+
+    <blockquote>
+      <p>写出坐标变换</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>利用虚功原理计算广义力<br />
+虽然耍流氓的方式就是, 简单的问题全部用牛顿法算一遍, 然后检验.<br />
+<strong>需要注意的是, 对于虚功原理, 需要确认作用力和自由的坐标</strong>.<br />
+(虽然不知道这样是否严谨, 但是如果想要得到约束力的话, 
+就要破坏约束力对应的约束, 使其重新变成一个自由坐标, 但是破坏之后, 
+对应的运动约束应该是什么样的, 就有点不好搞了. )<br />
+(所以最理想的方式还是 $\lambda \nabla g$ 的形式. )</p>
+  </li>
+  <li>
+    <p>计算 $L$ 以及通过 $L$ 来计算运动方程.<br />
+这个就… 直接 $L = T - V$ 来算就好了. 算的时候注意有没有把一些已经存在的, 
+显而易见的约束给不小心代入了. 比如 $x^2 + y^2 = r^2$ 直接带掉了之类的. 
+代入了之后可能会忘了, 导致求约束的时候自己给忘了.</p>
+  </li>
+  <li>欧拉角的转动</li>
+  <li>刚体<br />
+(一个流氓的办法: 如果算不来刚体的转动结果, 没准直接把刚体看作是质点组, 
+没准估计算得出来. 虽然是下策. )</li>
+</ul>
+
+<h2 id="附录-曲线坐标系">附录: 曲线坐标系</h2>
+<p>(别问我为何要这样, 明明考试前还要这般作死. 因为应该是考后写的. )</p>
+
+<h3 id="基矢">基矢</h3>
+<p>将向量用 $\boldsymbol{r} = x e_x + y e_y + z e_z$ 来表示. 对于一个坐标系
+$(x^1, x^2, x^3)$, 用 $\boldsymbol{r} = x(x^i) e_x + \cdots$ 的形式来表示.</p>
+
+<p>这样的好处是在进行坐标变换的时候, 只需要对基底进行变换即可. 
+比如在计算转动系的欧拉运动方程的时候, 就是用这样的对基底进行变换的方法来解决问题. 
+而这个基底就可以和直角坐标系的坐标轴类比, (虽然它可能是弯的). 
+对于位移投影, 就是 $\nabla f \cdot \boldsymbol{e}_i$, 于是写成简单的形式就变成了: 
+$\frac{\partial f}{\partial x_i} \boldsymbol{e}_i$.</p>
+
+<p>定义基矢量: $e_i = \frac{\partial \boldsymbol{r}}{\partial x^i}$, 
+定义逆基矢: $e^i = \frac{e_j \times e_k}{e_1 \cdot (e_2 \times e_3)}$, 
+其中 $V = e_1 \cdot (e_2 \times e_3)$ 来对基矢归一化. 
+也同时等于 $V = e^1 \cdot (e^2 \times e^3)$. 
+并且有: $e^i = \nabla x^i$.</p>
+
+<p>之所以定义逆基矢, 应该是为了有能得到像直角坐标系下正交归一的结果的想法. 
+即: \(\boldsymbol{e}_i \boldsymbol{e}_j = \delta_{ij}\). 这样的结果.</p>
+
+<h3 id="度规">度规</h3>
+<p>定义度规系数:</p>
+
+\[g_{ik} = e_i \cdot e_k = g_{ki}, g^{ik} = e^i \cdot e^k = g^{ki}\]
+
+<p>度规张量:</p>
+
+\[G = g_{ik} e^i e^k = g^{ik} e_i e_k\]
+
+<blockquote>
+  <p>爱因斯坦约定: (稍微和平时讲的有点点不一样)<br />
+一对求和指标总是一上一下</p>
+</blockquote>
+
+<p>用前面定义的基矢量:</p>
+
+\[\mathrm{d} x^i e_i = \mathrm{d} x_j e^j \Rightarrow \mathrm{d} x^i = \mathrm{d} x_j g^{ij}, \mathrm{d} x_j = \mathrm{d} x_i g_{i j} \Rightarrow g^_{jk}g_{ik} = \delta_i^j\]
+
+<h3 id="剩下的">剩下的?</h3>
+<p>嗯, 之后再写吧… (逃)</p>
+
+<p><del>毕竟摆烂更重要</del></p>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[理论力学 - 期中 这必须感谢大一的力学课, 目前学到的东西基本在赵爹课上都有讲过. 只是讲得更加细致一些.]]></summary></entry><entry><title type="html">概率论与数理统计 - 期中</title><link href="http://0.0.0.0:4000/notes/pobaboility-midterm/" rel="alternate" type="text/html" title="概率论与数理统计 - 期中" /><published>2022-10-22T15:49:44+00:00</published><updated>2022-10-22T15:49:44+00:00</updated><id>http://0.0.0.0:4000/notes/pobaboility-midterm</id><content type="html" xml:base="http://0.0.0.0:4000/notes/pobaboility-midterm/"><![CDATA[<h1 id="概率论与数理统计---期中">概率论与数理统计 - 期中</h1>
+<p>虽然就要考试了, 但是上半个学期学得实在是有些迷幻. 
+所以考前复习几乎和预习是一个样的.</p>
+
+<blockquote>
+  <p>Not only god knows, I know, and by the end of this semester, 
+you will know.<br />
+Sidney Coleman</p>
+</blockquote>
+
+<h2 id="一些概念">一些概念</h2>
+<ul>
+  <li>随机试验</li>
+  <li>样本空间 $\Omega$: 把所有的事件都表示出来的一个集合<br />
+于是事件的运算就变成了集合的运算</li>
+  <li>概率空间 \(\mathcal{F} \subseteq 2^\Omega, \mathrm{card}2^\Omega = \#2^\Omega = 2^{\#\Omega}\)<br />
+在样本空间 \(\Omega = \{w_1, \dots, w_n\}\) 
+上定义 代数 $\mathcal{F} \subseteq 2^\Omega$. 
+代数中的元素 $A \in \mathcal{F}$ 有映射
+$P: \mathcal{F} \rightarrow [0, 1], A \mapsto P(A)$, 
+于是形成概率空间 $(\Omega, \mathcal{F}, P)$.</li>
+  <li>随机变量: $X: \Omega \rightarrow \mathbb{R}, \omega \mapsto X(\omega)$<br />
+随机向量: \(\{X_1, \dots, X_n\}\)</li>
+  <li>条件概率 $P(A \mid B) = \frac{P(A B)}{P(B)}, P(A) = P(A \mid B)P(B)$
+    <ul>
+      <li>离散</li>
+      <li>连续: $f_{X\mid Y}(x\mid y) = \frac{f(x, y)}{f_Y(y)}$</li>
+    </ul>
+  </li>
+  <li>期望 $EX = \sum P_i X_i = \int_{-\infty}{\infty} x f(x) \mathrm{d}x$:
+    <ul>
+      <li>$E(\lambda X + \mu Y) = \lambda EX + \mu EY$, 线性</li>
+      <li>$E X = W X \cdot E Y \mathrm{iff} P(A ⋂ B) = P(A)P(B)$</li>
+    </ul>
+  </li>
+  <li>条件期望: $E(X\mid A) = \sum X_i P(X_i \mid  A) = \int_{- \infty}{\infty} = x f(x\mid A)dx$<br />
+如果 \(A = \{Y = y\}, E(X\mid Y = y)=\sum x_i P(X = x_i \mid  Y = y) = \int_{- \infty }{\infty} x f_{X\mid Y}(x\mid y)\mathrm{d}x\).<br />
+注意, $E(X|Y)$ 不是一个数, 而更像是一个函数: 
+\(E(X\mid Y) (ω) = \sum E(X\mid Y=y)\boldsymbol{1}_{\{Y = y\}}(ω)\)
+    <ul>
+      <li>$E(E(X\mid Y)) = E X$</li>
+      <li>$E(X \mid X) = X$</li>
+      <li>$E(h(X)Y\mid X) = h(X) E(Y\mid X)$</li>
+      <li>$X, Y$ 独立, $E(X\mid Y) = EX$</li>
+      <li>$E(aX+bY\mid Z) = aE(X\mid Z)+bE(Y\mid Z)$</li>
+      <li>$E(E(X\mid Y)\mid Y) = E(X\mid Y)$</li>
+      <li>$E((X - E(X\mid Y)) \cdot h(X)) = 0$<br />
+记 $(X - E(X\mid Y)) \cdot h(X) = Z$, 于是计算 $E(E(Z\mid Y)) = EZ$</li>
+    </ul>
+  </li>
+  <li>方差 $\mathrm{Var} X = E(X-EX)^2 = EX^2 - (EX)^2$</li>
+  <li>协方差 $Cov(X,Y) = E[(X-EX)(Y-EY)] = E(X Y) - (EX)(EY)$</li>
+  <li>
+    <p>全概率公式 (条件概率的推广) $P(A) = \sum_i P(B \mid E_i) P(E_i)$, 
+其中 $E_i$ 为 $\Omega$ 的一个划分.</p>
+
+    <blockquote>
+      <p>一个好的分划就能够简化计算.</p>
+    </blockquote>
+  </li>
+  <li>贝叶斯公式: $P(A \vert B) = \frac{A \bigcap B}{P(B)}$</li>
+  <li>示性函数: $\mathbb{1}_{E_n} = 1\ \mathrm{if}\ E_n\ \mathrm{else}\ 0$<br />
+可以把这个示性函数看作是一个随机变量.
+    <ul>
+      <li>计数: 如果令 \(X_i = \mathbb{1}_{\{第i次正面向上\}}\), 
+于是利用 $X = \sum X_i$ 就能够实现类似于计数的方式来计算得到一个分布.</li>
+    </ul>
+  </li>
+  <li>分布函数: $F(X) = P(X \leq x)$
+    <ul>
+      <li>生存函数: $P(X&gt;x) = 1-F(x)=S(x)$</li>
+      <li>离散: $F(X) = \sum P(X)$</li>
+      <li>连续: $F(X) = \int f(t) \mathrm{d}t, f(x) = F’(x)$ 为概率密度函数</li>
+      <li>多维随机变量的情况 (随机向量):<br />
+\(\{ω\} \mapsto x = (x_1, x_2, \cdots, x_n)\), 形成随机向量. 
+则 $F(x, y) = P(X \leq x, Y \leq y) = \int_0^x\int_0^y f(x, y)\mathrm{d}x\mathrm{d}y$. 
+其中 $f(x, y)$ 为一个联合分布.<br />
+从联合分布到边缘分布:<br />
+$P(X \leq x) = P(X \leq x, Y &lt; + \infty) = lim_{y \rightarrow \infty} F(x, y)$
+        <ul>
+          <li>离散: $P(X = x) = \sum P(X = x, y)$</li>
+          <li>连续: $f_X(x) = \int_{-\infty}^{\infty}f(x, y)\mathrm{d}y$</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>独立性 $P(A \bigcap B) = P(A) P(B) ↔ A, B$ 独立<br />
+(注: )</p>
+  </li>
+  <li>概率不等式:
+    <ul>
+      <li>Markov 不等式:</li>
+    </ul>
+
+\[X \geq 0, EX &lt; +\infty ⇒ ∀ c &gt; 0, P(X \geq c) \leq \frac{EX}{c}\]
+
+    <ul>
+      <li>Cebyshev 不等式</li>
+    </ul>
+
+\[X: E|X|^2 &lt; +\infty ⇒ ∀c&gt;0,P(|X-EX|\geq c)\leq \frac{\mathrm{Var}X}{c^2}\]
+  </li>
+  <li>中心极限定理: 
+设 $X_i$ 独立同分布 (与 $X$ 分布相同. )
+$E X = \mu, \mathrm{Var} X = \sigma^2 (0 &lt; σ^2 &lt; ∞)$, 
+令 $S_n=X_1 + \cdots + X_n$, 则当 $n \rightarrow \infty$, 
+$\frac{S_n - EX}{\sqrt{n \mathrm{Vat}X}} \rightarrow N(0,1)$</li>
+  <li>大数定律 (频率逼近概率):
+    <ul>
+      <li>弱大数定律: 设 $X_1, X_2, \cdots, X_n$ 独立同分布, 
+$E|X|^2 &lt; +∞$, 令 $S_n = \sum X_i$, 则 
+$\forall ε &gt; 0, P(|\frac{S_n}{n} - EX | &gt; ε) \rightarrow 0$</li>
+      <li>强大数定律: $\frac{S_n}{n} \rightarrow EX. $</li>
+    </ul>
+  </li>
+  <li>Story Proof: 分别为左式和右式讲一个故事, 并证明这两个故事是等价的.</li>
+</ul>
+
+<h2 id="随机变量和概率分布和其他">随机变量和概率分布和其他</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>分布</th>
+      <th>表达式</th>
+      <th>$EX$</th>
+      <th>$\mathrm{Var}X$</th>
+      <th>$Et^X$</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>伯努利分布</td>
+      <td>$P(X=1)=p,P(X=0)=1-p$</td>
+      <td>$p$</td>
+      <td>$p(1-p)$</td>
+      <td>$pt+(1-p)$</td>
+    </tr>
+    <tr>
+      <td>二项分布</td>
+      <td>$P(k)=C_n^kp^k(1-p)^{n-k}$</td>
+      <td>$np(1-p)$</td>
+      <td>$np(1-p)$</td>
+      <td>$(pt+(1-p))^n$</td>
+    </tr>
+    <tr>
+      <td>泊松分布</td>
+      <td>$\frac{e^{-\lambda}\lambda^k}{k!}$</td>
+      <td>$\lambda$</td>
+      <td>$\lambda$</td>
+      <td>$E^{\lambda(t-1)}$</td>
+    </tr>
+    <tr>
+      <td>负二项分布</td>
+      <td>$P(k)=C_{r+k-1}^{r-1}(1-p)^kp^r$</td>
+      <td>$\frac{r(1-p)}{p}$</td>
+      <td>$r\frac{1-p}{p^2}$</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>标准正态分布</td>
+      <td>$\frac{1}{\sqrt{2\pi}}e^{-\frac{x^2}{2}}$</td>
+      <td>$0$</td>
+      <td>$1$</td>
+      <td> </td>
+    </tr>
+    <tr>
+      <td>$\cdots$</td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+      <td> </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>(关于随机变量的分布之类的计算, 一般的操作就是难算, 非常的难算. 
+然后就是各种利用求和关系变来变去… )</p>
+
+<h2 id="exercise">Exercise</h2>
+<ul>
+  <li>
+    <p>随机事件</p>
+
+    <blockquote>
+      <p>写出随机事件和样本空间</p>
+    </blockquote>
+
+    <blockquote>
+      <p>星期二男孩问题<br />
+(关于知道的越多越怎么样的问题… 属于是变态问题)</p>
+      <ul>
+        <li>有两个小孩, 一个是男孩, 且在上海出生
+(假设某个小孩出生在上海的概率为 $\frac{1}{30}$),
+那么另外一个也是男孩的概率.</li>
+        <li></li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>事件的运算:</p>
+      <ul>
+        <li>证明 $P(A_1 \cup \cdots \cup A_n) = \sum_{i = 1}^n P(A_i) - \sum_{i \leq i &lt; j \leq n} P(A_i \cap A_j) + \sum_{1 \leq i &lt; j \leq n} P(A_i \cap A_j \cap A_k) + \cdots + (-1)^{n+1} P(A_1 \cap \cdots \cap A_n)$<br />
+就是容斥定理啊.</li>
+        <li>从数集 \(\{\dots\}\) 中取一个数, 不能被 $k$, 不能被 $l$ 整除. 
+这种就是利用上面的容斥定理来计算.</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>
+    <p>事件的独立性</p>
+
+    <blockquote>
+      <ul>
+        <li>证明 $A, B$ 独立的充要条件是 $P(A \mid B) = P(A \mid \hat{B})$<br />
+类似的问法还有很多… 都是在问什么和什么独立的条件. 
+做的基本思路是这样的: 推导 $P(A)P(B) = P(A \cap B)$.</li>
+      </ul>
+    </blockquote>
+  </li>
+  <li>
+    <p>事件分布</p>
+
+    <blockquote>
+      <p>计算事件的分布表 (离散), 计算随机变量的分布函数</p>
+    </blockquote>
+  </li>
+  <li>一些值的计算
+    <ul>
+      <li>期望</li>
+      <li>方差</li>
+      <li>协方差</li>
+      <li>矩</li>
+    </ul>
+  </li>
+  <li>高端的证明: Story Proof<br />
+需要注意的是, 一般给左边等式找了一个含义之后, 还要给右边等式也找一个, 
+哪怕再怎么简单的含义. (只是为了说明这是一个 Proof, 仅此而已. )</li>
+</ul>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[概率论与数理统计 - 期中 虽然就要考试了, 但是上半个学期学得实在是有些迷幻. 所以考前复习几乎和预习是一个样的.]]></summary></entry><entry><title type="html">Complex Analysis</title><link href="http://0.0.0.0:4000/notes/complex-analysis/" rel="alternate" type="text/html" title="Complex Analysis" /><published>2022-10-22T03:38:27+00:00</published><updated>2022-10-22T03:38:27+00:00</updated><id>http://0.0.0.0:4000/notes/complex-analysis</id><content type="html" xml:base="http://0.0.0.0:4000/notes/complex-analysis/"><![CDATA[<h1 id="complex-analysis">Complex Analysis</h1>
+<blockquote>
+  <p>复变函数学十遍…</p>
+</blockquote>
+
+<p>虽然仔细想了想, 发现虽然东西不多, 但是都不好算啊… 
+并且作为一个称职的菜狗, 还把基本上所有的证明都略过了. 
+(虽然一般的结论和数学分析里面的都差不多(目前). )</p>
+
+<h2 id="复数">复数</h2>
+<ul>
+  <li>四则运算, 求模之类的, 反正计算的时候选一个好一点的坐标系会比较方便, 
+比如遇到指数相关的大多数是极坐标, 遇到实部虚部的时候大多数是$x-y$</li>
+  <li>共轭: $z = x + iy \rightarrow z^* = x - i y$<br />
+其中共轭是对合运算: \((z^*)^* = z, \mathrm{Re} z = \frac{z + z^*}{2}, \mathrm{Im} z = \frac{z - z^*}{2i}\), 对四则运算保持运算.</li>
+  <li>三角不等式: $|z_1 + z_2| \leq |z_1| + |z_2|$</li>
+  <li>
+    <p>$ρ e^θ$</p>
+
+    <blockquote>
+      <p>利用上面的方法可以用来计算三角函数的和:<br />
+$S_n(\theta) = \sum_{i = 1}^{n} \sin i \theta$<br />
+用欧拉公式, $\sin k\theta = \frac{e^{ikθ} - e^{-ik\theta}}{2i}$ 
+将求和变成对等比级数的求和.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>用来计算 $\theta = \sum \arctan{\frac{n_i}{d_i}}$:<br />
+设 $z_i = d_i + i n_i$, 于是就有 $\theta = \mathrm{arg}(\prod z_i)$.</p>
+    </blockquote>
+  </li>
+  <li>康托完备性: Cauchy 数列均收敛于 $\mathbb{C}$, 复数域康托完备</li>
+  <li>代数学基本定理: 复数多项式一定有根
+    <ul>
+      <li>一般的操作就是 $R(z) = \prod_i(z^{\alpha_i} - c_i e^{i\theta_i})$, 
+然后就能够解: $z = \sqrt[\alpha_i]{c_i} e^{i \frac{\theta_i + 2 \lambda \pi}{k_i}}$.</li>
+      <li>或者是用来将多项式化简成一次因式的基, 即计算出 $z_i$, 然后得到结果.</li>
+    </ul>
+  </li>
+  <li>欧拉公式: $\cos\theta + i \sin\theta = e^{i\theta}$<br />
+于是可以有倍角公式: $\sin n\theta = \mathrm{Im} (e^{i\theta})^n = \mathrm{Im} (\cos\theta + i \sin\theta)^n$. 于是就有了倍角公式了.</li>
+  <li>复数几何: 平移$\pm z$, 伸缩$\lambda$, 旋转: $e^{i\theta}$</li>
+  <li>球极投影<br />
+(虽然不一定有用, 但是可以记录一下: 基本的做法就是一个三角形的相似而已. )</li>
+  <li>多值性: 割线和黎曼面<br />
+分支点阶数: $k$ 阶分支点 (绕 $k + 1$ 圈回到原来的值), $\infty$ 阶分支点.</li>
+</ul>
+
+<h2 id="函数">函数</h2>
+<ul>
+  <li>$\mathrm{sinh} = \frac{e^z - e^{-z}}{2}, \mathrm{cosh} = \frac{e^z + e^{-z}}{2}$<br />
+(注: 和三角函数不一样, 里面没有 $i$ 的出现. )</li>
+  <li>类似于 $\mathrm{ln}z = \mathrm{ln} |z| + i \mathrm{Arg}z$ 
+这样的的函数有多值性</li>
+  <li>对于函数极限与趋近极限的路径无关.</li>
+  <li>解析函数 (全纯函数): 在 $E$ 上解析的函数, 若 $E = \mathbb{C}$, 
+则为整函数.</li>
+  <li>调和函数: $ΔH=0$.<br />
+C-R 条件 $⇒$ 解析函数的实部或虚部为调和函数</li>
+</ul>
+
+<h3 id="集合">集合</h3>
+<p>平面点集的定义.</p>
+
+<h3 id="导数">导数</h3>
+
+\[\lim_{\Delta z \rightarrow 0} \frac{f(z+Δz) - f(z)}{Δz} = \frac{\mathrm{d} f(z)}{\mathrm{d} z}\]
+
+<ul>
+  <li>C-R 条件: $\frac{∂u}{∂x} = \frac{∂v}{∂y}, \frac{∂u}{∂y} = -\frac{∂v}{∂x}$<br />
+若 C-R 条件不满足, 那么就不可求导. (虽然满足也不一定可导就是了, 
+一般来说, 证明不可导就用一个反例来就好了. )<br />
+(注: 一个简单的, 但估计不太严谨的记忆方法就是 $(u,v)$, $(x,y)$, 
+$(ρ, \varphi)$, 看作是按顺序来的一对, 顺序相同的同号, 反的就是异号. )</li>
+</ul>
+
+<h3 id="积分">积分</h3>
+<p>一般的积分和数学分析里面的差不多.</p>
+
+<ul>
+  <li>柯西公式: 
+$f(\alpha) = \frac{1}{2πi} \oint_l \frac{f(z)}{z-α} \mathrm{d}z$<br />
+(证明的思路类似构造一个非常贴近 $\alpha$ 点的小圆和外面的大圆. )
+    <ul>
+      <li>导数: 
+$f^{(n)}(z) = \frac{n!}{2\pi i} \oint_l \frac{f(\xi)}{(\xi - z)^{n+1}}\mathrm{d}\xi$</li>
+      <li>Morera 定理: 
+$\forall l \subset E, \oint_l f(z) \mathrm{d}z = 0 ⇒ f(z)$解析</li>
+      <li>Liouville 定理: 
+$f(z)$ 为整函数, 并且有界, 则常数.<br />
+(证明思路: 构造 $\xi \rightarrow \infty$ 的积分路径 $l$. )</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="极限-级数">极限, 级数</h2>
+<p>极限: $∀ε &gt; 0, ∃N, n &gt; N ⇒ |z_n - z| &lt; ε$, 
+可以看作是实部合虚部的分别的极限.</p>
+
+<p><strong>级数 (和) 的收敛性判断</strong>:</p>
+<ul>
+  <li>
+    <p>Cauchy</p>
+
+\[n &gt; N ⇒ |\sum_{k = n + 1}^{n + p} z_k | &lt; ε\]
+
+    <p>原形就是 $z_m - z_n &lt; ε$ 的一个变形.</p>
+  </li>
+  <li>
+    <p>Leibniz</p>
+
+\[a_k ↓ \rightarrow 0 ⇒ \sum_{k=1}^∞(-1)^{k-1}a_k \rightarrow S\]
+
+    <p>其实就是 Dirichlet 的一种形式</p>
+  </li>
+  <li>
+    <p>Dirichlet</p>
+
+\[\{a_k\} 单调 \rightarrow 0, \mathrm{sup}\{b_k\} \leq M ⇒ \sum_{k=1}^∞a_kb_k\]
+  </li>
+</ul>
+
+<p><strong>一些结果</strong>:</p>
+<ul>
+  <li>条件收敛, 绝对收敛</li>
+  <li>级数的加减乘除</li>
+</ul>
+
+<h3 id="幂级数">幂级数</h3>
+<ul>
+  <li>收敛半径: 
+$\frac{1}{R} = \lim_{n \rightarrow ∞}\frac{a_{k+1}}{a_{k}}$<br />
+在洛朗级数里面, 内圆收敛半径: 
+$\frac{1}{r} = \lim_{n \rightarrow ∞}\frac{a_{-k}}{a_{-(k+1)}}$<br />
+或者使用 $\frac{1}{R} = \lim_{n \rightarrow \infty}\sqrt[n]{a_n}$</li>
+  <li>泰勒展开</li>
+  <li>解析延拓: 不知道算是一种概念上的东西还是一个操作性的东西…</li>
+  <li>洛朗级数展开(双边级数展开): 类似泰勒展开, 在操作上加入一个负幂部分.
+    <ul>
+      <li>可去奇点, 本心奇点, ($m$ 阶) 极点</li>
+    </ul>
+  </li>
+</ul>
+
+<h2 id="exercises">Exercises</h2>
+<ul>
+  <li>平面点集:
+    <blockquote>
+      <p>点集类型: $0 &lt; \mathrm{arg} \frac{z-i}{z+i} &lt; \frac{π}{4}$, 之类的. 
+想法就是 $\mathrm{arg}\frac{a + b i}{|z|}$ 变成那样再算.</p>
+    </blockquote>
+  </li>
+  <li>复数运算
+    <blockquote>
+      <p>Cauchy-Schwarz 不等式:<br />
+\(\|\sum_{j = 1}^n c^*_jd_j\|^2 \leq (\sum_{j=1}^n \|c_j\|^2) \cdot (\sum_{k=1}^n \| d_k \|^2)\)<br />
+证明的思路是这样的: 利用内积和韦达定理.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>三角函数:<br />
+\(\sum_{k=1}^n (\cot \frac{k \pi}{2n+1})^2 = \frac{n(2n-1)}{3}\)<br />
+想法是利用欧拉公式和多项式的根和系数的关系:</p>
+      <ul>
+        <li>欧拉公式:<br />
+\(\cos m\theta + i \sin m\theta = e^{im\theta} = (\cos\theta + i\sin\theta)^m ⇒ \frac{\cos m\theta + i\sin mθ}{\sin^mθ} = \sum_{l=0}^m \left(\begin{array}{l}m\\l\end{array}\right) i^l\cot^{m-l}\theta\)</li>
+        <li>可以看出解为 $k\pi/(2n+1)$, 利用韦达定理可以得到和的表达式.</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>无穷嵌套:<br />
+\(z = \sqrt{i + \sqrt{i + \cdots}}\)<br />
+简单的做法就是 $z = \sqrt{i + z}$, 然后计算检测是否满足结果.<br />
+复杂的做法就是写成 $z = \rho e^{i\theta}$ 或者是 $z = a + b i$ 的形式.</p>
+    </blockquote>
+  </li>
+  <li>复数几何
+    <blockquote>
+      <p>$z_1, z_2, z_3: z_1^2 + z_2^2 + z_3^2 = z_1 z_2 + z_2 z_3 + z_3 z_1 ⇔ z_1, z_2, z_3$ 形成等边三角形</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>解析函数</p>
+
+    <blockquote>
+      <p>实值解析函数为常数<br />
+证明思路: 直接使用 C-R 条件即可.</p>
+    </blockquote>
+
+    <blockquote>
+      <p>已知解析函数的一部分 (实部或者虚部), 求解解析函数 (复势).</p>
+      <ul>
+        <li>首先验证是否是解析函数, 检测那部分是否满足拉普拉斯方程.</li>
+        <li>求解解析函数的一部分 (如果有必要的话):<br />
+比如有一个圆族方程: $x^2 + y^2 = r^2$, 
+那么把变动的那一项写出来, 就能够得到等势线族方程. 
+等势线族方程对应 $u$. 电力线族对应 $v$.</li>
+        <li>计算的方法主要有三个:
+          <ul>
+            <li>凑全微分 (最优先选择)</li>
+            <li>
+              <p>代数方法 (虽然比较抽象, 但是某些时候比较好算)</p>
+
+\[u(x, y) = \frac{1}{2} (f(x+iy) + f^*(x-iy)), v(x, y) = \frac{1}{2i} (f(x+iy) - f^*(x-iy))\]
+
+              <p>基石 $↑$, 于是计算的时候, 
+相当于只需要计算 $f(z) = 2u(\frac{z}{2}, \frac{z}{2i}) - u(0,0) + iC$ 即可.</p>
+            </li>
+            <li>路径积分 (最容易理解, 但是最难算)</li>
+          </ul>
+        </li>
+      </ul>
+
+      <p>虽然但是, 这个是一个考验熟练度的活…</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>积分</p>
+
+    <blockquote>
+\[\frac{1}{2\pi} \int_{0}^{2\pi} \frac{R\cos\theta}{R^2 - 2rR\cos\theta + r^2} \mathrm{d}\theta = \frac{r}{R^2 - r^2}\]
+
+      <p>思路是这样的: 积分的时候遇到三角函数有理分式的时候, 
+可以利用欧拉公式: $z = e^{i\theta}$ 来替换 $\mathrm{d}\theta = \frac{\mathrm{d} x}{iz}$.<br />
+这样问题就变成了有理分式积分. 对于有理分式积分, 思路是这样的:<br />
+将其变成 $\sum \frac{1}{Q(z)} + \sum P(z)$ 的形式, 其中 $Q,P$
+为有理多项式. 对于 $\frac{1}{Q(z)}$ 的形式, 通过留数定理来计算.<br />
+(Note: 留数定理: \(\oint_C f(z) \mathrm{d}z = 2 \pi i \mathrm{Res} f(z_0)\), 其中留数为 $\lim_{z \rightarrow z_0} (z-z_0)f(z) = \mathrm{Res} f = a_{-1}$. )</p>
+    </blockquote>
+  </li>
+  <li>
+    <p>级数</p>
+
+    <blockquote>
+      <p>计算收敛半径:</p>
+      <ul>
+        <li>$\sum(a_k + b_k)z^k \rightarrow \mathrm{min} (r_a, r_b)$, 
+类似这样的, 虽然可能不太好算, 但是可以从收敛圆的那个图直观感受一下.</li>
+        <li>$\sum \frac{z^k}{1-z^k}$
+这样的求收敛半径的. 不会做就先猜后证吧… 猜好边界位置之后, 
+然后利用放缩来证明, (比如放缩成等比数列求和之类的).</li>
+      </ul>
+    </blockquote>
+
+    <blockquote>
+      <p>级数展开的问题:</p>
+      <ul>
+        <li>泰勒展开:
+          <ul>
+            <li>$(1+z)^{1/z}$ 这样的, 可以先求对数, 然后 $\frac{1}{z} \sum\cdots$.</li>
+            <li>$\arctan z$ 这样的, 可以先求导 $\frac{1}{1+z^2}$, 后展开, 再积分.</li>
+            <li>$\mathrm{ln} (1+e^z)$ 这样的, 可以先将 $e^z$ 视为一个 $u$ 展开, 
+然后再继续展开. (看来要记一下常用展开)</li>
+          </ul>
+        </li>
+        <li>洛朗级数:
+          <ul>
+            <li>分数形 $\frac{f(z)}{(z-z_0)^k}$, 
+其中 $f(z)$ 是一个只需要普通泰勒展开的</li>
+          </ul>
+        </li>
+      </ul>
+    </blockquote>
+  </li>
+</ul>]]></content><author><name></name></author><category term="notes" /><summary type="html"><![CDATA[Complex Analysis 复变函数学十遍…]]></summary></entry></feed>

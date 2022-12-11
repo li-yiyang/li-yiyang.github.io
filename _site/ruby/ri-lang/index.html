@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Computer Toys | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Computer Toys" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Computer Toy: Fibonacci Computer: Ruby 因为计算机科学导论里面要做一个模拟计算机CPU执行 大概20次类似汇编指令的事情, 并且还要给出每一步的计算机状态, 这个就让我很悲哀了. 我一个超过九九乘法表的运算都十分无力的菜狗, 做这种事分需要耐心的事情简直就是超级大危机." />
+<meta property="og:description" content="Computer Toy: Fibonacci Computer: Ruby 因为计算机科学导论里面要做一个模拟计算机CPU执行 大概20次类似汇编指令的事情, 并且还要给出每一步的计算机状态, 这个就让我很悲哀了. 我一个超过九九乘法表的运算都十分无力的菜狗, 做这种事分需要耐心的事情简直就是超级大危机." />
+<link rel="canonical" href="http://0.0.0.0:4000/ruby/ri-lang/" />
+<meta property="og:url" content="http://0.0.0.0:4000/ruby/ri-lang/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-07-03T02:23:30+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Computer Toys" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-07-03T02:23:30+00:00","datePublished":"2022-07-03T02:23:30+00:00","description":"Computer Toy: Fibonacci Computer: Ruby 因为计算机科学导论里面要做一个模拟计算机CPU执行 大概20次类似汇编指令的事情, 并且还要给出每一步的计算机状态, 这个就让我很悲哀了. 我一个超过九九乘法表的运算都十分无力的菜狗, 做这种事分需要耐心的事情简直就是超级大危机.","headline":"Computer Toys","mainEntityOfPage":{"@type":"WebPage","@id":"http://0.0.0.0:4000/ruby/ri-lang/"},"url":"http://0.0.0.0:4000/ruby/ri-lang/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="http://0.0.0.0:4000/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Computer Toys</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-07-03T02:23:30+00:00" itemprop="datePublished">Jul 3, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="computer-toy-fibonacci-computer-ruby">Computer Toy: Fibonacci Computer: Ruby</h1>
+<p>因为计算机科学导论里面要做一个模拟计算机CPU执行
+大概20次类似汇编指令的事情, 并且还要给出每一步的计算机状态, 
+这个就让我很悲哀了. 我一个超过九九乘法表的运算都十分无力的菜狗, 
+做这种事分需要耐心的事情简直就是超级大危机.</p>
+
+<p>于是, 为了发扬计算机的任劳任怨, 又超级细心的特色. 
+所以我决定自己做一个模拟CPU, 用来执行计科导里面出现的奇怪指令集. 
+(好吧, 做到最后我发现计科导课程里面的指令集和寄存器设定比较坑, 
+因为虽然限制了位宽度, 但是没有运算溢出的特性, 
+导致位宽度的设定有点鸡肋. 然后寄存器和内存有点不适合用来模拟实际的栈. 
+不过总体上来说还是能够成的. )</p>
+
+<blockquote>
+  <p>[2022/7/3] 拓展了一下, 重新写了一个解释器(Ruby)版本的. (虽然还有一些小小的问题), 目前可以实现大部分的Lisp功能了, (宏还在写… ). 参考的资料是<a href="https://mitpress.mit.edu/sites/default/files/sicp/index.html" title="Structure and Interpretation of Computer Programs">SICP</a>的第四章以及<a href="https://github.com/kanaka/mal" title="Make a Lisp">mal</a>. 见<a href="#n久之后的一个更新">下</a></p>
+</blockquote>
+
+<h2 id="最简单的版本">最简单的版本</h2>
+<p>嗯, 就是课上的模式.</p>
+
+<p><img src="/_img/computer-toys/machine/fibonacci.jpg" alt="演示" title="Okay" /></p>
+
+<p>这个的大概思路是将代码读入一个<code class="language-plaintext highlighter-rouge">@code</code>数组, 然后将内存放在<code class="language-plaintext highlighter-rouge">@memory</code>数组中, 
+将<code class="language-plaintext highlighter-rouge">@register</code>看作一个哈希表, 因为类似汇编语言的语法非常简单, 
+所以可以用简单的匹配方式来进行运算和执行.</p>
+
+<p>我将指令用 <strong>lambda</strong> 的方式储存起来, 这样就可以执行了.</p>
+
+<p>这里省略代码了.</p>
+
+<h2 id="我膨胀了">我膨胀了</h2>
+<p>因为能够实现最简单的运行, 所以我就想着能不能实现更加牛一点的效果, 
+比如说能够变得更加稍微像真实的计算机一样, 于是我根据一点点朴素的想法, 
+实现了一个比较水的简单汇编CPU的模拟.</p>
+
+<p><img src="/_img/computer-toys/machine/machine.jpg" alt="效果" title="还行吧" /></p>
+
+<details>
+<summary> 
+核心代码, 因为太年轻了, 写的不是很适合扔到Github上, 
+所以就这样展开看看吧.  
+</summary>
+  
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># machine.rb</span>
+
+<span class="c1"># 重新实现了虚拟机, </span>
+<span class="c1"># 将虚拟机当作是理想机器, 又如下的特性: </span>
+<span class="c1">#   * 无限位宽, 不存在溢出问题</span>
+<span class="c1">#   * 代码和数据是两种类型的东西, </span>
+<span class="c1">#     也就是不存在将数据当作代码来执行的问题</span>
+<span class="c1">#     (其实是不太对的一件事, 之后会想办法解决)</span>
+
+<span class="no">MAX_MEMORY</span> <span class="o">=</span> <span class="mi">1024</span>
+
+<span class="c1"># 虚拟机类, 初始化的时候载入代码, </span>
+<span class="c1"># 也同时支持利用 +load_code+ 方法来载入代码</span>
+<span class="c1"># 执行代码分为两种方式, 一种是直接+step+来按步执行内存里面的代码, </span>
+<span class="c1"># 一种是通过调用+execute+来直接执行代码. +run+命令会在之后重新加入. </span>
+<span class="c1"># 本次重构修改了读写以及对代码的美观程度有了比较好的提升, </span>
+<span class="c1"># 对于指令的实现也做了比较友好的优化</span>
+<span class="k">class</span> <span class="nc">Machine</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">config</span> <span class="o">=</span> <span class="p">{})</span>
+    <span class="n">load_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">load_code</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="n">load_instructions</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 为了更好地输出结果到网页或者终端上, </span>
+  <span class="c1"># 提供一个输出接口</span>
+  <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="n">mode</span> <span class="o">=</span> <span class="ss">:control</span><span class="p">)</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="ss">:control</span>
+      <span class="n">pc</span> <span class="o">=</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:PC</span><span class="p">]</span>
+      <span class="n">flags</span> <span class="o">=</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:FLAGS</span><span class="p">]</span>
+      <span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">?</span> <span class="s2">"&gt;"</span> <span class="p">:</span> <span class="p">(</span><span class="n">flags</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="p">?</span> <span class="s2">"&lt;"</span> <span class="p">:</span> <span class="s2">"="</span><span class="p">)</span>
+
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"ASM Code: "</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"    </span><span class="si">#{</span><span class="vi">@memory</span><span class="p">[</span><span class="n">pc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">pc</span> <span class="o">&lt;</span> <span class="vi">@max_memory</span> <span class="o">-</span> <span class="mi">1</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">" -&gt; </span><span class="si">#{</span><span class="vi">@memory</span><span class="p">[</span><span class="n">pc</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"    </span><span class="si">#{</span><span class="vi">@memory</span><span class="p">[</span><span class="n">pc</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"Registers: "</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"FLAGS: </span><span class="si">#{</span><span class="n">flags</span><span class="si">}</span><span class="s2">  PC: </span><span class="si">#{</span><span class="n">pc</span><span class="si">}</span><span class="s2">"</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"AX: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:AX</span><span class="p">]</span><span class="si">}</span><span class="s2"> SP: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:SP</span><span class="p">]</span><span class="si">}</span><span class="s2"> BP: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:BP</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+      <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"R0: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:R0</span><span class="p">]</span><span class="si">}</span><span class="s2"> R1: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:R1</span><span class="p">]</span><span class="si">}</span><span class="s2"> R2: </span><span class="si">#{</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:R2</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">elsif</span> <span class="n">mode</span> <span class="o">==</span> <span class="ss">:memory</span>
+      <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="vi">@memory</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
+        <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">#{</span><span class="n">m</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">m</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+      <span class="k">end</span>
+    <span class="k">end</span>
+    
+    <span class="k">return</span> <span class="n">res</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 单步执行</span>
+  <span class="k">def</span> <span class="nf">step</span>
+    <span class="n">execute</span><span class="p">(</span><span class="vi">@memory</span><span class="p">[</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:PC</span><span class="p">]])</span>
+    <span class="vi">@register</span><span class="p">[</span><span class="ss">:PC</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span> <span class="k">if</span> <span class="vi">@step</span>
+    <span class="vi">@step</span> <span class="o">=</span> <span class="kp">true</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 运行代码</span>
+  <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="s2">"Invaild Operation! "</span> <span class="k">unless</span> <span class="n">code</span><span class="p">.</span><span class="nf">is_a?</span> <span class="no">String</span>
+    <span class="n">i</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">code</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/\[.+\]/</span><span class="p">){</span><span class="o">|</span><span class="n">m</span><span class="o">|</span> <span class="n">m</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/\s/</span><span class="p">,</span> <span class="s2">""</span><span class="p">)}.</span><span class="nf">gsub</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">""</span><span class="p">).</span><span class="nf">split</span><span class="p">(</span><span class="s2">" "</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="s2">"No Instruction! "</span> <span class="k">unless</span> <span class="vi">@instructions</span><span class="p">.</span><span class="nf">include?</span> <span class="n">i</span><span class="p">.</span><span class="nf">to_sym</span>
+    <span class="vi">@instructions</span><span class="p">[</span><span class="n">i</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">].</span><span class="nf">call</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 读数据</span>
+  <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">case</span> <span class="n">a</span>
+    <span class="c1"># 输入的是一个数字, </span>
+    <span class="c1"># 对应的是类似于MOV 2, R0之类的命令</span>
+    <span class="k">when</span> <span class="sr">/^\d+$/</span>
+      <span class="k">return</span> <span class="n">a</span><span class="p">.</span><span class="nf">to_i</span> 
+    <span class="c1"># 访问地址的时候</span>
+    <span class="k">when</span> <span class="sr">/^M\[(.+)\]$/</span>
+      <span class="n">exp</span> <span class="o">=</span> <span class="no">Regexp</span><span class="p">.</span><span class="nf">last_match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/R0|R1|R2|PC|FLAGS|AX|BP|SP/</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>
+        <span class="vi">@register</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span>
+      <span class="k">end</span>
+      <span class="c1"># 这个地方又可能会有危险, 因为用到了eval函数</span>
+      <span class="k">return</span> <span class="vi">@memory</span><span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">exp</span><span class="p">)]</span>
+    <span class="c1"># 读到的是寄存器的时候</span>
+    <span class="k">else</span>
+      <span class="k">return</span> <span class="vi">@register</span><span class="p">[</span><span class="n">a</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 写数据</span>
+  <span class="c1"># 将能写的寄存器写死了, 防止写入不存在的寄存器</span>
+  <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="k">case</span> <span class="n">a</span>
+    <span class="k">when</span> <span class="sr">/^M\[(.+)\]$/</span>
+      <span class="n">exp</span> <span class="o">=</span> <span class="no">Regexp</span><span class="p">.</span><span class="nf">last_match</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="sr">/R0|R1|R2|PC|FLAGS|AX|BP|SP/</span><span class="p">)</span> <span class="k">do</span> <span class="o">|</span><span class="n">m</span><span class="o">|</span>  
+        <span class="vi">@register</span><span class="p">[</span><span class="n">m</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span>  
+      <span class="k">end</span>
+      <span class="vi">@memory</span><span class="p">[</span><span class="nb">eval</span><span class="p">(</span><span class="n">exp</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">else</span>
+      <span class="vi">@register</span><span class="p">[</span><span class="n">a</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 处理一些配置</span>
+  <span class="k">def</span> <span class="nf">load_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># 默认的内存是 1024, 不过对于理想机器来说, </span>
+    <span class="c1"># 这个就只是说能够放下 1024 个数量的东西罢了</span>
+    <span class="vi">@max_memory</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="ss">:max_memory</span><span class="p">]</span> <span class="o">||</span> <span class="no">MAX_MEMORY</span>
+    <span class="vi">@step</span> <span class="o">=</span> <span class="kp">true</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 往内存里面载入代码</span>
+  <span class="k">def</span> <span class="nf">load_code</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+    <span class="c1"># 内存清空, 并设置最大内存</span>
+    <span class="vi">@memory</span> <span class="o">=</span> <span class="no">Array</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="vi">@max_memory</span><span class="p">)</span>
+
+    <span class="c1"># 为了支持直接用手写汇编的特性, </span>
+    <span class="c1"># 提供 +tag+ 跳转的功能</span>
+
+    <span class="c1"># 标签</span>
+    <span class="n">tag</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># 当前载入虚拟机内存的地址</span>
+    <span class="n">load_num</span> <span class="o">=</span> <span class="vi">@max_memory</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">code</span><span class="p">.</span><span class="nf">each_line</span> <span class="k">do</span> <span class="o">|</span><span class="n">l</span><span class="o">|</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="n">l</span><span class="p">.</span><span class="nf">index</span><span class="p">(</span><span class="s2">"//"</span><span class="p">))</span>
+        <span class="vi">@memory</span><span class="p">[</span><span class="n">load_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="o">...</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">l</span><span class="p">[(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span><span class="o">..</span><span class="p">].</span><span class="nf">strip</span><span class="p">.</span><span class="nf">to_sym</span>
+        <span class="n">tag</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">load_num</span>
+      <span class="k">else</span>
+        <span class="vi">@memory</span><span class="p">[</span><span class="n">load_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">strip_tag</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span>
+      <span class="k">end</span>
+      <span class="n">load_num</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">end</span>
+
+    <span class="c1"># 寄存器归位</span>
+    <span class="c1"># 寄存器设计的时候借鉴了 x86, </span>
+    <span class="c1"># 将寄存器简化了一点</span>
+    <span class="c1"># 以后更新寄存器设计的时候, 要记得更新write和read方法</span>
+    <span class="vi">@register</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="no">AX</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="no">SP</span><span class="p">:</span> <span class="n">load_num</span><span class="p">,</span> <span class="no">BP</span><span class="p">:</span> <span class="n">load_num</span><span class="p">,</span> 
+      <span class="no">FLAGS</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="no">PC</span><span class="p">:</span> <span class="vi">@max_memory</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="no">R0</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="no">R1</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="no">R2</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 载入指令集</span>
+  <span class="c1"># 以后考虑去模拟不同类型的指令</span>
+  <span class="k">def</span> <span class="nf">load_instructions</span>
+    <span class="vi">@instructions</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="c1"># 赋值操作</span>
+      <span class="no">MOV</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">},</span> 
+
+      <span class="c1"># 四则运算</span>
+      <span class="c1"># 对于除法进行一个特别说明: 假如除数为零, 被除数也变成零 </span>
+      <span class="no">ADD</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">read</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">+</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">},</span> 
+      <span class="no">SUB</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">read</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">},</span> 
+      <span class="no">MUL</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">read</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">*</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="p">},</span> 
+      <span class="no">DIV</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="p">(</span><span class="n">v_a</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">?</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">read</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">v_a</span><span class="p">)</span> <span class="p">:</span> <span class="n">write</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="p">},</span> 
+      <span class="no">INC</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@instructions</span><span class="p">[</span><span class="ss">:ADD</span><span class="p">][</span><span class="s2">"1"</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="p">},</span> 
+      <span class="no">DEC</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@instructions</span><span class="p">[</span><span class="ss">:SUB</span><span class="p">][</span><span class="s2">"1"</span><span class="p">,</span> <span class="n">a</span><span class="p">]</span> <span class="p">},</span> 
+
+      <span class="c1"># 控制流</span>
+      <span class="no">JMP</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:PC</span><span class="p">]</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">);</span> <span class="vi">@step</span> <span class="o">=</span> <span class="kp">false</span> <span class="p">},</span>
+      <span class="no">CMP</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:FLAGS</span><span class="p">]</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">-</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">},</span>
+      <span class="no">JL</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@instructions</span><span class="p">[</span><span class="ss">:JMP</span><span class="p">][</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="k">if</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:FLAGS</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="p">},</span>
+      <span class="no">JE</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@instructions</span><span class="p">[</span><span class="ss">:JMP</span><span class="p">][</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span> <span class="k">if</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:FLAGS</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span> <span class="p">},</span>
+
+      <span class="c1"># 栈操作</span>
+      <span class="no">PUSH</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@register</span><span class="p">[</span><span class="ss">:SP</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span><span class="p">;</span> <span class="vi">@memory</span><span class="p">[</span><span class="vi">@register</span><span class="p">[</span><span class="ss">:SP</span><span class="p">]]</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="p">},</span>
+
+      <span class="c1"># 什么也不做</span>
+      <span class="no">HALT</span><span class="p">:</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="p">{</span> <span class="vi">@step</span> <span class="o">=</span> <span class="kp">false</span> <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 处理跳转的标签</span>
+  <span class="c1"># 这里用的方法就是粗暴地替换, </span>
+  <span class="c1"># 所以需要跳转的tag不是保留关键词, 否则会出现bug</span>
+  <span class="c1"># 这个之后会想办法修正</span>
+  <span class="k">def</span> <span class="nf">strip_tag</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">tag</span><span class="p">)</span>
+    <span class="n">tag</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">tag</span><span class="p">,</span> <span class="n">addr</span><span class="o">|</span>
+      <span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="n">tag</span><span class="p">.</span><span class="nf">to_s</span><span class="p">,</span> <span class="n">addr</span><span class="p">.</span><span class="nf">to_s</span><span class="p">)</span>
+    <span class="k">end</span>
+    <span class="n">code</span><span class="p">.</span><span class="nf">strip</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+  </code></pre></figure>
+
+</details>
+
+<details>
+<summary>
+网页和网页设计的代码
+</summary>
+
+<figure class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;meta</span> <span class="na">charset=</span><span class="s">"utf-8"</span><span class="nt">&gt;</span>
+
+    <span class="nt">&lt;title&gt;</span>Fibonacci Computer Emulator<span class="nt">&lt;/title&gt;</span>
+
+    <span class="nt">&lt;link</span> <span class="na">rel=</span><span class="s">"stylesheet"</span> <span class="na">type=</span><span class="s">"text/css"</span> <span class="na">href=</span><span class="s">"style/style.css"</span><span class="nt">&gt;</span>
+
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">'app/jquery-3.3.1.min.js'</span><span class="nt">&gt;&lt;/script&gt;</span> 
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">"text/javascript"</span> <span class="na">src=</span><span class="s">"app/main.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;h1&gt;</span>Fibonacci Computer : Ruby<span class="nt">&lt;/h1&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"box"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;strong&gt;</span>Code<span class="nt">&lt;/strong&gt;&lt;button</span> <span class="na">id=</span><span class="s">"load"</span><span class="nt">&gt;</span>LOAD<span class="nt">&lt;/button&gt;&lt;br&gt;</span>
+      <span class="nt">&lt;textarea</span> <span class="na">id=</span><span class="s">"code"</span><span class="nt">&gt;</span>MOV 0, R0<span class="nt">&lt;/textarea&gt;&lt;br&gt;</span>
+      
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"box"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;strong&gt;</span>Controls<span class="nt">&lt;/strong&gt;</span>
+      <span class="nt">&lt;button</span> <span class="na">id=</span><span class="s">"step"</span><span class="nt">&gt;</span>STEP<span class="nt">&lt;/button&gt;</span>
+      <span class="c">&lt;!-- &lt;button id="run"&gt;RUN&lt;/button&gt; --&gt;</span>
+      <span class="nt">&lt;br&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">"loaded_code"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"box"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;strong&gt;</span>Memories<span class="nt">&lt;/strong&gt;&lt;button</span> <span class="na">id=</span><span class="s">"memory"</span><span class="nt">&gt;</span>LOAD MEMORY<span class="nt">&lt;/button&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"message"</span> <span class="na">id=</span><span class="s">"memories"</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"box"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;strong&gt;</span>Ref<span class="nt">&lt;/strong&gt;&lt;br&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"message"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div&gt;</span>MOV [source], [destination] # mov source to destination<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>ADD [source], [destination] # add source to destination<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>SUB [source], [destination] # sub destination by source<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>MUL [source], [destination] # multiply destination with source<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>DIV [source], [destination] # divide destination by source, 
+          note that if you divide by zero, the result would be zero. <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>INC [destination] # increase by one<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>DEC [destination] # decrease by one<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>CMP [a], [b] # b - a -<span class="ni">&amp;gt;</span> FLAG<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>J<span class="nt">&lt;CONDITION&gt;</span>  [tag]    # jl if FLAG <span class="ni">&amp;lt;</span> 0, je if =<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>PUSH [value] # push value to stack<span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;div&gt;</span>HALT # do nothing<span class="nt">&lt;/div&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"box"</span><span class="nt">&gt;</span>
+      <span class="nt">&lt;strong&gt;</span>About<span class="nt">&lt;/strong&gt;</span>
+      <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">"message"</span><span class="nt">&gt;</span>
+        This project was originally from my computer class, 
+        which is called Fibonacci Computer. However, in the 
+        class, the teacher only told us that we, human should 
+        perform the assemble-like code, which I thought was 
+        terrible. <span class="nt">&lt;br&gt;</span>
+        Therefore, I made this toy machine to help me with
+        those codes. And because the original one does not
+        support many features a real computer would have, so
+        I made a few changes on it. <span class="nt">&lt;br&gt;</span>
+        If you want to use the original version, please see
+        my old one. <span class="nt">&lt;br&gt;</span>
+        And I'm working on a compiler for it. <span class="nt">&lt;br&gt;</span>
+        Author: <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">"https://li-yiyang.github.io"</span><span class="nt">&gt;</span>凉凉<span class="nt">&lt;/a&gt;&lt;br&gt;</span>
+      <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">"test.js"</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span></code></pre></figure>
+
+</details>
+
+<details>
+<summary>
+CSS样式设计
+</summary>
+
+<figure class="highlight"><pre><code class="language-css" data-lang="css"><span class="o">*</span> <span class="p">{</span>
+  <span class="nl">font-family</span><span class="p">:</span> <span class="s2">'Courier New'</span><span class="p">,</span> <span class="n">Courier</span><span class="p">,</span> <span class="nb">monospace</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">body</span> <span class="p">{</span>
+  <span class="nl">background-color</span><span class="p">:</span> <span class="m">#7B0019</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">h1</span> <span class="p">{</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="nb">auto</span><span class="p">;</span>
+  <span class="nl">margin-right</span><span class="p">:</span> <span class="nb">auto</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="m">80%</span><span class="p">;</span>
+  <span class="nl">max-width</span><span class="p">:</span> <span class="m">40em</span><span class="p">;</span>
+  <span class="nl">color</span><span class="p">:</span> <span class="no">white</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nc">.box</span> <span class="p">{</span>
+  <span class="nl">background-color</span><span class="p">:</span> <span class="m">#47002E</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="m">80%</span><span class="p">;</span>
+  <span class="nl">max-width</span><span class="p">:</span> <span class="m">40em</span><span class="p">;</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="nb">auto</span><span class="p">;</span>
+  <span class="nl">margin-right</span><span class="p">:</span> <span class="nb">auto</span><span class="p">;</span>
+  <span class="nl">margin-top</span><span class="p">:</span> <span class="m">2em</span><span class="p">;</span>
+  <span class="nl">border</span><span class="p">:</span> <span class="m">2px</span> <span class="nb">solid</span> <span class="m">#30001B</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">div</span> <span class="nt">strong</span> <span class="p">{</span>
+  <span class="nl">color</span><span class="p">:</span> <span class="no">white</span><span class="p">;</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="m">5%</span><span class="p">;</span>
+  <span class="nl">margin-right</span><span class="p">:</span> <span class="m">5%</span><span class="p">;</span>
+  <span class="nl">font-size</span><span class="p">:</span> <span class="m">150%</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nt">button</span> <span class="p">{</span>
+  <span class="nl">height</span><span class="p">:</span> <span class="m">2em</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nf">#code</span> <span class="p">{</span>
+  <span class="nl">background-color</span><span class="p">:</span> <span class="m">#FFD9EF</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="m">90%</span><span class="p">;</span>
+  <span class="nl">height</span><span class="p">:</span> <span class="m">15em</span><span class="p">;</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="m">5%</span><span class="p">;</span>
+  <span class="nl">margin-bottom</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">margin-top</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">color</span><span class="p">:</span> <span class="m">#6800A0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nf">#loaded_code</span> <span class="p">{</span>
+  <span class="nl">background-color</span><span class="p">:</span> <span class="m">#FFD9EF</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="m">90%</span><span class="p">;</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="m">5%</span><span class="p">;</span>
+  <span class="nl">margin-bottom</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">margin-top</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">color</span><span class="p">:</span> <span class="m">#6800A0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nc">.message</span> <span class="p">{</span>
+  <span class="nl">background-color</span><span class="p">:</span> <span class="m">#FFD9EF</span><span class="p">;</span>
+  <span class="nl">width</span><span class="p">:</span> <span class="m">90%</span><span class="p">;</span>
+  <span class="nl">margin-left</span><span class="p">:</span> <span class="m">5%</span><span class="p">;</span>
+  <span class="nl">margin-bottom</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">margin-top</span><span class="p">:</span> <span class="m">1em</span><span class="p">;</span>
+  <span class="nl">color</span><span class="p">:</span> <span class="m">#6800A0</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+</details>
+
+<p>(没准以后可以写一个编译器. 然后把简单的代码编译成我实现的这个汇编, 
+嗯, 有点搞头. 我觉得也不是不行嘛. )</p>
+
+<p>简单的一个想法:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code># MOV M[SP + INDEX1], AX # 载入变量
+# ADD M[SP + INDEX2], AX # 加法
+# MOV AX, M[SP + INDEX1] # var_1 += var_2
+# 减法, 乘法, 除法同理   #
+# 故四则运算实现完毕     #
+#                        #
+# 条件控制流             #
+# CMP 0, AX              # AX 为表达式中的演算结果
+# JE [tag]               # if AX == 0     
+#                        #                   
+# 循环的实现             # while true
+# ADD ... // WHILE       # while内部的代码
+# CMP 0, AX              # 计算条件判断   
+# JE WHILE               # 跳转
+# 然后把 for 语句包装为  # i = 0; while i &lt; 10; i++
+#                        #
+# 函数调用的参数传递     # 用栈来传递
+</code></pre></div></div>
+
+<h2 id="网页设计">网页设计</h2>
+<p>这是我第一次接触网页设计, 写的很是丑陋. QAQ
+不过感觉这样试过一次之后感觉还行, 估计之后可以试试.</p>
+
+<p>又: 我用的是<a href="http://opalrb.com">opal</a>作为javascript的一个代替, 
+现在可以直接通过ruby代码来生成javascript来控制页面. 真棒. 
+何必要用javascript呢.</p>
+
+<p>虽然只能说现在还差得远呢.</p>
+
+<h2 id="一个简单的demo">一个简单的demo</h2>
+<iframe src="/_img/computer-toys/machine/toy/index.html" style="width:90%;height:30em;margin-left:5%"></iframe>
+
+<p>上面的demo加入不知道有什么可以试的话, 不妨看看这里的一些例子:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MOV 0, R1
+MOV R1, M[R0]
+MOV 1, R1
+MOV R1, M[R0 + 1]
+MOV 2, R2
+MOV 0, R1 // LOOP
+ADD M[R0 + R2 - 2], R1
+ADD M[R0 + R2 - 1], R1
+MOV R1, M[R0 + R2 - 0]
+INC R2
+CMP 10, R2
+JL LOOP
+HALT
+</code></pre></div></div>
+
+<p>(计算兔子级数)</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>MOV 1, R1
+MOV 1, R2
+INC R2 // LOOP
+MUL R2, R1
+CMP 5, R2
+JL LOOP
+HALT
+</code></pre></div></div>
+
+<p>(计算阶乘)</p>
+
+<p>又: 这个demo我应该不会再更新了. 作为历史性质的东西来用吧. 
+(为什么不上传针对上课的版本呢? 因为那个写得太草了. )</p>
+
+<p>接下去去实现编译器… 希望可以成功.</p>
+
+<h2 id="三月的最后一天更新">三月的最后一天更新</h2>
+<p>没错, 为了防止我明天更新显得像是在骗人一样, 
+我决定今天牺牲机动警察的时间来更新我的作品.</p>
+
+<p>(其实是恰好搞完这件事… 一开始还夸下海口, 
+认为自己可以在一天时间里面把那个编译器给搞好, 没想到, 
+年轻人不讲武德, 不识抬举, 愣是给我搞了快一个星期才完成作品. 
+太惨了. 期间我发现了一个更加悲催的事情, 上课版本的那个, 
+我好像不小心把源码给覆盖了. QAQ. 啊, 好像有点没什么关系的样子. )</p>
+
+<p>先看结果:</p>
+
+<p><img src="/_img/computer-toys/machine/rilang.jpg" alt="rilang" title="运行了一段兔子级数的代码" /></p>
+
+<p>现在的这个版本我个人认为完成度还是比较高了, 
+可惜因为偷懒没有实现类似数组的list实现, 这个我认为比较遗憾了. 
+至于这个语言的一些特性还有来历, 请看看我的网页demo吧.</p>
+
+<iframe src="/_img/computer-toys/machine/りlang/index.html" style="width:90%;height:50em;margin-left:5%"></iframe>
+
+<p>一些注记:</p>
+
+<p>因为我没有实现输出和输入, 所以原则上来说, 
+用户的交互做得是真的没什么了. 所以假如你想要看到输入的话, 
+就到<code class="language-plaintext highlighter-rouge">AX</code>里面看看吧. 因为所有表达式的返回值都是设定放在<code class="language-plaintext highlighter-rouge">AX</code>里面来传递的.</p>
+
+<p>关于源代码的事情, 因为我不觉得我的代码比较好, 
+效率比较低. 所以一开始是不摆明放出来的, 
+但是有了上面说的源代码被覆盖的案例, 所以为了保险, 
+还是说一说吧. 以后也好翻查. (假如不嫌弃的话, 可以到我博客的仓库
+<code class="language-plaintext highlighter-rouge">_img/computer-toys/machine</code>文件夹里面查看代码. )</p>
+
+<p>假如你不知道写些什么的话, 除了图片里面的demo代码, 
+这里再提供一些无聊的小代码, 供你乐乐啦.</p>
+
+<pre><code class="language-rilang">(def (sum x y)
+     (if (greater x 0)
+         (y)
+         (sum (sub x 1) (add x y))))
+(sum 10 0)
+</code></pre>
+
+<p>一个无聊的累加器.</p>
+
+<h2 id="n久之后的一个更新">N久之后的一个更新</h2>
+<p>最终的目标是希望能够实现一个能够在网页中插入的代码执行器, 并且可以利用代码来和网页进行互动等等. 可以用做教学或者快速验证代码的功能. 但是目前还有很多的问题, 只是一个demo阶段. (并且外观也都没有很好的设计就是了… )</p>
+
+<iframe src="/_img/computer-toys/mal-ri-lang/demo.html" style="width: 90%; height:70vh;margin-left:5%;"></iframe>
+
+  </div><a class="u-url" href="/ruby/ri-lang/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
