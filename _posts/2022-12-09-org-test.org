@@ -82,7 +82,58 @@
 可以参考之前的一个笔记: [[{{ site.github.url }}/notes/analysis-for-test/#考完后的katex小教程][考完后的katex小教程]].
 然后在文档中添加: ~#+math: true~. 
 
-* 测试 <<test>>
+*** Github Pages and Github Actions
+结果我发现, 问题并没有我想得那么简单就是了...
+
+推送到 Github Page 上后, 发现了一个非常尴尬的问题:
+
+Github Page 因为安全性考虑, 所以对可以使用的 plugin 设置了一个白名单,
+而恰好, 这个白名单极其的狭窄, 并不包含我所使用的 ~jekyll-org~ 插件.
+
+难道就无解了么?
+
+一开始想要使用 [[https://taoalpha.github.io/blog/2015/05/29/tech-use-jekyll-plugin-with-github-page/][这篇文章]] 中提到的方法来实现. 
+但是发现这样太麻烦了, 根本不好用. 所以打算走别的路线:
+通过 Github Actions 来 build, 然后放到 gh-page branch,
+让 Github Pages 到 gh-page 来生成网页.
+
+原理是这样的, 但是实际操作还是很头疼, 因为一些不知道为什么的原因,
+我没法在我的电脑上安装 jekyll 环境, 所以我使用的是 docker 镜像来实现的.
+虽然并不知道是否是镜像的问题, 我在尝试现成的 Github Actions Workflow
+的时候, 不是遇到 Ruby 和 Gem 版本不对, 就是遇到虽然成功了, 但是貌似渲染出了问题,
+总之这样乱七八糟的, 让我很是不爽.
+
+于是我打算了解一下如何自己写一个 Github Actions.
+
+**** 本地环境
+每次测试都提交到 Github 上也未免有些尴尬...
+所以换到本地先进行测试通过后再放到远程. 需要安装:
++ [[https://github.com/nektos/act][nektos/act]]: 本地的 Github Actions, ~brew install act~
++ docker: 我已经有了
+
+(不过尴尬的是: 在我电脑上会报错的操作, 在服务器端并不会...
+害, 那么就造作服务器也可以. )
+
+基本的逻辑是这样的:
+
+1. 配置环境, 使用的是 ~actions/checkout~ 和 ~ruby/setup-ruby~
+   这两个已经写好了的 Action. 
+2. 生成静态网站, 也就是 ~_site~: ~bundle exec jekyll build~
+3. 然后将这个静态网站推送到 ~gh-pages~ 分支,
+   也就是 Github Pages 去查看的分支.
+
+   其中有一个坑就是, 因为一开始我使用 Jekyll 的时候,
+   将图片文件地址写成了 ~_img~, 而 Jekyll 默认不包含 ~_~ 开头的文件,
+   并且 Github Pages 默认使用 Jekyll 来生成网页.
+
+   于是就会导致我的网页图片无法正常显示... 
+
+   一个曲线救国的方式就是在 ~gh-pages~ 中加入一个 ~.nojekyll~ 的文件,
+   让 Github Pages 默认不使用 Jekyll. 
+
+具体的代码可以查看我的 [[https://github.com/li-yiyang/li-yiyang.github.io/blob/main/.github/workflows/build-jekyll.yml][仓库]]. 
+
+* 测试
 因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分.
 
 + 数学公式
@@ -103,10 +154,6 @@
   [[{{ site.github.url }}/_img/meme/see-isnt-these-what-you-want.png]]
 
 + 链接跳转, 跳转至 [[test][测试]], 貌似不行... 
-+ 发布到 Github Page 上:
-
-  唉, 因为 Github Page 并不支持自定义的插件, 所以效果一言难尽.
-  所以我打算使用 [[https://taoalpha.github.io/blog/2015/05/29/tech-use-jekyll-plugin-with-github-page/][这篇文章]] 中提到的方法来实现. 
 
 * Org-mode
 让我来介绍一下为什么我会想要使用 org-mode 吧.
