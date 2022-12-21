@@ -1,0 +1,311 @@
+#+layout: post
+#+title: Hide and Seek
+#+date: 2022-12-21
+#+math: true
+#+categories: ctf
+* 文件隐写与加密
+#+begin_quote
+Hey, Big Bro's watchin' ya. 
+#+end_quote
+
+故事是这样的, 同学想要发点什么好康的东西, 结果被 ban 了.
+于是无奈之下, 就开始了一下简单的教学. 
+
+申明: 并不鼓励, 仅作学习, 本人都不会, 全部来源网络,
+没有本人的任何操作. 
+
+** 目标
+我们的目标是让自己的信息能够发出去而不被别人知道.
+为什么要这样? 单纯只是因为我很好奇网络安全而已,
+没有别的什么意思. 
+
+** 最简单的版本
+让我们用一个简单的例子来进行教学:
+
+假设你是一个专业的鉴黄师, 每天的工作就是审核那帮精力旺盛的网友发来的文字.
+防止他们传播一些 "Animation Video":
+
+#+caption: 又在这看色禽图片哪
+#+attr_org: :width 0.3
+[[{{ site.github.url }}/_img/ghidra-basic/color-pic.jpg]]
+
+但是你又比较偷懒, 于是你想了一个简单的方法来检验那些用户的信息:
+
+#+begin_src ruby
+  if message.match(/av/)
+    puts "Attention!!! Animation Video founded in #{message}"
+  end
+#+end_src
+
+注: 这只是一个最简单的检测输入的方式, 但是大概差不多是这个意思:
+即如果想要审核的话, 一般就是通过读取文本数据信息进行识别.
+(但是因为这样很容易出问题, 比如上学的时候, 经常会有人激动的 ~avi~ 文件. )
+
+于是有两个简单的路线: 一个是让其无法识别, 另一个则是让其无法读取.
+尽管这两个并不一定是完全不相关的事情, 但是从这两个方面着手还是挺方便的. 
+
+*** 无法识别
+所谓的无法识别, 有点类似于没法让人从文本信息中识别到要查杀的信息. 
+通过藏木于林的方式达到 "偷渡" 的目的. 
+
+**** 暗号化 grep and replace
+#+begin_quote
+暗号（あんごう）とは、セキュア通信の手法の種類で、
+第三者が通信文を見ても特別な知識なしでは読めないように変換する、
+というような手法をおおまかには指す。
+#+end_quote
+
+为什么不用中文的加密来说呢? 因为我个人觉得这一步的操作,
+用加密这么高大上的词来形容, 可能有点过头了. 因为这一步的操作,
+怎么说呢? 非常的朴素和平凡, 就像是看到了外语一样, 让人有点看不懂的感觉:
+
+#+begin_src ruby
+  message.gsub(from, to)
+#+end_src
+
+举个例子: (来自 [[https://www.ted.com/talks/james_veitch_this_is_what_happens_when_you_reply_to_spam_email/][this is what happens when you reply to spam email]])
+
+#+begin_quote
+I said, "Solomon, I spent all night coming up with this code
+we need to use in all further correspondence:
++ Lawyer: Gummy Bear.
++ Bank: Cream Egg.
++ Legal: Fizzy Cola Bottle.
++ Claim: Peanut MMs.
++ Documents: Jelly Beans.
++ Western Union: A Giant Gummy Lizard.
+
+I knew these were all words they use, right?
+I said, "Please call me Kitkat in all further correspondence."
+
+I didn't hear back. I thought, I've gone too far.
+I've gone too far. So I had to backpedal a little.
+I said, "Solomon, Is the deal still on? KitKat."
+Because you have to be consistent.
+Then I did get an email back from him. He said,
+"The Business is on and I am trying to blah blah blah ..."
+I said, "Dude, you have to use the code!"
+What followed is the greatest email I've ever received.
+
+I'm not joking, this is what turned up in my inbox.
+This was a good day. "The business is on. I am trying
+to raise the balance for the Gummy Bear --
+#+end_quote
+
+于是我们就可以这样来玩:
+
+#+begin_src ruby :exports both
+  code = [
+    ["Lawyer", "Gummy Bear"],
+    ["Bank", "Cream Egg"],
+    ["Legal", "Fizzy Cola Bottle"],
+    ["Claim", "Peanut MMS"],
+    ["Documents", "Jelly Beans"],
+    ["Western Union", "A Giant Gummy Lizard"]
+  ]
+
+  message = "The business is on. I am trying to raise \
+  the balance for the Lawyer... "
+
+  # encode
+  encoded_message = message
+  code.each do |from, to|
+    encoded_message.gsub!(from, to)
+  end
+
+  encoded_message
+#+end_src
+
+于是你懂得, 这就是加密方式. 而这, 就是加密结果:
+
+#+RESULTS:
+: The business is on. I am trying to raise the balance for the Gummy Bear...  
+
+其实不难发现, 这里面的操作就是做了一个简单的一一映射.
+将一些会被 ban 的字串替换成一些平凡的, 奇怪的字串.
+在当今这个离谱的网络环境中, 这些平凡的字串往往会通过各种谐音,
+造梗的方式来得到.
+
+当然, 我们也能够做一个比较大的映射表, 比如我们在英文里面的一个暗号化方式,
+就是将单词表打乱后和顺序的单词表做一个映射:
+
+$$A \mapsto K, B \mapsto I, \cdots$$
+
+或者, 如果了解历史的话, 就会知道, 曾经在这个火星人在地球留下了他们的文字,
+即 [[https://zh.moegirl.org.cn/火星文][火星文]] (bushi):
+
+#+begin_quote
+焱暒妏，牸媔仩解莋焱暒亾妏牸，泹實際仩湜栺①類網絡語訁。
+隨着沍聅蛧哋普彶，姩輕蛧姄為浗汸楩戓彰顯個悻，閞始汏糧使鼡哃堷牸、
+堷菦牸、特姝苻呺唻錶堷哋妏牸。甴纡適種妏牸玙ㄖ瑺泩萿狆使鼡哋妏牸楿仳洧眀显哋芣哃，
+妏琺竾楿當渏異，難姒讀慬，诂稱為焱暒妏，掫「哋浗亾看芣慬哋妏牸」哋諷剌效淉。
+“焱暒妏”適種稱琺朂皁炪哯纡珆塆涻浍，隨旣蓅垳纡萫港、狆國汏陸啝嗨迯澕亾涻浍，
+荿潙狆妏沍聅蛧仩特脃。
+
+由 [[https://tooltt.com/huoxingwen/][生成器]] 生成. 原文来自维基百科的 [[https://zh.wikipedia.org/wiki/火星文][解释]]. 
+#+end_quote
+
+(注: 这个生成器的效果实际上类似于一一映射, 真实的火星文里面估计还会有一些神秘短语,
+让阅读和审核比较困难, 所以估计是被禁止使用的, 至于那些用得太广泛的表达,
+则在之后成为了汉语的一部分了. 这段历史, 有兴趣的可以了解下. )
+
+当然, 这样的加密方法非常的朴素. 在审核端, 要么通过加入一个新的审核的词汇,
+要么通过直接解密的方式来得到原本的文章进行查杀. 也许你会问, 如果我一直换密码表,
+那么是否就不会被解密, 也就不会被查杀了呢?
+
+(在密码学里面, 这个叫做一次性密码本, 类似于手机验证码的概念,
+我们确实可以通过这样的方式来增强加密手段. ) 但是...
+因为这样的加密方法本身就是有缺陷的: 一一映射, 所以有一种叫做词频分析的方式,
+可以对这样的文本进行攻击和解密. 同样的, 还有上下文的语境分析等等.
+(这也是为什么你可以在没有太多了解的情况下, 看懂网上的那些抽象的梗的原因了. )
+
+(一个无聊的想法, 能否通过 NLP 的方式在文本审查的时候进行筛选.
+不过只能说, 这样的筛选估计只能说是毫无意义且浪费时间,
+但是如果能够做到的话, 估计是一个很有实践意义的造轮子的操作. )
+
+**** 其他的简单加密方法 -- 古典密码
+历史上我们的加密方式还有很多, 比如 [[https://zh.wikipedia.org/wiki/凱撒密碼][凯撒密码]], [[https://zh.wikipedia.org/zh-cn/籬笆密碼法][栅栏密码]], [[https://dsb.ink/ctf/dangpu.html][当铺密码]] 等等.
+不过因为我很懒, 所以这里就不多介绍了. 有一个叫做 [[https://gchq.github.io/CyberChef/][CyberChef]]
+的网站提供了很多的工具来进行简单的加密解密变换. 并且不仅仅只有古典密码. 
+
+但是这些都有一个非常致命的缺点 (这也就是为什么叫做古典密码了): 
+那就是 *如果知道了加密的方式, 那么就会构造出解密的方式了*.
+
+听上去很离谱, 或者说看起来很废话, 难道有那种即使知道加密方式,
+也没办法解密的方法么?
+
+答案是, 还 *真有*. 比如常见的 [[https://zh.wikipedia.org/wiki/RSA加密演算法][RSA]] 加密算法. 其基于一个很大的数不容易分解的现状,
+来进行加密和解密. 并且还通过公钥和私钥的方式来减少在传播过程中因为要交换密钥,
+而导致加密系统败露的结果.
+
+不过这样的东西还有一个小小的问题: 那就是有点慢... 因为 RSA 的原理是分解质因数,
+(+具体我就不太懂了, 数学白痴了属于是+), 那么随着要用很大的数
+来创造一个难分解的问题, 计算量也就上来了. 
+
+*** 无法读取
+而无法读取呢, 则是另外一个思路, 即让通信通道没法读取到文件,
+从而导致没法进行识别. 尽管在前一阶段中,
+加密已经做到了让人无法读取到有效的信息了, 但是这一部分,
+我们不妨从文件的角度, 而不是信息的角度来思考问题.
+
+**** 文件类型
+众所周知, 电脑的文件是有不同的类型的. 就好像是你没法把 ~txt~
+当作 ~mp3~ 来听, 毕竟这不是 "有声小说". 简单地来讲,
+电脑可以通过文件后缀名的方式来判断文件的类型,
+从而选择使用什么程序来打开文件.
+
+比如说, 如果你把 ~今天的作业.docx~ 的后缀名改成 ~.pdf~,
+然后把 ~今天的作业.pdf~ 交给你的老师的话, 老师肯定就没有办法正常地打开文件
+(除非老师的电脑软件比较智能, 这个我会在之后介绍), 因为电脑没法正常识别文件类型. 
+
+所以如果你想要上传一个有趣的文件, 比如一张表情包: ~sodayou.gif~, 
+
+#+caption: 就是啊
+#+attr_org: :width 0.2
+[[{{ site.github.url }}/_img/meme/sodayou.jpg]]
+
+但是又不想被别人看见... 于是你就将其命名成了 ~sodayou.zip~,
+于是这下就没人能打开了...
+
+#+caption: 嘿嘿, 你打不开了
+#+attr_org: :width 0.4
+[[{{ site.github.url }}/_img/pieces/fail-to-open-sodayou-dot-zip.png]]
+
+但是, 正如上面说的: "除非 ... ", 实际上并不是这样的,
+如果你的老师比较有闲情雅致, 不会只想着先把你挂了再说,
+而是用一些工具来检查了一下你的文件: (比如 Linux 中的 ~file~ 命令)
+
+#+begin_src shell :exports both
+  file 今天的作业.pdf
+#+end_src
+
+命令返回的值是: 
+
+#+RESULTS:
+: 今天的作业.pdf: Microsoft Word 2007+
+
+诶, 发现这 B 玩意竟然是个 Word 文件. 这是怎么做到的?
+答案是文件在计算机中储存的时候, 是按照一定方式进行组织自己的数据的.
+一般规定要在头部特定位置放置关于自己的一些信息, 也就是 [[https://blog.51cto.com/u_2982693/3354695][文件头信息]]. 
+也就是说程序还能够通过这样的方式来判断文件的身份. 从而进行读取. 
+
+并且还有一个另外的方式, 就像之前我们说到的文件中匹配是否存在关键信息来筛查,
+我们还可以直接通过匹配整个文件来筛查. 并且相比直接筛查文件全部,
+我们可以筛查文件的 Hash 值:
+
+(注: 你可以将 Hash 值想象成一种能通过文件内容来计算得到
+一个对应文件的一个专属 ID. 从而加速对大文件的比对. )
+
+#+begin_src shell :exports both
+  md5 sodayou.gif sodayou.jpg
+#+end_src
+
+#+RESULTS:
+| MD5 | (sodayou.gif) | = | 1f535e7aaec9d8952ae4987bb692ec43 |
+| MD5 | (sodayou.jpg) | = | 1f535e7aaec9d8952ae4987bb692ec43 |
+
+这样不论你将其命名为什么名字, 只要文件内容被数据库标记过了,
+那么服务器只需要 ban 即可了. 
+
+那么也许你会说, 那只要我把文件头也给改了, 那不就完事了?
+并且这样文件内容都不一样了, 服务器也就没法 ban 我的文件了. 
+你真聪明. 这样确实是一种很好的方法. 不过你可能需要和接受方沟通得当,
+并且需要一些小小的文件处理的技术.
+
+**** 数据隐写
+既然我们已经在文件上开刀了, 那么是否还有别的方法来进行夹带私货呢?
+答案是, 还真有. 比如我们首先以一个 ~bmp~ 图片文件为例:
+
+一个 ~bmp~ 文件, 我们不妨认为每一个像素点都是一个 (组) 数,
+用来表示对应的颜色. 比如白色 ~(255, 255, 255)~. 并且我打赌,
+你应该很难分辨 ~(254, 254, 255)~ 和白色的区别. 于是这就是 [[https://3gstudent.github.io/隐写技巧-PNG文件中的LSB隐写][LSB]]
+隐写的基本原理了: 即, 通过修改最后的几位,
+来达到只修改一点点肉眼难以辨别的颜色, 从而将一个二进制文件,
+藏在一张图片里面.
+
+或者我们还能够利用文件的结构, 而不是修改文件的内容 (这样有点破坏性),
+比如在计算机中, 一些文件是有头有尾的文件, 在文件头后会有一个文件尾.
+大部分程序在读取到这个文件尾巴标记的时候就会自动中止读取,
+于是这个尾巴后面就可以随便塞各种东西: 比如追加一段感人至深的文本,
+或者追加一段神奇的 ~zip~ 文件. 
+
+#+begin_src shell :exports both
+  cat hide.zip >> color-pic.jpg
+  binwalk color-pic.jpg # 检查输出的文件结构 
+#+end_src
+
+于是你就得到了一个在 jpg 文件后面跟着一个 zip 文件的神奇图片了. 
+
+#+RESULTS:
+|          |             |             |         |       |          |          |         |    |          |              |       |       |       |                    |
+|  DECIMAL | HEXADECIMAL | DESCRIPTION |         |       |          |          |         |    |          |              |       |       |       |                    |
+| -------- |             |             |         |       |          |          |         |    |          |              |       |       |       |                    |
+|        0 |         0x0 | JPEG        | image   | data, | JFIF     | standard | 1.01    |    |          |              |       |       |       |                    |
+|    35195 |      0x897B | Zip         | archive | data, | at       | least    | v2.0    | to | extract, | uncompressed | size: | 9646, | name: | hide-into-file.org |
+|    40489 |      0x9E29 | End         | of      | Zip   | archive, | footer   | length: | 22 |          |              |       |       |       |                    |
+|          |             |             |         |       |          |          |         |    |          |              |       |       |       |                    |
+
+而接收到这个文件的用户, 则可以通过 ~binwalk -e~ 的方式 (或者其他),
+来提取出 ~zip~ 文件, 从而在神不知鬼不觉的情况下, 达到一个瞒天过海.
+
+在我的 [[{{ site.github.url }}/ctf/simple-reverse/][Simple Reverse in the Real World]] 一文中, 就有这样的一个隐写例子.
+里面藏了一个小小的玩具病毒. 可以下载来玩玩. 
+
+然而, 这个方案, 还有一个不足: 那就是这个图片生成的往往会比较大,
+而这么大的图片文件, 则往往会被某些自作多情的软件给压缩后再发送.
+而压缩算法, 可不管你文件尾巴后面有什么呢...
+(所以建议为了防止被压缩, 在外面再套一层压缩包吧. )
+
+而压缩包又可以通过设置密码的方式进行加密, ( 或者, 你也可以了解一下 [[https://wiki.mrskye.cn/Misc/ZIP压缩包伪加密/][伪加密]])
+并且如果你的压缩包密码能够使用一些 [[https://xkcd.com/2606/][奇怪字符]], 比如 ⍨, 或者 ℘, ⩐, 等. 
+那么你的密码估计就很难被单纯的跑字典的方式来破解了. 
+
+** 能不能再硬核一点? 
+可以. 但是这估计就得自己来试试看了. 作为一个科普的小文章, 这么多应该够用了.
+
++真实的原因是我懒得写了, 并且也不会很多...+
+
+** 最后
+那么究竟是什么文件呢? 
+
+我不造啊~
