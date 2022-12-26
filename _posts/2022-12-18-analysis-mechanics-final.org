@@ -1,0 +1,489 @@
+#+layout: post
+#+title: 理论力学 (期末)
+#+date: 2022-12-26
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+* 理论力学的期末复习
+下半个学期应该是从谐振子开始的.
+但是还是先从不是很熟练的哈密顿部分开始. 
+
+* 哈密顿力学
+#+begin_quote
+1. 哈密顿量并没有减少求解力学问题的困难,
+   实际上和拉格朗日方法是等价的.
+2. 哈密顿力学的好处不仅是其将 $s$ 个二阶微分方程降阶为
+   $2s$ 个一阶微分方程, 更是能够将坐标和动量降到相同的地位.
+
+   (在之后的正则变换里面, 可以看到更加有趣的部分,
+   比如将动量看作新的正则坐标之类的. )
+3. 在构筑更为近代的物质理论方面有不可缺少的作用. 
+#+end_quote
+
+** 勒让德变换
+从拉格朗日力学到哈密顿力学的变换. 
+
+$$L(q_\alpha, \dot{q}_\alpha, t) \Rightarrow H(q_k, p_k, t)$$
+
+想法是让一个二阶的方程: $\frac{\mathrm{d}}{\mathrm{d}t}(\frac{\partial L}{\partial \dot{q}})-\frac{\partial L}{\partial q}$ 能够变成低阶微分方程.
+或者是不想关心计算的时候的 $t$, 就像是将 $\ddot{q} = \dot{q}\frac{\mathrm{d}\dot{q}}{\mathrm{d}q}$ 一样.
+
+定义变换为:
+
+$$H(q, p, t) = H(q, \dot{q}, t) = \dot{q}\frac{\partial L}{\partial \dot{q}} - L(q, \dot{q}, t)$$
+
+于是得到 $H$ 的表达式.
+
+类似的还有 Routhian 方程, 通过对可遗坐标 ($\frac{\partial L}{\partial q} = 0$) 进行勒让德变换,
+来减少上面的变换的麻烦的地方:
+
+$$R(q_l, \dot{q}_\alpha, p_k, t) = \dot{q}_k p_k - L(q_l, \dot{q}_l, t) = H - \dot{q}_\alpha p_\alpha$$
+
+** 正则方程
+从哈密顿方程和拉格朗日方程显然可以得到正则方程:
+
+$$\left\{\begin{array}{lll}\
+  \dot{p} & = & -\frac{\partial H}{\partial q}\\\\ \
+  \dot{q} & = & \frac{\partial H}{\partial p}\
+\end{array}\right.$$
+
+其实很好理解. 因为有 $p = \frac{\partial L}{\partial \dot{q}}$, 以及 $\frac{\partial H}{\partial q} = - \frac{\partial L}{\partial q}$,
+还有 $\frac{\partial H}{\partial t} = - \frac{\partial L}{\partial t}$, 于是对时间求导即可.
+
+** 正则变换
+将相空间 $(q, p) \mapsto (q^*, p^*)$, 变换得到新的相空间.
+(有点像是线性代数里面的基底变换... ),
+如果变换后的哈密顿量仍然满足正则方程, 那么就称为正则变换. 
+并且通过正则变换, 还能够得到更多的循环积分 (可遗坐标).
+(也就是为什么要进行正则变换的原因).
+
+对于作用量在变换的过程中:
+
+$$S = \int L \mathrm{d}t \mapsto S^* = \int L^* \mathrm{d}t$$
+
+因为变换是对同一运动的不同表述, 仍应该有:
+
+$$\delta S = \delta S^* = 0$$
+
+于是有:
+
+$$\delta \int (p\mathrm{d}q - H\mathrm{d}t) = \delta\int(p^*\mathrm{d}q^* - H^*\mathrm{d}t) = 0$$
+
+即:
+
+$$\lambda (p\dot{q} - H) = (p^* \dot{q}^* - H^*) + \frac{\mathrm{d}F}{\mathrm{d}t}$$
+
++ 其中的 $F$ 来自于这样的一个结论:
+
+  /对拉氏量加上或者减去一个对时间的全导数, 仍描述原来的运动./
+
+  可以看作是拉氏量不确定性的推广.
+
+  称这样的函数为正则变换的母函数 $F$
++ 其中的 $\lambda$ 为标度变换因子 ($\lambda = 1$)
+  
+*** Pfaff 方程
+对于上面的方程, 变换得到 Pfaff 方程:
+
+$$p\mathrm{d}q - p^*\mathrm{d}q^* - (H - H^*)\mathrm{d}t = \mathrm{d}F$$
+
+其中, 根据 $F$ 是什么的函数, 以及作用量的类型:
+
+1. $S_A = \int(p\mathrm{d}q - H\mathrm{d}t)$
+2. $S_B = -\int(q\mathrm{d}p + H\mathrm{d}t)$
+
+将 $F$ 分为四类:
+
+1. $F_1(q, p^*, t), S_A = S_A^*$
+
+   于是有
+
+   $$\mathrm{d}F = \frac{\partial F_1}{\partial q}\mathrm{d}q + \frac{\partial F_1}{\partial p^*}\mathrm{d}p^* + \frac{\partial F_1}{\partial t}\mathrm{d}t$$
+
+   进而带入 Pfaff 方程, 有:
+
+   $$p = \frac{\partial F_1}{\partial q}$$
+   $$p^* = -\frac{\partial F_1}{\partial q^*}$$
+   $$H^* = H + \frac{\partial F_1}{\partial t}$$
+
+2. $F_2(q, p^*, t), S_A = S_B^*$
+3. $F_3(p, p^*, t), S_B = S_B^*$
+4. $F_4(p, q^*, t), S_B = S_A^*$
+
+通过这样一系列的变换的方式, 可以将 $H$ 中的 $p, q$ 都一个个换成 $p^*, q^*$,
+有点像是热力学里面的 $F = U - TS$ 这样的变换.
+
+*** 验证正则变换
+对变换 $(q, p, t) \mapsto (Q, P, t)$, 为了验证是否为正则变换,
+
+1. 一个简单的方法就是通过验证其 Jacobbi 矩阵 (的绝对值) 是否为 $1$.
+
+   $$J = \frac{\partial (P, Q)}{\partial (p, q)} ?= 1$$
+
+2. 或者可以通过构造母函数 $F$ 的方式来验证
+
+*** 无穷小正则变换
+$$F(q^*, p^*, t) = \cdots + \varepsilon G(q^*, p^*, t)$$
+
+其中, $G$ 为无穷小正则变换的生成函数. 
+
+** 泊松括号
+定义泊松括号为:
+
+$$[f, g] = \frac{\partial f}{\partial p_k}\frac{\partial g}{\partial q_k} - \frac{\partial f}{\partial q_k}\frac{\partial g}{\partial p_k}$$
+
+(注: 不同的书里面的正负号定义不一定一样, 这里定义是 $p, q$ 这样的顺序. )
+
+于是可以用力学量和力学系统之间的关系来表示力学量对时间的全微分:
+
+$$\frac{\mathrm{d}f}{\mathrm{d}t} = \frac{\partial f}{\partial t} + [H, f]$$
+
+于是可以用泊松括号来表示正则方程:
+
+$$\dot{q}_k = [H, q_k], \dot{p}_k = [H, p]$$
+
+嗯, 简洁又好看. 然后再利用计算的一些便捷小技巧:
+
++ 基本元素:
+  + $[q_k, q_l] = 0, [p_k, p_l] = 0$
+  + $[p_k, q_l] = \delta_{kl}$, $[q_k, p_l] = -\delta_{kl}$
+  + $\dot{q} = [H, q], \dot{p} = [H, p] \Rightarrow \dot{f} = [H, f]$
+  + $[f, q] = \frac{\partial f}{\partial p}, [f, p] = -\frac{\partial f}{\partial q}$
++ $[c, f] = 0$ 常数的泊松括号
++ 双线性 $[\sum_i \alpha_i f_i, \sum_j \beta_j g_j] = \sum_i\sum_j \alpha_i\beta_j [f_i, g_j]$
++ 反对称 $[f, g] = - [g, f]$
++ 算符 $[f_1 f_2, g] = f_1[f_2, g] + f_2[f_1, g]$
++ 对偏导 $\frac{\partial}{\partial t}[f, g] = [\frac{\partial f}{\partial t}, g] + [f, \frac{\partial g}{\partial t}]$
++ Jacobbi 恒等式 $[f, [g, h]] + [g, [h, f]] + [h, [f, g]] = 0$ 
++ 正则不变性: 对正则变换 $(q, p) \mapsto (q^*, p^*)$, 有 $[f, g]_{p, q} = [f, g]_{p^*, q^*}$  
+
+#+begin_quote
+一些例子:
+1. $[p_{k}, J_{l} = \varepsilon_{lij} q_{i} p_{j}] = \varepsilon_{lij} ([p_{k}, q_{i}] p_{j} + [p_{k}, p_{j}] q_{i}) = \varepsilon_{lij} \delta_{ik} p_{j}$
+   + $\varepsilon_{ijk}$ 只是一个数
+   + 思路应该就是化简到基本元素去计算
+#+end_quote
+
+*** 泊松定理
+若 $f$ 和 $g$ 都是循环变量, 那么 $[f, g]$ 也是循环变量.
+
+证明非常平凡, 就是求导:
+
+$$\frac{\mathrm{d}}{\mathrm{d}t}[f, g] =\
+\frac{\partial}{\partial t}[f, g] + [H, [f, g]] =\
+[\frac{\partial f}{\partial t} + [H, f], g] +\
+[f, \frac{\partial g}{\partial t} + [H, g]]$$
+
+$$\Rightarrow = [\frac{\mathrm{d} f}{\mathrm{d} t}, g] +\
+[f, \frac{\mathrm{d} g}{\mathrm{d} t}] = 0$$
+
+通过这样的方式, 就能够得到新的循环变量.
+
+(Note: 不过因为循环变量的数量肯定是有限的,
+所以有这样一个无聊的想法, 如果用 $f$, $g$ 来计算, $[f, [f, g]]$,
+$[f, [f, [f, g]]]$ 这样一直下去, 肯定会有重复.
+诶, 那么是否就会得到一个循环的群呢? 好吧,
+最后发现课件里面写了: 正则变换构成一个群. +是我上课没仔细听了+)
+
++ 判断运动积分是否独立: 看他们是否能够被其他线性表示:
+
+  $$\frac{\partial (F_1, F_2, \cdots)}{\partial (q_1, q_2, \cdots, p_1, p_2, \cdots)} \neq 0$$
+
++ 能否有新的运动积分
+
+** 哈密顿 - 雅克比理论
+有 Pfaff 方程:
+
+$$p_k \mathrm{d}q_k + q_k^* \mathrm{d}p_k^* - (H - H^*)\mathrm{d}t = \mathrm{d}F_2(q, p^*, t)$$
+
+于是可以变换成: (假设有 $H^* = 0$, 且有目标 $\dot{p}^* = 0, \dot{q}^* = 0$)
+
+$$\frac{\partial S}{\partial t} + H(q, \frac{\partial S}{\partial q}, t) = 0$$
+
+#+begin_quote
+Eg. 对于单个质点的一维运动: $H = \frac{1}{2m} p^2 + V(q)$,
+其雅克比方程为: $\frac{\partial S}{\partial t} + \frac{1}{2m} (\frac{\partial S}{\partial q})^2 + V(q) = 0$. 
+#+end_quote
+
+其对应的物理意义: $S = \int L \mathrm{d}t \Rightarrow L = \frac{\mathrm{d}S}{\mathrm{d}t}, H = - \frac{\partial S}{\partial t}$
+
+对于 $H = const = E$ 的特殊情况, 可以令 $S = - E t + W(q, \alpha, E)$,
+其中 $W$ 为哈密顿特征函数. 然后就可以用来求解:
+(利用 $p = \frac{\partial W}{\partial q}$)
+
+$$H(q, \frac{\partial W}{\partial q}) = E$$
+
+如果还不显含 $X$, 那么就还能继续化简 $W = W'(\hat{X}) + \alpha X$. 
+
+#+begin_quote
+Eg. $H = \frac{1}{2m}p_1^2 + \frac{1}{2m}(p_2 - k q_1)^2$,
+令 $W = W_1(q_1) + \alpha q_2$, 对应的雅克比方程:
+
+$$\frac{1}{2m} (\frac{\partial W_1}{\partial q_1})^2 + \frac{1}{2m}(\alpha - k q_1) = E$$
+
+然后求解方程即可 (虽然并不好求). 
+#+end_quote
+
+* 微振动
+这部分就比较简单了 +(并不是)+, 考虑下列的一个振动方程:
+
+$$m \ddot{x} + \gamma \dot{x} + m \omega^2 x = f$$
+
+这个方程的一般的解的形式如下:
+
+$$x = \frac{f}{m \omega ^2}+\
+c_1 e^{\frac{1}{2} t \left(-\frac{\sqrt{\gamma ^2-4 m^2 \omega ^2}}{m}-\frac{\gamma }{m}\right)}\
++c_2 e^{\frac{1}{2} t \left(\frac{\sqrt{\gamma ^2-4 m^2 \omega ^2}}{m}-\frac{\gamma }{m}\right)}$$
+
+当然, 也能够通过分类的方式来解决问题.
+不过还是来看看如何通过简单的操作来得到这个方程吧. 
+
+1. 临界条件: $\gamma = 2m \omega$,
+   这个时候, 对应的通解是 $x = (c_1 + c_2 t)e^{-\lambda t}$.
+2. 过阻尼: $\gamma > 2m \omega$, 得到的解类似于 $e^{-\lambda t}$
+3. 欠阻尼: $\gamma < 2m \omega$, 得到的解类似于 $e^{-\lambda t} e^{i \omega t}$
+
+* 习题
+** 哈密顿力学
+*** 写出哈密顿函数
+方法比较简单, 就是在拉氏量的基础上:
+
+$$H = q p - L = q \frac{\partial L}{\partial \dot{q}} - L$$
+
+然后做 $p = \frac{\partial L}{\partial \dot{q}}$ 的换元,
+即可得到 $H(q, p, t)$ 的方程了.
+
+使用哈密顿函数来求解的方法:
+1. 写出 $L = T - V$
+2. 得到 $H = q p - L, p = \frac{\partial L}{\partial \dot{q}}$
+3. 利用正则方程: $\dot{q} = \frac{\partial H}{\partial p}, \dot{p} = - \frac{\partial H}{\partial q}$
+   然后计算 $2s$ 个微分方程.
+4. 然后计算轨道 (如果有必要的话)
+   
+*** 找出循环积分和能量积分, 以及判断守恒量
+所谓的循环积分 (比如用 $X$ 来表示), 也就是 $\frac{\mathrm{d} X}{\mathrm{d} t} = 0$.
+判断方式就是通过:
+1. 直接看可遗坐标是否存在: 比如 $\frac{\partial H}{\partial q}$ 直接就 $=0$,
+   那么显然 $q$ 就是可遗坐标. ($H$ / $L$ 不显含)
+2. 计算 $\dot{p} = \frac{\partial H}{\partial t} + [H, p]$.
+3. 或者利用泊松定理来构造新的 $\dot{f} = \dot{g} = 0 \Rightarrow [f, g]$,
+   只要注意到实际上是有上限的就可以构造完了. 
+   
+*** 计算泊松括号
+通过上面的基本公式来化简成基本的泊松括号:
++ $[p_i, q_j] = \delta_{ij}$
++ $[p_i, p_j] = [q_i, q_j] = 0$
+
+基本的思路是这样的:
+
+1. 利用双线性性, 将 $[F, G] \Rightarrow \sum \alpha_i [f, g]$.
+   其中系数 $\alpha_i$ 可以是 $\varepsilon_{ijk}$ 等与 $p, q$ 无关的 "常数".
+
+   (看来还要记忆一下 $\varepsilon$ 的一些计算法则. )
+2. 对于单个 $[f, g]$, 如果不麻烦的话, 可以直接用
+   $\frac{\partial f}{\partial p}\frac{\partial g}{\partial q} -\
+    \frac{\partial f}{\partial q}\frac{\partial g}{\partial p}$
+   然后来计算.
+
+   如果可以化简的话, 比如 $f$ 中不显含 $p$ 或者 $q$ 之类的.
+   就可以快速简化计算. 
+*** 求解母函数的哈密顿雅克比方程
+1. 是否显含时间 $\frac{\partial H}{\partial t} = 0$,
+   若有, 则 $S = -E t + W$
+2. 是否有可遗坐标 $\frac{\partial H}{\partial q} = 0$
+   若有, 则 $W = W' + \alpha q$
+3. 带入雅克比方程: $\frac{\partial S}{\partial t} + H = 0$,
+   并求解方程.
+   
+*** 判断是否是正则变换
+1. 对 $(p, q) \mapsto (P, Q)$, 判断雅克比行列式:
+   $\frac{\partial (P, Q)}{\partial (p, q)}$ 是否为 $1$, 若是, 则为正则变换, 反之否.
+2. 判断是否满足正则方程
+3. 其他 (目前就了解那么多大概就够了)
+   
+** 简谐振动
+*** 写出振动方程
+1. 小量近似 (流氓化简)
+2. 或者在上面的近似中保留线性的阻尼项
+
+一个比较技巧的就是比内方程: 通过变换
+$\dot{r} = \frac{\mathrm{d}r}{\mathrm{d} \theta} \dot{\theta}$, 以及 $u = \frac{1}{r}$ 然后将中心力场的运动方程化为:
+
+$$mh^2u^2(\frac{\mathrm{d}^2 u}{\mathrm{d}\theta^2} + u) = -F(r)$$
+
+*** 计算临界阻尼的运动方程, 以及过临界等.
+1. 写出运动方程
+2. 判断是否有临界阻尼的情况,
+   如果有, 则带入 $x = (c_1 + c_2 t) e^{-\omega t}$
+3. 直接带入 $x = x_0 + c_1 e^{\lambda_1 t} + c_2 e^{\lambda_2 t}$,
+   其中, 可以直接带入试探解 $x = e^{\lambda t}$,
+   然后通过特征方程来计算出 $\lambda$ 的值.
+
+*** 计算简振频率和简振模式
+1. 将振动方程 (组) 写成矩阵的形式:
+
+   $$\boldsymbol{M} \ddot{q} + \boldsymbol{K} \boldsymbol{q} = 0$$
+
+   然后对其进行求特征值: (久期方程)
+
+   $$\mathrm{det}(\boldsymbol{K} - \omega^2 \boldsymbol{M}) = 0$$
+
+2. 用特征值 $\omega$ 对坐标进行正交化,
+   即可得到线性化的微分方程. 
+* Emacs Calc: 一些奇怪的东西
+类似一种带货了属于是... 在 Emacs 里面有一个叫做 calc-mode 的东西. 
+好不好用目前还难以判断, 但是非常有意思:
+
+比如执行命令:
+
+#+begin_src calc :exports both
+  fsolve([x + y = a, x - y = b], [x, y])
+#+end_src
+
+然后就会得到结果: 
+
+#+RESULTS:
+: [x = a + (b - a) / 2, y = (a - b) / 2]
+
+单看演示, 功能还是很强的.
+一个稍微别扭一点的地方就是文档感觉有点少, ([[https://www.gnu.org/software/emacs/manual/html_mono/calc.html#Tutorial][官方的文档]])
+并且输入用的是类似栈的方式输入的. 但是这并不影响,
+毕竟啥好玩就玩啥. 
+
+(那么为什么是在复习理论力学的时候?
+因为黄老师在上课的时候并没有排斥我们使用计算机来进行计算,
++虽然也没有让我们用计算机来考试就是了+,
+并且非常鼓励我们使用计算机来辅助计算.
++虽然我上课时候用的都是 Mathematica+, 但是这并不妨碍我玩玩 calc)
+
+参考资料:
++ [[https://www.gnu.org/software/emacs/manual/html_mono/calc.html#Tutorial][官方的文档]], 目前看来非常好用. 在稍微了解个把例子之后就可以上手了. 
++ +[[https://vimeo.com/14742598][Emacs-Calc: The Poor Man's Mathematica]]+,
+  不太推荐, 口音严重, 并且录制的时候好像忘了录制输入了.
++ [[https://github.com/lujun9972/emacs-document/blob/master/calc/emacs-calculator使用说明.org][emacs-calculator使用说明]]
++ [[https://www.math.s.chiba-u.ac.jp/~matsu/emacs/emacs21/calc-example.html][calc の使用例]]
+
+** 认清地位
+嗯, 在大致了解了 calc 之后, 发现实际上它能干的事情应该并没有很多.
+(没法成为一个 Mathematica), 但是可以作为一个干翻 CASIO 的存在了.
+并且在了解了其主要的操作逻辑之后, 发现它真的很适合作为计算器来存在.
+
+嗯, 一个有趣的计算器... 想到之前 +难产的+ [[http://127.0.0.1:9600/learning/computer-algebra-pickup/][计算机代数系统]],
+不禁想起了我高中时的一个梦想, 如果有一台计算器,
+能够像 Mathematica 一样进行符号处理的话就好了. 
+(当时我只知道 Mathematica 可以进行符号处理, 也不是很会用)
+现在看来, 将 Emacs 移植到单片机上, 然后做一个类似于
+[[https://www.youtube.com/watch?v=q3qIS5XvzfQ][CASIO Z-1GR 16-Bit Pocket Computer]] 这样的外形, +搞不好这能吃律师函+
+应该会很有意思. 作为未来的一个 flag 来努力吧. +搞不好这事能发 paper+
+
+认清 calc 最适合做一个快速好用的计算器之后, 接下来就比较好使用了. 
+
+** 简单操作
+在 Emacs 中, 使用 ~M-x calc~ 即可进入 ~calc-mode~.
+(或者使用系列快捷键 ~C-x * c~ 进入)
+
+*** RPN
+默认使用的输入方式叫做 RPN (Reverse Polish Notation 逆波兰表达式),
+即 $a+b$ 这样的表达式, 就会通过 ~a RET b RET + RET~ 的方式输入.
+
+Note: 如果你做错了什么的话, 使用 ~U~ 来 Undo, ~D~ 来 reDo.
+(或者使用退格键来删掉重来也不是不行... )
+
+*** Algebraic-Style Calculations
+当然, 正经人肯定想要用简单的方式来输入了: 通过前置一个引号 ~'~,
+来输入自然的表达式: ~'a + b RET~.
+
+(注: 这仍然是输入, 终极的操作逻辑仍然是 RPN 的逻辑. )
+
+需要注意的是, 其中的运算顺序是 ~^ * / +-~, 所以在乘除的时候需要小心. 
+
+通过输入 ~m a~ 来进入 Algebraic Mode (在 minibuffer 上面会显示 Alg),
+然后就可以输入公式了. 得到的结果会立刻写入栈上. (退出同理)
+
+不同数值的输入方式: 
++ 如果想要输入复数的话, 比如 $a + b i$, 那么就可以输入 ~(a, b)~ 来输入. 
++ 类似 Ruby 的 Array 和 Range, 可以输入一个集合
+  (数组/向量/... 名字还挺多): ~[<a_1>, <a_2>, ]~
+  或者 ~[<inf>, <sup>]~. 并且输入的时候可以一行一行地输入. 
++ 然后是 Matrix: ~[[<a_ij>, ...], ...]~ 的类型
+
+*** 函数
+在 Algebraic Mode 下, 输入 ~f(x)~ 的形式就可以进行函数的调用计算了.
+比如:
+
+#+begin_src calc :exports both
+  'sqrt(1 + 2)
+#+end_src
+
+当然, 也有一些 RPN 输入下的快捷按键:
+(可以通过 ~m ?~ 来查看, 类似的还有 ~a ?~)
++ 简单的操作
+  + ~Q~ sqrt
+  + ~P~ pi
+  + ~F~ flor (floor), ~R~ round
++ 三角函数
+  + ~S~ sin, ~C~ cos, ~T~ tan, ~E~ exp, ~L~ ln
+  + ~IS~ arcsin, ~IC~ arccos, ~IT~ arctan
++ 双曲函数
+  + ~HS~ sinh, ~HC~ cosh, ~HT~ tanh
++ 复数
+  + ~J~ conj 取对偶
+  + ~G~ arg 取幅角
++ 向量
+  + ~+~, ~-~, ~*~ dot, ~C~ vC, cross.
+  + ~A~ abs
++ 符号计算
+  + ~a d~ calc-derivative 微分, 可以描述对什么微分
+  + ~a i~ calc-integral 积分, 可以描述对什么积分
+  + ~a a~ calc-apart 有理式函数展开
+  + ~a c~ calc-collect
+  + ~a s~ calc-simplify
+  + ~a x~ calc-expand
+  + ~a n~ calc-normalize-rat
+
+(注: 在 minibuffer 上会有角度单位 Deg 和 Rad 标记.
+使用 ~m d~ 和 ~m r~ 来分别切换. 还有 ~m h~ 切换到 HMS 模式)
+
+*** 赋值
+这个更像是 Mathematica 里面的 Replace,
+通过替换出现的符号来得到最终的结果. 通过 ~s s <var-name> RET~,
+来将栈中的结果放到 ~<var-name>~ 中, 然后在计算过程中,
+比如最终的栈上的结果是 ~<exp-of-var-name>~,
+通过按 ~=~ 来将 ~<var-name>~ 的结果代入. 
+
+并且 calc 计算的结果会在 Trail 中记录,
+可以通过 ~t y~ 来将 Trail 中指向的值放到栈中.
+(可以通过 ~t n~ 和 ~t p~ 来移动指向的位置)
+
+** 其他的一些操作
++ ~h~ 可以进入帮助输入的模式, 基本上 calc Document
+  也就是官方的文档都在里面了. 
++ ~C-x *~ 系列按键映射
++ 在 Emacs 中的其他部分, 可以通过 ~C-x * y~ 的方式来将 calc
+  中剩下的最后一个结果粘贴到光标处:  
++ 画图 (可以参考 [[https://www.reddit.com/r/emacs/comments/jdrcer/calc_is_fun/][calc is fun]])
+  
+
+** 一个马后炮
+在考试的时候, 遇到了一个很奇怪的微分方程: (我不会积啊... 妈蛋)
+
+总之就是现在特别后悔, 早知道我 tmd 猜的是对的...
+(但是还是不会积分), 如果当时能够让我用计算机代数系统,
+就算是 calc 也可以解出那个问题了:
+
+#+begin_src calc :exports both
+  integ(sqrt(E * q1^2 - 1), q1)
+#+end_src
+
+结果就是这样:
+
+#+RESULTS:
+: (q1 sqrt(E) sqrt(E q1^2 - 1) - arccosh(q1 sqrt(E))) / (2 sqrt(E))
+
+emmm... 或者可以转换成 LaTeX 模式 ~d T~
+
+$${\left( q1 \sqrt{E} \sqrt{E q1^2 - 1} - arccosh\left( q1 \sqrt{E} \right) \right) / \left( 2 \sqrt{E} \right)}$$
+
+...
+
+emmm... 为什么都大学了, 还不能用符号计算器呢? 
