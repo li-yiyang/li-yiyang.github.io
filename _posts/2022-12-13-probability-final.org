@@ -1,0 +1,326 @@
+#+layout: post
+#+title: 概率统计 (预习)
+#+date: 2022-12-27
+#+math: true
+#+options: _:nil
+#+options: ^:nil
+#+categories: notes
+* 开始做梦
+剩下这么几天, 看看能不能翻身. +显然不能+.
+
+* 概率论的复习 以题目为主的复习
+** 样本空间
++ 样本空间 $\Omega$: 所有样本点的集合
+  #+begin_quote
+  常见的题型就是写出某个实验的样本空间: 
+  + 抛硬币: $\Omega = \{H, T\}$
+  + 扔骰子: $\Omega = \{1, 2, 3, 4, 5, 6\}$
+  #+end_quote
++ 随机事件 $A \subset \Omega$
+
+  以及事件的运算: $A \cap B$
++ 概率空间 $(\Omega, \mathcal{F}, P)$
+  + $\Omega$ 为所有子集的集合
+  + $\mathcal{F}$ 为 $\sigma$ 代数
+
+    $(\Omega, \mathcal{F})$ 为可测空间
+  + $P: \mathcal{F} \rightarrow [0, 1]$ 为概率
+    
+** 独立性
+独立性: $P(A B) = P(A)P(B)$
+
+#+begin_quote
+一般会有证明独立性. 
+#+end_quote
+
+** 条件概率和 Bayes 法则
++ 条件概率: $P(A | B) = \frac{P(A B)}{P(B)}$
+
+  一个简单的理解就是将 $\Omega$ 限制在 $B$ 条件概率空间上,
+  $(\Omega, \mathcal{F}, P|_B)
+  = (\Omega, \mathcal{F}, P(\cdot | B))$
++ 全概率公式:
+  $P(A) = P(A|B)P(B) + P(A|\bar{B})P(\bar{B})$
++ Bayes 法则:
+  $P(A|B) = \frac{P(B|A)P(A)}{\sum P(A)}$
+
+  #+begin_quote
+  通过结果计算发生的概率. 
+  #+end_quote
+
+** 随机变量
++ 随机变量 $\Omega \rightarrow \mathbb{R}$
+
+  $X: (\Omega, \mathcal{F}, P) \rightarrow
+  (\mathbb{R}, \mathcal{B}(\mathbb{R}, P_X))$
+
++ 描述 $X$ 的分布:
+  + 分布函数: $F(x) = P(X \leq x)$
+  + 离散: $F(X) = \sum_{X \leq x}(P(X))$
+    + [[https://en.wikipedia.org/wiki/Bernoulli_distribution][Bernoulli]]: $X \sim Bernoulli(p)$, 看作是抛硬币是否成功与否. 
+
+      $$P(X = 1) = p, P(X = 0) = 1 - p$$
+	
+    + [[https://en.wikipedia.org/wiki/Binomial_distribution][Binomial]]: $X \sim Binomial(p, n)$, 看作是连续抛 $n$ 次硬币,
+      其中 $k$ 次正面的概率. 
+
+      $$P(X = k) = \left(\begin{array}{l} k \\ n \end{array}\right) p^k (1-p)^k$$
+	
+    + [[https://en.wikipedia.org/wiki/Poisson_distribution][Poisson]]: $X \sim Poisson(\lambda)$ 
+
+      $$P(X=k) = \frac{e^{-k}}{k!} \lambda^k$$
+
+      这个并不是很好记忆, 可以理解为是二项分布的极限. 
+	
+    + [[https://en.wikipedia.org/wiki/Geometric_distribution][Geometric]]: $X \sim Geometric(p)$, 可以看作是连续抛硬币,
+      第一次出现正面的时候为 $k$ 的时候
+
+      $$P(X = k) = (1 - p)^k p$$
+
+      注: 需要注意的是, 有两种定义方式, 是第一次成功要的总数,
+      还是失败的次数. 里面差了一个一. 
+  + 连续: $F(X) = \int^xf(x) \mathrm{d}x$
+    + 均匀: $F(X) = \frac{x}{\theta}$, 其中 $\theta$ 为区间长度. 
+    + [[https://en.wikipedia.org/wiki/Normal_distribution][正态]]: $X \sim \mathcal{N}(\mu, \sigma^2)$
+
+      $$f(x) = \frac{1}{\sigma \sqrt{2 \pi}}\
+      e^{-\frac{1}{2} (\frac{x - \mu}{\sigma})^2$$
+
+      记忆的方法就是用一个标准的正态分布来记忆: $\mathcal{N}(0, 1)$
+
+    + [[https://en.wikipedia.org/wiki/Exponential_distribution][指数]]:
+
+      $$f(x, \lambda) = \left\{\begin{array}{ll} \lambda e^{-\lambda x} & x \geq 0,\\ 0 & x < 0. \end{array}\right.$$
+      
+    + [[https://en.wikipedia.org/wiki/Gamma_distribution][Gamma]]:
+
+      $$f(x) = \frac{1}{\Gamma(k) \theta^k} x^{k - 1} e^{-\frac{x}{\theta}}, f(x) = \frac{\beta^\alpha}{\Gamma(\alpha)} x^{\alpha - 1} e^{-\beta x}$$
+    + [[https://en.wikipedia.org/wiki/Beta_distribution][Beta]]
+
+      $$f(x) = \frac{x^{\alpha - 1} (1 - x)^{\beta - 1}}{\Beta(\alpha, \beta)}$$
+      
+  + 数值特征:
+    + 期望 $EX = \sum_x x P(X=x) = \int xf(x)\mathrm{d}x$
+      
+      #+begin_quote
+	Eg.
+	$$\boldsymbol{1}_A(\omega)\
+	= \left\{\begin{array}{ll} \
+	1 & \mathrm{if} A \\ \
+	0 & \mathrm{if} \bar{A} \
+	\end{array}\right.$$
+
+	+ $E(X|A) = \frac{E(X\cdot\boldsymbol{1}_A)}{P(A)}$
+	+ 用这样的方式可以比较方便地计算概率.
+	  即对概率空间先进行一个分划, 然后简化计算. 
+      #+end_quote
+      
+    + 期望是线性的: $E(\alpha X + \beta Y) = \alpha EX + \beta EY$
+    + 若 $X$, $Y$ 独立, 则 $EXY = (EX)(EY)$
+  + 条件期望 (重要):
+    1. $X$ 关于事件 $A$ 的条件期望 
+
+       $$E(X|A) = \sum x_i P(x_i|A)
+	     = \frac{\sum x_i P(x_i, A)}{P(A)}
+	     = E(X\cdot \boldsymbol{1}_A)/P(A)
+	     = \int x f(x|A)\mathrm{d}x$$
+
+       也就是 $X$ 限制在 $A$ 上 $P(\cdot|A)$ 的均值. 
+    2. 全期望公式: $\{A_i\}$ 为 $\Omega$ 的分划
+
+       $$EX = \sum E(X|A_i)P(A_i)$$
+
+       #+begin_quote
+       独立连续抛硬币, 正面朝上概率为 $p$,
+       $X$ 为首次正面数超过反面的的次数.
+
+       即平均抛的次数. 
+
+       记 $A$ 为首次抛正面向上的事件, 做分划, 有:
+       $EX = E(X|A)P(A) + E(X|\bar{A})P(\bar{A})$
+
+       又: $X|A \sim 1$, $X|\bar{A} \sim 1 + X_1 + X_2$,
+       其中 $X_1, X_2$ 和 $X$ 同分布.
+       于是 $EX = 1 \times p + (1 + 2 EX)(1- p)$
+       #+end_quote
+     3. $X$ 关于随机变量 $Y$ 的条件期望 <<e-x-of-y>>
+
+	本质上还是一个随机变量,
+	$E(X|Y)(\omega) \
+	= \sum E(X|Y^{-1}(y))\boldsymbol{1}_{Y^{-1}(y)}(\omega)$
+
+	和前面的数值情况 $A = (Y=y)$ 并不同. 
+	考虑: 若 $X$, $Y$ 离散随机变量, 有限/可数可能取值,
+	$X(\omega) = \sum_k x_k \boldsymbol{1}_{x=x_k}(\omega)$
+	$Y$ 同理. 
+
+	$$E(X|Y) = \sum_i E(X|Y=y_i) \mathbb{1}_{Y=y_i}$$
+	$$E(E(X|Y)) = \sum E(X|Y=y_i)P(Y=y_i) = EX$$
+
+	有如下性质:
+	+ $E(E(X|Y)) = EX$, 其中, 应该有如下的计算顺序:
+	  $E_Y(E_X(X|Y))$, 即用来求期望的对象不同. 
+	+ $E(h(x)|X) = h(x)$
+	+ $E(h(x) \cdot Y|x) = h(x)$
+
+	#+begin_quote
+	Eg. 随机变量 $X, Y$
+	+ $X \sim \mathrm{Poisson}(Y)$
+	+ $Y \sim \mathrm{Poisson}(\lambda)$
+
+	计算 $Es^{X+Y}, E(E(s^{X+Y}|Y)) = Es^{X+Y}$
+	1. $= E(E(s^{X + Y} | Y))$, 利用的是 $E(E(X|Y)) = EX$ 的结论.
+
+	   (技巧: 对于相互独立变量的一个多元函数的期望: $E(f(X, Y))$,
+	   通过上面的公式来逐步分解来计算. )
+	2. $= E(s^Y E(s^X | Y)) = E(s^Y e^{Y (s - 1)})$,
+	   通过分解的方式来分离变量. 利用的是 $X, Y$ 是相互独立的变量.
+	3. $= E[(s e^{s - 1})^Y] = e^{\lambda (s e^{s - 1} - 1)$
+	#+end_quote
+  + 方差 $VarX=E(X-EX)^2=EX^2 - (EX)^2$
+  + $k$ 阶原点矩 $EX^k$
+  + $k$ 阶中心矩 $E(X-EX)^k$
+
+* 参数估计
+** 基本概念
+所谓的参数估计, 就是对观测量的分布进行一个猜测,
+比如猜测连续抛骰子满足一个 Bernoulli 分布,
+认为 $6$ 朝上的概率为 $p = \theta$.
+
+然后做实验去验证, 得到了实验数据 $X_1, \cdots, X_n$,
+然后要检测这个 $p$ 应该是多少.
+
+** 估计方法
++ 点估计
+  + 矩估计
+    + 理论矩 $E X^k = \frac{1}{n}\sum_i X_i^k$ 样本矩 $\Rightarrow \hat{\theta}(X_i)$ 
+    + 或者也能够用中心矩来 $E(X-\bar{X})^k$
+    + 矩估计的方法就是对 $n$ 个参数 $\theta_i$ 列出 $n$ 个方程:
+      $E X^{k_i} = \sum_j X_j^{k_i}$, 然后联立求解出参数.
+
+      以上面的例子为例, 有点像是做了 $N$ 次实验, 每次抛 $n$ 次骰子,
+      得到 $6$ 朝上的次数为 $X_1, \cdots, X_n$, 理论上来说,
+      应该有 $1$ 阶矩为 $EX = n \theta = \bar{X}$, 于是可以解出 $\theta$. 
+  + 极大似然估计
+    + 似然函数: $L(\theta | X_i, \cdots, X_n) = f(X_i | \theta)$
+    + 极大似然估计的方式就是求使得似然函数 $L$ 的最大值
+
+      $$l(\theta | X_i) = \mathrm{ln} L (\theta | X_i)$$
+      $$\frac{\partial l}{\partial \theta} = 0 \Rightarrow \hat{\theta}(X_i)$$
+
+      以上面的例子为例, 有点像是让似然函数 $L = \prod_j P(X_j)$ 取到最大值,
+      大概是这样的一个感觉.  
+  + Bayes 估计 $\Theta$ 作为随机变量, 满足一个 $\sim h(\theta)$ 的先验分布.
+    于是有后验分布: 
+
+    $$h(\theta | X_i) = \frac{f(X_i | \theta) h(\theta)}{f(X_i)}$$
+
+    通过这个后验分布来计算得到参数 $\hat{\theta}(X_i) = E(\theta | X_i)$.
+
+    用上面的例子来说就是: 认为抛硬币的先验分布为 $h(\theta) = \boldsymbol{1}_{X = 6}$
+    然后就能够计算得到后验分布 $h(\theta | X_i) = \frac{f(X_i | \theta)h(\theta)}{f(X_i)}$.
+    对其平均即可得到结果. 一般后者 $f(X_i) = \int_\theta \prod_i f(X_i) h(\theta) \mathrm{d}\theta$,
+    可以利用现成的公式来计算, 会方便很多. 
++ 区间估计
++ 统计量 $X \sim f(x | \theta)$, 样本 $\bar{X} = (X_1, \cdots, X_n), X_i \sim X$,
+  统计量就是样本的一个多元函数: $U(\bar{X}) = U(X_i)$.
+  + 充分统计量: $P(\bar{X}\in A | U(\hat{X}) = u)$ 与 $\theta$ 无关
+    + Fisher-Neyman 因子分解定理:
+
+      $$f(x|\theta) = G(u(x) | \theta) r(x)$$
+
+      其中 $G(u(x) | \theta)$ 包含 $\theta$, 而 $r(x)$ 不包含 $\theta$.
+      
+  + 次序统计量 $X \sim f(x), F(x) = P(X \leq x)$, $X_i$ 和 $X$ 同分布.
+    对 $X_i$ 进行排序, 则有 $X_{(1)} \leq X_{(2)} \leq \cdots \leq X_{(n)}$.
+    于是有 $X_{(j)} \rightarrow$ 统计量. 
++ Fisher Information
+
+  $$x \sim f(x|\theta), \mathcal{I} = E[(\frac{\partial \mathrm{ln} f(X|\theta)}{\partial \theta})^2 |\theta]$$
+
+  一般是用来计算的. 
++ Shannon Entropy
+
+  $$X \sim f(X), S(X) = E \mathrm{ln}\frac{1}{f(X)} = \int f(x) \mathrm{ln}\frac{1}{f(x)}\mathrm{d}x$$
++ Jensson 不等式
+  $E \mathrm{ln}W \leq \mathrm{ln}EW$
+* 其他的一些
+** Story Proof
+#+begin_quote
+Eg.
+$\sum_i^k \left(\begin{array}{l} m \\ i \end{array}\right)\
+\left(\begin{array}{l} n \\ k-i \end{array}\right) = \
+\left(\begin{array}{l} m + n \\ k \end{array}\right)$
+
+从 $m$ 个男生 $n$ 个女声中选出 $k$ 个人
++ $m + n$ 中选出 $k$ 个人的选法
++ $k$ 个人中, 选择 $i$ 个男生和 $k-i$ 个女生的选法
+
+这两种是等价的, 所以是相等的. 
+#+end_quote
+** 概率不等式
++ markov 不等式
+
+  随机变量 $X \geq 0$ 且 $EX < \infty$, 则 $\forall C > 0, P(X \geq C) \leq \frac{EX}{C}$
++ Chebyshev 不等式
+** 中心极限定理
+设 $X_1, X_2, \cdots, X_n$ 与 $X$ 分布相同, 令 $S_n = \sum_i^n X_i$,
+则 $n \rightarrow \infty, \frac{S_n - n EX}{\sqrt{n Var X}} \rightarrow N(0, 1)$.
+
+$$Z_n = \frac{S_n - n EX}{\sqrt{n Var X}}, n \rightarrow \infty, \forall x \in \mathbb{R} P(Z_n \leq x) \rightarrow \frac{1}{\sqrt{2\pi}}\int_{-\infty}^\infty e^{-t^2/2}$$
+
+** 大数定律
+频率逼近概率的理论支撑. 
++ 弱大数定律
+
+  设 $X_1, X_2, \cdots, X_n$ 与 $X$ 分布相同, $E X_i < \infty$,
+  令 $S_n = \sum_{i = 1}^n X_i$, 则 $\forall \varepsilon > 0, \lim_{n \rightarrow  \infty} P(|\frac{S_n}{n} - EX| > \varepsilon) = 0$
+
++ 强大数定律
+
+
+* 习题
+
+1. $P(X + Y = \alpha) = 1 \Rightarrow X, Y$ 常值随机变量
+   + $P(X + Y = \alpha) = 1 \Rightarrow X + Y$ 为常值随机变量
+   + 设 $X$ 取值范围 $A$, 即 $\sum_{x \in A} P(X = x) = 1$,
+     即 $\exists x_0 \in A, P(X = x_0) \neq 0$
+   + 最终要证明 $A$ 仅包含一个元素
+2. $X \sim Exponential(\lambda)$
+   + $E(X|X > a) = \frac{E(X \boldsymbol{1}_{X>a})}{P(X>a)}$
+   + $E(X|Y)$
+     
+#+begin_quote
+$X_1.. X_i.. X_n$ 为独立同分布的随机变量, 分布函数严格递增,
+令 $X(n) = max\{X_i\}$, 求随机变量 $Z_n = n [1 - F(X_{(n)})]$
+的分布函数 $F_{Z_n}(X)$ 在 $n \rightarrow \infty$ 的极限.
+
+$$F_{Z_n}(t) = P(Z_n \leq t) = P(n(1 - F(X_{(n)})) \leq t) = P(F(X_{(n)}) \geq 1 - \frac{t}{n})$$
+$$= 1 - P(F(X_{(n)}) \leq 1 - \frac{t}{n}) = 1 - P(X_{(n)} \leq F^{-1}(1 - \frac{t}{n}))$$
+$$\Rightarrow = 1 - (P(X \leq F^{-1}(1 - \frac{t}{n}))^n = 1 - (1 - \frac{t}{n})^n \rightarrow 1 - e^{-t}$$
+
+上面的具体解释:
+1. 在计算概率的时候, 通过变换其中的条件的表达式,
+   来达到简化计算的作用.
+2. 在计算大数定律的时候,
+   $P(X \leq F^{-1}(1 - \frac{t}{n})) = F(F^{-1}(1 - \frac{t}{n})) = 1 - \frac{t}{n}$
+   利用的是 $F$ 的定义, 也就让难算的东西变得简单好算了.
+3. 然后是一个极限. 
+#+end_quote
+
+** 期中考试
+1. 不均匀硬币模拟均匀硬币
+   1) 写出样本空间: ${TH, HT}$
+   2) 得到一次正面或者反面的次数, 相当于就是在求期望. 
+2. 抛 $N$ 次硬币, $N \sim Poisson(\lambda)$
+   1) 正面数 $X$ 和反面数 $Y$ 相互独立
+
+      只要计算 $P(X)$ 和 $P(Y)$, 然后计算 $P(X, Y)$,
+      说明 $P(X, Y) = P(X)P(Y)$ 即可说明独立性. 
+   2) $P(X|Y = N - X) \nRightarrow P(X)$
+
+      这里要说明 $N$ 和 $X$ 的无关
+3. $X|_{U=p} \sim Binomial(n, p), U \sim U(0, 1)$ 为均匀分布,
+   则 $X$ 的分布实际上就是一个关于 $U$ 的 [[e-x-of-y][随机变量的期望]]:
+   $P(X) = \int_u P(X|U)P(U)$, 或者也可以认为 $U$ 对 $\Omega$ 做了一个划分也行. 
+4. 
