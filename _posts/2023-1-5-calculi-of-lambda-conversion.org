@@ -1,0 +1,914 @@
+#+layout: post
+#+title: [Reading] The Calculi of Lambda Conversion
+#+date: 2023-1-5
+#+options: _:nil ^:nil
+#+math: true
+#+categories: reading
+* $\lambda$ -- and its history
+** 为什么叫 $\lambda$ 演算子
+据说, 这是一个印刷的故事...
+
+#+begin_quote
+(By the way, why did Church choose the notation
+" $\lambda$ " In [Church, 1964, §2] he stated clearly that
+it came from the notation " $\hat{x}$ " used for class-abstraction
+by Whitehead and Russell, by first modifying " $\hat{x}$ " to " $\wedge x$ "
+to distinguish function-abstraction from class-abstraction,
+and then changing " $\lambda$ " to " $\lambda$ " for ease of printing.
+This origin was also reported in [Rosser, 1984, p.338].
+On the other hand, in his later years Church told two enquirers
+that the choice was more accidental: a symbol was needed and " $\lambda$ "
+just happened to be chosen.
+
+from [[http://www.users.waitrose.com/~hindley/SomePapers_PDFs/2006CarHin,HistlamRp.pdf][History of Lambda-calculus and Combinatory Logic]]
+#+end_quote
+
+* [Reading] The Calculi of Lambda Conversion
+阅读的是 Alonzo Church 的一篇 [[https://ia600107.us.archive.org/1/items/AnnalsOfMathematicalStudies6ChurchAlonzoTheCalculiOfLambdaConversionPrincetonUniversityPress1941/annalsOfMathematicalStudies6ChurchAlonzo-theCalculiOfLambda-conversion-princetonUniversityPress1941.pdf][文章]], 只有 92 页.
+下面的基本上就是阅读的时候的个人理解的笔记.
+
+只能说外国的教科书也不一定都是十分简单易懂的就是了...
+(诶, 是教科书吧... 别说是论文吧)
+
+注: 里面的名词基本都是我瞎翻译的, 请不要太较真.
+不过尴尬的是, 中文和英文混用看起来就像是乱码一样.
+并且由于原文的排版的公式和正文的字体区分并不是很友好,
+所以如果有输入错误的地方也不是不可能.
+
+并且, 因为是阅读过程中慢慢做的笔记的原因, 符号可能并不一定统一. 
+
+** Introductory
+这一章的作用类似于引入函数的概念以及一个形式化的表示方式.
+
+*** 函数的概念
+函数 function, 操作 operation, 变换 transformation, 函数有很多的叫法.
+但是用一个简单直观的想法来理解的话: 一个函数就像是一个输入 - 输出的对应规则:
+
+用 $f$ 来表示函数, 用 $f \alpha$ 来表示元素 $\alpha$ 在 $f$ 映射规则下的结果. 
+
+$$f: \alpha \mapsto y = f \alpha$$
+
+#+begin_comment
+一些例子:
+1. 函数的原像可以是任意的元素, 其像亦然:
+$\mathcal{F}: f \mapsto \mathcal{F}f = \int_0^1 (f x)\mathrm{d}x$
+
+令 $\Sigma$ 为存在量词 (existential quantifier),
+则 $\Sigma \{\mathrm{propostional\ functions}\} \rightarrow \{\mathrm{true}, \mathrm{false}\}$.
+或者是 $H: \forall x \mapsto I \Rightarrow HH = I$.
+同理有 $\Sigma \Sigma = \mathrm{true}$
+2. 函数的元素可以是自己: (function $f$ should be the function $f$ itself)
+
+尽管这样可能会产生悖论. 在数学上, 会有像罗素悖论这样的东西.
+但是实际使用中 (递归? ), 这样的定义是自然的.
+3. 恒等映射 (identity function) $I: I x \mapsto x$
+#+end_comment
+
+*** Extension and Intension 可延拓性
+如何比较两个函数?
++ 只要映射相通的元素, 结果一样即可 $\rightarrow$ function in extension
+
+  可以用复变函数中的解析延拓来进行理解. (话说就是同样的概念吧. )
+  之所以叫做可延拓的, 举个例子: $f: A \rightarrow C, g: B \rightarrow C$,
+  对于公共部分 $D = A \cap B$, 有 $\forall x \in D, fx = gx$,
+  于是就可以将两个函数的定义域扩充成 $A \cup B$. 
+
++ 只有定义的规则是一样的才算是一样的函数 $\rightarrow$ function in intension
+
+  当然, 这个什么样的规则才算是一样的有点难以描述 (vague).
+  在之后会进行介绍.
+
+这里给出了一个函数在定义域上的性质? 
+
+*** 多元函数的模型 Function of Several Variables
+#+begin_quote
+*例*: 考虑这样的一个二元函数: $f \alpha \beta$, 视为是 $(f \alpha)\beta$,
+即 $f$ 是一个根据 $\alpha$ 返回一个关于 $\beta$ 的函数的函数.
+#+end_quote
+
+同理, 这样的方式可以拓展到多元函数上, 即一个多元函数是函数的函数的 ... 函数的函数.
+
+在一元函数的基础上拓展成多元函数.
+并且这样的多元函数和直接将多个参数看作向量的一个映射不同,
+而是一组嵌套的函数. 
+
+*** Abstraction 抽象
+在这里引入了记号用来表示函数: $(\lambda x \boldsymbol{M})$.
+如果用代码 (Scheme) 来理解的话:
+
+#+begin_src scheme
+  (lambda (x) (exp-of-x x))
+#+end_src
+
+(注: 这里估计可以结合离散数学中的一阶逻辑的量词辖域,
+以及计算机编程中的变量作用域来理解? )
+
+好处就是一目了然么. 
+
+#+begin_quote
+*例*: 有两个表达式: $(x^2 + x)^2 = (y^2 + y)^2$ 以及
+$(\lambda x (x^2 + x)^2) = (\lambda y (y^2 + y)^2)$. 其中 $=$ 表示相等判断.
+对这两个表达式, 前者在 $x, y$ 未确定的时候, 其值是未知的. 后者则是恒为真的命题.
+其中的区别在于前者的变量不是自由的变量, 而是 bound (绑定的变量).
+对应离散数学里面的换名规则. 
+#+end_quote
+
+#+begin_quote
+*例*: 多元函数的记号: $(\lambda x (\lambda y \boldsymbol{M})) \Leftrightarrow (\lambda x y.\boldsymbol{M})$.
+如 $(\lambda x (\lambda y ((x^2 + x)^2 = (y^2 + y)^2))) \Leftrightarrow (\lambda x y. ((x^2 + x)^2 = (y^2 + y)^2))$.
+#+end_quote
+
+#+begin_quote
+*例*: 其中 $\lambda x$ 并是一个不完整的符号. 不过可以被叫做是一个抽象的运算符.
+可以将表达式中的符号提取出来, 变成一个函数.
+#+end_quote
+
+** Lambda-Conversion $\lambda$ 变换
+其中, 标题中所指的 The Calculus of $\lambda$ - Conversion,
+指的是一种形式系统 (formal system). 建立在第一章的函数概念上.
+
+这章的重点在于通过引入了形式的符号和公式记号,
+并引入变换方法和规则, 并说明 well-formed 公式总能够变换为 principal normal 的公式. 
+
+*** Primitive Symbols, and Formulas 符号和公式
+Primitive Symbols (基本符号, +害, 之后还是用英文吧+) 包含:
+
++ Improper Symbols (不完整的符号):
+
+  $$\lambda, (, ),$$
+  
++ Variables (变量, 满足字母表排列):
+
+  $$a, b, c, \dots, x, y, z, \bar{a}, \bar{b}, \bar{c}, \dots, \bar{z}, \bar{\bar{a}}, \dots, $$
+
+Formula (公式): 是一堆有限的基本符号 (Primitive Symbols) 的组合:
++ $x$ 就是一个完整有效的公式 (well-formed), 其中 $x$ 是一个自由的变量.
++ 若 $\boldsymbol{F}$ 和 $\boldsymbol{A}$ 是 well-formed, 那么 $(\boldsymbol{F} \boldsymbol{A})$ 也是. 在 $\boldsymbol{F}$ 中自由的变量,
+  在 $(\boldsymbol{F} \boldsymbol{A})$ 中也应该是自由的变量.
++ 若 $\boldsymbol{M}$ 是一个 well-formed 公式. 而 $\boldsymbol{M}$ 中包含了不止一个变量, 那么
+  $\lambda x \boldsymbol{M}$ 也是 well-formed. 但是其中的 $x$ 是绑定的变量 (bound).
+  而其他的变量则根据其特性或自由或绑定.
++ 上述三条决定了一个公式是否是 well-formed 以及其中的变量是否是自由的.
+  (充要条件? )
+
+(其中用粗体来表示公式. )
+
+替换规则的 Syntactical Notation:
+
+$$S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$$
+
+即用 $\boldsymbol{N}$ 替换在 $\boldsymbol{M}$ 中出现的所有的 $\boldsymbol{x}$.
+如果在 $\boldsymbol{M}$ 中并不存在 $\boldsymbol{x}$ 的话, 那么替换前后 $\boldsymbol{M}$ 不变.
+
+Abbrevation (缩写): 用来简化书写
++ Nominal Definition: 类似于为一个表达式命名, 类似于如下:
+
+  #+begin_src scheme
+    (define name (exp-for-name))
+  #+end_src
+
+  形式上的定义: $\boldsymbol{Abbr} \rightarrow \boldsymbol{M}$. 
+
+  #+begin_quote
+  *例*: 恒等函数: $\boldsymbol{I} \rightarrow (\lambda \alpha \alpha)$.
+  于是 $\boldsymbol{I}\boldsymbol{I}$ 即表示 $((\lambda \alpha \alpha)(\lambda \alpha \alpha))$  
+  #+end_quote
+
++ Schematic Definition: 类似于定义新的语法 (邪恶括号语言 Lisp 狂喜).
+  即通过形式地声明方式, 来定义一系列满足该形式的匹配方式.
+  使用粗体的小写字母来表示依次传入的参数.
+
+  #+name: schematic-function-definition
+  #+begin_quote
+  *例*:
+  + $[\boldsymbol{M} + \boldsymbol{N}] \rightarrow (\lambda \boldsymbol{a} (\lambda \boldsymbol{b} ((\boldsymbol{M} \boldsymbol{a})((\boldsymbol{N} \boldsymbol{a})\boldsymbol{b}))))$
+  + $[\boldsymbol{M} \times \boldsymbol{N}] \rightarrow (\lambda \boldsymbol{a} (\boldsymbol{M}(\boldsymbol{N} \boldsymbol{a})))$
+  + $[\boldsymbol{M}^{\boldsymbol{N}}] \rightarrow (\boldsymbol{N} \boldsymbol{M})$
+
+  于是 $[x + y] \rightarrow (\lambda \boldsymbol{a} (\lambda \boldsymbol{b} ((x \boldsymbol{a}) ((y \boldsymbol{a}) \boldsymbol{b}))))$,
+  并且其中的粗体的小写参数只是起形式上的占位作用,
+  如 $[a + c] \rightarrow (\lambda \boldsymbol{b} (\lambda \boldsymbol{d} ((a \boldsymbol{b})((c \boldsymbol{b})\boldsymbol{d}))))$.
+  以及 $[\boldsymbol{I} + \boldsymbol{I}] \rightarrow (\lambda \boldsymbol{b} (\lambda \boldsymbol{c} ((\boldsymbol{I} \boldsymbol{b}) (\boldsymbol{I} \boldsymbol{b})\boldsymbol{c})))$. 等等
+  #+end_quote
+
++ Omission of the Parentheses 括号省略规则: 省略括号的,
+  按照从右到左的顺序结合: $((f x)y) \Leftrightarrow f x y$,
+  $f(xy)z \Leftrightarrow (f(xy))z$.
+
+  对于方括号 (形式定义) 亦同理. 并且引入点号在不产生误解的前提下,
+  进一步简化括号的书写: $[x + [y + [z + t]]] \rightarrow x + . y + . z + t$.
+  以及: $\lambda x y z . x + y + z \rightarrow (\lambda x (\lambda y (\lambda [[x + y] + z)))$.
+
+*** Conversion
+这样的变换提供了将表达式 formula 变换为 principal formula 的工具.
+再通过下一节确定 principal formula 是唯一的,
+即能够给出一个比较 formula 的方法了. 
+
+有如下的变换:
+1. Rule I. (类似于命题逻辑中的换名规则) 对 $\boldsymbol{M}$ 中的非自由的变量 $\boldsymbol{x}$
+   可以替换为新的名字 $\boldsymbol{y}$.
+
+   即进行 $S^{\boldsymbol{x}}_{\boldsymbol{y}} \boldsymbol{M}|$ 的操作.
+
+   #+begin_quote
+   *例*: $a b (\lambda a a) (\lambda a a)$ 变成 $a b (\lambda b b) (\lambda a a)$.
+   对其中的 $(\lambda a a)$ 的部分进行了变换. 
+   #+end_quote
+  
+2. Rule II. 对于 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 的表达式, 可变换为 $S^{\boldsymbol{x}}_{\boldsymbol{N}} \boldsymbol{M}|$. 
+3. Rule III. 对于 $S^{\boldsymbol{x}}_{\boldsymbol{N}} \boldsymbol{M}|$, 可以变换为 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 的形式.
+
+   #+begin_quote
+   *例*: $(\lambda a a)$ 变成 $\lambda a . (\lambda a a) a$ 的形式.
+   对其中的 $a$ 的部分进行了变换, 变成了 $(\lambda a a) a$. 
+   #+end_quote
+
+后两个形式有点像是对称的形式. 且要求 $\boldsymbol{M}$ 和 $\boldsymbol{x}$ 和 $\boldsymbol{N}$ 是 "可分辨" 的.
+($\boldsymbol{M}$ are distinct both from $\boldsymbol{x}$ and from the free variables of $\boldsymbol{N}$.)
+
+这个可分辨感觉不太好描述... 在其中有一个说明:
+
+#+begin_html
+<details>
+<summary>说明</summary>
+#+end_html
+
+#+begin_quote
+it is to be understood that the word part (of a formula)
+means consecutive well-formed part not immediately following
+an occurrence of the symbol $\lambda$.
+#+end_quote
+
+于是一个反例就是 $(\lambda a a)$ 不能够对第一个 $a$ 进行变换,
+即 $(\lambda ((\lambda a a) a) a)$ 的形式. 因为这个不是一个有效的形式.
+
+对于这样的变换, 有如下记号: (感觉好麻烦, 都是约定性的东西)
++ $\boldsymbol{A}$ 经过一次上述的规则即可变换为 $\boldsymbol{B}$,
+  称 $\boldsymbol{A} \mathrm{\ imc\ } \boldsymbol{B}$ 即 $\boldsymbol{A}$ is immediately convertible into $\boldsymbol{B}$.
+  (可以立刻变换? )
++ $\boldsymbol{A}$ 可以通过有限次变换为 $\boldsymbol{B}$, 称 $\boldsymbol{A} \mathrm{\ conv\ } \boldsymbol{B}$,
+  即 $\boldsymbol{A}$ is convertible into $\boldsymbol{B}$. (可以变换)
++ 这样的关系称为 interconvertibility 即可变换性.
++ 仅使用第一种规则的变换记为 $\boldsymbol{A} \mathrm{\ conv-I\ } \boldsymbol{B}$,
+  称为 $\boldsymbol{A}$ is convertible-I to $\boldsymbol{B}$. 
+  同理, 可以定义 $\mathrm{conv-I-II}$ 和 $\mathrm{conv-I-III}$ 之类的.
++ 仅使用一次 Rule III 而不使用 Rule II, (可以使用 Rule I) 的称为 expansion (展开).
+  对称的, 仅使用一次 Rule II 的称为 reduction (化简 $\boldsymbol{A} \mathrm{\ red\ } \boldsymbol{B}$,
+  或者是 imr immediately reducible).
++ 使用 Rule II 称为 contraction of the part (约化, 收缩).
++ 对于一个公式, 若不存在 $((\lambda \boldsymbol{x} \boldsymbol{M})\boldsymbol{N})$ 的成分,
+  则称为 Normal Form (一般形式, 正规形式).
+  那么就可以说 $\boldsymbol{B}$ is a normal form of $\boldsymbol{A}$. 
+
+  而 principal normal form 则是, emmm, 还是直接摘原文, 然后用例子来理解吧.
+
+  #+begin_quote
+  A well-formed formula will be said to be in principsl normal form
+  if it is in normal form, and no variable is both a bound variable
+  and free variable of it, and the first bound variable occurring in it
+  (in the left-to-right order of the symbols which compose the formula)
+  is the same as the first variable in alphabetical order
+  which is not a free variable of it, and the variables which occur in it
+  immediately following the symbol $\lambda$ are, when taken in the order
+  in which they occur in the formula, in alphabetical order, without repetitions,
+  and without omissions except of variables which are free variables of the formula. 
+  #+end_quote
+
+  #+begin_quote
+  *例*: $\lambda a b . b a$ 和 $\lambda a . a (\lambda c . b c)$ 以及 $\lambda b . b a$ (自由变量外的 bound variable 的第一个为 $b$)
+  是 principal normal form. 而 $\lambda a c . c a$, $\lambda b c . c b$ (不满足字母表顺序) 和
+  $\lambda a . a (\lambda a . b a)$ (不满足仅出现一次的规律) 仅仅是 normal form. 
+  #+end_quote
+
+  对于 normal form 总能够通过 Rule I 变换为 principal form.
+
+#+begin_html
+</details>
+#+end_html
+
+*** Fundamental Theorems on Well-formulas and on the Normal Form
+这部分实在是有点难顶, 概念太多了, 并且很多都是一些重复性的概念...
+(有一种线性代数里面后面讲代数部分的定义那段的感觉了,
+不过不知道该不该吐槽这些长长的形式定义和说明...
++至少给我以后水论文提供了一个可行的方向了.(bushi)+)
+
+基本上需要知道的内容:
++ 一个 well-formed 的公式在 conversion 后仍然是 well-formed
++ 即一个复杂的表达式, 通过约化后可以得到一个小的表达式,
+  这个复杂的表达式和小的表达式通过 residual 剩余的关系联系在一起.
++ 上面的化简方式: 对于 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 的形式, 先约化 $\boldsymbol{M}$, 然后统一 $\boldsymbol{x}$,
+  最后 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$. 进行替换.
++ 因为通过 residual 剩余关系联系在一起, 所以在剩余关系下, 表达式是唯一的.
+  即每个 well-formed 公式都有一个唯一对应的 principal well-formed 的公式.
+
+#+begin_html
+<details>
+<summary>折叠 (具体的 theorems 和其说明)</summary>
+#+end_html
+
+在 Kleene 的 [[https://www.jstor.org/stable/1968749][Proof by cases in formal logic]] 中提出了如下的理论
+(以及证明的大纲), 不过这里我写的非常简单就是了:
++ I. 在一个 well-formed 的公式 $\boldsymbol{K}$ 中, 括号是成对的. 即括号闭合. 
++ II. 对 well-formed $\boldsymbol{K}$ 中的一部分 $\boldsymbol{M}$, 当且仅当其包含的括号是成对的时,
+  则 $\boldsymbol{M}$ 也会是一个 well-formula 的公式. 显然. 
++ III. 每个 well-formed 公式都有三种形式:
+  + $\boldsymbol{x}$, 其中 $\boldsymbol{x}$ 为变量
+  + $(\boldsymbol{F} \boldsymbol{A})$, 其中 $\boldsymbol{F}$ 和 $\boldsymbol{A}$ 是 well-formed.
+  + $(\lambda \boldsymbol{x} \boldsymbol{M})$, 其中 $\boldsymbol{M}$ 是 well-formed 且 $\boldsymbol{x}$ 是 $\boldsymbol{M}$ 中的自由变量 (free variable).
++ IV. 如果 $(\boldsymbol{F} \boldsymbol{A})$ 以及 $\boldsymbol{F}$ 或者 $\boldsymbol{A}$ 中的一个是 well-formed.
+  那么 $\boldsymbol{F}$ 和 $\boldsymbol{A}$ 都是 well-formed.
++ V. 如果 $(\lambda \boldsymbol{x} \boldsymbol{M})$ 是 well-formed, 那么 $\boldsymbol{M}$ 为 well-formed, 且 $\boldsymbol{x}$ 是 $\boldsymbol{M}$ 的自由变量.
++ VI. 一个 well-formed 的公式可以是 $(\boldsymbol{F} \boldsymbol{A})$ 的形式, 其中 $\boldsymbol{F}$ *或者* $\boldsymbol{A}$ 是 well-formed.
+  并且只能是这个形式.
+
+  (注: 这里之所以是 "或者", 是因为可以用 IV 来得到且的条件. )
++ VII. 一个 well-formed 的公式可以是 $(\lambda \boldsymbol{x} \boldsymbol{M})$ 的形式, 其中 $\boldsymbol{x}$ 是变量.
+  并且只能是这个形式.
+
+  注: 感觉这一部分写得太啰唆了, 可以形式地看作一个定理的...
+  可能是证明的方式不一样吧. 或者是有什么我没有注意到的坑吧. 
++ VIII. 如果 well-formed 的 $\boldsymbol{P}$ 和 $\boldsymbol{Q}$ 是 well-formed 的 $\boldsymbol{K}$ 的一部分.
+  那么要么 $\boldsymbol{P}$ 是 $\boldsymbol{Q}$ 的一部分, 或者反过来, 要么这两个部分是不相交 (non-overlapping) 的.
+
+  注: 不相交 (non-overlapping) 的概念在前面的第一结论中介绍了.
+  大概的意思就是看括号的部分, 比如 $((\lambda x (\lambda y y) z))$ 中,
+  $((\lambda x (\lambda y y)$ 和 $(\lambda y y) z))$ 就是相交的.
+
+  感觉证明只要说明如果相交, 那么就会导致括号不成对, 即和 I 矛盾即可. 
++ IX. 一个 well-formed 的公式 $\boldsymbol{K}$ 中的两个 distinct occurrence $\boldsymbol{P}$ 一定是 non-overlapping 的.
+
+  证明就是数括号. 然后利用一些对称性. 
++ X. 如果 $\boldsymbol{P}$, $\boldsymbol{F}$, 以及 $\boldsymbol{A}$ 是 well-formed. $\boldsymbol{P}$ 是 $(\boldsymbol{F} \boldsymbol{A})$ 的一部分.
+  则 $\boldsymbol{P}$ 是 $(\boldsymbol{F} \boldsymbol{A})$ 或者 $\boldsymbol{P}$ 是 $\boldsymbol{F}$ 或者 $\boldsymbol{A}$ 的一部分.
++ XI. 如果 $\boldsymbol{P}$ 和 $\boldsymbol{M}$ 是 well-formed 并且 $\boldsymbol{P}$ 是 $(\lambda \boldsymbol{x} \boldsymbol{M})$ 的一部分.
+  那么 $\boldsymbol{P}$ 要么是 $(\lambda \boldsymbol{x} \boldsymbol{M})$, 或者是 $\boldsymbol{x}$ 或者是 $\boldsymbol{M}$ 的一部分. 
++ XII. 在 well-formed 公式 $\boldsymbol{K}$ 中出现的变量 $\boldsymbol{x}$ 是否是自由的,
+  取决于其是否出现于 $\boldsymbol{K}$ 中的类似于 $(\lambda \boldsymbol{x} \boldsymbol{M})$ 的形式中.
+
+  类似于编程中的形式变量一样. (有点像是 Ruby 中的变量的作用域 Scope)
++ XIII. 如果 $\boldsymbol{M}$ 是 well-formed 且 $\boldsymbol{x}$ 不是 $\boldsymbol{M}$ 中的自由变量.
+  且 $\boldsymbol{y}$ 并不出现在 $\boldsymbol{M}$ 中. 则 $S_{\boldsymbol{y}}^{\boldsymbol{x}} \boldsymbol{M}|$ 是 well-formed.
++ XIV. 如果 $\boldsymbol{M}$ 和 $\boldsymbol{N}$ 是 well-formed 且 $\boldsymbol{x}$ 在 $\boldsymbol{M}$ 中出现,
+  在 $\boldsymbol{N}$ 中为 bound 变量. 那么 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$ 和 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 都是 well-formed
+  且有相通的变量.
+
+  #+begin_quote
+  *例*: 在 $(\lambda x (x + 1)) y$ 表达式中, $x$ 在 $(\lambda x (x + 1))$ 中是自由的变量,
+  可以用换名规则方式来变成 $y$, 即 $(\lambda y (y + 1)) N$. 而 $N$ 为 $y$,
+  其中的 $y$ 为 bound 变量. 
+  #+end_quote
++ XV. 若 $\boldsymbol{K}$, $\boldsymbol{P}$, $\boldsymbol{Q}$ 是 well-formed. 并且 $\boldsymbol{P}$ 中的所有自由变量也是 $\boldsymbol{Q}$ 中的自由变量.
+  那么在 $\boldsymbol{K}$ 中用 $\boldsymbol{Q}$ 来替换 $\boldsymbol{P}$, 只要不是在 $\lambda$ 之后的, 都是可行的.
+
+  这里的只要不是在 $\lambda$ 后, 实际上和 $(\lambda ((\lambda a a) a) . a)$ 这样的例子是一样的. 
++ XVI. 若 $\boldsymbol{A} \mathrm{\ conv\ } \boldsymbol{B}$, 且 $\boldsymbol{A}$ 是 well-formed, 那么 $\boldsymbol{B}$ 也是 well-formed.
++ XVII. 若 $\boldsymbol{A} \mathrm{\ conv\ } \boldsymbol{B}$, 且 $\boldsymbol{A}$ 是 well-formed, 那么 $\boldsymbol{A}$ 和 $\boldsymbol{B}$ 有相同的变量.
++ XVIII. 若 $\boldsymbol{K}$, $\boldsymbol{P}$, $\boldsymbol{Q}$ 是 well-formed, 且 $\boldsymbol{P} \mathrm{\ conv\ } \boldsymbol{Q}$. 并且 $\boldsymbol{L}$ 为在 $\boldsymbol{K}$ 用 $\boldsymbol{Q}$ 替换 $\boldsymbol{P}$ 的结果.
+  那么 $\boldsymbol{K} \mathrm{\ conv\ } \boldsymbol{L}$.
+
+  拓展原有的自由变量和绑定变量的概念, 引入 free occurrence 和 bound occurrence
+  的概念来描述表达式在表达式中的关系. 且引入记号 $S_{\boldsymbol{N}}^{\boldsymbol{P}} \boldsymbol{M}|$ 来表示替换. 
++ XIX. 一个 $\boldsymbol{P}$ 在 $\boldsymbol{K}$ 中的出现是 free occurrence 还是 bound occurrence,
+  取决于其是否出现于 $\boldsymbol{K}$ 中的类似于 $(\lambda\boldsymbol{x} \boldsymbol{M})$ 的形式中. (基本上是 12 的拓展)
++ XX. 基本就是 XIII 的拓展.
++ XXI. 基本就是 XIV 的拓展.
++ XXII. 基本就是 XV 的拓展. 
+
+前面的这些 theorems 类似于通过对情况进行不同条件区分,
+从而得到一个简单的结论: *一个 well-formed 的公式在 conversion 后仍然是 well-formed*. 
+
+接下来的一组理论来自 Church 和 Rosser 的 [[https://www.jstor.org/stable/1989762][Some Properties of Conversion]].
+定义一个进行包含 $\boldsymbol{A}$ 中的各个部分, 记为 $(\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j$.
+并规定若 $p \neq q$, 则 $(\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p$ 和 $(\lambda \boldsymbol{x}_q \boldsymbol{M}_q) \boldsymbol{N}_q$ 是 $\boldsymbol{A}$ 中的不同部分.
+(不一定是不同的表达式) 目标是得到一个表达式中的 residuals
+(不知道叫做剩余是不是比较好, 看了后面的定义, 感觉和线代里面的剩余类比较像.
+有一种在 conv 关系下的一个剩余类的感觉... ). 
+
+1. If the sequence of applications of Rules I and II in question is vacuous,
+   each part $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ is its own residual.
+
+   对于只参加了换名和约化的变换的, 自己就是自己的剩余.
+2. $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 经过一次 Rule I 变换为 $((\lambda \boldsymbol{x}_j' \boldsymbol{M}_j') \boldsymbol{N}_j')$ 那么后者为前者的剩余.
+3. 有 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 为 $\boldsymbol{A}$ 的一部分, $\boldsymbol{A}$ 对其经过一次 Rule II 约化为 $\boldsymbol{A}'$.
+   记 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 为集合 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 中的特定一个,
+   有如下六种情况:
+   1) $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 和 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 不相交. 在约化的过程中,
+      $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 变为在 $\boldsymbol{A}'$ 中相同的一部分且该部分为其剩余.
+
+      emmm, 简单来说就是约化前后的部分为剩余呗.
+   2) 若 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 是 $\boldsymbol{M}_p$ 的一部分, 则在约化的过程中.
+      $\boldsymbol{M}_p$ 变为 $\boldsymbol{M}_p'$. $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p') \boldsymbol{N}_p)$ 为 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 的剩余. 
+   3) 若 $((\lambda \boldsymbol{x} \boldsymbol{M})\boldsymbol{N})$ 是 $\boldsymbol{N}_p$ 的一部分, 则在约化过程中.
+      $\boldsymbol{N}_p$ 变为 $\boldsymbol{N}_p'$, $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p')$ 为 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p)\boldsymbol{N}_p)$ 的剩余.
+
+      2 和 3 的简单表述应该就是对于部分的约化前后结果为剩余. 
+   4) 若 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 就是 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$. 那么  $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 在 $\boldsymbol{A}'$ 中没有剩余. 
+   5) 若 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 是 $\boldsymbol{M}$ 的一部分, 那么令 $\boldsymbol{M}'$ 为用 $\boldsymbol{N}$ 来替换
+      在 $\boldsymbol{M}$ 中除了在 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 中的所有 $\boldsymbol{x}$ 的出现.  
+
+      在这样的变换过程中, 记 $\boldsymbol{M}'$ 为 $\boldsymbol{M}$ 的约化结果. 当然, 在 $\boldsymbol{M}'$ 中仍是 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$,
+      因为它们是相同的公式. 用 $S_{\boldsymbol{N}}^{\boldsymbol{x}} ((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)|$ 来替换 $\boldsymbol{M}'$ 中的 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$,
+      于是 $\boldsymbol{M}'$ 变成了 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$.
+
+      于是 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 在 $\boldsymbol{A}'$ 中的剩余
+      定义为在 $\boldsymbol{A}'$ 中用 $S_{\boldsymbol{N}}^{\boldsymbol{x}} ((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)|$ 替换 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$ 的结果.
+      也就是在 $\boldsymbol{A}$ 中用 $S_{\boldsymbol{N}}^{\boldsymbol{x}}\boldsymbol{M}$ 来替换 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 的结果.
+
+      (这里翻译可能有错, 请以原文为主. 属于是真・长难句了. )
+   6) 若 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 是 $\boldsymbol{N}$ 的一部分,
+      那么令 $((\lambda \boldsymbol{y}_i \boldsymbol{P}_i) \boldsymbol{Q}_i)$ 为 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$ 中和 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 对应的部分.
+
+      那么在 $\boldsymbol{A}$ 中的 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 在 $\boldsymbol{A}'$ 中的剩余即为 $((\lambda \boldsymbol{y}_i \boldsymbol{P}_i) \boldsymbol{Q}_i)$ 在
+      $\boldsymbol{A}'$ 中 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}|$ 的出现, 后者为在 $\boldsymbol{A}$ 中用 $S_{\boldsymbol{N}}^{\boldsymbol{x}} \boldsymbol{M}$ 替换 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 得到. 
+4. 若经过多次的 Rule I, II 变换得到 $\boldsymbol{A} \mathrm{\ imc\ } \boldsymbol{A}' \mathrm{\ imc\ } \cdots$, 那么在变换中,
+   对应的剩余仍为剩余. 
+
+如果按照我的理解的话, 我认为这个求剩余类的操作就像是在进行计算 normal 表达式的过程.
+*即一个复杂的表达式, 通过约化后可以得到一个小的表达式*,
+而在比较的过程中, 只要说明可以用代表元来表述即可. 
+
++ XXIII. 若 $\boldsymbol{A} \mathrm{\ conv-I-II\ } \boldsymbol{B}$, 那么 $\boldsymbol{A}$ 中的 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 集合的剩余对应 $\boldsymbol{B}$ 中的剩余,
+  且都有 $((\lambda \boldsymbol{y} \boldsymbol{P}) \boldsymbol{Q})$ 的形式.
+
+  这大概就是我上面所说的东西.
++ XXIV. 若 $\boldsymbol{A}$ 经历一系列 Rule I 和 II 的变换, (这里有点没有理解):
+  no residual of the part $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ of $\boldsymbol{A}$ can coincide with a residual
+  of the part $((\lambda \boldsymbol{x}'\boldsymbol{M}')\boldsymbol{N}')$ of $\boldsymbol{A}$ unless $((\lambda \boldsymbol{x} \boldsymbol{M})\boldsymbol{N})$ coincides with $((\lambda \boldsymbol{x}'\boldsymbol{M}')\boldsymbol{N}')$.
+
+  类似于只剩下代表元的感觉?
+
+记一系列的约化变换 $\boldsymbol{A}_1 \mathrm{\ imr\ } \boldsymbol{A}_2 \mathrm{\ imr\ } \cdots \mathrm{\ imr\ } \boldsymbol{A}_{n + 1}$ 为 a sequence of contractions on the parts
+$((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ of $\boldsymbol{A}_1$. (即对一个部分的约化. ) 直到没有剩余. 在最终 $\boldsymbol{A}_{n + 1}$ 处终止.
+若消没了的话, 则称为对该 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$, 为 a vacuous sequence of reductions. 
+
+#+begin_quote
+*例*: $(\lambda x ((\lambda y (\lambda z z)) z)) \mathrm{\ imr\ } (\lambda x ((\lambda \alpha \alpha) z)) \mathrm{\ imr\ } (\lambda x z)$
+#+end_quote
+
++ XXV. 记 $m$ 为一系列换名变换后终止的前一个位置.
+  记第 $m + 1$ 次的变换结果为 $\boldsymbol{A}'$, 
+  于是可以说 $\boldsymbol{A} \mathrm{\ conv-I\ } \boldsymbol{A}'$.
+
+上面的方式通过引入 $\boldsymbol{A}$ 的长度来是相. 如果 $\boldsymbol{A}$ 的长度为 1 (即只有一个符号),
+那么 $m = 0$. 作为这样引入的一个假说 (hypothesis), 假设每个 $\boldsymbol{A}$ 的长度都比 $n$ 小.
+那么:
+1) 若 $\boldsymbol{A}$ 的形式为 $\lambda \boldsymbol{x} \boldsymbol{M}$,
+   那么 $\boldsymbol{A}$ 的 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 的集合的元素都是 $\boldsymbol{M}$ 的部分.
+   即对 $\boldsymbol{M}$ 进行计数. 
+2) 若 $\boldsymbol{A}$ 的形式为 $\boldsymbol{F} \boldsymbol{X}$, 其中 $\boldsymbol{F} \boldsymbol{X}$ 不是 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 的元素,
+   且 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 中的元素不是 $\boldsymbol{F}$ 或者 $\boldsymbol{X}$. 那么对 $\boldsymbol{F}$ 和 $\boldsymbol{X}$ 分别计数.
+3) 若 $\boldsymbol{A}$ 的形式为 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$,
+   其中 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 为 $((\lambda \boldsymbol{x}_j \boldsymbol{M}_j) \boldsymbol{N}_j)$ 的元素.
+   那么在收缩中, 对 $\boldsymbol{M}_p$ 应有一个最大可以约化的次数 $a$,
+   对 $\boldsymbol{N}_p$ 同理有一个次数 $b$. 并且通过若干次 ($c \geq 1$) Rule I 变换后,
+   可将 $\boldsymbol{M}_p$ 变为 $\boldsymbol{M}$. (注: 这部分不是很理解. 这里的 $c$ 应该是出现的变量的次数? )
+
+于是现在对 $\boldsymbol{A}$ 中 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 的部分的约化操作如下:
+1) 将 $((\lambda \boldsymbol{x}_p \boldsymbol{M}_p) \boldsymbol{N}_p)$ 中的 $\boldsymbol{M}_p$ 部分约化为最简形式 $\boldsymbol{M}$
+2) 对 $\boldsymbol{M}$ 进行若干次 Rule I 变换, 得到 $((\lambda \boldsymbol{t} \boldsymbol{M}') \boldsymbol{N}_p)$ 的形式.
+   其中 $\boldsymbol{M}'$ 的形式为 $\boldsymbol{M}$ 中 $\boldsymbol{x}_p$ 经过 Rule I 替换得到的形式.
+3) 做替换操作 $S_{\boldsymbol{N}_p}^{\boldsymbol{t}} \boldsymbol{M}'|$ 于是应该有 $c$ 次替换.
+
+(注: 这里我跳过了, 因为实在是太麻烦了, 如果后面有理解的问题的话我再跳回来. )
+
++ XXVI. 如果 $\boldsymbol{A} \mathrm{\ imr\ } \boldsymbol{B}$, 即通过约化 $\boldsymbol{A}$ 中的 $((\lambda \boldsymbol{x} \boldsymbol{M}) \boldsymbol{N})$ 部分,
+  若令 $\boldsymbol{A}_1$ 为 $\boldsymbol{A}$ 则可以写出一个变化的序列 $\boldsymbol{A}_1 \mathrm{\ imr\ } \boldsymbol{A}_2 \mathrm{\ imr\ } \boldsymbol{A}_3 \cdots \boldsymbol{A}_k$,
+  对每个 $k$, $\boldsymbol{B}_k$ 是 $\boldsymbol{A}_k$ 的剩余的变换序列的终止元素.
+  (the result of a terminating sequence of contractions on the residuals in $\boldsymbol{A}_k$)
+  于是:
+  1) $\boldsymbol{B}_1$ 为 $\boldsymbol{B}$
+  2) 对于每个 $\boldsymbol{B}_k \mathrm{\ conv-I-II\ } \boldsymbol{B}_{k + 1}$
+  3) 哪怕 $\boldsymbol{A}_k$ 序列可以无穷增长, 仍然存在一个确定的 $u_m$, 由 $\boldsymbol{A}$ 以及 $m$ 来确定.
+     (这里有点不太理解其含义. ) starting with $\boldsymbol{B}_m$, at most
+     $u_m$ consecutive $\boldsymbol{B}_k$'s occur for which it is not true that
+     $\boldsymbol{B}_k \mathrm{\ red\ } \boldsymbol{B}_{k + 1}$.
++ XXVII. 若 $\boldsymbol{A} \mathrm{\ conv\ } \boldsymbol{B}$,
+  那么存在从 $\boldsymbol{A}$ 到 $\boldsymbol{B}$ 的没有先于约化的展开变换.
+  (no expansion precedes any reduction)
++ XXVIII. 若 $\boldsymbol{B}$ 是 $\boldsymbol{A}$ 的 normal 形式. 那么 $\boldsymbol{A} \mathrm{\ conv-I-II\ } \boldsymbol{B}$.
++ XXIX. 若 $\boldsymbol{A}$ 是一个 normal 形式, 那么在 Rule I 的变换内,
+  其是唯一的.
++ XXX. 若 $\boldsymbol{A}$ 有 normal form, 那么它就有唯一的 principal normal form.
++ XXXI. 若 $\boldsymbol{B}$ 是 $\boldsymbol{A}$ 的 normal form. 那么最多经过 $m$ 次可以从 $\boldsymbol{A}$ 变换到 $\boldsymbol{B}$.
++ XXXII. 若 $\boldsymbol{A}$ 有 normal form, 那么它的所有的 well-fromed 部分都有 normal form.
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_comment
+,#+begin_html
+<details>
+<summary>程序实现的尝试</summary>
+,#+end_html
+,*** 程序实现的尝试
+照着规范来吧, 不清楚能否能实现.
+
+,#+begin_html
+</summary>
+,#+end_html
+#+end_comment
+** Lambda-Definability $\lambda$ 表达性
+这章的重点应该是为了说明 $\lambda$ 表达式可以用来表达什么.
+实际上这部分更加侧重于构造, 及能够用 $\lambda$ 演算子来构造什么. 
+
+*** Lambda-Definability of Functions of Positive Integers 用 $\lambda$ 表达式定义正整数
+如下定义:
+
+$$1 \rightarrow \lambda a b . a b$$
+$$2 \rightarrow \lambda a b . a (a b)$$
+$$3 \rightarrow \lambda a b . a (a (a b))$$
+
+等等, 于是可以定义一系列的整数. 当然为了和 $1 1 = (\lambda a b . a b) (\lambda a b . a b)$ 做区分,
+于是引入记号:
+
+$$\overline{11} \rightarrow \lambda a b . a(a(a(a(a(a(a(a(a(a(a b))))))))))$$
+
+来表示多位的整数.
+
+那么这样的方式是如何和数联系在一起的呢. 比如 $2 f$ 即得到一个对 $f$ 应用两次的形式的东西.
+而 $\overline{14} f$ 则得到对 $f$ 应用 $14$ 次的结果. (类似的还有 Frege 和 Russell 的集合论的定义.
+应该是有点像是卓里奇里面的实数定义? )
+
+于是可以定义这样的正整数的运算, 比如用一个 $\boldsymbol{F}$ 来表示对上面定义的 (一元) 正整数的函数,
+如果存在这样的函数, 满足:
+1) 任意正整数 $m$ 和 $n$, 记其对应的表达式为 $\boldsymbol{M}$, $\boldsymbol{N}$, 若 $\boldsymbol{F} m = n$, 则 $\boldsymbol{F} \boldsymbol{M} \mathrm{\ conv\ } \boldsymbol{N}$. 
+2) 若 $\boldsymbol{F} m$ 没有值 (has no value for positive integer $m$),
+   那么 $\boldsymbol{F} \boldsymbol{M}$ 没有 normal form.
+   
+则称为 $\lambda$ -definable ($\lambda$ 可定义). 并且称这样的函数称为 $\lambda$ -defined. 
+
+(同理, 可定义二元 (及以上的) 函数的 $\lambda$ 可定义性. 若 $\boldsymbol{F} l m = n \Rightarrow \boldsymbol{F} \boldsymbol{L} \boldsymbol{M} = \boldsymbol{N}$,
+若 $\boldsymbol{F} l m$ 没有值对应, 那么 $\boldsymbol{F} \boldsymbol{L} \boldsymbol{M}$ 没有 normal form. )
+
+#+begin_html
+<details>
+<summary>例子</summary>
+#+end_html
+
+前面定义的函数, 此时就会有一些直观的含义了:
++ $[\boldsymbol{M} + \boldsymbol{N}] \rightarrow (\lambda \boldsymbol{a} (\lambda \boldsymbol{b} ((\boldsymbol{M} \boldsymbol{a})((\boldsymbol{N} \boldsymbol{a})\boldsymbol{b}))))$
+
+  相当于是对于一个函数 $a$ 作用了 $\overline{n}$ 次后继续作用 $\overline{m}$ 次.
+  即是一个加法的感觉: $f^{n + m}$.
++ $[\boldsymbol{M} \times \boldsymbol{N}] \rightarrow (\lambda \boldsymbol{a} (\boldsymbol{M}(\boldsymbol{N} \boldsymbol{a})))$
+
+  相当于是对于一个函数, 作用了 $\overline{n}$ 次后, 作为一个整体重新作用 $\overline{m}$ 次,
+  即是一个乘法的感觉: $(f^{n})^{m}$. 
++ $[\boldsymbol{M}^{\boldsymbol{N}}] \rightarrow (\boldsymbol{N} \boldsymbol{M})$
+
+  实际上并不难发现, 如果对于正整数表达中的形式, 比如以 $\overline{3}$ 为例:
+  $(\lambda a b . (a (a (a b))))$, 作用在 $\boldsymbol{M}$ 上后再做换名:
+  $\overline{3} \boldsymbol{M} \rightarrow\
+  (\lambda b (\boldsymbol{M} (\boldsymbol{M} (\boldsymbol{M} a))))\
+  \rightarrow \boldsymbol{M} \times \boldsymbol{M} \times \boldsymbol{M}\
+  \rightarrow \boldsymbol{M}^{\boldsymbol{N}}$.
++ $\boldsymbol{S}$ 为 $\lambda a b c . b (a b c)$
+
+  实际上这个的命名和之后的一个函数的命名非常的像, "S" 代表 succeed,
+  "P" 代表 predecessor. 
+
+有结论:
++ $[\boldsymbol{L} + \boldsymbol{M}] + \boldsymbol{N} \mathrm{\ conv\ } \boldsymbol{L} + [\boldsymbol{M} + \boldsymbol{N}]$
++ $[\boldsymbol{L} \times \boldsymbol{M}] \times \boldsymbol{N} \mathrm{\ conv\ } \boldsymbol{L} \times [\boldsymbol{M} \times \boldsymbol{N}]$
++ $[\boldsymbol{L} + \boldsymbol{M}] \times \boldsymbol{N} \mathrm{\ conv\ } [\boldsymbol{L} \times \boldsymbol{N}] + [\boldsymbol{M} \times \boldsymbol{N}]$
++ $\boldsymbol{L}^{\boldsymbol{M} + \boldsymbol{N}} \mathrm{\ conv\ } \boldsymbol{L}^{\boldsymbol{M}} \times \boldsymbol{L}^{\boldsymbol{N}}$
++ $\boldsymbol{L}^{\boldsymbol{M} \times \boldsymbol{N}} \mathrm{\ conv\ } [\boldsymbol{L}^{\boldsymbol{N}}]^{\boldsymbol{M}}$
++ $\boldsymbol{S} \boldsymbol{M} \mathrm{\ conv\ } 1 + \boldsymbol{M}$
+
+简单的证明尝试 (还是留到之后吧. 先画一个大饼:
+之后可以试试看用 Racket 来实现一个演算子的运算程序).
+
+选几个证明:
++ $[\boldsymbol{L} + \boldsymbol{M}] + \boldsymbol{N} \mathrm{\ conv\ } \boldsymbol{L} + [\boldsymbol{M} + \boldsymbol{N}]$
+
+  左边:
+  $[\boldsymbol{L} + \boldsymbol{M}] + \boldsymbol{N}\
+  \rightarrow  (\lambda a (\lambda b (([\boldsymbol{L} + \boldsymbol{M}] a)((\boldsymbol{N} a) b))))$,
+  + 其中,
+    $[\boldsymbol{L} + \boldsymbol{M}]\
+    \rightarrow (\lambda c (\lambda d ((\boldsymbol{L} c) ((\boldsymbol{M} c) d))))$.
+  + 于是,
+    $([\boldsymbol{L} + \boldsymbol{M}] a) \rightarrow\
+    (\lambda d ((\boldsymbol{L} a) ((\boldsymbol{M} a) d)))$.
+  + 继续带入,
+    $([\boldsymbol{L} + \boldsymbol{M}] a) ((\boldsymbol{N} a) b) \rightarrow\
+    (\boldsymbol{L} a)((\boldsymbol{M} a) ((\boldsymbol{N} a)b))$
+  + 即,
+    $[\boldsymbol{L} + \boldsymbol{M}] + \boldsymbol{N} \mathrm{\ conv\ }\
+    (\lambda a (\lambda b ((\boldsymbol{L} a)(\boldsymbol{M} a) (\boldsymbol{N} a) b)))$
+
+  右边:
+  $\boldsymbol{L} + [\boldsymbol{M} + \boldsymbol{N}] \rightarrow\
+  (\lambda a (\lambda b ((\boldsymbol{L} a) ([\boldsymbol{M} + \boldsymbol{N}] a) b)))$
+  显然同理可以化成 $(\lambda a (\lambda b ((\boldsymbol{L} a) (\boldsymbol{M} a) (\boldsymbol{N} a) b)))$. 
++ $\boldsymbol{S} \boldsymbol{M} \mathrm{\ conv\ } 1 + \boldsymbol{M}$
+
+  左边: 
+  $\boldsymbol{S} \boldsymbol{M} \rightarrow\
+  (\lambda a b . a \boldsymbol{M} a b)$
+
+  右边:
+  $1 + \boldsymbol{M} \rightarrow\
+  (\lambda a (\lambda b ((\lambda c d . c d) a) ((\boldsymbol{M} a) b)))\
+  \rightarrow (\lambda a (\lambda b (a (\boldsymbol{M} a) b)))\
+  \rightarrow (\lambda a b . a \boldsymbol{M} a b)$
+
+#+begin_html
+</details>
+#+end_html
+
+(注: 因为我的微积分学得不是很好, 所以我很好奇微积分中的戴维金分割的操作,
+或者说, 是如何从 $\mathbb{N} \sim \mathbb{Z} \sim \mathbb \sim \mathbb{Q} \leadsto \mathbb{R} \sim \mathbb{C}$ 这样变过去的. )
+
+*** Ordered Pairs and Triads 有序对和三元组
+(对上面定义的正整数)
+
+定义有序对:
+
+$$[\boldsymbol{M}, \boldsymbol{N}] \rightarrow \lambda a . a \boldsymbol{M} \boldsymbol{N}$$
+
+以及对取元素操作:
++ $\boldsymbol{2}_1 \rightarrow \lambda a . a (\lambda b c . c I b)$
++ $\boldsymbol{2}_2 \rightarrow \lambda a . a (\lambda b c . b I c)$
+
+其中 $I$ 为
+
+类似的有三元组:
+
+$$[\boldsymbol{L}, \boldsymbol{M}, \boldsymbol{N}] \rightarrow \lambda a . a \boldsymbol{L} \boldsymbol{M} \boldsymbol{N}$$
+
+其取元素操作:
++ $\boldsymbol{3}_1 \rightarrow \lambda a . a (\lambda b c d . c I d I b)$
++ $\boldsymbol{3}_2 \rightarrow \lambda a . a (\lambda b c d . b I d I c)$
++ $\boldsymbol{3}_3 \rightarrow \lambda a . a (\lambda b c d . b I c I d)$
+
+#+begin_html
+<details>
+<summary>简单的证明</summary>
+#+end_html
+
+于其说是证明, 不如说是说明比较好. 以有序对的 $2_1$ 方法为例:
+
+$$\boldsymbol{2}_1 [\boldsymbol{M}, \boldsymbol{N}]\
+= [\boldsymbol{M}, \boldsymbol{N}] (\lambda b c . c I b)\
+= (\lambda b c . c I b) \boldsymbol{M} \boldsymbol{N}\
+= \boldsymbol{N} I \boldsymbol{M} = \boldsymbol{M}$$
+
+其中 $\boldsymbol{N} I \mathrm{\ conv\ } I$, 对于正整数 $\boldsymbol{N}$ 来说. 
+这是因为:
+
+$\overline{m} I$ 等价于对 $I$ 进行 $m$ 次作用, 结果仍然是 $I$.
+
+妙啊. 
+
+#+begin_html
+</details>
+#+end_html
+
+一些例子:
++ 定义:
+  $\boldsymbol{P} \rightarrow \
+  \lambda a . \boldsymbol{3}_3 (a (\lambda b [\boldsymbol{S} (\boldsymbol{3}_1 b), \boldsymbol{3}_1 b, \boldsymbol{3}_2 b]) [1, 1, 1])$
+
+  这个函数满足:
+  $$\boldsymbol{P} \boldsymbol{x} \rightarrow \left\{\begin{array}{ll} 1 & \boldsymbol{x} \mathrm{\ is\ } 1 \\\\ \boldsymbol{x} - 1 & \mathrm{others} \end{array}\right.$$
+
+  其中:
+  + $(\lambda b [\boldsymbol{S} (\boldsymbol{3}_1 b), \boldsymbol{3}_1 b, \boldsymbol{3}_2 b])[\boldsymbol{K}, \boldsymbol{L}, \boldsymbol{M}] \mathrm{\ conv\ } [\boldsymbol{S} \boldsymbol{K}, \boldsymbol{K}, \boldsymbol{L}]$
+  + $\boldsymbol{A} (\lambda b [\boldsymbol{S} (\boldsymbol{3}_1 b), \boldsymbol{3}_1 b, \boldsymbol{3}_2 b]) [1, 1, 1] \mathrm{\ conv\ } [\boldsymbol{S} \boldsymbol{A}, \boldsymbol{A}, \boldsymbol{B}]$, 
+    其中 $\boldsymbol{B}$ 表示 $\boldsymbol{A}$ 的 predecessor (前一个数)
++ 于是可以定义一种 "减法":
+  $[\boldsymbol{M} \dot{-} \boldsymbol{N}] \rightarrow \boldsymbol{N} \boldsymbol{P} \boldsymbol{M}$
+
+  即 $(\boldsymbol{N} \boldsymbol{P}) \boldsymbol{M}$, 对 $\boldsymbol{M}$ 做 $\overline{n}$ 次 $\boldsymbol{P}$ 操作.
+  并且和通常的减法不同, 若 $x \leq y$, 那么 $x \dot{-} y = 1$.
++ 于是可以定义最小值和最大值函数:
+  + $\min \rightarrow \lambda a b . \boldsymbol{S} b \dot{-} . \boldsymbol{S} b \dot{-} a$
+
+    若 $a \leq b$, 则 $\min a b \rightarrow (b+1) - ((b+1) - a)$;
+    若 $b \leq a$, 则 $\min a b \rightarrow (b+1) - 1$.
+  + $\max \rightarrow \lambda a b . [a + b] \dot{-} \min a b$
++ parity of a positive integer
+
+  #+begin_quote
+  *例*: 一个对奇数返回 $1$, 对偶数返回 $2$ 的函数:
+  $\mathrm{par} \rightarrow \lambda a . a (\lambda b . 3 \dot{-} b) 2$. 
+  #+end_quote
+
++ 一个得到不小于输入的一半的最小正整数的函数:
+  $\boldsymbol{H} \rightarrow \lambda a . \boldsymbol{P} (\boldsymbol{2}_1 (a (\lambda b [\boldsymbol{P} [\boldsymbol{2}_1 b + \boldsymbol{2}_2 b], 3 \dot{-} \boldsymbol{2}_2 b])[1, 2]))$
+
+
+  实际上只需要分析 $(\lambda b [\boldsymbol{P} [\boldsymbol{2}_1 b + \boldsymbol{2}_2 b], 3 \dot{-} \boldsymbol{2}_2 b])$ 的作用即可.
+  如果给 $[1, 2]$ 一个更加有意义的名字的话: =[counter, inc]=,
+  于是上面的函数的作用就是 =counter + inc - 1=,
+  然后在 =1= 和 =2= 之间反转 =inc=. 
++ 定义: (这里不是很理解)
+  + $\boldsymbol{\mathcal{L}} \rightarrow \lambda b . b (\lambda c \lambda d [d \boldsymbol{P} c (\lambda e . e 1 \boldsymbol{I}) (\lambda f g . f g \boldsymbol{S}) c, d \boldsymbol{P} c (\lambda h . h 1 \boldsymbol{I} \boldsymbol{S}) (\lambda i j k . k i j (\lambda l . l i)) d])$
+  + $\boldsymbol{\mathcal{U}} \rightarrow \lambda a . a \boldsymbol{\mathcal{L}} [1, 1]$
+  + $\boldsymbol{Z} \rightarrow \lambda a . \boldsymbol{2}_2 (\boldsymbol{\mathcal{U}} a)$
+  + $\boldsymbol{Z}' \rightarrow \lambda a . \boldsymbol{\mathcal{U}} a (\lambda b c . b \dot{-} c)$ 
+  
+  (这里因为看不出来原文的符号, 所以用我认为最接近的符号来表述了.
+  并且为了符号的一致性, 我对原文中看起来并没有加粗的符号进行了 =\boldsymbol= 加粗. )
+
+  于是对 $\overline{m} \rightarrow \boldsymbol{M}, \overline{n} \rightarrow \boldsymbol{N}$ 有如下结论:
+  + $\boldsymbol{\mathcal{L}} [\boldsymbol{M}, \boldsymbol{N}] \mathrm{\ conv\ } [\boldsymbol{S} \boldsymbol{M}, 1] \mathrm{\ if\ } m \dot{-} n = 1$,
+    $\boldsymbol{\mathcal{L}} [\boldsymbol{M}, \boldsymbol{N}] \mathrm{\ conv\ } [\boldsymbol{M}, \boldsymbol{S} \boldsymbol{N}] \mathrm{\ if\ } m \dot{-} n > 1$
+  + 并且 $\boldsymbol{\mathcal{U}} 1, \boldsymbol{\mathcal{U}} 2, \cdots$ 依次和:
+    $[2, 1], [3, 1], [3, 2], [4, 1], [4, 2], [4, 3], [5, 1], \cdots$ 相对应. (convertible respecively)
+  + 以及 $\boldsymbol{Z}1, \boldsymbol{Z}2, \cdots$ 对应:
+    $1, 1, 2, 1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 4, 5, \cdots$. (即 "分母" 部分)
+  + 以及 $\boldsymbol{Z}'1, \boldsymbol{Z}'2, \cdots$ 对应:
+    $1, 2, 1, 3, 2, 1, 4, 3, 2, 1, 5, 4, 3, 2, 1, \cdots$. (即 "分子" 部分)
+  + 于是无穷序列 $[\boldsymbol{Z}1, \boldsymbol{Z}'1], [\boldsymbol{Z}2, \boldsymbol{Z}'2], \cdots$ 则包含了所有的成对的正整数,
+    且没有重复. 
+
+  (之后有时间再看吧, 有点乱. )
+  
+*** Propositional Functions; The Kleene $\varphi$ - Fuction
+这部分定义了类似于逻辑判断和选择的函数. 
+
+所谓的 Propositional Function (陈述函数? ) 即一个返回值为 true 或者 false 的函数.
+(有点像是逻辑里面的命题陈述? statement.) 比如:
++ property (一元的 propositional 函数)
++ relation (关系, 二元的 propositional 函数)
+
+  #+begin_quote
+  + $\mathrm{exc} \rightarrow \lambda a b . \min 2 [\boldsymbol{S} a \dot{-} b]$
+
+    若 $a > b$, 则 $[\boldsymbol{S} a \dot{-} b] \geq 2$; 反之, 后者为 $1$.
+    (注: 这个顺序应该是 $[\boldsymbol{S} [a \dot{-} b]]$. )
+  + $\mathrm{eq} \rightarrow \lambda a b . 4 \dot{-} . \mathrm{exc\ } a b + \mathrm{exc\ } b a$
+
+    若 $a \neq b$, 则 $\mathrm{exc\ } a b + \mathrm{exc\ } b a$ 为 $1 + 2$, 反之则为 $1 + 1$. 
+  #+end_quote
++ characteristic function (特征函数? ) 将 true 映射成 $2$, 将 false 映射成 $1$. 
+
+(通过使用 $\min$, $\max$ 和 $\lambda a . 2 \dot{-} a$ 这些函数, 来构造 propositional 函数. )
+
+有下面两个来自 Kleene 的 [[https://www.jstor.org/stable/2372027][A Theory of Positive Integers in Formal Logic]] theorem.
+以及一个相关的定理:
++ I. 若 $\boldsymbol{R}$ 是一个有 $n + 1$ 个正整数参数的 propositional 函数.
+  那么有这样的一个 $\lambda$ - definable 的函数 $\boldsymbol{F}$:
+  1) 其对于一堆 $x_1, x_2, \dots, x_n$ 的正整数参数的映射值为 $y$,
+     其中 $y$ the least value that $\boldsymbol{R} x_1 x_2 \dots x_n y$ holds. 
+     即对任意小于 $y$ 的 $z$, 都有一个 true 或者 false 的值.
+  2) 其没有其他的值
+
+  引入辅助函数: (注: 公式可能有错, 还是只关心后面的这个结论就好)
+  
+  $$\boldsymbol{\mathcal{G}} \rightarrow \lambda n . n \
+  (\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} (\lambda x g t . g 1 (t x) \boldsymbol{I} x)))\
+  (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) (\lambda x g t . g (t (\boldsymbol{S} x)) (\boldsymbol{S} x) g t)$$
+
+  于是:
+
+  $$\boldsymbol{\mathcal{G}} 1 \mathrm{\ red\ } \lambda x g t . g (t (\boldsymbol{S} x)) (\boldsymbol{S} x) g t$$
+  $$\boldsymbol{\mathcal{G}} 2 \mathrm{\ red\ } \lambda x g t . g 1 (t x) \boldsymbol{I} x$$
+
+  #+begin_html
+  <details>
+  <summary>尝试分析, 但是失败... <summary>
+  #+end_html
+  
+  注意到 $\boldsymbol{\mathcal{G}}$ 仅以 $1$ 和 $2$ 为参数输入.
+  且其更像是一种选择函数 (=if= 的即视感)
+
+  简记为 $\lambda n . n (\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T})) (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) \boldsymbol{F}$.
+  其中 $\boldsymbol{T}$ 对应 $(\lambda x g t . g 1 (t x) \boldsymbol{I} x)$; $\boldsymbol{F}$ 对应 $(\lambda x g t . g (t (\boldsymbol{S} x)) (\boldsymbol{S} x) g t)$.
+
+  对两个可能的输入进行分析:
+  + $\boldsymbol{\mathcal{G}}1 \rightarrow (\lambda a b . a b) (\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T})) (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) \boldsymbol{F}$
+    + $\rightarrow (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T}) \boldsymbol{F}$
+    + $\rightarrow ((\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T}) \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) \boldsymbol{F}$
+    + $\rightarrow \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T} 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{F}$
+    + $\rightarrow \boldsymbol{T} 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{F}$
+      
+      其中 $\boldsymbol{T} 1 \boldsymbol{I} \boldsymbol{I} \rightarrow\
+      \boldsymbol{I} 1 (\boldsymbol{I} 1) \boldsymbol{I} 1$, 即: $1\ 1$
+    + $\rightarrow 1 \boldsymbol{F}$ ? 是我理解错了? 
+    
+  + $\boldsymbol{\mathcal{G}}2 \rightarrow (\lambda a b . (a (a b)))(\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T})) (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) \boldsymbol{F}$
+
+  于是区别就是在 $(\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} \boldsymbol{T}))$ 这个函数作用在 $(\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I})$ 上的次数?
+
+  注: 血肉苦痛, 机械飞升, 这里还是使用工具会比较爽一点.
+  比如在线的 $\lambda$ 计算器: [[https://lambdacalc.io][lambdacalc.io]]
+
+  不过用了计算器仍然不太理解. 一个合理的猜想就是我把公式搞错了. 
+
+  #+begin_comment
+  这里的 $\boldsymbol{\mathcal{G}}$ 的主体部分为:
+  $(\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} (\lambda x g t . g 1 (t x) \boldsymbol{I} x)))\
+  (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I}) (\lambda x g t . g (t (\boldsymbol{S} x)) (\boldsymbol{S} x) g t)$.
+  可以分成三部分来分析:
+  + $\boldsymbol{A} \rightarrow  (\lambda r . r (\lambda s . s 1 \boldsymbol{I} \boldsymbol{I} (\lambda x g t . g 1 (t x) \boldsymbol{I} x)))$ 部分
+  + $\boldsymbol{B} \rightarrow (\lambda f . f \boldsymbol{I} 1 \boldsymbol{I} \boldsymbol{I})$ 部分
+  + $\boldsymbol{C} \rightarrow (\lambda x g t . g (t (\boldsymbol{S} x)) (\boldsymbol{S} x) g t)$ 部分
+
+  于是 $\boldsymbol{\mathcal{G}}$ 变成 $(\lambda n . n \boldsymbol{A} \boldsymbol{B} \boldsymbol{C})$ 的形式.
+
+  + $\boldsymbol{\mathcal{G}} 1 \rightarrow 1 \boldsymbol{A} \boldsymbol{B} \boldsymbol{C}$
+    + 代入 $1 \rightarrow (\lambda a b . a b)$, 即 $\boldsymbol{A} \boldsymbol{B} \boldsymbol{C}$
+    + 
+  #+end_comment
+  
+  #+begin_html
+  </details>
+  #+end_html
+
+  若直接使用结论, 可以得到:
+
+  + $\boldsymbol{\mathcal{G}} 1 \boldsymbol{N} \boldsymbol{\mathcal{G}} \boldsymbol{T} \mathrm{\ red\ } \boldsymbol{\mathcal{G}} (\boldsymbol{T} (\boldsymbol{S} \boldsymbol{N})) (\boldsymbol{S} \boldsymbol{N}) \boldsymbol{\mathcal{G}} \boldsymbol{T}$
+  + $\boldsymbol{\mathcal{G}} 2 \boldsymbol{N} \boldsymbol{\mathcal{G}} \mathrm{\ red\ } \boldsymbol{N}$
+
+  若令 $\boldsymbol{p} \rightarrow \lambda t x . \boldsymbol{\mathcal{G}} (t x) x \boldsymbol{\mathcal{G}} t$, 于是有结论:
+  + $\boldsymbol{p} \boldsymbol{T} \boldsymbol{N} \mathrm{\ red\ } \boldsymbol{N} \mathrm{\ if\ } \boldsymbol{T} \boldsymbol{N} \mathrm{\ conv\ } 2$
+  + $\boldsymbol{p} \boldsymbol{T} \boldsymbol{N} \mathrm{\ conv\ } \boldsymbol{p} \boldsymbol{T} (\boldsymbol{S} \boldsymbol{N}) \mathrm{\ if\ } \boldsymbol{T} \boldsymbol{N} \mathrm{\ conv\ } 1$
+  + 若 $\boldsymbol{T} \boldsymbol{N}$ 没有 normal form, 则 $\boldsymbol{p} \boldsymbol{T} \boldsymbol{N}$ 也没有 normal form.
+
+  如果 $\boldsymbol{N}$ 代表正整数 $n$, 那么 $\boldsymbol{T}$ 为对正整数的 $\lambda$ -defines 的判断函数.
++ II 如果 $\boldsymbol{T}$ 为对正整数的 $\lambda$ 可定义的特征函数, 那么对 $\lambda$ 可定义的函数 $\boldsymbol{F}$ 有:
+  1) 其对正整数参数的 $\boldsymbol{x}$ 的结果为第 $x$ 个满足 $\boldsymbol{T} y$ 的 $y$ 的值.
+     对任何比 $y$ 小的 $z$, 都满足 $\boldsymbol{T} z$ 有 true 或者 false 的值. 
+  2) 其值唯一
+
+  令 $\boldsymbol{\mathcal{B}} \rightarrow \lambda t x . P (x (\lambda n . S (\boldsymbol{p} t n)) 1)$, 令 $\boldsymbol{T}$ 为一个 $\lambda$ 定义的特征函数.
+  那么 $\boldsymbol{\mathcal{B}} \boldsymbol{T}$ 定义了 $\boldsymbol{F}$. 
++ III. 如果 $\boldsymbol{R}_1$ 和 $\boldsymbol{R}_2$ 都是 $\lambda$ 可定义的判断函数.
+  对每一个 ...
+
+  (注: 目前没有什么动力继续往下看了, 之后的部分打算快速水完. )
+
+*** Definition by Recursion
+
+* 关于吐槽
+** 零
+好像这本书没有定义 $0$.
+
+** 古早的书和论文
+以前的书和论文是真的顶, 很多介绍讲的东西感觉现在也还是在做.
+并且里面的东西也确实牛逼.
+
+不过一个坏处就是它们基本都是扫描版本的. 于是你根本没有办法分辨书中的符号到底是哪一个,
+是加粗的 $\boldsymbol{e}$ 呢? 还是只是因为印刷的时候排得太密了的 $e$ 呢?
+并且所有的字体都是等宽 (?) 的 *打字机字体*, 非常的难读.
+尤其是公式也是这种字体的时候就更加痛苦了. +好吧, 可能是因为英语不熟练的原因+
+
+** 关于翻译和英语的吐槽
+在我和大英老师报怨其 TCR (Translate Compare Revise) 的文本过于离谱且和
+我们的专业毫无关联之后, 大英老师告诉我, 啊, 这 TCR 是为了用来准备英语考试的,
+比如雅思托福之类的考试用的文章的, 专业英语自然有专业英语的课程.
+
+嘛, 也许是因为我大英二摆过去了的原因, 没能跳过大英三. 也许大英四的时候,
+我就会接触到专业英语了. 也许吧也许, 反正下学期就知道是什么了.
+
+但是这些论文的英语是真的难读, 而翻译这些也真的是难顶.
+至少我可以扪心自问, 坦坦荡荡地打包票, 上面的翻译一定有问题,
+且语法和流畅绝对会有问题. +倒不如说, 如果没有问题才有大问题了.+
+
+嘛, 就当作是看文献的笔记吧... 不过之后我想我绝对不要这么做笔记了,
+这样简直就是在浪费时间... 唉, 多少年的英语教育, 英语工具论的说法,
+没想到这个工具不过是考试求分的工具, 而不是交流沟通的工具了. 
+
+** 关于摆烂假期的吐槽
+害, 假期本来是想要好好学一把的, 结果每天起床就吃午饭, 大把时间在看番
+(甚至已经开始写看番注记了), 然后啥也没干啥也没学就混过去了... 害.
+
+并且看书的时候越来越没有耐心, 看了一半之后就不是很想继续看下去了. 
+
+** 我逐渐理解一切 +并没有+
+感谢你耐心到了这里 (或者干脆是直接滑到最底下的, 不过不论如何).
+
+这篇的主要部分是这样的逻辑:
++ 首先说明函数, 也就是用来构建整个文章的元素. 
+  并引入了形式符号来进行表达这些函数. 
++ 然后引入了对这些形式符号的变换规则,
+  相当于引入了对于输入的处理方式.
+
+  并且引入了 principal normal form 来说明可比性. 
++ 然后开始用该形式系统来构造其他东西, 以及一整个系统, 来说明其可定义性. 
+
+那么读完之后应该会有一种这简直就是在定义了一门编程语言的感觉了吧. 
+
+** 画饼
+读这本书的时候, 是为了了解 $\lambda$ 演算子
++ 读了一部分之后, 在维基百科上发现 $\lambda$ 演算子在别的领域也有应用:
+
+  #+begin_quote
+  Thanks to Richard Montague and other linguists' applications
+  in the semantics of natural language, the lambda calculus has
+  begun to enjoy a respectable place in both linguistics
+  and computer science.
+  
+  from [[https://en.wikipedia.org/wiki/Lambda_calculus#cite_ref-mm-linguistics_16-0][Wikipedia]]
+  #+end_quote
+
+  于是找到了一本 [[https://www.researchgate.net/publication/230876377_Mathematical_Methods_in_Linguistics][Mathematical Methods in Linguistics]].
+  打算之后看看.
++ 当然, 还想要用 Racket 给上面定义的 $\lambda$ 演算做一个简单的计算机的框架.
+  因为实际上我觉得这就是一种编程语言. 不过感觉这个可能并不是很轻松就是了.
+
+  然后等我能做好一个编程语言的话, 再回来继续看这个吧. 
