@@ -1,0 +1,1411 @@
+#+layout: post
+#+title: Ruby and EBNF (Very Naive)
+#+date: 2023-1-29
+#+options: _:nil ^:nil
+#+math: true
+#+categories: ruby
+* What's these?
+读了一个有趣的文章 [[https://ruby-china.org/topics/41296][三点几嚟，饮茶先啦 —— 将大马饮料名编译成汉语]],
+于是想要学学看关于 EBNF 和 Ruby 相关的内容.
+并且希望能够最后实现一个 FSTN 的处理机器.
+
+其中使用了一个 [[https://github.com/dryruby/ebnf][gem]] 来处理 EBNF. 
+
+#+name: ruby-include-ebnf-gem
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  require 'ebnf'
+#+end_src
+
+#+RESULTS: ruby-include-ebnf-gem
+: true
+
+* EBNF
+EBNF, 即 Extended [[https://en.wikipedia.org/wiki/Backus–Naur_form][Backus–Naur Form]].
+它的感觉非常的像是 FSTN (finite-state transition network).
+
+在一个 [[https://bnfplayground.pauliankline.com][BNF Playground]] 的网站, 可以试试简单的 BNF 在线测试.
+其同样支持 EBNF 的一些语法, 不过和 ebnf gem 用的语法还是有一点点的区别.
+(具体对于每个系统来说, 不同的语法根据规定会有一些不一样的)
+对于使用的这个 [[https://github.com/dryruby/ebnf][gem]] 来说, 其接受的书写形式为 [[https://www.w3.org/TR/REC-xml/#sec-notation][W3C EBNF]]:
+
+#+begin_src ebnf
+  symbol ::= expression
+#+end_src
+
+也可以通过用 =[<num>]= 在开头表示顺序:
+
+#+begin_src ebnf
+  [1] symbol ::= expression
+#+end_src
+
+其满足的具体规则请直接查看 [[https://github.com/dryruby/ebnf#ebnf-grammar][文档]].
+
+那么直接从例子上手可能会快一些:
+
+** 一个计算器的例子 (PEG Parser)
+来自 [[https://dryruby.github.io/ebnf/examples/calc/doc/calc.html][calc.html]], 是 [[https://github.com/dryruby/ebnf][ebnf gem]] 的一个例子.
+
+#+name: calc-ebnf-example
+#+begin_src org :export code
+  [1] Expr    ::= Sum
+  [2] Sum     ::= Product (('+' | '-') Product)*
+  [3] Product ::= Power (('*' | '/') Power)*
+  [4] Power   ::= Value ('^' Power)?
+  [5] Value   ::= NUMBER | '(' Expr ')'
+  [6] NUMBER  ::= [0-9]+
+#+end_src
+
+在上面的 EBNF 中, 一个简单的例子比如: =(1 + 3 ^ 2) * 4 - 5=
+这样的一个表达式, 对应的 AST 如下:
+
+#+name: dot-calc-ebnf-example-plot
+#+header: :file ../_img/ebnf/dot-calc-ebnf-example.svg
+#+begin_src dot :exports none
+  digraph Calc {
+    rankdir = LR;
+    node [shape = circle];
+    "-" -> {"*", "5"};
+    "*" -> "+" [label = " \"(\" Expr \")\""];
+    "*" -> "4";
+    "+" -> {"^", "1"};
+    "^" -> {"3", "2"};
+  }
+#+end_src
+
+#+RESULTS: dot-calc-ebnf-example-plot
+[[file:../_img/ebnf/dot-calc-ebnf-example.svg]]
+
+[[{{ site.github.url }}/_img/ebnf/dot-calc-ebnf-example.svg]]
+
+那么计算 =Expr= 的值的过程就是一个规约过程,
+即从 AST 的根部向上一步步根据规则化简的过程.
+比如上面的图, 在遇到 =a ^ b= 这样的形式的时候,
+就将其用 $a^b$ 的值来替代.
+
+于是可以新建一个 Ruby 类来作为 Parser 来处理程序:
+
+#+name: ruby-calc-ebnf-example-initialize-clac-class
+#+header: :session ruby-ebnf
+#+header: :var CALC_RULES = calc-ebnf-example
+#+begin_src ruby :exports both
+  class Calc
+    include EBNF::PEG::Parser
+    @@rules = EBNF.parse(CALC_RULES).make_peg.ast
+
+    def evaluate(input)
+      input
+    end
+  end
+
+  Calc.new.evaluate("(1 + 3^2) * 4 - 5")
+#+end_src
+
+#+RESULTS: ruby-calc-ebnf-example-initialize-clac-class
+: (1 + 3^2) * 4 - 5
+
+#+begin_html
+<details><summary>for debug usage...</summary>
+#+end_html
+
+这里用了一个 =rule= 方法来访问类变量 =@@rules=. 
+
+#+name: ruby-calc-ebnf-example-add-debug-for-rules
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  class Calc
+    def rules
+      @@rules
+    end
+  end
+
+  Calc.new.rules
+#+end_src
+
+#+RESULTS: ruby-calc-ebnf-example-add-debug-for-rules
+: '(#<EBNF::Rule:260 (:sym=>:Expr  :id=>"1"  :kind=>:rule  :expr=>(:seq  :Sum))>  #<EBNF::Rule:280 (:sym=>:Sum  :id=>"2"  :kind=>:rule  :expr=>(:seq  :Product  :_Sum_1))>  #<EBNF::Rule:300 (:sym=>:_Sum_1  :id=>"2.1"  :kind=>:rule  :expr=>(:star  :_Sum_2))>  #<EBNF::Rule:320 (:sym=>:_Sum_2  :id=>"2.2"  :kind=>:rule  :expr=>(:seq  :_Sum_3  :Product))>  #<EBNF::Rule:340 (:sym=>:_Sum_3  :id=>"2.3"  :kind=>:rule  :expr=>(:alt  "+"  "-"))>  #<EBNF::Rule:360 (:sym=>:Product  :id=>"3"  :kind=>:rule  :expr=>(:seq  :Power  :_Product_1))>  #<EBNF::Rule:380 (:sym=>:_Product_1  :id=>"3.1"  :kind=>:rule  :expr=>(:star  :_Product_2))>  #<EBNF::Rule:400 (:sym=>:_Product_2  :id=>"3.2"  :kind=>:rule  :expr=>(:seq  :_Product_3  :Power))>  #<EBNF::Rule:420 (:sym=>:_Product_3  :id=>"3.3"  :kind=>:rule  :expr=>(:alt  "*"  "/"))>  #<EBNF::Rule:440 (:sym=>:Power  :id=>"4"  :kind=>:rule  :expr=>(:seq  :Value  :_Power_1))>  #<EBNF::Rule:460 (:sym=>:_Power_1  :id=>"4.1"  :kind=>:rule  :expr=>(:opt  :_Power_2))>  #<EBNF::Rule:480 (:sym=>:_Power_2  :id=>"4.2"  :kind=>:rule  :expr=>(:seq  "^"  :Power))>  #<EBNF::Rule:500 (:sym=>:Value  :id=>"5"  :kind=>:rule  :expr=>(:alt  :NUMBER  :_Value_1))>  #<EBNF::Rule:520 (:sym=>:_Value_1  :id=>"5.1"  :kind=>:rule  :expr=>(:seq  "("  :Expr  ")"))>  #<EBNF::Rule:540 (:sym=>:NUMBER  :id=>"6"  :kind=>:terminal  :expr=>(:plus  :_NUMBER_1))>  #<EBNF::Rule:560 (:sym=>:_NUMBER_1  :id=>"6.1"  :kind=>:terminal  :expr=>(:range  "0-9"))>)
+
+#+begin_html
+</details>
+#+end_html
+
+自然, 这个程序什么都不会干, 只会原封不动地输出输入.
+
+于是需要对各种形式来规定特定的规则.
+因为选择的是 [[https://en.wikipedia.org/wiki/Parsing_expression_grammar][PEG]] 的形式, 所以希望得到的是关于 PEG 格式的信息输出. 
+
+对于这个需求, 可以通过 =to_sxp=, =to_html= 等方法来将其转换为美观的输出.
+即查看 ebnf 这个 gem 将输入的 EBNF 转换为什么样的一个表达式结构了:
+
+#+name: ruby-calc-ebnf-example-to-sxp
+#+header: :session ruby-ebnf
+#+header: :var CALC_RULES = calc-ebnf-example
+#+begin_src ruby :exports both
+  EBNF.parse(CALC_RULES).make_peg.to_sxp
+#+end_src
+
+#+RESULTS: ruby-calc-ebnf-example-to-sxp
+#+begin_example
+  (
+   (rule Expr "1" (seq Sum))
+   (rule Sum "2" (seq Product _Sum_1))
+   (rule _Sum_1 "2.1" (star _Sum_2))
+   (rule _Sum_2 "2.2" (seq _Sum_3 Product))
+   (rule _Sum_3 "2.3" (alt "+" "-"))
+   (rule Product "3" (seq Power _Product_1))
+   (rule _Product_1 "3.1" (star _Product_2))
+   (rule _Product_2 "3.2" (seq _Product_3 Power))
+   (rule _Product_3 "3.3" (alt "*" "/"))
+   (rule Power "4" (seq Value _Power_1))
+   (rule _Power_1 "4.1" (opt _Power_2))
+   (rule _Power_2 "4.2" (seq "^" Power))
+   (rule Value "5" (alt NUMBER _Value_1))
+   (rule _Value_1 "5.1" (seq "(" Expr ")"))
+   (terminal NUMBER "6" (plus _NUMBER_1))
+   (terminal _NUMBER_1 "6.1" (range "0-9")))
+#+end_example
+
+对于上面的结构, 其示意图如下:
+
+#+name: dot-calc-ebnf-ast
+#+header: :file ../_img/ebnf/dot-calc-ebnf-ast.svg
+#+begin_src dot :exports none
+  digraph calc {
+    rankdir = LR;
+    node [shape = circle];
+    "Expr" -> "Sum" -> {"Product", "_Sum_1"};
+    "Product" -> {"Power", "_Product_1"};
+    "Power" -> {"Value", "_Power_1"};
+    "Value" -> {"Number", "_Value_1"};
+    "_Sum_1" -> "_Sum_2" -> {"_Sum_3", "Product"};
+    "_Sum_3" -> {"+", "-"};
+    "_Product_1" -> "_Product_2" -> {"_Product_3", "Power"};
+    "_Product_3" -> {"+", "-"};
+    "_Power_1" -> "_Power_2" -> {"^", "Power"};
+    "_Value_1" -> {"(", "Expr", ")"}
+  }
+#+end_src
+
+#+attr_org: :width 0.618
+#+RESULTS: dot-calc-ebnf-ast
+[[file:../_img/ebnf/dot-calc-ebnf-ast.svg]]
+
+[[{{ site.github.url }}/_img/ebnf/dot-calc-ebnf-ast.svg]]
+
+那么可以通过添加规则来对其进行 =parse=:
+
+#+name: ruby-calc-ebnf-example-evaluate-parse-method
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  class Calc
+    def evaluate(input)
+      parse(input, :Expr, @@rules)
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-calc-ebnf-example-evaluate-parse-method
+: :evaluate
+
+#+begin_html
+<details><summary>运行结果</summary>
+#+end_html
+
+#+header: :session ruby-ebnf
+#+header: :results value pp
+#+begin_src ruby :exports both
+  Calc.new.evaluate("(1 + 3^2) * 4 - 5")
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[{:Sum=>
+   [{:Product=>
+      [{:Power=>
+         [{:Value=>
+            [{:"("=>"("},
+             {:Expr=>
+               [{:Sum=>
+                  [{:Product=>
+                     [{:Power=>[{:Value=>"1"}, {:_Power_1=>nil}]},
+                      {:_Product_1=>[]}]},
+                   {:_Sum_1=>
+                     [[{:_Sum_3=>"+"},
+                       {:Product=>
+                         [{:Power=>
+                            [{:Value=>"3"},
+                             {:_Power_1=>
+                               [{:^=>"^"},
+                                {:Power=>
+                                  [{:Value=>"2"}, {:_Power_1=>nil}]}]}]},
+                          {:_Product_1=>[]}]}]]}]}]},
+             {:")"=>")"}]},
+          {:_Power_1=>nil}]},
+       {:_Product_1=>
+         [[{:_Product_3=>"*"},
+           {:Power=>[{:Value=>"4"}, {:_Power_1=>nil}]}]]}]},
+    {:_Sum_1=>
+      [[{:_Sum_3=>"-"},
+        {:Product=>
+          [{:Power=>[{:Value=>"5"}, {:_Power_1=>nil}]},
+           {:_Product_1=>[]}]}]]}]}]
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+(=parse= 的 [[https://dryruby.github.io/ebnf/EBNF/PEG/Parser.html#parse-instance_method][文档]]) 即告诉机器对于输入, 以 =Expr= 为入口, 用 =@rules= 来进行处理.
+于是得到的结果就是输入经过 Parser 被处理后的一个结构.
+即, 默认返回值为一个符合 PEG 逻辑的结构. 
+
+可以将 Parser 看作是一个在这个结构上行走的机器.
+根据不同层级的结构和不同种类的结构来进行处理. 
+而通过 =production= 方法 ([[https://dryruby.github.io/ebnf/EBNF/PEG/Parser/ClassMethods.html#production-instance_method][文档]]), 可以为特定的节点指定规约规则,
+如:
+
++ 对于一个 =Value= 规则描述的节点.
+  其有两种可能: =(alt NUMBER _Value_1)=,
+  即前者返回的是一个匹配的 =NUMBER= 对象,
+  而后者返回的是一个 =[{:"(" => "("}, ...]= 形式的值.
+  (可以参考上面的结果).
+
+  #+name: ruby-calc-ebnf-example-production-value
+  #+header: :session ruby-ebnf
+  #+begin_src ruby :exports code
+    class Calc
+      production(:Value) do |node|
+	case node
+	when String then node.to_i
+	when Array then node[1][:Expr]
+	end
+      end
+    end
+  #+end_src
+
+  #+RESULTS: ruby-calc-ebnf-example-production-value
+  : '(#<Proc:0x000000012e1d5040 (irb):51>  false)
+
+  #+begin_html
+  <details><summary>运行结果及说明</summary>
+  #+end_html
+  
+  #+header: :session ruby-ebnf
+  #+header: :results value pp
+  #+begin_src ruby :exports both
+    Calc.new.evaluate("(1 + 3^2) * 4 - 5")
+  #+end_src
+
+  #+RESULTS:
+  #+begin_example
+  [{:Sum=>
+     [{:Product=>
+	[{:Power=>
+	   [{:Value=>
+	      [{:Sum=>
+		 [{:Product=>
+		    [{:Power=>[{:Value=>1}, {:_Power_1=>nil}]},
+		     {:_Product_1=>[]}]},
+		  {:_Sum_1=>
+		    [[{:_Sum_3=>"+"},
+		      {:Product=>
+			[{:Power=>
+			   [{:Value=>3},
+			    {:_Power_1=>
+			      [{:^=>"^"},
+			       {:Power=>[{:Value=>2}, {:_Power_1=>nil}]}]}]},
+			 {:_Product_1=>[]}]}]]}]}]},
+	    {:_Power_1=>nil}]},
+	 {:_Product_1=>
+	   [[{:_Product_3=>"*"}, {:Power=>[{:Value=>4}, {:_Power_1=>nil}]}]]}]},
+      {:_Sum_1=>
+	[[{:_Sum_3=>"-"},
+	  {:Product=>
+	    [{:Power=>[{:Value=>5}, {:_Power_1=>nil}]}, {:_Product_1=>[]}]}]]}]}]
+  #+end_example
+
+  其中可以看到, 现在的 =Value= 指向的值从 =String= 和 =Expr= 的类型
+  已经变成了数字和其他的类型.
+
+  需要注意的是, 这里是用了 Ruby 自身的方法来进行的一个值转换的操作.
+  通过这样的方式来转换输入. 
+  
+  #+begin_html
+  </details>
+  #+end_html
+
++ 那么继续向上一层, 对于 =Power= 规则,
+  需要将 =[{:Value => ...}, {:_Power_1 => ...}]=
+  这样的形式进行转换, 于是根据 =_Power_1= 的类型的不同:
+
+  #+name: ruby-calc-ebnf-example-production-power
+  #+header: :session ruby-ebnf
+  #+begin_src ruby :exports code
+    class Calc
+      production(:Power) do |node|
+	base, pow = node.first[:Value], node.last[:_Power_1]
+	pow ? base.pow(pow.last[:Power]) : base
+      end
+    end
+  #+end_src
+
+  #+RESULTS:
+  : '(#<Proc:0x000000012e2753d8 (irb):99>  false)
+
+  #+begin_html
+  <details><summary>运行结果及解释</summary>
+  #+end_html
+
+  #+header: :session ruby-ebnf
+  #+header: :results value pp
+  #+begin_src ruby :exports both
+    Calc.new.evaluate("(1 + 3^2) * 4 - 5")
+  #+end_src
+
+  #+RESULTS:
+  #+begin_example
+  [{:Sum=>
+     [{:Product=>
+	[{:Power=>
+	   [{:Sum=>
+	      [{:Product=>[{:Power=>1}, {:_Product_1=>[]}]},
+	       {:_Sum_1=>
+		 [[{:_Sum_3=>"+"},
+		   {:Product=>[{:Power=>9}, {:_Product_1=>[]}]}]]}]}]},
+	 {:_Product_1=>[[{:_Product_3=>"*"}, {:Power=>4}]]}]},
+      {:_Sum_1=>
+	[[{:_Sum_3=>"-"}, {:Product=>[{:Power=>5}, {:_Product_1=>[]}]}]]}]}]
+  #+end_example
+
+  可以看到, 上面的结果中, 有两种形式的化简:
+  + 若 ={:_Power_1 => nil}=,
+    即在三目运算符中 =pow ? <t> : <f>= 会选择 =<f>= 分支.
+
+    也就是对应无 =^= 形式的指数. 默认为一次指数.
+  + 若 ={:_Power_1 => [{:^ => "^"}, {:Power => ...}]}=,
+    也就是对应有指数形式的节点, 那么就用 =Integer#pow= 方法来计算指数. 
+  #+begin_html
+  </details>
+  #+end_html
+
++ =Product= 规则和 =Sum= 规则:
+
+  这两个的规则实际上非常的相似, 只是因为计算优先级不同而在不同的层级而已.
+  它们的思路大致是这样的:
+
+  将节点下的列表中有效的数字提取出来,
+  然后对于 =_Product_1= 和 =_Sum_1= 非空的情况,
+  根据其运算符的类型进行计算.
+  为了实现这个操作, 首先化简 =_Product_1= 和 =_Sum_1=,
+  使其更容易用来处理. 
+
+  #+name: ruby-calc-ebnf-example-production-product-and-sum
+  #+header: :session ruby-ebnf
+  #+begin_src ruby :exports code
+    class Calc
+      production(:_Product_1) do |node|
+	node.map { |op| op.map(&:values).flatten }
+      end
+
+      production(:_Sum_1) do |node|
+	node.map { |op| op.map(&:values).flatten }
+      end
+
+      production(:Product) do |node|
+	product, ops = node.first[:Power], node.last[:_Product_1]
+	ops.inject(product) { |res, op| res.send(*op) }
+      end
+
+      production(:Sum) do |node|
+	sum, ops = node.first[:Product], node.last[:_Sum_1]
+	ops.inject(sum) { |res, op| res.send(*op) }
+      end
+    end
+  #+end_src
+
+  #+RESULTS: ruby-calc-ebnf-example-production-product-and-sum
+  : '(#<Proc:0x000000011e826eb8 (irb):774>  false)
+
+  #+begin_html
+  <details><summary>运行结果和解释</summary>
+  #+end_html
+
+  #+header: :results value pp
+  #+header: :session ruby-ebnf
+  #+begin_src ruby :exports both
+    Calc.new.evaluate("1 * 2 - 1 + 2 + 3 + 4 * 2")
+  #+end_src
+
+  #+RESULTS:
+  : [{:Sum=>14}]
+
+  因为这两个就是对称的, 所以只分析一个:
+  + =_Product_1= 部分: 其下节点形式如下
+    =[[{:_Product_3 => "*"}, {:Power => ...}], ...]=,
+    为了方便后续处理, 将其约化成 =[["*", ...], ...]= 的形式.
+
+    =map= 取其中的每个子元素 =[{:_Product_3 => "*"}, {:Power => ...}]=.
+    再使用 =map(&:values)=, 等价于 =map {|obj| obj.values}= 转换为 =[["*"], [val]]=
+    的形式, 最终用 =flatten= 变换为 =["*", val]= 的结果.
+  + =Product= 部分: 其节点形式如下: =[{:Power => ...}, {:_Product_1 => ...}]=.
+
+    利用 =inject(initial) { |obj| ... }= 方法, 在历遍 =_Product_1= 中元素的同时,
+    将 =Power= 做为初始值进行计算. 差不多等价于:
+    =product * ... / ... * ... * ...= 这样的一个展开.
+
+    用到的两个方法的例子:
+
+    #+name: example-of-ruby-inject
+    #+begin_src ruby :exports both
+      # inject, see more by `ri Array#inject`
+      (0..5).inject(-5) { |sum, item| sum + item } # equal to -5 + 0 + 1 + ... + 5
+    #+end_src
+
+    #+RESULTS: example-of-ruby-inject
+    : 10
+
+    #+name: example-of-ruby-send
+    #+begin_src ruby
+      # send, see more by `ri Object#send`
+      2.send("+", 3) # equal to 2.+(3) <=> 2 + 3
+    #+end_src
+
+    #+RESULTS: example-of-ruby-send
+    : 5
+
+  #+begin_html
+  </details>
+  #+end_html
+
++ 于是最后, 只需要将 =Expr= 规则指明即可 (当前为 ={:Expr => [{:Sum => ...}]}= 的形式):
+
+  #+name: ruby-calc-ebnf-example-production-expr
+  #+header: :session ruby-ebnf
+  #+begin_src ruby :exports code
+    class Calc
+      production(:Expr) do |node|
+	node.first[:Sum]
+      end
+    end
+  #+end_src
+
+  #+RESULTS: ruby-calc-ebnf-example-production-expr
+  : '(#<Proc:0x000000011e864240 (irb):832>  false)
+
+至此, 一个能动的 (整数) 计算器应该就算完事了:
+
+#+name: ruby-calc-final-example
+#+header: :session ruby-ebnf
+#+header: :result output
+#+begin_src ruby :exports both
+  Calc.new.evaluate("(1 + 3^2) * 4 - 5")
+#+end_src
+
+#+RESULTS: ruby-calc-final-example
+: 35
+
+(之后可能需要一些测试集去覆盖测试,
+不过作为一个普通的练习应该差不多就可以了. )
+
+一个可行的优化是通过在 =production= 的选项中传入 =clear_packrat: true= 参数,
+来通过删除 =packrat= 来减少
+
+*** 反思
++ 核心的思路就是在 Parse 之后的结构树上进行约化
++ 那么就需要设计一个逻辑性强的结构树
++ 上面的代码并没有做到容易修改,
+  一个更好的做法应该是将结构和操作尽可能地分离.
+  (来自 PAIP 中的说法)
+
+*** 那么来做一个更加有趣的东西吧
+和之前的差不多, 只是现在要将这个 =Calc= 做成一个能将输入的数学表达式转换为
+[[https://graphviz.org][graphviz]] 绘图代码, 以及能够计算的一个程序.
+
+那么实现的方法如下:
++ 类似于上面的代码, 将程序约化为类似于 Lisp 的 S-Exp.
+  作为一个 Hash 来返回. (={:op => [args ...]}=).
++ 计算的时候, 根据 Hash 的 =op= 来选择对应的计算方法.
++ 绘图的时候, 绘制出对应的调用结构.
+
+#+begin_html
+<details><summary>Parser 处理代码</summary>
+#+end_html
+  
+#+name: ruby-calc-dot-example-init
+#+header: :var CALC_RULES = calc-ebnf-example
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  class CalcDot
+    include EBNF::PEG::Parser
+    @@rules = EBNF.parse(CALC_RULES).make_peg.ast
+
+    production(:Value, clear_packrat: true) do |node|
+      case node
+      when String then node.to_i
+      when Array then node[1][:Expr]
+      end
+    end
+
+    production(:Power, clear_packrat: true) do |node|
+      base, pow = node.first[:Value], node.last[:_Power_1]
+      pow ? [:power, base, pow.last[:Power]] : base
+    end
+
+    production(:Sum, clear_packrat: true) do |node|
+      product, ops = node.first[:Product], node.last[:_Sum_1] 
+      map_ops(product, ops)
+    end
+
+    production(:_Sum_1, clear_packrat: true) do |node|
+      node.map { |ops| ops.map(&:values).map(&:first) }
+    end
+
+    production(:Product, clear_packrat: true) do |node|
+      power, ops = node.first[:Power], node.last[:_Product_1]
+      map_ops(power, ops)
+    end
+
+    production(:_Product_1, clear_packrat: true) do |node|
+      node.map { |ops| ops.map(&:values).map(&:first) }
+    end
+
+    production(:Expr, clear_packrat: true) do |node|
+      node.first[:Sum]
+    end
+
+    def self.map_ops(exp, ops)
+      p ops
+      if ops.empty?
+	exp
+      else
+	op = ops.first
+	case op.first
+	when "+" then operation = :add
+	when "-" then operation = :sub
+	when "*" then operation = :mul
+	when "/" then operation = :div
+	end
+
+	[operation, exp, map_ops(op.last, ops[1..])]
+      end
+    end
+
+    def read(input)
+      parse(input, :Expr, @@rules)
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-calc-dot-example-init
+: :read
+
+其中定义了一个 =map_ops= 的 class method 来处理结构. 
+
+#+begin_html
+</details>
+#+end_html
+
+现在通过 =read= 方法可以将输入的表达式转换为下面这样的 S-Exp.
+
+#+header: :results value pp
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports both
+  CalcDot.new.read("1 + 2 + (3 + 4) * 2^3 * 3")
+#+end_src
+
+#+RESULTS:
+: [:add, 1, [:add, 2, [:mul, [:add, 3, 4], [:mul, [:power, 2, 3], 3]]]]
+
+于是可以定义一个绘图代码:
+
+#+name: ruby-calc-dot-example-dot-code
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  class CalcDot
+    def to_dot(input)
+      ast = read(input)
+      iter_to_dot(ast)
+    end
+
+    private
+
+    def iter_to_dot(ast, depth = 0, node_name = "node")
+      case ast
+      when Array
+	a, b = '0', '0'
+	op, args = ast.first, ast[1..]
+	line =
+	  "#{node_name}_#{op}_#{depth} [label = \"#{op}\"];\n" + \
+	  "#{node_name}_#{op}_#{depth} -> " + \
+	  "{ #{ args.map {|exp| to_dot_node(exp, depth, node_name + a.succ!)}.join(', ') } };\n" + \
+	  args.map {|exp| iter_to_dot(exp, depth + 1, node_name + b.succ!)}.join("")
+      when Integer
+	line = "#{node_name}_#{ast}_#{depth} [label = \"#{ast}\"];\n"
+      end
+    end
+
+    def to_dot_node(ast, depth, node_name)
+      case ast
+      when Array
+	op = ast.first
+	node = "#{node_name}_#{op}_#{depth + 1}"
+      when Integer
+	node = "#{node_name}_#{ast}_#{depth + 1}"
+      end
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-calc-dot-example-dot-code
+: :to_dot_node
+
+#+name: ruby-calc-dot-example-to-dot-code
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports code
+  CalcDot.new.to_dot("(1 + 2^3) * 4 - 5")
+#+end_src
+
+#+name: calc-dot-example-to-dot-code
+#+header: :file ../_img/ebnf/calc-dot-example-to-dot-code.svg
+#+header: :var in = ruby-calc-dot-example-to-dot-code
+#+begin_src dot :exports none
+  digraph example {
+    node [shape = circle];
+    rankdir = LR;
+    $in
+  }
+#+end_src
+
+#+RESULTS: calc-dot-example-to-dot-code
+[[file:../_img/ebnf/calc-dot-example-to-dot-code.svg]]
+
+[[{{ site.github.url }}/_img/ebnf/calc-dot-example-to-dot-code.svg]]
+
+注: 还能够继续干的事情:
++ 写一个 =simplify= 函数, 来把 =[:add, 1, [:add 2, 3]]= 这样的结构化简成
+  =[:add, 1, 2, 3]= 的形式.
++ 写一个 =evaluate= 函数, 根据 =read= 返回的结构来进行计算求值.
+  一个大概的思路是这样的:
+
+  #+name: ruby-calc-dot-example-evaluate-presudo-code
+  #+begin_src ruby
+    def evaluate(ast)
+      case ast
+      when Array
+	@@methods[ast.first].call(*(ast[1..].map { |exp| evaluate(ast) }))
+      when Integer
+	ast
+      end
+    end
+  #+end_src
+
+  其中 =@@methods= 为 =CalcDot= 这个类中的储存方法的函数. 为 =Hash= 类型. 
+  比如 =:add= Key 对应的应该是 =-> (*args) { args.inject { |sum, item| sum + item } }=
+  这样的东西.
++ 写更多的匹配规则
++ 做一个会出错的计算器
++ 加入 =Logger= 来记录运行日志
+
+** 一个 EBNF Parser
+参考的 [[https://github.com/dryruby/ebnf/tree/develop/examples/ebnf-peg-parser][例子]]:
+
+#+begin_quote
+This example creates a parser for the EBNF grammar which
+generates the same Abstract Syntax Tree as the built-in
+parser in the gem.
+#+end_quote
+
+这个例子里面引入了 =terminal= 的概念来方便处理.
+虽然暂时还不是很了解这个有什么用就是了, 感觉类似于对前面的 node 进行了分类.
+
+其中用来描述 EBNF 的 EBNF 代码在 [[https://github.com/dryruby/ebnf/blob/develop/etc/ebnf.ebnf][这里]]:
+
+#+begin_html
+<details><summary>展开</summary>
+#+end_html
+
+#+name: ruby-ebnf-parser-download-ebnf-rules
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports both
+  # if you have a good network connection
+  require 'open-uri'
+  require 'ebnf'
+
+  link = URI("https://raw.githubusercontent.com/dryruby/ebnf/develop/etc/ebnf.ebnf")
+
+  EBNF_RULES = URI.open(link).read
+#+end_src
+
+#+RESULTS: ruby-ebnf-parser-download-ebnf-rules
+: #<Errno::ECONNREFUSED: Failed to open TCP connection to raw.githubusercontent.com:443 (Connection refused - connect(2) for "raw.githubusercontent.com" port 443)>
+
+emmm, 网不是很好. 直接用开梯子下载的文件算了.
+
+#+name: ruby-ebnf-parser-ebnf-rules
+#+header: :result value pp
+#+header: :session ruby-ebnf
+#+begin_src ruby :exports both
+  EBNF.parse(EBNF_RULES).make_peg.to_sxp
+#+end_src
+
+#+RESULTS: ruby-ebnf-parser-ebnf-rules
+#+begin_example
+(
+ (rule ebnf "1" (star _ebnf_1))
+ (rule _ebnf_1 "1.1" (alt declaration rule))
+ (rule declaration "2" (alt "@terminals" pass))
+ (rule rule "3" (seq LHS expression))
+ (rule expression "4" (seq alt))
+ (rule alt "5" (seq seq _alt_1))
+ (rule _alt_1 "5.1" (star _alt_2))
+ (rule _alt_2 "5.2" (seq "|" seq))
+ (rule seq "6" (plus diff))
+ (rule diff "7" (seq postfix _diff_1))
+ (rule _diff_1 "7.1" (opt _diff_2))
+ (rule _diff_2 "7.2" (seq "-" postfix))
+ (rule postfix "8" (seq primary _postfix_1))
+ (rule _postfix_1 "8.1" (opt POSTFIX))
+ (rule primary "9" (alt HEX SYMBOL O_RANGE RANGE STRING1 STRING2 _primary_1))
+ (rule _primary_1 "9.1" (seq "(" expression ")"))
+ (rule pass "10" (seq "@pass" expression))
+ (terminals _terminals (seq))
+ (terminal LHS "11" (seq _LHS_1 SYMBOL _LHS_2 "::="))
+ (terminal _LHS_1 "11.1" (opt _LHS_3))
+ (terminal _LHS_3 "11.3" (seq "[" SYMBOL "]" _LHS_4))
+ (terminal _LHS_4 "11.4" (plus " "))
+ (terminal _LHS_2 "11.2" (star " "))
+ (terminal SYMBOL "12" (plus _SYMBOL_1))
+ (terminal _SYMBOL_1 "12.1" (alt _SYMBOL_2 _SYMBOL_3 _SYMBOL_4 "_" "."))
+ (terminal _SYMBOL_2 "12.2" (range "a-z"))
+ (terminal _SYMBOL_3 "12.3" (range "A-Z"))
+ (terminal _SYMBOL_4 "12.4" (range "0-9"))
+ (terminal HEX "13" (seq "#x" _HEX_1))
+ (terminal _HEX_1 "13.1" (plus _HEX_2))
+ (terminal _HEX_2 "13.2" (alt _HEX_3 _HEX_4 _HEX_5))
+ (terminal _HEX_3 "13.3" (range "a-f"))
+ (terminal _HEX_4 "13.4" (range "A-F"))
+ (terminal _HEX_5 "13.5" (range "0-9"))
+ (terminal RANGE "14" (seq "[" _RANGE_1 _RANGE_2 _RANGE_3))
+ (terminal _RANGE_1 "14.1" (plus _RANGE_4))
+ (terminal _RANGE_4 "14.4" (alt _RANGE_5 _RANGE_6 R_CHAR HEX))
+ (terminal _RANGE_5 "14.5" (seq R_CHAR "-" R_CHAR))
+ (terminal _RANGE_6 "14.6" (seq HEX "-" HEX))
+ (terminal _RANGE_2 "14.2" (opt "-"))
+ (terminal _RANGE_3 "14.3" (diff "]" LHS))
+ (terminal O_RANGE "15" (seq "[^" _O_RANGE_1 _O_RANGE_2 "]"))
+ (terminal _O_RANGE_1 "15.1" (plus _O_RANGE_3))
+ (terminal _O_RANGE_3 "15.3" (alt _O_RANGE_4 _O_RANGE_5 R_CHAR HEX))
+ (terminal _O_RANGE_4 "15.4" (seq R_CHAR "-" R_CHAR))
+ (terminal _O_RANGE_5 "15.5" (seq HEX "-" HEX))
+ (terminal _O_RANGE_2 "15.2" (opt "-"))
+ (terminal STRING1 "16" (seq "\"" _STRING1_1 "\""))
+ (terminal _STRING1_1 "16.1" (star _STRING1_2))
+ (terminal _STRING1_2 "16.2" (diff CHAR "\""))
+ (terminal STRING2 "17" (seq "'" _STRING2_1 "'"))
+ (terminal _STRING2_1 "17.1" (star _STRING2_2))
+ (terminal _STRING2_2 "17.2" (diff CHAR "'"))
+ (terminal CHAR "18" (alt _CHAR_1 _CHAR_2 _CHAR_3 _CHAR_4))
+ (terminal _CHAR_1 "18.1" (range "#x9#xA#xD"))
+ (terminal _CHAR_2 "18.2" (range "#x20-#xD7FF"))
+ (terminal _CHAR_3 "18.3" (range "#xE000-#xFFFD"))
+ (terminal _CHAR_4 "18.4" (range "#x10000-#x10FFFF"))
+ (terminal R_CHAR "19" (diff CHAR _R_CHAR_1))
+ (terminal _R_CHAR_1 "19.1" (alt "]" "-" HEX))
+ (terminal POSTFIX "20" (range "?*+"))
+ (terminal PASS "21" (alt _PASS_1 _PASS_2 _PASS_3 _PASS_4))
+ (terminal _PASS_1 "21.1" (range "#x9#xA#xD#x20"))
+ (terminal _PASS_2 "21.2" (seq _PASS_5 _PASS_6))
+ (terminal _PASS_5 "21.5" (alt _PASS_7 "//"))
+ (terminal _PASS_7 "21.7" (diff "#" "#x"))
+ (terminal _PASS_6 "21.6" (star _PASS_8))
+ (terminal _PASS_8 "21.8" (range "^#xA#xD"))
+ (terminal _PASS_3 "21.3" (seq "/*" _PASS_9 "*/"))
+ (terminal _PASS_9 "21.9" (star _PASS_10))
+ (terminal _PASS_10 "21.10" (alt _PASS_11 _PASS_12))
+ (terminal _PASS_11 "21.11" (opt _PASS_13))
+ (terminal _PASS_13 "21.13" (seq "*" _PASS_14))
+ (terminal _PASS_14 "21.14" (range "^/"))
+ (terminal _PASS_12 "21.12" (range "^*"))
+ (terminal _PASS_4 "21.4" (seq "(*" _PASS_15 "*)"))
+ (terminal _PASS_15 "21.15" (star _PASS_16))
+ (terminal _PASS_16 "21.16" (alt _PASS_17 _PASS_18))
+ (terminal _PASS_17 "21.17" (opt _PASS_19))
+ (terminal _PASS_19 "21.19" (seq "*" _PASS_20))
+ (terminal _PASS_20 "21.20" (range "^)"))
+ (terminal _PASS_18 "21.18" (range "^*"))
+ (pass _pass (seq PASS)))
+#+end_example
+
+暂时没什么好的解释, 因为并不是很会. 
+
+#+begin_html
+</details>
+#+end_html
+
+那么还是和前面 =Calc= 的例子一样, 看看这样的规则会得到什么样的结构吧. 
+
+#+name: ruby-ebnf-parser-init-class
+#+header: :session ruby-ebnf
+#+header: :results value pp
+#+begin_src ruby :exports both
+  class EBNFParser
+    include EBNF::PEG::Parser
+    include EBNF::Terminals
+    @@rules = EBNF.parse(EBNF_RULES).make_peg.ast
+    @@whitespace = EBNF::Terminals::PASS
+
+    def read(input)
+      parse(input, :ebnf, @@rules,
+	    whitespace: @@whitespace)
+    end
+  end
+
+  EBNFParser.new.read("[1] test ::= test_a | test_b")
+#+end_src
+
+#+RESULTS: ruby-ebnf-parser-init-class
+#+begin_example
+[[{:LHS=>"[1] test ::="},
+  {:expression=>
+    [{:alt=>
+       [{:seq=>
+          [[{:postfix=>[{:primary=>"test_a"}, {:_postfix_1=>nil}]},
+            {:_diff_1=>nil}]]},
+        {:_alt_1=>
+          [[{:|=>"|"},
+            {:seq=>
+              [[{:postfix=>[{:primary=>"test_b"}, {:_postfix_1=>nil}]},
+                {:_diff_1=>nil}]]}]]}]}]}]]
+#+end_example
+
+其中, =@@whitespace= 用于告诉 =parse= 函数要忽略的空白符的形式.
+通常是一个正则表达式或者是一个字符串. 这里直接使用了现成的.
+(不过不知道该不该说这是一个小小的 bug 呢?
+因为这里按照文档所说: Symbol of whitespace rule (defaults to =@pass=),
+or a regular expression for eating whitespace between non-terminal rules
+(strongly encouraged). 应该是可以从输入的规则中读出来的.
+不过不清楚, 还是忽略吧. )
+
+于是首先要对 =terminals= 进行一个处理.
+目前对于这个 =terminals= 的片面理解就是其将被捕获到的东西,
+作为一个整体的 (字符串) 传值和处理, 而不是像 Calc 中,
+=rules= 中对于捕获到的对象保留捕获的结构.
+所以可以认为是将一堆 =rule= 抽象为一个点的感觉.
+也就是目前的最基本元素.
+
+所以需要处理 =terminals= 的信息:
+
+#+header: :session ruby-ebnf
+#+header: :results value pp
+#+begin_src ruby :exports both
+  class EBNFParser
+    # [SYMBOL] SYMBOL ::= -> [SYMBOL, SYMBOL]
+    terminal(:LHS) do |value|
+      value.to_s.scan(/(?:\[([^\]]+)\])?\s*(\w+)\s*::=/).first
+    end
+
+    # #xN -> [:hex, "#xN"]
+    terminal(:HEX) do |value|
+      [:hex, value]
+      value
+    end
+
+    # [...-...] -> [:range, "......"]
+    terminal(:RANGE) do |value|
+      p value
+      [:range, value[1..-2]]
+      value
+    end
+
+    terminal(:O_RANGE) do |value|
+      [:range, value[1..-2]]
+      value
+    end
+
+    terminal(:STRING1) do |value|
+      value[1..-2]
+    end
+
+    terminal(:STRING2) do |value|
+      value[1..-2]
+    end
+  end
+
+  EBNFParser.new.read("test ::= \"HELLO\"")
+#+end_src
+
+#+RESULTS:
+: [[{:LHS=>[nil, "test"]},
+:   {:expression=>
+:     [{:alt=>
+:        [{:seq=>
+:           [[{:postfix=>[{:primary=>"HELLO"}, {:_postfix_1=>nil}]},
+:             {:_diff_1=>nil}]]},
+:         {:_alt_1=>[]}]}]}]]
+
+这个例子就不完全分析了. 就列举一些目前了解的技巧算了:
++ 使用 =terminal= 来对末端的节点进行提前的处理.
+  其中 block 中传入的 =|value, prod|= 中 =prod= 参数为父规则的名字. 
++ 使用 =start_production= 在处理 rule 之前提前进行处理,
+  比如使用 =as_hash: true= 的方式, 来将
+  =[{KEY_1: value_1}, {KEY_2: value_2}]= 这样的变成
+  ={KEY_1: value_1, KEY_2: value_2}= 这样的结果,
+  在 =production= 中以 =value= 的形式传播.
++ 使用 =production= 传入 block 代码块的时候,
+  通过使用 =|value, data, callback|= 中的 =callback= 来在 parse
+  的时候以 =yeild= 的形式传值出去.
+
+  形式大致如下:
+
+  #+begin_src ruby
+    production(...) do |value, data, callback|
+      callback.call(args)
+    end
+
+    parse(...) do |args|
+      # ...
+    end
+  #+end_src
+
+* FSTN Parser
+首先是 FSTN 的 EBNF 的语法表述:
+(其所满足的规则在 [[{{ site.github.url }}/reading/natural-language-processing-in-lisp/][Natural Language Processing in Lisp 01]] 里面有介绍.)
+
+#+name: fstn-ebnf-expression
+#+begin_src org
+  [1] fstn ::= (network | abbreviates)+
+
+  [2] network ::= "Name" name ":" (nodes | arcs)+ "."
+  [3] nodes   ::= ("Initial" | "Final") value
+  [4] arcs    ::= "From" node "to" node "by" label
+
+  [5] abbreviates ::= name "abbreviates" ":" array "."
+
+  [6] value   ::= node_array | node
+  [7] node_array   ::= (node ",")+ node
+  [8] array   ::= (char ",")* char
+
+  @terminals
+  [9] name    ::= [A-Z]+ ("-" [A-Z]+)*
+  [10] node    ::= [1-9] [0-9]*
+  [11] label   ::= name | char | [#x21-#x2f#x3a-#x40#x5b-#x60#7b-#x7e]
+  [12] char    ::= [a-z]+ ("-" [a-z])*
+#+end_src
+
+#+begin_html
+<details><summary>S-Exp of EBNF</summary>
+#+end_html
+
+#+name: ruby-fstn-make-peg-to-sxp
+#+header: :var FSTN_RULES = fstn-ebnf-expression
+#+header: :session ruby-fstn
+#+begin_src ruby :exports both
+  require 'ebnf'
+  EBNF.parse(FSTN_RULES).make_peg.to_sxp
+#+end_src
+
+#+RESULTS: ruby-fstn-make-peg-to-sxp
+#+begin_example
+(
+ (rule fstn "1" (plus _fstn_1))
+ (rule _fstn_1 "1.1" (alt network abbreviates))
+ (rule network "2" (seq "Name" name ":" _network_1 "."))
+ (rule _network_1 "2.1" (plus _network_2))
+ (rule _network_2 "2.2" (alt nodes arcs))
+ (rule nodes "3" (seq _nodes_1 value))
+ (rule _nodes_1 "3.1" (alt "Initial" "Final"))
+ (rule arcs "4" (seq "From" node "to" node "by" label))
+ (rule abbreviates "5" (seq name "abbreviates" ":" array "."))
+ (rule value "6" (alt node_array node))
+ (rule node_array "7" (seq _node_array_1 node))
+ (rule _node_array_1 "7.1" (plus _node_array_2))
+ (rule _node_array_2 "7.2" (seq node ","))
+ (rule array "8" (seq _array_1 char))
+ (rule _array_1 "8.1" (star _array_2))
+ (rule _array_2 "8.2" (seq char ","))
+ (terminals _terminals (seq))
+ (terminal name "9" (seq _name_1 _name_2))
+ (rule _name_1 "9.1" (plus _name_3))
+ (terminal _name_3 "9.3" (range "A-Z"))
+ (rule _name_2 "9.2" (star _name_4))
+ (rule _name_4 "9.4" (seq "-" _name_5))
+ (rule _name_5 "9.5" (plus _name_6))
+ (terminal _name_6 "9.6" (range "A-Z"))
+ (terminal node "10" (seq _node_1 _node_2))
+ (terminal _node_1 "10.1" (range "1-9"))
+ (rule _node_2 "10.2" (star _node_3))
+ (terminal _node_3 "10.3" (range "0-9"))
+ (terminal label "11" (alt name char _label_1))
+ (terminal _label_1 "11.1" (range "#x21-#x2f#x3a-#x40#x5b-#x60#7b-#x7e"))
+ (terminal char "12" (seq _char_1 _char_2))
+ (rule _char_1 "12.1" (plus _char_3))
+ (terminal _char_3 "12.3" (range "a-z"))
+ (rule _char_2 "12.2" (star _char_4))
+ (rule _char_4 "12.4" (seq "-" _char_5))
+ (terminal _char_5 "12.5" (range "a-z")))
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: ruby-fstn-ebnf-initialize
+#+header: :session ruby-fstn
+#+header: :result value pp
+#+begin_src ruby :exports code
+  class FSTN
+    include EBNF::PEG::Parser
+    @@rules = EBNF.parse(FSTN_RULES).make_peg.ast
+
+    def read(input)
+      parse(input, :fstn, @@rules,
+	    whitespace: /\s/)
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-fstn-ebnf-initialize
+: :read
+
+#+begin_html
+<details><summary>其中, 测试用的 FSTN 例子以及默认的结果</summary>
+#+end_html
+
+#+name: fstn-ebnf-example-fstn
+#+begin_src org
+  Name TEST:
+    Initial 1
+    Final 3
+    From 1 to 2 by ABB
+    From 1 to 3 by #
+    From 2 to 3 by ABB.
+
+  ABB abbreviates:
+    test, hello, world.
+#+end_src
+
+#+header: :var FSTN_EXAMPLE = fstn-ebnf-example-fstn
+#+header: :session ruby-fstn
+#+header: :results value pp
+#+begin_src ruby
+  FSTN.new.read(FSTN_EXAMPLE)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+[[{:Name=>"Name"},
+  {:name=>"TEST"},
+  {:":"=>":"},
+  {:_network_1=>
+    [[{:_nodes_1=>"Initial"}, {:value=>"1"}],
+     [{:_nodes_1=>"Final"}, {:value=>"3"}],
+     [{:From=>"From"},
+      {:node=>"1"},
+      {:to=>"to"},
+      {:node=>"2"},
+      {:by=>"by"},
+      {:label=>"ABB"}],
+     [{:From=>"From"},
+      {:node=>"1"},
+      {:to=>"to"},
+      {:node=>"3"},
+      {:by=>"by"},
+      {:label=>"#"}],
+     [{:From=>"From"},
+      {:node=>"2"},
+      {:to=>"to"},
+      {:node=>"3"},
+      {:by=>"by"},
+      {:label=>"ABB"}]]},
+  {:"."=>"."}],
+ [{:name=>"ABB"},
+  {:abbreviates=>"abbreviates"},
+  {:":"=>":"},
+  {:array=>
+    [{:_array_1=>
+       [[{:char=>"test"}, {:","=>","}], [{:char=>"hello"}, {:","=>","}]]},
+     {:char=>"world"}]},
+  {:"."=>"."}]]
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+那么, 开始写规则吧:
+
+** Terminals
+对于 terminal, 相当于要把对应的匹配的东西全部都转换成一个 "最小" 零售单元的感觉.
+(注: 可以试试看将 =@terminals= 去掉后的结果. )
+
+注意到里面的 =name=, =node=, =label=, =char= 是等价的,
+只是在其字符可用区间上有一些限制.
+即 =@terminals= 的作用仅仅只是将其作为一个整体进行匹配而已. 
+
+** Rules
+对于其他的规则, 也就是对结构进行约化. 一个简单的想法就是将其约化为如下的形式:
+
+#+name: ruby-fstn-example-ast-example
+#+begin_src ruby :exports code
+  { networks: [
+      {
+	name: :name_of_network,
+	des: [
+	  { initial: value },
+	  { final: value },
+	  { arc: by, from: node, to: node }
+	]
+      },
+      {
+	name: :name_of_abbreviation,
+	des: [ char, char, ... ]
+      }
+    ] }
+#+end_src
+
+于是开整:
+
+#+name: ruby-fstn-production-rules
+#+header: :session ruby-fstn
+#+begin_src ruby :exports code
+  class FSTN
+    production(:arcs, clear_packrat: true) do |node|
+      from, to, by = node[1][:node], node[3][:node], node[5][:label]
+      { arc: by, from: from, to: to }
+    end
+
+    production(:nodes, clear_packrat: true) do |node|
+      type, value = node[0][:_nodes_1].downcase.to_sym, node[1][:value]
+      { type => value }
+    end
+
+    production(:array, clear_packrat: true) do |node|
+      node.first[:_array_1]
+	.map { |item| item.first[:char].to_sym }
+	.append(node.last[:char].to_sym)
+    end
+
+    start_production(:network, as_hash: true)
+    production(:network) do |node, data, callback|
+      name, des = node[:name], node[:_network_1]
+      callback.call(:network, { name: name, des: des })
+    end
+
+    start_production(:abbreviates, as_hash: true)
+    production(:abbreviates) do |node, data, callback|
+      name, des = node[:name], node[:array]
+      callback.call(:abbreviates, { name: name, des: des })
+    end
+
+    def read(input)
+      ast = { network: [], abbreviates: [] }
+    
+      parse(input, :fstn, @@rules, whitespace: /\s/) do |type, value|
+	ast[type] << value
+      end
+
+      ast
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-fstn-production-rules
+: :read
+
+于是:
+
+#+header: :session ruby-fstn
+#+header: :results value pp
+#+begin_src ruby :exports both
+  FSTN.new.read(FSTN_EXAMPLE)
+#+end_src
+
+#+RESULTS:
+: {:network=>
+:   [{:name=>"TEST",
+:     :des=>
+:      [{:initial=>"1"},
+:       {:final=>"3"},
+:       {:arc=>"ABB", :from=>"1", :to=>"2"},
+:       {:arc=>"#", :from=>"1", :to=>"3"},
+:       {:arc=>"ABB", :from=>"2", :to=>"3"}]}],
+:  :abbreviates=>[{:name=>"ABB", :des=>[:test, :hello, :world]}]}
+
+** FSTN 自动机可视化
+对于读到的 FSTN. 需要将其画出来. (使用 [[https://graphviz.org][graphviz]])
+
+于是简单的想法就是根据 =read= 返回的 ast 来进行绘制:
+
+#+begin_html
+<details><summary>代码折叠</summary>
+#+end_html
+
+#+name: ruby-fstn-draw-ast-code
+#+header: :session ruby-fstn
+#+begin_src ruby :exports code
+  class FSTN
+    def draw(input, options = {})
+      draw_ast(read(input), **options)
+    end
+
+    def draw_ast(ast, options = {})
+      layout = options[:layout] || :dot
+      shape  = options[:shape]  || :circle
+      in_out = options[:in_out] || true
+      rankdir = options[:rankdir] || :LR
+
+      res = "layout = #{layout};\n" +
+	    "rankdir = #{rankdir};\n" + 
+	    (in_out ? "node [shape = point]; qi, qa;\n" : "") +
+	    "node [shape = #{shape}];\n"
+
+      ast[:network].each do |network|
+	network[:des].each do |items|
+	  res << "qi -> #{items[:initial]};\n" if items[:initial]
+	  res << "#{items[:final]} -> qa;\n" if items[:final]
+	  res << ("#{items[:from]} -> #{items[:to]}" +
+		  (items[:arc] == "#" ?  "" : "[label = \"#{items[:arc]}\"]") +
+		  ";\n") if items[:arc]
+
+	end
+      end
+
+      return res
+    end
+  end
+#+end_src
+
+#+RESULTS: ruby-fstn-draw-ast-code
+: :draw_ast
+
+#+begin_html
+</details>
+#+end_html
+
+于是可以有如下的绘图结果:
+
+#+name: ruby-fstn-draw-ast-example
+#+header: :session ruby-fstn
+#+begin_src ruby :exports code
+  FSTN.new.draw(FSTN_EXAMPLE)
+#+end_src
+
+#+name: ruby-fstn-draw-ast-example-dot
+#+header: :var in = ruby-fstn-draw-ast-example
+#+header: :file ../_img/ebnf/ruby-fstn-draw-ast-example.svg
+#+begin_src dot :exports none
+  digraph {
+    $in
+  }
+#+end_src
+
+#+RESULTS: ruby-fstn-draw-ast-example-dot
+[[file:../_img/ebnf/ruby-fstn-draw-ast-example.svg]]
+
+[[{{ site.github.url }}/_img/ebnf/ruby-fstn-draw-ast-example.svg]]
+
+** FSTN 的自动生成
+在这里我就想吐槽一下之前是有什么大病想到那么离谱的 ast 数据组织方式.
+不过无所谓了, 论屎山的诞生:
+
+首先是为了方便引用 abbreviates, 将其转换成通过缩写即可得到一列数据的形式.
+为了方便生成, 将 ={initial: ...}= 和 ={final: ...}= 都变成 ={arc: ...}= 的形式.
+并且将其最终变为 ={<from> => [{to => <to>, arc => <arc>}, ...]}= 的形式.
+
+#+begin_html
+<details><summary>代码折叠</summary>
+#+end_html
+
+#+header: :session ruby-fstn
+#+begin_src ruby :exports code
+  class FSTN
+    def generate(input, options = {})
+      generate_ast(read(input), **options)
+    end
+
+    def generate_ast(ast, options = {})
+      terminal = options[:terminal]
+      join_char = options[:join] || " "
+
+      network_ast = ast[:network].select { |item| item == terminal || terminal.nil? }.first
+      network = parse_network(network_ast[:des])
+      abbreviates = parse_abbreviates(ast[:abbreviates])
+
+      res = []
+      state = "qi"
+      while state != "qa"
+	length = network[state].length
+	arc = network[state][rand(length)]
+	label = arc[:arc]
+
+	if label == "#"
+	elsif abbreviates.include?(label)
+	  res << abbreviates[label][rand(abbreviates[label].length)]
+	else
+	  res << label
+	end
+
+	state = arc[:to]
+      end
+
+      return res.join(join_char)
+    end
+
+    def parse_abbreviates(ast)
+      res = {}
+
+      ast.each do |abb|
+	res[abb[:name]] = abb[:des]
+      end
+
+      return res
+    end
+
+    def parse_network(ast)
+      res = {}
+
+      parse_init = -> (nodes) { nodes.is_a?(Array) ? nodes.map { |node| { arc: "#", from: "qi", to: node } } : { arc: "#", from: "qi", to: nodes } }
+      parse_final = -> (nodes) { nodes.is_a?(Array) ? nodes.map { |node| { arc: "#", from: node, to: "qa" } } : { arc: "#", from: nodes, to: "qa" } }
+
+      ast.map do |item|
+	if item[:arc]
+	  item
+	elsif item[:initial]
+	  parse_init[item[:initial]]
+	else
+	  parse_final[item[:final]]
+	end
+      end.each do |arc|
+	res[arc[:from]] ||= []
+	res[arc[:from]] << { arc: arc[:arc], to: arc[:to] }
+      end
+
+      return res
+    end
+  end
+#+end_src
+
+#+RESULTS:
+: :parse_network
+
+#+begin_html
+</details>
+#+end_html
+
+#+header: :session ruby-fstn
+#+begin_src ruby :exports both
+  FSTN.new.generate(FSTN_EXAMPLE)
+#+end_src
+
+#+RESULTS:
+: test hello
+
+* 其他的一些资料
+都是一些想看但是并没有时间看的东西 +毕竟现在还是假期, 并且这东西也不是我主业+
++ [[https://cse.buffalo.edu/~regan/cse305/RubyBNF.pdf][RubyBNF.pdf]] Ruby 的一个 BNF Syntax (基于 ruby-man-1.4)
++ [[https://www.ics.uci.edu/~pattis/misc/ebnf2.pdf][EBNF: A Notation to Describe Syntax]] 一个看起来比较有意思的介绍
+
+* 一些其他的想法
++ 重新实现之前的 [[{{ site.github.url }}/ruby/ri-lang/][riLang]], 不过是通过 EBNF 的形式
++ 实现一个 EBNF 的处理程序 (模仿 ebnf 这个 gem)
++ ...

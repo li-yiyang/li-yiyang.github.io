@@ -1,0 +1,861 @@
+#+layout: post
+#+title: [Reading] Natural Language Processing in Lisp 01
+#+date: 2023-1-27
+#+options: _:nil ^:nil
+#+math: true
+#+categories: reading
+* 又是一个新坑
+我不管, 好玩玩它就是了.
+
+又, 这本书里面现在看起来故事挺多的, 感觉挺有意思的. 
+
+* Finite-State Techniques
+#+begin_quote
+Finite-state automata (FSAs) are among the simplest computing machines
+that can be envisaged. They are well understood mathematically, easy to
+implement and efficient at doing what they do. If an NLP problem can be
+conveniently solved with a finite-state automaton, then it is probably
+a good idea to solve it that way. However. FSAs are subject to certain
+formal limitations that render them ill suited to certain computational
+linguistic tasks. This chapter provides a fairly comprehensive introduction
+to these machines and their implementation, indicates possible areas of
+application and gives some concrete examples of their use, and examines
+their limitations.
+#+end_quote
+
+** Finite-state transition networks
+如何判断输入的文本的语言类型?
++ 词频分析:
+
+  比如对于不同的语言文本, 其字母出现的频率不同,
+  所以可以通过这样的方式来判断.
++ 暴力枚举:
+
+  假设所有的语言都存在对应的处理程序, 对所有的处理程序,
+  都进行一次匹配, 如果不成功的话就使用下一个语言,
+  这样的坏处是比较慢. 
+
+*** 简单的自动机的例子
+一个开怀大笑的例子:
+
+#+name: a-laughing-machine
+#+caption: A laughing machine
+#+headers: :file ../_img/reading/lisp-nlp/laughing-machine.svg
+#+begin_src dot :exports none
+  digraph finite_state_machine {
+      rankdir=LR;
+
+      node [shape = point]; qi qa;
+      node [shape = circle];
+      
+      qi -> 1;
+      1 -> 2 [label = "h"];
+      2 -> 3 [label = "a"];
+      3 -> 2 [label = "h"];
+      3 -> 4 [label = "!"];
+      4 -> qa;
+  }
+#+end_src
+
+#+RESULTS: a-laughing-machine
+[[file:../_img/reading/lisp-nlp/laughing-machine.svg]]
+
+[[{{ site.github.url }}/_img/reading/lisp-nlp/laughing-machine.svg]]
+
+上图即为一个简单的 (只有四个状态的) 描述 FSA (有限自动机) 的 FSTN (有限状态转移图).
+其中在第三个状态 *3* 处, 在两条道路 "*h*" 和 "*!*" 之间会有一定的机率发生转换.
+这个转换的依据可以是外部的一个随机数生成器这样之类的东西.
+
+使用上述自动机, 还能够用来处理输入, 比如将输入的符号扔到里面进行匹配.
+(那么说起来, 这个的感觉有点像是一种正则表达式进行匹配的感觉. )
+
+当然, 描述一个自动机可以有多种可能:
+
+#+name: non-deterministic-laughing-machine
+#+caption: Non-deterministic laughing machine
+#+header: :file ../_img/reading/lisp-nlp/laughing-machine-reading.svg
+#+begin_src dot :exports none
+  digraph finite_state_machine {
+    rankdir = LR;
+
+    node [shape = point]; qi qa;
+    node [shape = circle];
+
+    qi -> 1;
+    1 -> 2 [label = "h"];
+    2 -> 1 [label = "a"];
+    2 -> 3 [label = "a"];
+    3 -> 4 [label = "!"];
+    4 -> qa;
+  }
+#+end_src
+
+#+RESULTS: non-deterministic-laughing-machine
+[[file:../_img/reading/lisp-nlp/laughing-machine-reading.svg]]
+
+[[{{ site.github.url }}/_img/reading/lisp-nlp/laughing-machine-reading.svg]]
+
+不过和前一种自动机不同的是, 这个自动机是 *non-deterministic* (非确定的) 的自动机.
+从 *2* 状态的两个 *a* 转换的规则即可看出.
+
+除了上面的未定分支, 还可以出现跳转分支 (*jump arc*, 或者说, 无标签的跳转 unlabelled arcs):
+
+#+name: laughing-machine-with-jump-arc
+#+caption: Laughing machine with 'jump' arc
+#+header: :file ../_img/reading/lisp-nlp/laughing-machine-with-jump-arc.svg
+#+begin_src dot :exports none
+  digraph finite_state_machine {
+    rankdir = LR;
+
+    node [shape = point]; qi qa;
+    node [shape = circle];
+
+    qi -> 1;
+    1 -> 2 [label = "h"];
+    2 -> 3 [label = "a"];
+    3 -> 1;
+    3 -> 4 [label = "!"];
+    4 -> qa;
+  }
+#+end_src
+
+#+RESULTS: laughing-machine-with-jump-arc
+[[file:../_img/reading/lisp-nlp/laughing-machine-with-jump-arc.svg]]
+
+[[{{ site.github.url }}/_img/reading/lisp-nlp/laughing-machine-with-jump-arc.svg]]
+
+注: 这一段是想要说明 FSTN 和 FSA 的一些细微的区别, 即对于 FSTN 来说,
+上面的网络都是可行的, 但是对于 FSA 来说, 这样的网络并不都是可行的.
+但是一般为了方便, 所以会在不出现歧义的情况下将二者等同. 
+
+于是上面就给出了一个如何处理语言 (或者说, 如何识别特定语言) 的思路:
+即对一种语言, 构建出关于其的自动机网络 FSTN, 然后对其识别即可. 
+
+** A notation for networks
+为了达到使用 FSTN 对语言进行识别的目的, 首先需要想一种用来描述 FSTN 的形式标记.
+而对于一个 FSTN, 其应该由如下组成: (显然, 这就是一个有向图)
+1) 网络需要有一个名称
+
+   尽管在描述 FSTN 的时候, 一个名字仅仅只是助记用途 (mnemonic), 但是在 RTN 种,
+   the name of network plays an absolutely crucial role in the definition of RTNs.
+
+   在这里用:
+
+   #+name: example-of-fstn-name
+   #+begin_src org
+     Name TO-LAUGH:
+   #+end_src
+
+   来标记之前的 *laughing* 机. 
+2) 网络的节点的集合
+
+   对于节点的集合, 其必须包含一个初始节点 *Initial*, 以及一个终止节点 *Final*.
+   于是一个图的节点集合可以记为:
+
+   #+name: example-of-fstn-node
+   #+begin_src org
+     Initial 1
+     Final 4
+   #+end_src
+
+   对于这样的一个集合, 一个更加方便的方法则是对集合进行划分
+   (引入子集和缩写 =abbreviates= 的方式来进行描述):
+
+   #+name: example-of-fstn-abbreviates
+   #+begin_src org
+     V abbreviates:
+       a, e, i, o, u.
+     C abbreviates:
+       b, c, d, f, g, h, j, k, l, m, n, p, q, r, s, t, v, w, x, y, z.
+   #+end_src
+
+   对于这样的缩写, 在绘图的时候通过用缩写名字来代替各种线的方式来简化图的结构. 
+3) 连接网络中节点的有向线段
+
+   对于有向线段的描述, 通过 =From <node> to <node> by <label>= 的方式进行定义.
+   其中在用 =#= 来表述 =<label>= 的时候, 认为其为无 label 的跳转.
+
+   于是一个完整的描述如下: (为上面的最后一个自动机的图)
+
+   #+name: example-of-fstn-arcs
+   #+begin_src org
+     Name TO-LAUGH:
+       Initial 1
+       Final 4
+       From 1 to 2 by h
+       From 2 to 3 by a
+       From 3 to 1 by #
+       From 3 to 4 by !.
+   #+end_src
+
+   其中, =<label>= 可以是多个字符的子集.
+   
+   并且还能够通过这样的方式来对其进行描述:
+   (通过一个转移矩阵来描述和储存)
+
+   |   | h | a | ! |
+   | 1 | 2 | 0 | 0 |
+   | 2 | 0 | 3 | 0 |
+   | 3 | 2 | 0 | 4 |
+   | 4 | 0 | 0 | 0 |
+
+   其中用 *0* 表示没有线段, 用其他的数字来表示到达的目的地. 
+
+*** 英语的一些例子
+**** 英语语句
+#+begin_html
+<details>
+<summary>一个英语的例子 (代码以及解释)</summary>
+#+end_html
+
+对于一个英语的语句结构, 可以用如下的 FSTN 来进行表述:
+
+#+name: english-1-fstn-raw
+#+begin_src org
+  Name ENGLISH-1:
+    Initial 1
+    Final 9
+    From 1 to 3 by NP
+    From 1 to 2 by DET
+    From 2 to 3 by N
+    From 3 to 4 by BV
+    From 4 to 5 by ADV
+    From 4 to 5 by #
+    From 5 to 6 by DET
+    From 5 to 7 by DET
+    From 5 to 8 by #
+    From 6 to 6 by MOD
+    From 6 to 7 by ADJ
+    From 7 to 9 by N
+    From 8 to 8 by MOD
+    From 8 to 9 by ADJ
+    From 9 to 4 by CNJ
+    From 9 to 1 by CNJ
+
+    NP abbreviates:
+      kim, sandy, lee.
+    DET abbreviates:
+      a, the, her.
+    N abbreviates:
+      consumer, man, woman.
+    BV abbreviates:
+      is, was.
+    CNJ abbreviates:
+      and, or.
+    ADJ abbreviates:
+      happy, stupid.
+    MOD abbreviates:
+      very.
+    ADV abbreviates:
+      often, always, sometimes.
+#+end_src
+
+其中的缩写分别对应:
++ N: noun 名词
++ NP: noun phrase 名词性短语
++ DET: determiners 定冠词 (words that can come before (common) nouns)
++ ADJ: adjectives 形容词
++ MOD: modify adjecitves 形容词修饰短语, 如 "stupid" 和 "very stupid"
++ V: verb 动词
++ VP: verb phrase 动词短语
++ BV: be 动词
++ CNJ: conjuction 连接词
+
+说明:
++ 尽管这样的 FSTN 看起来并不是很容易理解, 但是却很容易实现.
++ 感觉可以用类似于正则表达式或者是 [[https://bnfplayground.pauliankline.com/?bnf=%3Csentence%3E%20%3A%3A%3D%20%3Cobject%3E%20%3CBV%3E%20%3Cdescription%3E%0A%3Cobject%3E%20%3A%3A%3D%20%3CDET%3E%20%3CN%3E%20%7C%20%3CNP%3E%0A%3Cdescription%3E%20%3A%3A%3D%20(%3Cadj_pharse%3E%20%7C%20%3Cnoun_pharse%3E)%20%3Cmore%3E*%0A%3Cadj_pharse%3E%20%3A%3A%3D%20%3CADV%3E%20%3CMOD%3E*%20%3CADJ%3E%0A%3Cnoun_pharse%3E%20%3A%3A%3D%20(%3CADV%3E%20%7C%20%22%20%22)%20(%3CDET%3E%20(%3CMOD%3E*%20%3CADJ%3E%20%7C%20%22%20%22)%20%3CN%3E%20%7C%20%3CMOD%3E*%20%3CADJ%3E)%0A%3Cmore%3E%20%3A%3A%3D%20%3CCNJ%3E%20(%3Cdescription%3E%20%7C%20%3Csentence%3E)%0A%3CDET%3E%20%3A%3A%3D%20(%22a%22%20%7C%20%22the%22%20%7C%20%22her%22)%20%22%20%22%0A%3CN%3E%20%3A%3A%3D%20(%22consumer%22%20%7C%20%22man%22%20%7C%20%22woman%22)%20%22%20%22%0A%3CNP%3E%20%3A%3A%3D%20(%22kim%22%20%7C%20%22sandy%22%20%7C%20%22lee%22)%20%22%20%22%0A%3CBV%3E%20%3A%3A%3D%20(%22is%22%20%7C%20%22was%22)%20%22%20%22%0A%3CADV%3E%20%3A%3A%3D%20(%22often%22%20%7C%20%22always%22%20%7C%20%22sometimes%22)%20%22%20%22%0A%3CCNJ%3E%20%3A%3A%3D%20(%22and%22%20%7C%20%22or%22)%20%22%20%22%0A%3CADJ%3E%20%3A%3A%3D%20(%22happy%22%20%7C%20%22stupid%22)%20%22%20%22%0A%3CMOD%3E%20%3A%3A%3D%20(%22very%22)%20%22%20%22&name=English-1][ENBF]] 的方式来表述上面的语句:
+
+  #+begin_src bnf
+    <sentence> ::= <object> <BV> <description>
+    <object> ::= <DET> <N> | <NP>
+    <description> ::= (<adj_pharse> | <noun_pharse>) <more>*
+    <adj_pharse> ::= <ADV> <MOD>* <ADJ>
+    <noun_pharse> ::= (<ADV> | " ") (<DET> (<MOD>* <ADJ> | " ") <N> | <MOD>* <ADJ>)
+    <more> ::= <CNJ> (<description> | <sentence>)
+  #+end_src
+  
+  (差不多这样的感觉, 写得不是很干净... )
++ 不过上面的 FSTN 仅仅实现了 A is B 这样的语句.
+  因为语句比较简单, 所以可以通过一些非常直接的方式来进行构造:
+  1. 主体肯定是 =<A> <BV> <B>= 这样的构造
+  2. 对于 =<A>= 的部分, 需要构造名词性短语, 即 =<DET> <N>= 或者 =<NP>= 短语
+  3. 对于 =<B>= 的部分, 需要构造的是一个形容词性短语或者是名词性短语.
+     
+     对于形容词性短语, 简单的方式就是 =<ADV> <MOD>* <ADJ>= 这样构造
+     
+     对于名词性短语, 通过形容词性短语修饰的名词即可得到
+
+  并且通过拓展语料库的方式, 应该就能够实现更多复杂的语句.
+  不过这个目前并没有上下文一致性的判断. 
+#+begin_html
+</details>
+#+end_html
+
+#+name: english-1-fstn
+#+Caption: English-1 FSTN
+#+header: :file ../_img/reading/lisp-nlp/english-1-fstn.svg
+#+header: :var in=ruby-fstn-dot-parser(raw = english-1-fstn-raw)
+#+begin_src dot :exports none
+  digraph finite_state_machine {
+    $in
+  }
+#+end_src
+
+#+attr_org: :width 0.618
+#+RESULTS: english-1-fstn
+[[file:../_img/reading/lisp-nlp/english-1-fstn.svg]]
+
+[[{{ site.github.url }}/_img/reading/lisp-nlp/english-1-fstn.svg]]
+
+#+begin_html
+<details>
+<summary>一些其他的例子</summary>
+#+end_html
+**** 英语的单音节词
+其中对于英语的单音节的单词:
+
+#+name: eng-monosyl-fstn
+#+caption: FSTN for possible monosyllabic English words
+#+header: :file ../_img/reading/lisp-nlp/eng-monosyl-fstn.svg
+#+header: :var in=ruby-fstn-dot-parser(raw = eng-monosyl-fstn-raw)
+#+begin_src dot :exports none
+  digraph finite_state_machine {
+    $in
+  }
+#+end_src
+
+#+attr_org: :width 0.618
+#+RESULTS: eng-monosyl-fstn
+[[file:../_img/reading/lisp-nlp/eng-monosyl-fstn.svg]]
+
+[[{{ site.github.url }}/_img/reading/lisp-nlp/eng-monosyl-fstn.svg]]
+
+#+begin_html
+<details>
+<summary>代码以及解释</summary>
+#+end_html
+
+#+name: eng-monosyl-fstn-raw
+#+begin_src org
+  Name ENG-MONOSYL:
+    Initial 1, 2
+    Final 3, 4, 5
+    From 1 to 2 by C0
+    From 2 to 3 by V
+    From 3 to 4 by C8
+    From 4 to 5 by s
+    From 1 to 7 by C3
+    From 7 to 2 by w
+    From 1 to 6 by C2
+    From 6 to 2 by l
+    From 6 to 5 by #
+    From 1 to 5 by C1
+    From 5 to 2 by r
+    From 1 to 8 by s
+    From 8 to 5 by C4
+    From 8 to 2 by C5
+    From 3 to 9 by l
+    From 3 to 10 by s
+    From 3 to 11 by C7
+    From 9 to 4 by C6
+    From 10 to 4 by C4
+    From 11 to 4 by th.
+
+    V abbreviates:
+      a, ae, ai, au, e, ea, ee, ei, eu, i, ia, ie, o, oa, oe, oi, oo, ou, ue, ui.
+    CO abbreviates:
+      b, c, ch, d, f, g, h, j, k, I, m, n, p, qu, r, s, sh, t, th, v, w, x.
+    C1 abbreviates:
+      d, sh, th.
+    C2 abbreviates:
+      b, c, f, g, k.
+    C3 abbreviates:
+      d, g, h, t, th.
+    C4 abbreviates:
+      c, k, p, t.
+    C5 abbreviates:
+      c, k, l, m, n, p, pl, qu, t, w.
+    C6 abbreviates:
+      b, t, m.
+    C7 abbreviates:
+      d, f, i, n, x.
+    C8 abbreviates:
+      b, c, ch, ck, d, f, g, h, k, l, m, mp, mph, n, ng, p, que, r, s, sh, th, v, w, x, y, z.
+#+end_src
+
+#+begin_html
+<details>
+<summary>题外话</summary>
+#+end_html
+
+突然很好奇一个想法, 如果我有一个足够大的英语单词库 (比如 [[https://www.mit.edu/~ecprice/wordlist.10000][这个]]), 然后对其进行统计,
+比如说将 26 个字母每个字母都做一遍统计, 统计其从前一个字母,
+或者说前几个字母向下一个字母变化的概率.
+
+比如说用这样的一个程序来统计:
+(请忽略我丑陋的四不像代码)
+
+从 [[https://www.mit.edu/~ecprice/wordlist.10000][这里]] 下载一个 10000 词的词典:
+
+#+name: ruby-count-of-english-words-download-dictionary
+#+header: :session ruby-count-of-english-words
+#+begin_src ruby :exports code
+  require 'open-uri'
+  words = URI.open(URI("https://www.mit.edu/~ecprice/wordlist.10000"))\
+	    .read.split(/\s+/)\
+	    .map { |word| word.downcase.split("").map { |c| c.ord - 97 } }
+
+  words.length # => 10000
+#+end_src
+
+#+RESULTS: ruby-count-of-english-words-download-dictionary
+: 10000
+
+其中统计的方法是这样的:
++ 对于一个 arc, 用 From *A* to *B* by *P* 的形式来记录
++ 通过使用一个矩阵 =trans= 来记录数据.
+  规定第 *A* 行为 From, 第 *B* 列为 to,
+  即第 *A* 行的第 *B* 列的元素记录了 From *A* to *B* 的 arc 次数.
+
+  #+name: ruby-count-of-english-words-init-matrix
+  #+header: :results output
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports code
+    trans = 27.times.map { 27.times.map { 0 } }
+
+    puts "You got a 27x27 matrix with default value of 0."
+  #+end_src
+
+  #+RESULTS: ruby-count-of-english-words-init-matrix
+  : You got a 27x27 matrix with default value of 0.
++ 对于一个单词, 从第二个字母开始计数.
+  即若前一个字母为 *A*, 当前字母为 *B*, 则在 From *A* to *B* 元素处增加一.
++ 且令第 27 (对应序号 =26=) 为结束符
+
+  #+name: ruby-count-of-english-words-count-alphabet
+  #+header: :session ruby-count-of-english-words
+  #+header: :results output
+  #+begin_src ruby :exports code
+    count = ->(word) {
+      pre = word[0] # input as C style word
+      (1...word.length).each do |i| # start from second character
+        trans[pre][word[i]] += 1
+        pre = word[i]
+      end
+      trans[word[-1]][26] += 1 # end of word
+    }
+
+    words.each { |word| count.call(word) }
+
+    puts "Count each arcs to the matrix."
+  #+end_src
+
+  #+RESULTS: ruby-count-of-english-words-count-alphabet
+  : Count each arcs to the matrix.
++ 然后对该矩阵进行归一化处理 (保留两位小数精度, 请谨慎展开下文中折叠的部分)
+
+  #+begin_html
+  <details><summary>归一化前</summary>
+  #+end_html
+  
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports results
+    trans
+  #+end_src
+
+  #+RESULTS:
+  |   6 | 132 | 323 | 237 |   8 | 40 | 147 |  21 | 218 |  3 |  59 | 653 | 215 |  727 |   6 | 170 | 10 |  678 | 311 | 781 |  83 |  79 |  34 |  17 | 101 | 20 |  299 |
+  | 160 |  15 |   8 |   4 | 170 |  0 |   1 |   2 | 128 |  8 |   1 | 150 |  11 |    3 | 128 |   3 |  0 |  116 |  51 |   7 | 101 |   2 |   3 |   0 |  15 |  1 |   53 |
+  | 362 |   2 |  63 |   9 | 388 |  2 |   2 | 314 | 192 |  1 | 153 | 125 |   3 |    6 | 591 |   3 |  5 |  131 |  41 | 303 | 120 |   2 |   1 |   0 |  35 |  2 |  169 |
+  | 148 |   6 |   9 |  36 | 489 |  4 |  26 |   5 | 362 |  9 |   1 |  31 |  15 |    9 | 115 |   5 |  1 |   71 | 117 |   9 |  85 |  28 |  11 |   1 |  34 |  0 |  880 |
+  | 377 |  48 | 322 | 685 | 176 | 94 |  94 |  18 |  44 |  3 |  16 | 370 | 224 |  844 |  38 | 126 | 36 | 1114 | 941 | 276 |  28 | 120 |  73 | 175 |  45 |  4 | 1310 |
+  | 101 |   1 |   4 |   2 | 121 | 76 |   3 |   1 | 192 |  0 |   0 |  61 |   1 |    0 | 126 |   1 |  0 |   61 |   7 |  30 |  62 |   0 |   2 |   1 |  11 |  0 |   63 |
+  | 124 |   6 |   3 |   3 | 274 |  2 |  23 | 104 | 103 |  0 |   1 |  33 |   8 |   50 |  63 |   5 |  0 |  133 |  62 |  15 |  67 |   0 |   0 |   0 |  24 |  1 |  613 |
+  | 248 |   4 |   3 |   6 | 294 |  0 |   0 |   1 | 188 |  0 |   1 |  16 |  10 |   16 | 231 |   3 |  2 |   44 |  14 |  69 |  54 |   1 |   5 |   0 |  30 |  3 |  186 |
+  | 258 |  87 | 456 | 174 | 282 | 93 | 158 |   1 |  10 |  6 |  25 | 270 | 160 | 1325 | 603 | 110 |  8 |  170 | 441 | 455 |  19 | 184 |   1 |  22 |   1 | 50 |   92 |
+  |  33 |   0 |   2 |   1 |  40 |  0 |   0 |   0 |   9 |  1 |   0 |   0 |   1 |    0 |  43 |   3 |  0 |    1 |   1 |   0 |  37 |   1 |   0 |   0 |   0 |  0 |   10 |
+  |  27 |   6 |   0 |   2 | 156 |  4 |   3 |   2 |  96 |  2 |   1 |  11 |   3 |   21 |  12 |   2 |  0 |    4 |  68 |   2 |   6 |   0 |   1 |   0 |  10 |  0 |  153 |
+  | 372 |  14 |  14 |  84 | 572 | 21 |   9 |   1 | 469 |  0 |  19 | 302 |  15 |    7 | 290 |  16 |  0 |    3 | 106 |  88 |  97 |  24 |   3 |   0 | 217 |  0 |  488 |
+  | 338 |  64 |   6 |   2 | 430 |  5 |   2 |   2 | 254 |  1 |   0 |   6 |  68 |    7 | 193 | 185 |  0 |    3 |  61 |   4 |  47 |   1 |   3 |   1 |  21 |  0 |  208 |
+  | 276 |   9 | 257 | 358 | 414 | 46 | 706 |  11 | 274 | 10 |  48 |  25 |  13 |   98 | 135 |   4 |  5 |    8 | 454 | 661 |  60 |  53 |   6 |   2 |  46 |  5 |  838 |
+  |  62 |  63 | 124 | 116 |  21 | 43 |  90 |  10 |  39 |  6 |  56 | 282 | 284 | 1067 | 154 | 149 |  0 |  613 | 175 | 186 | 275 | 100 | 131 |  20 |  34 |  8 |  144 |
+  | 249 |   3 |   7 |   9 | 308 |  2 |   8 |  95 | 124 |  1 |   2 | 178 |  11 |    5 | 232 | 100 |  0 |  307 |  66 |  90 |  74 |   1 |   0 |   0 |  12 |  1 |  142 |
+  |   1 |   0 |   1 |   0 |   0 |  0 |   0 |   0 |   1 |  0 |   0 |   3 |   0 |    0 |   0 |   0 |  0 |    0 |   1 |   2 | 103 |   0 |   0 |   0 |   0 |  0 |   11 |
+  | 593 |  34 |  86 | 130 | 999 | 25 |  77 |   7 | 559 |  1 |  61 |  53 | 109 |  100 | 410 |  36 |  1 |  114 | 320 | 231 |  98 |  51 |  12 |   1 | 152 |  1 |  599 |
+  | 140 |  12 | 143 |  10 | 473 | 12 |   7 | 204 | 360 |  0 |  37 |  53 |  38 |   13 | 184 | 161 |  7 |    7 | 262 | 646 | 208 |   2 |  28 |   0 |  35 |  0 | 2043 |
+  | 379 |   9 |  40 |   5 | 798 |  6 |   4 | 256 | 995 |  0 |   2 |  67 |  28 |   13 | 306 |  10 |  0 |  353 | 278 | 122 | 166 |   6 |  18 |   1 | 137 |  1 |  760 |
+  | 101 |  72 |  93 |  58 |  87 | 16 |  65 |   1 |  86 |  2 |  10 | 142 | 113 |  232 |   7 |  70 |  2 |  317 | 217 | 184 |   1 |   3 |   2 |   5 |   8 |  8 |   37 |
+  | 116 |   2 |   5 |   3 | 415 |  0 |   2 |   1 | 205 |  0 |   0 |   0 |   0 |    0 |  59 |   2 |  0 |    1 |   4 |   2 |   2 |   0 |   0 |   1 |   4 |  0 |   25 |
+  | 129 |   4 |   3 |   3 | 104 |  3 |   0 |  31 | 104 |  2 |   1 |   9 |   2 |   31 |  61 |   3 |  0 |   18 |  32 |   6 |   1 |   1 |   3 |   1 |   5 |  0 |   75 |
+  |  18 |   1 |  24 |   0 |  24 |  1 |   0 |   6 |  25 |  0 |   0 |   1 |   2 |    1 |   2 |  53 |  0 |    0 |   0 |  32 |   8 |   0 |   0 |   4 |   4 |  0 |   58 |
+  |  18 |  10 |  14 |   8 |  48 |  0 |   2 |   1 |  24 |  0 |   0 |  16 |  23 |   16 |  21 |  15 |  0 |   11 |  49 |  10 |   5 |   0 |   7 |   0 |   0 |  2 |  727 |
+  |  22 |   1 |   0 |   2 |  44 |  0 |   0 |   0 |  14 |  0 |   0 |   2 |   0 |    0 |  16 |   0 |  0 |    1 |   1 |   0 |   5 |   0 |   0 |   0 |   4 |  7 |   17 |
+  |   0 |   0 |   0 |   0 |   0 |  0 |   0 |   0 |   0 |  0 |   0 |   0 |   0 |    0 |   0 |   0 |  0 |    0 |   0 |   0 |   0 |   0 |   0 |   0 |   0 |  0 |    0 |
+
+  #+begin_html
+  </details>
+  #+end_html
+  
+  归一化代码: (保留百分号后两位小数)
+
+  #+name: ruby-count-of-english-words-unify
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports code
+    26.times do |alphabet|
+      total = trans[alphabet].sum
+      trans[alphabet].map! { |count| (count * 100.0 / total).round(2) }
+    end
+  #+end_src
+
+  #+RESULTS: ruby-count-of-english-words-unify
+  : 26
+
+  #+begin_html
+  <details><summary>归一化后 (单位 %)</summary>
+  #+end_html
+
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports results
+    trans
+  #+end_src
+
+  #+RESULTS:
+  |  0.11 | 2.45 | 6.01 | 4.41 |  0.15 | 0.74 |  2.73 |  0.39 |  4.05 | 0.06 |  1.1 | 12.14 |  4.0 | 13.52 |  0.11 |  3.16 | 0.19 | 12.61 |  5.78 | 14.52 |  1.54 | 1.47 | 0.63 | 0.32 | 1.88 | 0.37 |  5.56 |
+  | 14.02 | 1.31 |  0.7 | 0.35 |  14.9 |  0.0 |  0.09 |  0.18 | 11.22 |  0.7 | 0.09 | 13.15 | 0.96 |  0.26 | 11.22 |  0.26 |  0.0 | 10.17 |  4.47 |  0.61 |  8.85 | 0.18 | 0.26 |  0.0 | 1.31 | 0.09 |  4.65 |
+  | 11.97 | 0.07 | 2.08 |  0.3 | 12.83 | 0.07 |  0.07 | 10.38 |  6.35 | 0.03 | 5.06 |  4.13 |  0.1 |   0.2 | 19.54 |   0.1 | 0.17 |  4.33 |  1.36 | 10.02 |  3.97 | 0.07 | 0.03 |  0.0 | 1.16 | 0.07 |  5.59 |
+  |   5.9 | 0.24 | 0.36 | 1.44 | 19.51 | 0.16 |  1.04 |   0.2 | 14.44 | 0.36 | 0.04 |  1.24 |  0.6 |  0.36 |  4.59 |   0.2 | 0.04 |  2.83 |  4.67 |  0.36 |  3.39 | 1.12 | 0.44 | 0.04 | 1.36 |  0.0 |  35.1 |
+  |  4.96 | 0.63 | 4.24 | 9.01 |  2.32 | 1.24 |  1.24 |  0.24 |  0.58 | 0.04 | 0.21 |  4.87 | 2.95 |  11.1 |   0.5 |  1.66 | 0.47 | 14.66 | 12.38 |  3.63 |  0.37 | 1.58 | 0.96 |  2.3 | 0.59 | 0.05 | 17.23 |
+  |  10.9 | 0.11 | 0.43 | 0.22 | 13.05 |  8.2 |  0.32 |  0.11 | 20.71 |  0.0 |  0.0 |  6.58 | 0.11 |   0.0 | 13.59 |  0.11 |  0.0 |  6.58 |  0.76 |  3.24 |  6.69 |  0.0 | 0.22 | 0.11 | 1.19 |  0.0 |   6.8 |
+  |  7.22 | 0.35 | 0.17 | 0.17 | 15.96 | 0.12 |  1.34 |  6.06 |   6.0 |  0.0 | 0.06 |  1.92 | 0.47 |  2.91 |  3.67 |  0.29 |  0.0 |  7.75 |  3.61 |  0.87 |   3.9 |  0.0 |  0.0 |  0.0 |  1.4 | 0.06 |  35.7 |
+  | 17.35 | 0.28 | 0.21 | 0.42 | 20.57 |  0.0 |   0.0 |  0.07 | 13.16 |  0.0 | 0.07 |  1.12 |  0.7 |  1.12 | 16.17 |  0.21 | 0.14 |  3.08 |  0.98 |  4.83 |  3.78 | 0.07 | 0.35 |  0.0 |  2.1 | 0.21 | 13.02 |
+  |  4.72 | 1.59 | 8.35 | 3.19 |  5.16 |  1.7 |  2.89 |  0.02 |  0.18 | 0.11 | 0.46 |  4.94 | 2.93 | 24.26 | 11.04 |  2.01 | 0.15 |  3.11 |  8.08 |  8.33 |  0.35 | 3.37 | 0.02 |  0.4 | 0.02 | 0.92 |  1.68 |
+  | 18.03 |  0.0 | 1.09 | 0.55 | 21.86 |  0.0 |   0.0 |   0.0 |  4.92 | 0.55 |  0.0 |   0.0 | 0.55 |   0.0 |  23.5 |  1.64 |  0.0 |  0.55 |  0.55 |   0.0 | 20.22 | 0.55 |  0.0 |  0.0 |  0.0 |  0.0 |  5.46 |
+  |  4.56 | 1.01 |  0.0 | 0.34 | 26.35 | 0.68 |  0.51 |  0.34 | 16.22 | 0.34 | 0.17 |  1.86 | 0.51 |  3.55 |  2.03 |  0.34 |  0.0 |  0.68 | 11.49 |  0.34 |  1.01 |  0.0 | 0.17 |  0.0 | 1.69 |  0.0 | 25.84 |
+  | 11.51 | 0.43 | 0.43 |  2.6 |  17.7 | 0.65 |  0.28 |  0.03 | 14.52 |  0.0 | 0.59 |  9.35 | 0.46 |  0.22 |  8.98 |   0.5 |  0.0 |  0.09 |  3.28 |  2.72 |   3.0 | 0.74 | 0.09 |  0.0 | 6.72 |  0.0 |  15.1 |
+  | 17.68 | 3.35 | 0.31 |  0.1 | 22.49 | 0.26 |   0.1 |   0.1 | 13.28 | 0.05 |  0.0 |  0.31 | 3.56 |  0.37 | 10.09 |  9.68 |  0.0 |  0.16 |  3.19 |  0.21 |  2.46 | 0.05 | 0.16 | 0.05 |  1.1 |  0.0 | 10.88 |
+  |  5.72 | 0.19 | 5.33 | 7.42 |  8.59 | 0.95 | 14.64 |  0.23 |  5.68 | 0.21 |  1.0 |  0.52 | 0.27 |  2.03 |   2.8 |  0.08 |  0.1 |  0.17 |  9.42 | 13.71 |  1.24 |  1.1 | 0.12 | 0.04 | 0.95 |  0.1 | 17.38 |
+  |  1.46 | 1.48 | 2.92 | 2.73 |  0.49 | 1.01 |  2.12 |  0.24 |  0.92 | 0.14 | 1.32 |  6.63 | 6.68 | 25.09 |  3.62 |   3.5 |  0.0 | 14.42 |  4.12 |  4.37 |  6.47 | 2.35 | 3.08 | 0.47 |  0.8 | 0.19 |  3.39 |
+  | 12.28 | 0.15 | 0.35 | 0.44 | 15.19 |  0.1 |  0.39 |  4.69 |  6.12 | 0.05 |  0.1 |  8.78 | 0.54 |  0.25 | 11.45 |  4.93 |  0.0 | 15.15 |  3.26 |  4.44 |  3.65 | 0.05 |  0.0 |  0.0 | 0.59 | 0.05 |  7.01 |
+  |  0.81 |  0.0 | 0.81 |  0.0 |   0.0 |  0.0 |   0.0 |   0.0 |  0.81 |  0.0 |  0.0 |  2.44 |  0.0 |   0.0 |   0.0 |   0.0 |  0.0 |   0.0 |  0.81 |  1.63 | 83.74 |  0.0 |  0.0 |  0.0 |  0.0 |  0.0 |  8.94 |
+  |  12.2 |  0.7 | 1.77 | 2.67 | 20.56 | 0.51 |  1.58 |  0.14 |  11.5 | 0.02 | 1.26 |  1.09 | 2.24 |  2.06 |  8.44 |  0.74 | 0.02 |  2.35 |  6.58 |  4.75 |  2.02 | 1.05 | 0.25 | 0.02 | 3.13 | 0.02 | 12.33 |
+  |  2.75 | 0.24 | 2.81 |  0.2 |   9.3 | 0.24 |  0.14 |  4.01 |  7.08 |  0.0 | 0.73 |  1.04 | 0.75 |  0.26 |  3.62 |  3.17 | 0.14 |  0.14 |  5.15 |  12.7 |  4.09 | 0.04 | 0.55 |  0.0 | 0.69 |  0.0 | 40.18 |
+  |  7.96 | 0.19 | 0.84 | 0.11 | 16.76 | 0.13 |  0.08 |  5.38 |  20.9 |  0.0 | 0.04 |  1.41 | 0.59 |  0.27 |  6.43 |  0.21 |  0.0 |  7.42 |  5.84 |  2.56 |  3.49 | 0.13 | 0.38 | 0.02 | 2.88 | 0.02 | 15.97 |
+  |  5.21 | 3.71 |  4.8 | 2.99 |  4.49 | 0.83 |  3.35 |  0.05 |  4.44 |  0.1 | 0.52 |  7.32 | 5.83 | 11.96 |  0.36 |  3.61 |  0.1 | 16.35 | 11.19 |  9.49 |  0.05 | 0.15 |  0.1 | 0.26 | 0.41 | 0.41 |  1.91 |
+  | 13.66 | 0.24 | 0.59 | 0.35 | 48.88 |  0.0 |  0.24 |  0.12 | 24.15 |  0.0 |  0.0 |   0.0 |  0.0 |   0.0 |  6.95 |  0.24 |  0.0 |  0.12 |  0.47 |  0.24 |  0.24 |  0.0 |  0.0 | 0.12 | 0.47 |  0.0 |  2.94 |
+  | 20.41 | 0.63 | 0.47 | 0.47 | 16.46 | 0.47 |   0.0 |  4.91 | 16.46 | 0.32 | 0.16 |  1.42 | 0.32 |  4.91 |  9.65 |  0.47 |  0.0 |  2.85 |  5.06 |  0.95 |  0.16 | 0.16 | 0.47 | 0.16 | 0.79 |  0.0 | 11.87 |
+  |  6.82 | 0.38 | 9.09 |  0.0 |  9.09 | 0.38 |   0.0 |  2.27 |  9.47 |  0.0 |  0.0 |  0.38 | 0.76 |  0.38 |  0.76 | 20.08 |  0.0 |   0.0 |   0.0 | 12.12 |  3.03 |  0.0 |  0.0 | 1.52 | 1.52 |  0.0 | 21.97 |
+  |  1.75 | 0.97 | 1.36 | 0.78 |  4.67 |  0.0 |  0.19 |   0.1 |  2.34 |  0.0 |  0.0 |  1.56 | 2.24 |  1.56 |  2.04 |  1.46 |  0.0 |  1.07 |  4.77 |  0.97 |  0.49 |  0.0 | 0.68 |  0.0 |  0.0 | 0.19 | 70.79 |
+  | 16.18 | 0.74 |  0.0 | 1.47 | 32.35 |  0.0 |   0.0 |   0.0 | 10.29 |  0.0 |  0.0 |  1.47 |  0.0 |   0.0 | 11.76 |   0.0 |  0.0 |  0.74 |  0.74 |   0.0 |  3.68 |  0.0 |  0.0 |  0.0 | 2.94 | 5.15 |  12.5 |
+  |     0 |    0 |    0 |    0 |     0 |    0 |     0 |     0 |     0 |    0 |    0 |     0 |    0 |     0 |     0 |     0 |    0 |     0 |     0 |     0 |     0 |    0 |    0 |    0 |    0 |    0 |     0 |
+  
+  #+begin_html
+  </details>
+  #+end_html
++ 其中关于绘图的代码:
+  在输出的时候为了美观起见, 最多只输出前 3 (=n = 3=) 个可能的 arc.
+  且并不输出休止符.
+
+  #+name: ruby-count-of-english-words-process-output
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports code
+    n = 3
+    res = ""
+
+    26.times do |alphabet|
+      index = -1
+      res << (trans[alphabet][0...-1]
+                .map { |percent| [percent, (index += 1)] }
+                .sort_by { |x| x[0] }
+                .reverse)[0...n]
+               .map { |item| "#{(alphabet + 97).chr} -> #{(item[1] + 97).chr} [label = \"#{item[0]}\"];\n" }
+               .join("")
+    end
+
+    res
+  #+end_src
+
+  最终得到的图的结果:
+
+  #+name: count-of-english-words
+  #+caption: Super messy FSTN of English words
+  #+header: :var in=ruby-count-of-english-words-process-output
+  #+header: :file ../_img/reading/lisp-nlp/cout-of-english-words.svg
+  #+begin_src dot :exports none
+    digraph networks {
+      layout = circo;
+      $in
+    }
+  #+end_src
+
+  #+attr_org: :width 0.618
+  #+RESULTS: count-of-english-words
+  [[file:../_img/reading/lisp-nlp/cout-of-english-words.svg]]
+
+  [[{{ site.github.url }}/_img/reading/lisp-nlp/cout-of-english-words.svg]]
+
+  没什么想法美化了, 只能说真的丑啊...
+  看来之后还要想想办法钻研一下如何出漂亮的图.
++ 造词部分则通过如下的方式来实现
+
+  #+begin_html
+  <details><summary>准备的代码</summary>
+  #+end_html
+  
+  #+name: ruby-count-of-english-words-prepare-for-generate
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports code
+    require 'pickup' # https://github.com/fl00r/pickup
+
+    hashed_trans = {}
+
+    trans.each_with_index do |tos, from_index|
+      hashed_tos = {}
+
+      tos.each_with_index do |possibility, to_index|
+        hashed_tos[(to_index + 97).chr] = possibility
+      end
+
+      hashed_trans[(from_index + 97).chr] = Pickup.new(hashed_tos)
+    end
+
+    word = -> (iter = 0, char = '') {
+      c = (rand(26) + 97).chr
+      if iter == 0
+        c + word.call(1, c)
+      elsif iter > 10
+        c
+      else
+        c = hashed_trans[char].pick
+        c == '{' ? "" : c + word.call(iter + 1, c)
+      end
+    }
+  #+end_src
+
+  注: 其中使用了一个叫做 =pickup= 的 gem,
+  原因是我懒得写随机生成的算法了. 
+
+  #+begin_html
+  </details>
+  #+end_html
+  
+  来输出一段话吧:
+
+  #+name: ruby-count-of-english-words-generate
+  #+header: :session ruby-count-of-english-words
+  #+begin_src ruby :exports both
+    10.times.map { word.call }.join(" ")
+  #+end_src
+
+  #+RESULTS: ruby-count-of-english-words-generate
+  : thice baddicana b ran gug on f ronstintotag veacadonamaw erarivore
+  感觉有点样子了. 
+  
+不过这样的方法还是太粗鲁了一些. (有一种概率论里面的无记忆性掷色子的感觉. )
+一些可能可以改进的方向:
++ 增加对前一字母的判断
++ 细化对字母的一些处理, 比如上面的计数部分就做得不是很好
++ 增加对开始标记的处理 (我真的不想再重新写了... )
+
+#+begin_html
+</details>
+#+end_html
+
+和上面的题外话类似的, 也能够根据上面的方式来进行处理生成. 
+
+*[2023-1-25]*: 先暂停一下, 去搞一个
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+</details>
+#+end_html
+
+* 附录
+** 黑话表
+| ATN    | augmented transition network          |
+| CF-PSG | context-free phrase structure grammar |
+| CFL    | context-free language                 |
+| DAG    | directed acyclic graph                |
+| DBQ    | database query (language)             |
+| DCG    | definite clause grammar               |
+| FSA    | finite-state automaton                |
+| FST    | finite-state transducer               |
+| FSTN   | finite-state transition network       |
+| MRL    | meaning representation language       |
+| MT     | machine translation                   |
+| NATR   | network and transducer representation |
+| PA     | pushdown automation                   |
+| PT     | pushdown transducer                   |
+| RTN    | recursive transition network          |
+| WFC    | word form clause                      |
+| WFST   | well-formed substring table           |
+
+** 一些无关的代码
+
+#+begin_html
+<details><summary>简单的自动机绘图代码</summary>
+#+end_html
+
+#+name: ruby-fstn-dot-parser
+#+begin_src ruby
+  nodes = /(Initial|Final)\s+((((\w+),\s*)|\w+)+)/
+  arcs = /From\s+(\w+)\sto\s+(\w+)\s+by\s+(\w+|#)/
+
+  res = "  rankdir = LR;\n" + \
+        "  node [shape = point]; qi qa;\n" + \
+        "  node [shape = circle];\n"
+
+  raw.each_line do |line|
+    if line.match(nodes)
+      m = Regexp.last_match
+      type, node_names = m[1], m[2]
+
+      if type == "Initial"
+        node_names.split(/,\s*/).each do |node_name|
+          res << "  qi -> #{node_name};\n" unless node_name.empty?
+        end
+      else # type == "Final"
+        node_names.split(/,\s*/).each do |node_name|
+          res << "  #{node_name} -> qa;\n" unless node_name.empty?
+        end
+      end
+    elsif line.match(arcs)
+      m = Regexp.last_match
+      from, to = m[1], m[2]
+
+      if m[3] == '#'
+        label = ";\n"
+      else
+        label = " [label = \"#{m[3]}\"];\n"
+      end
+      res << "  \"#{from}\" -> \"#{to}\"#{label}"
+    end
+  end
+
+  return res
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_comment
+注: 这段在 Ruby and EBNF 里面介绍. 
+#+begin_html
+<details><summary>简单的自动机处理代码</summary>
+#+end_html
+
+注: 首先是用来匹配的代码, 只考虑了比较规范的书写, 其他的书写方式没有考虑,
+并且因为最近才刚学 ([[https://ruby-china.org/topics/41296][参考]]), 所以对 EBNF 的语法并不是很熟练.
+写得一般. 又臭又长. 在线的版本在 [[https://bnfplayground.pauliankline.com/?bnf=%3CFSTN%3E%20%3A%3A%3D%20(%3Cnamed_network%3E%0A%20%20%20%20%20%20%20%7C%20%3Cabbreviates%3E%20%20%20%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%7C%20%3Copt_space%3E%20%3Cnew_line%3E)%2B%20%0A%0A%3Cnamed_network%3E%20%3A%3A%3D%20%3Copt_space%3E%20%22Name%22%20%3Cspace%3E%20%3Cvalid_name%3E%20%3Copt_space%3E%20%22%3A%22%20%3Copt_space%3E%20%3Cnew_line%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(%3Cdescriptions%3E%20(%3Copt_space%3E%20%3Cnew_line%3E)*)*%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(%3Cdescriptions%3E%20%3Copt_space%3E)%20%22.%22%0A%3Cabbreviates%3E%20%3A%3A%3D%20%3Copt_space%3E%20%3Cvalid_name%3E%20%3Cspace%3E%20%22abbreviates%22%20%3Copt_space%3E%20%22%3A%22%20%3Copt_space%3E%20%3Cnew_line%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cindent%3E%20%3Carrays%3E%0A%0A%3Cdescriptions%3E%20%3A%3A%3D%20%3Cindent%3E%20(%3Cnodes%3E%20%7C%20%3Carcs%3E)%0A%3Cnodes%3E%20%3A%3A%3D%20(%22Initial%22%20%7C%20%22Final%22)%20%3Cspace%3E%20%3Carray%3E%0A%3Carcs%3E%20%3A%3A%3D%20%22From%22%20%3Cspace%3E%20%3Cvalid_node_name%3E%20%3Cspace%3E%0A%20%20%20%20%20%20%20%22to%22%20%3Cspace%3E%20%3Cvalid_node_name%3E%20%3Cspace%3E%0A%20%20%20%20%20%20%20%22by%22%20%3Cspace%3E%20%3Cvalid_label%3E%0A%0A%3Carray%3E%20%3A%3A%3D%20(%3Cvalid_name%3E%20%3Copt_space%3E%20%22%2C%22%20%3Copt_space%3E)*%20%3Cvalid_name%3E%0A%3Carrays%3E%20%3A%3A%3D%20%3Carray%3E%20%3Copt_space%3E%20%22.%22%0A%0A%3Cvalid_char%3E%20%3A%3A%3D%20%5B0-9%5D%20%7C%20%5Ba-z%5D%20%7C%20%5BA-Z%5D%20%7C%20%22-%22%20%7C%20%22!%22%0A%3Cvalid_name%3E%20%3A%3A%3D%20%3Cvalid_char%3E%2B%0A%3Cvalid_node_name%3E%20%3A%3A%3D%20%5B1-9%5D%20%5B0-9%5D*%0A%3Cvalid_label%3E%20%3A%3A%3D%20%22%23%22%20%7C%20%3Cvalid_char%3E%2B%0A%0A%3Cindent%3E%20%3A%3A%3D%20%22%5Ct%22%2B%20%7C%20%3Cspace%3E%0A%3Cspace%3E%20%3A%3A%3D%20%22%20%22%2B%0A%3Copt_space%3E%20%3A%3A%3D%20%22%20%22*%0A%3Cnew_line%3E%20%3A%3A%3D%20%22%5Cn%22%2B&name=FSTN][这里]], 不过现在我觉得可能这个 EBNF 写得不是很好. 
+
+#+name: fstn-ebnf-description
+#+begin_src org
+  FSTN ::= (named_network
+         | abbreviates           
+         | opt_space new_line)+ 
+
+  named_network ::= opt_space "Name" space valid_name opt_space ":" opt_space new_line
+                  (descriptions (opt_space new_line)*)*
+                  (descriptions opt_space) "."
+  abbreviates ::= opt_space valid_name space "abbreviates" opt_space ":" opt_space new_line
+                indent arrays
+
+  descriptions ::= indent (nodes | arcs)
+  nodes ::= ("Initial" | "Final") space array
+  arcs ::= "From" space valid_node_name space
+         "to" space valid_node_name space
+         "by" space valid_label
+
+  array ::= (valid_name opt_space "," opt_space)* valid_name
+  arrays ::= array opt_space "."
+
+  valid_char ::= [0-9] | [a-z] | [A-Z] | "-" | "!"
+  valid_name ::= valid_char+
+  valid_node_name ::= [1-9] [0-9]*
+  valid_label ::= "#" | valid_char+
+
+  indent ::= "\t"+ | space
+  space ::= " "+
+  opt_space ::= " "*
+  new_line ::= "\n"+
+#+end_src
+
+(题外话: 写这个的时候我就想吐槽一下 Lisp 的强大,
+因为语法太简单了, 并且有 marco 这样变态的操作,
+用 Lisp 来实现这个估计要比我用现在这种方法实现得要轻松很多...
+下次用 Racket 来吧... )
+
+有上面的作为标准语法, 然后用 Ruby 中的 [[https://github.com/dryruby/ebnf][ebnf]] gem:
+
+#+name: ruby-fstn-ebnf-parser-load-gem
+#+header: :var FSTN_RULES = fstn-ebnf-description
+#+header: :session ruby-fstn-ebnf-parser
+#+begin_src ruby :export both
+  require 'ebnf' # https://github.com/dryruby/ebnf
+
+  EBNF.parse(FSTN_RULES).to_sxp
+#+end_src
+
+#+begin_html
+<details><summary>输出结果</summary>
+#+end_html
+
+#+RESULTS: ruby-fstn-ebnf-parser-load-gem
+#+begin_example
+(
+ (terminal FSTN (plus (alt named_network abbreviates (seq opt_space new_line))))
+ (rule named_network
+  (seq opt_space "Name" space valid_name opt_space ":" opt_space new_line
+   (star (seq descriptions (star (seq opt_space new_line))))
+   (seq descriptions opt_space) "." ))
+ (rule abbreviates
+  (seq opt_space valid_name space "abbreviates" opt_space ":" opt_space
+   new_line indent arrays ))
+ (rule descriptions (seq indent (alt nodes arcs)))
+ (rule nodes (seq (alt "Initial" "Final") space array))
+ (rule arcs
+  (seq "From" space valid_node_name space "to" space valid_node_name space "by"
+   space valid_label ))
+ (rule array (seq (star (seq valid_name opt_space "," opt_space)) valid_name))
+ (rule arrays (seq array opt_space "."))
+ (rule valid_char (alt (range "0-9") (range "a-z") (range "A-Z") "-" "!"))
+ (rule valid_name (plus valid_char))
+ (rule valid_node_name (seq (range "1-9") (star (range "0-9"))))
+ (rule valid_label (alt "#" (plus valid_char)))
+ (rule indent (alt (plus "\\t") space))
+ (rule space (plus " "))
+ (rule opt_space (star " "))
+ (rule new_line (plus "\\n")))
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: ruby-fstn-ebnf-parser-define-class
+#+header: :session ruby-fstn-ebnf-parser
+#+begin_src ruby
+  class FSTN
+    include EBNF::PEG::Parser
+    attr_reader :ast, :abbreviates, :networks
+
+    production(:abbreviates) do |value|
+      puts value
+    end
+
+    def initialize
+      @ast = EBNF.parse(FSTN_RULES).make_peg.ast
+      @abbreviates = {}
+      @networks = {}
+      @terminal = nil
+    end
+  end
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+#+end_comment
