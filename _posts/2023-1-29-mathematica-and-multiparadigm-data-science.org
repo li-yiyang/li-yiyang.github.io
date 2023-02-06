@@ -1,0 +1,1058 @@
+#+layout: post
+#+title: Mathematica and MultiParadigm Data Science
+#+date: 2023-1-29
+#+options: _:nil ^:nil
+#+math: true
+#+categories: mathematica
+* 非常功利的理由
+之后要用来分析数据, 所以学一些备用.
+
+教程是 Wolfram U 中的 [[https://www.wolfram.com/wolfram-u/courses/data-science/multiparadigm-data-science/][MultiParadigm Data Science]].
+本文的作用就是用来速查的, 尽可能忠实地复制原文,
+并随便添加一些注释 (在使用过后). 
+
+What is multiparadigm data science:
+
+#+begin_quote
+Multiparadigm Data Science is a new approach of
+using Al and modern analytical techniques, automation
+and human-data interfaces to arrive at better answers
+with flexibility and scale.
+
+from [[https://www.mpdatascience.com][Multiparadigm Data Science]]
+#+end_quote
+
+* Build A Project Overview
+This part is an overview of how the data analysis is done.
+
+#+begin_quote
+Data science projects attempt to use data to answer certain
+questions so that you can derive some useful insights from
+the answers and act on them. A flexible, modular, iterative
+workflow can serve as a roadmap in this quest to get from
+data-driven questions to actionable insights.
+#+end_quote
+
++ Questions
++ Wrangle
++ Explore
++ Analyze
++ Communicate
+
+** Question
++ What can be learned from the data?
+  + How many ...?
+  + What ...?
+  + Who ...?
++ Who wants to know?
+  (which means stands at the reader's view and interests.)
+
+** Wrangle
+This part is the data gathering and pre-processing,
+which is about gathering the data and unifying the data for
+further processing.
+
++ *Data Gathering* 获取数据
++ *Pre-process* 对数据进行预处理, 即:
+  + *Beautify Data Struct* 美化数据格式
+  + *Strip Unnecessary Data* 剔除不必要的数据
+  + *Add Pivots to Important Data* 增加关键的数据节点
+
+会使用到的方法和知识:
++ *Key-Value Pairs* 在 Ruby 里面叫做 [[https://ruby-doc.org/3.2.0/Hash.html][Hash]].
+  在 Mathematica 中为 [[https://reference.wolfram.com/language/guide/Associations.html][Associations]]. 通过:
+
+  #+name: key-value-pairs-associations
+  #+begin_src matheamtica
+    <| key1 -> value1, key2 -> value2, ... |>
+  #+end_src
+
+  这样的形式来组织构建.
++ *String Modification* 字符串处理. ([[https://reference.wolfram.com/language/guide/StringManipulation.html][String Manipulation]])
+  + [[https://reference.wolfram.com/language/ref/StringCases.html][StringCases]] Find cases of string patterns.
+
+    但是不得不说, 其形式是真的难看:
+
+    #+name: stringcases-rules
+    #+begin_src mathematica
+      StringCases[str, patt] (* equal to StringCases[patt][str] *)
+      StringCases[str, lhs -> rhs] (* replace matched lhs by rhs *)
+    #+end_src
+
+    其中, =patt= 的规则类似于 [[https://ruby-doc.org/3.2.0/Regexp.html][Regexp (Ruby)]]
+    (在 MMA 中也有对应 [[https://reference.wolfram.com/language/tutorial/StringsAndCharacters.html#16225][Regexp (MMA)]]). 简单来说是用 =~~= 连接,
+    用字符串 (如 ="a"= ), 字符集合 (如 =DigitCharacter= ),
+    匹配的函数符号 (如 =x_= 或者 =(x: WordCharacter)=) 来组成.
+    使用 =..= 来表示匹配多字符.
+
+    #+name: stringcases-example
+    #+begin_src mathematica
+      txt = "This is an example text @wolfram.";
+      StringCases[txt,
+	"@"~~u:(LetterCharacter | DigitCharacter | "-")..~~
+	  (WhitespaceCharacter | PunctuationCharacter | EndOfString) :> u]
+    #+end_src
+  + [[https://reference.wolfram.com/language/ref/StringReplace.html][StringReplace]] Make replacements for string patterns.
+
+    类似于 Ruby 里面的 [[https://ruby-doc.org/3.2.0/String.html#method-i-gsub][String#gsub]] 方法.
+  + [[https://reference.wolfram.com/language/ref/StringDelete.html][StringDelete]] 类似于查找并删除. 用于去掉非必需的字符串.
++ *List Manipulation* 列表处理. ([[https://reference.wolfram.com/language/guide/ListManipulation.html][List Manipulation]])
+  + [[https://reference.wolfram.com/language/ref/Select.html?q=Select][Select]] Pick out all elements of list which =crit= is =True=.
+    =Select[list, crit]= 或者 =Select[crit][list]=.
+  + [[https://reference.wolfram.com/language/ref/Sort.html?q=Sort][Sort]], [[https://reference.wolfram.com/language/ref/ReverseSort.html?q=ReverseSort][ReverseSort]]
+  + [[https://reference.wolfram.com/language/ref/Count.html][Count]] Gives the number of elements.
+  + [[https://reference.wolfram.com/language/ref/DeleteDuplicates.html][DeleteDuplicates]]
++ *Graph and Relations* 关系网络.
+  ([[https://reference.wolfram.com/language/guide/GraphsAndNetworks.html][Graphs and Networks]], [[https://reference.wolfram.com/language/guide/GraphConstructionAndRepresentation.html][Grap Construction and Representation]])
+  + [[https://reference.wolfram.com/language/ref/SimpleGraph.html][SimpleGraph]] Gives the underlying simple graph from the graph.
++ 一些不太好分类的
+  + [[https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud][WordCloud]] Generate a word cloud.
+  + [[https://reference.wolfram.com/language/ref/Interpreter.html?q=Interpreter][Interpreter]] Something like a parser on specific rules.
+
+    比如用来处理地理数据 =Interpreter["ComputedLocation"]=.
+    (注: 使用 [[https://reference.wolfram.com/language/ref/GeoListPlot.html][GeoListPlot]] 可以在地图上输出地点,
+    [[https://reference.wolfram.com/language/ref/GeoHistogram.html][GeoHistogram]] 可以输出地图上的数据点的强度. )
+
+** Explore
+By this stage, use the previous stage of *Wrangle* to visualize
+the data gathered and while trying to answer the questions
+asked at *Question* stage, figure out more questions of the data.
+(which also means returning to the *Question* stage)
+
+Thus the visualization data methods:
++ [[https://reference.wolfram.com/language/ref/DateHistogram.html?q=DateHistogram][DateHistogram]] Plots a histogram of the dates.
+
+  根据日期绘制分布. 比较有用的参数:
+  + [[https://reference.wolfram.com/language/ref/DateReduction.html][DateReduction]] 用于约化计数的范围.
+    传入的参数范围为 [[https://reference.wolfram.com/language/ref/DateValue.html][DateValue]] (="Year"=, ="Month"= 等).
++ [[https://reference.wolfram.com/language/ref/Histogram.html][Histogram]] Plots a histogram of the values.
+
+  比较有用的参数:
+  + [[https://reference.wolfram.com/language/ref/ChartLayout.html][ChartLayout]] Overall layout:
+    单参数可传入 ="Overlapped"= (重叠两张表来显示),
+    ="Stacked"= (两张图表数值会叠在一起).
+    或者可以通过 ="Column"=, ="Row"= 等传入更多的参数,
+    但是用处感觉不是很大. 
+  + [[https://reference.wolfram.com/language/ref/ChartLegends.html][ChatLegends]] 图例. 
++ [[https://reference.wolfram.com/language/ref/Graph.html][Graph]] Yields a graph.
+
+通过简单的数据处理和可视化来表现数据的性质和特征.
+
+** Analyze
+To answer the question asked at the stage of *Question*,
+methods could be applied to the data.
+
++ How many ...?
+  + by *Simply Counting*
+  + by *Comparision Charts*
+    + [[https://reference.wolfram.com/language/ref/Histogram.html][Histogram]]
+    + [[https://reference.wolfram.com/language/ref/ArrayPlot.html][ArrayPlot]] Generate a plot in which the values in an array
+      are shown in a discrete array of squares.
+
+      可以和 Github 上的小绿图做个类比.
+      可以用来分析一个在二维分布的数据的频次.
+  + by *Predict the Future Data*
+    + [[https://reference.wolfram.com/language/ref/Predict.html][Predict]] generates a [[https://reference.wolfram.com/language/ref/PredictorFunction.html][PredictorFunction]] based on example
+      input-output pairs given.
++ What ...?
+  + by *String Matching and Counting*
+  + by *Clustering* [[https://reference.wolfram.com/language/guide/ClusterAnalysis.html][Cluster Analysis]]
+  + by *Classification* (assigning labels to data)
+    + [[https://reference.wolfram.com/language/ref/Classify.html][Classify]]
+  + by *Graphs and Networks* (show who is connected to whom, aka,
+    the relationships).
+    + [[https://reference.wolfram.com/language/ref/FindGraphCommunities.html][FindGraphCommunities]] finds communities in the graph
+
+** Communicate
+#+begin_quote
+*Things to Remember*: (How to tell the story)
++ What is the story your audience is interested in?
++ How can you recreate the story easily?
+  + Reproducible analysis
+  + Comparative analysis
+#+end_quote
+
++ Easy to read and see the results.
+  + Visualization
+    + [[https://reference.wolfram.com/language/ref/Grid.html][Grid]] (Used to layout the graphics)
+    + [[https://reference.wolfram.com/language/ref/TabView.html][TabView]] (Used to add interactability for flat data)
++ Easy to redo the results.
++ To convince the readers.
++ Notebook as an essay, report slides, cloud publishment,
+  report template. (*MMA only*)
+
+* Get Your Data into Shape
+This part is mainly about the *Wrangle* part,
+which could be done by:
++ Handle data in different formats from different sources
++ Reshape the data into different structures
++ Deal with messy data
++ Extract useful features from raw data
++ Reduce the dimensionality of high-dimensional data
+
+** Handling Different Types of Data
+Note: Before wrangling the Real-world data,
+you have to get them first (of course):
++ Repositories of curated data
+
+  With Curated Data, it is easier to produce the
+  data (or even skip the wrangle part.)
+  + [[https://datarepository.wolframcloud.com][Wolfram Data Repository]]: [[https://reference.wolfram.com/language/ref/ResourceData.html][ResourceData]]
+    Gives the primary content of the specified resource.
+  + [[https://www.wolfram.com/knowledgebase/][Wolfram Knowlegebase]]: [[https://reference.wolfram.com/language/guide/EntityTypes.html][Entity Types]].
+  + [[https://reference.wolfram.com/language/ref/FinancialData.html][FinancialData]]: gives the last known price or value for the
+    financial entity specified by name.
+  + [[https://reference.wolfram.com/language/ref/WeatherData.html][WeatherData]]: gives the most recent measurement for the
+    specified weather property at the location.
++ Flat files
+  + [[https://reference.wolfram.com/language/ref/Import.html][Import]] Imports data from source.
+    And the [[https://reference.wolfram.com/language/ref/$ImportFormats.html][$ImportFormats]] is a list of currently supported
+    import formats.
+
+    If passing in a URL, the =Import= function can be
+    used to parse the specified data format of the URL.
+    For example:
+
+    #+name: mma-import-from-url
+    #+begin_src mathematica
+      Import["https://li-yiyang.github.io/manga/animatation-review/", "Images"]
+    #+end_src
+
+    You can get a list of images (depending on your network
+    connectivity...)
+
+    [[{{ site.github.url }}/_img/MMA/MMA-Import-Images-example-of-my-blog.png]]
+    
+  + [[https://reference.wolfram.com/language/ref/Save.html][Save]] appends definitions associated with a specified symbol
+    to a file. And [[https://reference.wolfram.com/language/ref/DumpSave.html][DumpSave]] write definitions associated
+    with a symbol to a file in internal Wolfram System format.
+
+    After saving, use [[https://reference.wolfram.com/language/ref/FindFile.html][FindFile]] to find the file path saved.
+    With [[https://reference.wolfram.com/language/ref/Get.html][Get (<<)]] can read in a file. 
++ Databases [[https://reference.wolfram.com/language/guide/DatabaseConnectivity.html][Database Connectivity]]
+  + [[https://reference.wolfram.com/language/DatabaseLink/guide/SQLDatabaseOperations.html][DatabaseLink SQL Operations]] =Needs["DatabaseLink"]=
+
+    #+begin_src mathematica
+      conn = OpenSQLConnection["..."]
+
+      SQLTableNames[conn]
+
+      SQLSelect[conn, ...] (* or, SQLExecute[] *)
+    #+end_src
+  + [[https://reference.wolfram.com/language/ref/RelationalDatabase.html][RelationalDatabase]] Represents schema information about
+    a relational database.
++ External APIs
+  + comes alone Wolfram: [[https://reference.wolfram.com/language/ref/ServiceConnect.html][ServiceConnect]] Creates a
+    connection to an external service, which are
+    listed by [[https://reference.wolfram.com/language/ref/$Services.html][$Services]] or described at
+    [[https://reference.wolfram.com/language/guide/ListingOfSupportedExternalServices.html][Listing of Supported External Services]].
+
+    +乐, 一堆国内不好用的.+
+  + [[https://reference.wolfram.com/language/ref/WebSearch.html][WebSearch]] Gives a dataset of the top web search results
+    for the specified literal string.
+  + [[https://reference.wolfram.com/language/ref/WebImageSearch.html][WebImageSearch]] Gives a list of thumbnails of
+    the top web image search results for the specified literal
+    string.
+  + [[https://reference.wolfram.com/language/ref/WikipediaData.html][WikipediaData]] Gives the plain text of the specified
+    Wikipedia article.
+  + Publicly Available Data
+    + [[https://data.stats.gov.cn][国家统计局]]
+      +不过离谱的是网站证书过期了...+
+    + [[https://opendata.chinadep.com/#/][China Open Data]]
+      +类似一个整合网站, 不过数据不一定全部有效+
+    + [[https://data.gov][US Government's Open Data]]
+    + [[https://data.nasa.gov/browse][NASA's Open Data Portal]]
+    + [[https://archive.ics.uci.edu/ml/index.php][UCI Machine Learning Repository]]
+    + [[https://www.kaggle.com/datasets][Kaggle Data Science Contests]]
+    + [[https://data.fivethirtyeight.com][Five Thirty Eight]]
++ Web scraping
+
+#+begin_html
+<details><summary>吐槽</summary>
+#+end_html
+
+不知道该说什么好... Mathematica 难道真的是一个非常小众的东西么?
+网络上的资料基本上全部都是官方的.
++尽管可能是因为大家都在用... 所以比较低调?+
+
+并且连接到数据库真的好累... 可能是服务器不在国内的缘故吧.
+一个曲线救国的方式就是使用梯子, 在
+=Mathematica -> Settings -> Internet & Mail=
+里面设置 Proxy Settings. 用自己的梯子来. 
+
+#+begin_html
+</details>
+#+end_html
+
+** Restructuring Data
+#+begin_quote
++ Data is systematically stored
++ Data elements are arranged in a structured way
+
+from [[https://blog.wolfram.com/2017/04/20/launching-the-wolfram-data-repository-data-publishing-that-really-works/][Launching the Wolfram Data Repository: Data Publishing that Really Works]]
+#+end_quote
+
+#+begin_html
+<details><summary>吐槽</summary>
+#+end_html
+
+每次看 Stephen Wolfram 的博客的时候,
+总有一种好像很牛逼又好像很一般的感觉.
+有一种说不上来的敬佩感.
+
+尽管有一种虽然这个问题很简单, 但是为什么要这么做的困惑.
+有点像是之前计算机科学导论的课上的感觉.
+(尽管我那门课可能上得不太行, 但是里面的知识我觉得都是很有用的)
+
+可能这就是牛逼的人的一种思考方式么. 
+
+#+begin_html
+</details>
+#+end_html
+
+Here are some helpful organized data types:
++ [[https://reference.wolfram.com/language/ref/List.html][List]]: [[https://reference.wolfram.com/language/guide/ListManipulation.html][List Manipulation]]
++ [[https://reference.wolfram.com/language/ref/Association.html][Association]]: [[https://reference.wolfram.com/language/guide/Associations.html][Associations]]
++ [[https://reference.wolfram.com/language/ref/Dataset.html][Dataset]]: [[https://reference.wolfram.com/language/guide/ComputationWithStructuredDatasets.html][Computation with Structured Datasets]]
++ [[https://reference.wolfram.com/language/ref/EntityStore.html][EntityStore]]: [[https://reference.wolfram.com/language/guide/KnowledgeRepresentationAndAccess.html][Knowledge Representation & Access]]
++ [[https://reference.wolfram.com/language/ref/TimeSeries.html][TimeSeries]]: [[https://reference.wolfram.com/language/guide/TimeSeries.html][Time Series Processing]]
+
+Some more useful data types I think:
+
+*** Lists
+Most data imported are in the forms of List,
+and many built-in data structures (Vector, Matrix, ...)
+are based on List.
+
++ Read List
+  + [[https://reference.wolfram.com/language/ref/First.html][First]] Gives the first element of exp.
+
+    And like =car= and =cdr= in lisp ([[https://www.gnu.org/software/emacs/manual/html_node/eintr/car-_0026-cdr.html][Elisp]]),
+    the First function has a relative function: [[https://reference.wolfram.com/language/ref/Rest.html][Rest]],
+    which gives the rest element with first one removed.
+  + [[https://reference.wolfram.com/language/ref/Part.html][Part]] =expr[[]]= can be used to get part of =expr=.
+    + ={a, b, c}[[1]]= will return =a=.
+      (start counting from =1=, and the negative index
+      will count backward.)
+    + ={a, b, c}[[2;;3]]= likes python's [[https://docs.python.org/3/library/functions.html#slice][slice]],
+      which could be written as
+      =list[[start ;; stop ;; step]]= .
+    + ={ {a, 1, 0}, {b, 2, 1} }[[All, {1, 3}]]=
+      will return ={ {a, 0}, {b, 1} }=, which could be
+      a way to extract nested list data.
++ Process List
+  + [[https://reference.wolfram.com/language/ref/GatherBy.html][GatherBy]] Gathers into sublist each set elements
+    in =list= that gives the same value when =f= is
+    applied. =Gatherby[list, f]=.
+  + [[https://reference.wolfram.com/language/ref/Map.html][Map (/@)]] Applies function to each element in list.
++ List Attributes
+  + [[https://reference.wolfram.com/language/ref/Dimensions.html][Dimensions]] Gives a list of dimensions.
+    (kinda like giving the shape of a list)
+  + [[https://reference.wolfram.com/language/ref/Length.html][Length]] Gives the number of elements.
+    
+*** Associations
+[[https://reference.wolfram.com/language/guide/Associations.html][Associations]] are key-value pairs.
++ =<|a -> 1, b -> 2|>[a]= It looks more like a function
+  written in mapping rules.
+
+  =<|b -> 2, a -> 1|>[[1]]= will return =2= as the first
+  value of it is =2=.
++ Those List functions would also work on Associations:
+  [[https://reference.wolfram.com/language/ref/Total.html][Total]], [[https://reference.wolfram.com/language/ref/Select.html][Select]], [[https://reference.wolfram.com/language/ref/Sort.html][Sort]]... (just like they are performed on
+  the values ([[https://reference.wolfram.com/language/ref/Values.html][Values]]) of the associations).
++ And the functions with "Key" prefixed will serve on
+  the keys ([[https://reference.wolfram.com/language/ref/Keys.html][Keys]]): [[https://reference.wolfram.com/language/ref/KeySort.html][KeySort]], [[https://reference.wolfram.com/language/ref/KeyMap.html][KeyMap]].
++ To map with Key-Value pairs, use [[https://reference.wolfram.com/language/ref/AssociationMap.html][AssociationMap]].
+  To construct an Association by Keys and Values,
+  use [[https://reference.wolfram.com/language/ref/AssociationThread.html][AssociationThread]] and turn Association to List
+  by [[https://reference.wolfram.com/language/ref/Normal.html][Normal]]. 
+  
+*** Dataset
+[[https://reference.wolfram.com/language/ref/Dataset.html][Dataset]] represents a structured dataset based on a hierarchy
+of lists and associations.
++ by *Definitions*
+
+  #+name: mma-define-dataset
+  #+begin_src mathematica
+    d = Dataset[{
+	    <| "a" -> 1, "b" -> x, "c" -> {1} |>,
+	    <| "a" -> 2, "b" -> y, "c" -> {2, 3} |>}]
+  #+end_src
+  + [[https://reference.wolfram.com/language/ref/SemanticImport.html][SemanticImport]] attempts to import a file semantically to
+    give a *Dataset* object.
++ by *Reading*
+  + Query row: =d[2]=, and rows =d[1;;2]=
+
+    and a row can be processed like an *Association*.
+    (=d[2] // Normal= will return the *Association* form data)
+  + Query with rules: =d[All, "a"]= will return all the column
+    of ="a"=.
+
+    With functions passed in will be applied to the matched column.
+    For example: =d[Total, "a"]= will return the results of applying
+    =Total= to the ="a"= column.
+
+    And pass in select function will apply the function to each
+    row: =d[SortBy[Lengh[#c]&]]=, =d[Select[#a > 1 &], "b"]=
+    (return the ="b"= column, whose ="a"= value is greater than =1=).
+
+    And =d[GroupBy[Key["b"]], Catenate, "c"]=.
+
+    A simple guess is that when queried with rules,
+    functions are applied to each row and finally select the
+    corresponding column. 
+    
+** Dealing with Messy Data
+This part is fighting with the messy data, which often
+comes with data like:
++ Incomplete
++ Inaccurate
++ Irrelevant
+
+For which data cleaning is necessary:
++ Replacing
++ Modifying
++ Removing errors
+
+And a possible checklist for such a process can be:
++ *Type Checking*: Consistent formatting across each row and column
+  + [[https://reference.wolfram.com/language/ref/Head.html][Head]] Gives the head of input.
+  + [[https://reference.wolfram.com/language/ref/InputForm.html][InputForm]] Prints as a version of =expr= suitable
+    for input to the Wolfram Language.
+  + [[https://reference.wolfram.com/language/ref/DeleteDuplicates.html][DeleteDuplicates]] Delete all duplicates from a list.
+    This could strip out the different types of values.
+    Also, [[https://reference.wolfram.com/language/ref/Sort.html][Sort]] values could help with stripping out
+    wrong data.
++ *Range Checking*: Reasonable and informative feature values
+  + Use [[https://reference.wolfram.com/language/ref/Histogram.html][Histogram]] to plot out the data to check.
+  + Use [[https://reference.wolfram.com/language/ref/Select.html?q=Select][Select]] to strip out suspecious values.
++ *Missing Data*: Occurrence of missing data
+  + [[https://reference.wolfram.com/language/ref/DeleteCases.html][DeleteCases]] to match values with ="NA"= missing data,
+    and delete them. /[Note: if you have enough data to delete...]/
+  + [[https://reference.wolfram.com/language/ref/ReplaceAll.html][ReplaceAll (/.)]] Applies a rule or list of rules in an attempt
+    to transform each subpart of an expression =expr=.
+    /[Note: Use it to replace missing value. ]/
+
+    The *replacing* methods are various:
+    + Replace with default values: =data /. "NA" -> 0=
+    + Replace with means:
+      /[Note: Also, select with [[https://reference.wolfram.com/language/ref/Cases.html][Cases]] to provide better means.]/
+      =data /. "NA" -> Mean[Select[data, NumbericQ]]=
+    + Replace with random value [[https://reference.wolfram.com/language/ref/RandomVariate.html][RandomVariate]]:
+      + [[https://reference.wolfram.com/language/ref/NormalDistribution.html][NormalDistribution]]:
+	First get the $\mu$ and $\sigma$ out from good data by
+	[[https://reference.wolfram.com/language/ref/Mean.html][Mean]], [[https://reference.wolfram.com/language/ref/StandardDeviation.html][StandardDeviation]]. Then use =RandomVariate= to generate.
+      + [[https://reference.wolfram.com/language/ref/LearnedDistribution.html][LearnedDistribution]]: Guess a possible distribution.
+    + Replace with [[https://reference.wolfram.com/language/ref/Nearest.html][Nearest]] sample.
+    + Use a Regression or Classification Model to [[https://reference.wolfram.com/language/ref/Predict.html][Predict]]:
+      =Predict[data, Method -> "..."]=.
+    + Treat "missing" as a special value [[https://reference.wolfram.com/language/ref/Missing.html][Missing]]: =Missing[]=
+** Feature Extraction and Dimensionality Reduction
+This part is about extracting useful features from raw data,
+and reducing the dimensionality of high-dimensional data.
+
+*** Feature Extraction
+Transform raw data into numeric vectors to enable:
++ Applying transformations like standardization, rescaling,
+  filtering etc.
++ Performing operations like Principal Component Analysis
++ Calculating distances between samples
++ Feeding data into Neural Networks
+
+To extract data, the following methods could be applied:
++ *Nominal to Numbers*: [[https://reference.wolfram.com/language/ref/FeatureExtract.html][FeatureExtract]] and apply Feature Selection.
+
+  /[Note: About the [[https://en.wikipedia.org/wiki/Feature_(machine_learning)][features]] in machine learning.]/
+
+  通过 =FeatureExtract= 来提取出数据的关键参数,
+  然后通过 Feature Selection 的方式来选择需要的数据以提高效率.
+  常见的选择方式:
+  + *Filter methods*: 类似于给一个打分标准来选择什么样的 feature 更好用.
+  + *Wrapper methods*: 在数据的子集上先进行训练,
+    然后更换子集来看是否训练的模型是匹配的.
+
+    /[Note: 可以使用 [[https://reference.wolfram.com/language/ref/RandomSample.html][RandomSample]], [[https://reference.wolfram.com/language/ref/RandomChoice.html][RandomChoice]] 来从数据集中提取出一个小样本. ]/
+
+    /[Note: 或者是对数据先 *Select* 之后再筛选. ]/
+  + *Embedded methods*
+    
+*** Dimension Reduce
+实际上也可以算是一种 Feature Extract 和 Feature Selection 的组合了.
+
++ [[https://reference.wolfram.com/language/ref/DimensionReduce.html][DimensionReduce]]: 自动尝试将输入进行缩减.
+
+  有一个非常炫酷的例子: 
+
+  #+begin_src mathematica
+  images = Import["https://li-yiyang.github.io/manga/animatation-review/", "Images"];
+  reduced = DimensionReduce[images, 2];
+  ListPlot[MapThread[Labeled[#1, #2] &, {reduced, images}]]
+  #+end_src
+
+  这个例子里面的结果就很炫酷, 可以将输入的图片直接进行一个分类.
+  (当然, 应该不是内容识别, 猜测可能是根据图片的色调之类的进行的区分,
+  因为我输入的这几张图片在颜色上还是有那么一个区分的. )
+
+  [[{{ site.github.url }}/_img/MMA/MMA-DimensionReduce-on-Images-Imported-from-my-Blog.png]]
+
+  并且可以传入各种各样的参数, 所以非常的方便. +尽管都不会+
+
+  类似上面操作的还有 [[https://reference.wolfram.com/language/ref/FeatureSpacePlot.html][FeatureSpacePlot]]. 
+* Get to Know Your Data (EDA: Exploratory Data Analysis)
+*What to do* at this stage:
++ Gain an intuitive understanding of the underlying
+  nature of the dataset
++ Identify relationships between variables
++ Formulate good questions for the actual analysis
+  (as the explorations proceed, those questions can change)
++ Evaluate the quality of data (Data QA)
+
+Questions to *keep in mind* for EDA:
++ Do we have the data as needed for the planned analysis?
+  Is there enough of it?
++ Does the data seem to be accurate? Are there obvious errors?
+  Is the data missing something?
++ Is the data relevant? Are there outliers?
++ Are there some characteristics of the features that
+  attract attention right away?
+
+EDA Checklist:
++ Visualise the data in *feature space*
+  + Try pairs of raw features
+  + Project data to 2 or 3 dimensions
+    through Dimensionality Reduction.
++ Create scatterplot matrices to look at pairwise relationships
+  across all variables
++ Plot distributions of all variables
+  + Start with single distribution - single variable
+  + Go on to joint distributions of pairs of variables
++ Overlay plots and graphs
+  + Compare distribution shapes to histograms
+  + Look for deviations
++ Visualise clusters of samples
+  + Identify outliers
+  + Look for gaps in the data
++ Plot time series data to identify trends
++ Try visualization tools from other disciplines
++ Look at pairwise relationships between variables - correlation
+  
+** Visual Exploration
+#+begin_quote
+We are visual creatures. Visual things stay put, whereas sounds fade.
+
+人是视觉的动物.
+
+by Steven Pinker
+#+end_quote
+
+所以数据可视化对于认识数据极其有帮助. 
+
+*Tools* of EDA:
++ Graphical (visualizations) or Non-graphical (statistics)
+
+  /[Note: a useful website about [[https://datavizcatalogue.com/ZH/][Visualization Plots]]. ]/
+  + [[https://reference.wolfram.com/language/ref/Show.html][Show]] 用于整合输出多幅图
+  + Scatterplots (散点图) [[https://reference.wolfram.com/language/ref/ListPlot.html][ListPlot]]
+
+    通过 [[https://reference.wolfram.com/language/ref/Grid.html][Grid]] 来组织不同的图表来展现不同类别的散点图. 
+  + [[https://reference.wolfram.com/language/ref/BarChart.html][BarChart]] (柱状图, 相对大小), [[https://reference.wolfram.com/language/ref/PieChart.html][PieChart]] (饼状图, 成分占比)
+  + [[https://reference.wolfram.com/language/ref/Histogram.html][Histogram]], 或使用 [[https://reference.wolfram.com/language/ref/PairedHistogram.html][PairedHistogram]] 来进行对比.
+
+    注: 一个绘图的小技巧是在绘图前可以对数据进行一个缩放 [[https://reference.wolfram.com/language/ref/Rescale.html][Rescale]],
+    使得其输出结果更加容易看:
+
+    #+begin_src mathematica
+      dataScaled = With[{
+              dat1 = ({Min[#1], Max[#1]}&)[dur],
+              dat2 = ({Min[#1], Max[#1]}&)[wait]},
+                   (Rescale[#1, dat1, dat2]&) /@ dur];
+    #+end_src
+
+    上面是来自官方的代码, 满满的函数式编程的味道.
+
+    其他的还有: [[https://reference.wolfram.com/language/ref/DensityHistogram.html][DensityHistogram]], [[https://reference.wolfram.com/language/ref/Histogram3D.html][Histogram3D]],
+    [[https://reference.wolfram.com/language/ref/SmoothHistogram.html][SmoothHistogram]], [[https://reference.wolfram.com/language/ref/SmoothHistogram3D.html][SmoothHistogram3D]]. 
+  + [[https://reference.wolfram.com/language/ref/BoxWhiskerChart.html][BoxWhiskerChart]] (箱线图)
+
+    注: 箱线图的 (线) 两端表示最大和最小, 中间的框表示第一四分位数,
+    第三四分位数的一个范围. 最后中间的线表示中位数. 其反应了数据的:
+    中心位置, 散布程度, 对称性的信息.
+  + [[https://reference.wolfram.com/language/ref/DistributionChart.html][DistributionChart]] (默认) 得到的是 [[https://mode.com/blog/violin-plot-examples/][Violin Plots]] (小提琴图).
+
+    注: 类似于箱线图的升级版本. 可以和人口年龄结构分布图类比一下.
+  + [[https://reference.wolfram.com/language/ref/QuantilePlot.html][QuantilePlot]] (Q-Q 图)
+
+    注: 用来表示两个分布之间的差异. 比如默认是和标准分布的差:
+    假设数据样本的概率分布为 $F(X)$ 而标准分布为 $\hat{F}(X)$.
+    那么如果将其差 $F(X) - \hat{F}(X)$ 在一条直线附近绘制出来,
+    就会得到 Q-Q 图.
+
+    #+begin_quote
+    + Do two data sets come from populations with
+      a common distribution?
+    + Do two data sets have a common location and scale?
+    + Do two data sets have similar distributional shapes?
+    + Do two data sets have similar tail behavior?
+
+    from [[https://www.itl.nist.gov/div898/handbook/eda/section3/qqplot.htm][Quantile-Quantile Plot]]
+    #+end_quote
+  + Cluster visualizations 通过对数据进行分类以达到数据可视化的程度.
+    + [[https://reference.wolfram.com/language/ref/FindClusters.html][FindClusters]] 对输入的数据进行一个分类
+    + [[https://reference.wolfram.com/language/ref/ClusteringTree.html][ClusteringTree]] 基于树状图的一个分类,
+      类似的还有 [[https://reference.wolfram.com/language/ref/Dendrogram.html][Dendrogram]] 来绘制. 
+  + TimeSeries plots
+    + [[https://reference.wolfram.com/language/ref/DateListPlot.html][DateListPlot]], [[https://reference.wolfram.com/language/ref/DateListStepPlot.html][DateListStepPlot]]
+  + [[https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud][WordCloud]]
+
+    /[Note: 可以用来分析词条的出现频次.]/
++ Univariate (single variable behavior) or multivariate
+  (combined behavior of two or more variables)
+
+** Looking at Data Differently
+这一部分的想法就是, 对于不同的类型的数据, 通过不同的方式来处理,
+可以得到很好的结果:
++ 词条的出现频次, 通过 [[https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud][WordCloud]] 这样的方案就很好
++ 对于低维数据, 可以通过简单的绘图的方式显现.
+  但是对于复杂的高维数据, 则可以通过特征提取的方式来分类.
+  + [[https://reference.wolfram.com/language/ref/FeatureSpacePlot.html][FeatureSpacePlot]]
+  + [[https://reference.wolfram.com/language/ref/Graph.html][Graph]], and [[https://reference.wolfram.com/language/ref/HighlightGraph.html][HighlightGraph]] helps information stand out.
++ 对于特定的种类的数据, 可以用专门的方式来绘制:
+  + [[https://reference.wolfram.com/language/ref/GeoGraphics.html][GeoGraphics]], [[https://reference.wolfram.com/language/ref/GeoHistogram.html][GeoHistogram]] 
+  + [[https://reference.wolfram.com/language/ref/TimelinePlot.html][TimelinePlot]]
+** Statistical Tools
++ $\bar{x} = \sum x_i / N$ [[https://reference.wolfram.com/language/ref/Mean.html][Mean]], $\sum(x - \bar{x})^2/N$ [[https://reference.wolfram.com/language/ref/Variance.html][Variance]]
++ $\sigma$ [[https://reference.wolfram.com/language/ref/StandardDeviation.html][StandardDeviation]]
++ Tukey's *Five number summary*
+
+  注: 这个 [[https://en.wikipedia.org/wiki/Five-number_summary][Five number summary]] 描述的量在箱线图中就有表述.
+  + [[https://reference.wolfram.com/language/ref/Min.html][Min]]
+  + First quartile
+  + Median
+  + Third quartile
+  + [[https://reference.wolfram.com/language/ref/Max.html][Max]]
++ Frequency Counts [[https://reference.wolfram.com/language/ref/Count.html][Count]]
+
+  /[Note: when dealing with *Float* data, it is helpful to first apply [[https://reference.wolfram.com/language/ref/Round.html][Round]].]/
++ [[https://reference.wolfram.com/language/ref/Correlation.html][Correlation]]
++ Others
+  + [[https://reference.wolfram.com/language/ref/Skewness.html][Skewness]]
+  + [[https://reference.wolfram.com/language/ref/Kurtosis.html][Kurtosis]]
+
+* Assenble a Multiparadigm Toolset
+This part is about using tools to answer the questions asked above.
+
+*Quick Review of Terms*: (黑话介绍)
++ *Independent variables* as input $\vec{x} = {x_1, \dots, x_n}$
++ *Dependent variable* as the result $y$.
++ *Model* about how input generates the output,
+  which could be a function $y = f(\vec{x})$ or just
+  simply a *blackbox*: $\vec{x} \rightarrow \mathrm{blackbox} \rightarrow  y$. 
++ *Parameters* are values in the model or algorithm that
+  are not assumed by the predictor or response variables;
+  learned/tuned while training.
++ *Training* The process of identifying the function or the
+  algorithm (and the corresponding parameters) that best
+  represents the relationship between the input and output.
+  
+** Classification
+This part is about answering the question like *Is this A or B?*
+
+Use [[https://reference.wolfram.com/language/ref/Classify.html][Classify]] to mark data, return a [[https://reference.wolfram.com/language/ref/ClassifierFunction.html][ClassifierFunction]] which could
+classify input. The  [[https://reference.wolfram.com/language/ref/ClassifierFunction.html][ClassifierFunction]] can be used for getting
+the probabilities for all classes or a specific class.
+
+#+begin_src mathematica
+  c = Classify[data];
+  c[value] (* Return the class *)
+  c[value, "Probabilities"] (* All possible classes with probability *)
+  c[value, "Probabilities" -> "A"] (* Probability for a specific class*)
+#+end_src
+
+思路是这样的, 在数据集中选择一个代表数据集, 然后进行手工标定,
+最后用 [[https://reference.wolfram.com/language/ref/Classify.html][Classify]] 来对数据集进行学习, 以期望能够通过学习的结果,
+用来对其他的数据进行预测.
+
+训练的方法 =Classify[data, Method -> "..."]= 有: (方法内容介绍有空补)
++ *Logistic Regression* to classify using probabilities from linear
+  combinations of features.
++ *Nearest Neighbors* to classify from nearest neighbor examples
++ *Naive Bayes* to classify by assuming probabilistic independence of features
++ *Decision Tree* to classify using a tree-like model for representing
+  decisions and their consequences
++ *Gradient Boosted Trees* to classify using an ensemble of trees
+  trained with gradient boosting
++ *Random Forests* to classify using Breiman-Cutler ensembles of
+  decision trees
++ *Markov Models* to classify using a stochastic model on the sequence
+  of features (for text, bags of tokens, etc.)
++ *Support Vector Machines* to classify using a discriminative model that
+  constructs a hyperplane or sets of hyperplanes to separate samples of
+  different classes.
++ *Neural Networks* to classify using algorithms modeled loosely after
+  biological neural networks.
++ 更多方法见 [[https://reference.wolfram.com/language/ref/Classify.html][Classify]] 文档.
+
+训练结果可以添加用来判断分类的阀值, 如:
+=Classify[data, IndeterminateThreshold -> 0.9`]=,
+若没有高于阀值的分类结果, 则返回 =Indeterminate= 表示不能判断.
+也可以在实际使用中添加参数: =cfunc[value, Indeterminate -> ...]=. 
+
+在训练的时候, 可以传入标定概率的数据集 =UtilityFunction= 来增强分类结果.
+
+#+begin_src wolfram
+  utility = Association[
+    "a" -> Association["a" -> 1, "b" -> 0, Indeterminate -> 0.5`],
+    "b" -> Association["a" -> -15, "b" -> 1, Indeterminate -> 0.8`]];
+  ClassifierMeasurements[c, test, "ConfusionMatrixPlot", UtilityFunction -> utility]
+#+end_src
+
+使用 =PerformanceGoal= 参数在 =Classify= 中可以改变分类的性能.
+是速度优先或者是质量优先或者其他. 
+
+对于结果, 通过 [[https://reference.wolfram.com/language/ref/Information.html][Information]] 来提取关于拟合的 [[https://reference.wolfram.com/language/ref/ClassifierFunction.html][ClassifierFunction]] 函数的信息,
+比如 =Information[c]= 得到所有关于 =c= 的信息. 或者再传入一个参数指定信息:
+=Information[c, "MethodOption"]=. 其中的参数还有: =LearningCurve= (训练曲线),
+=Accuracy= 精确度等等.
+
+使用 [[https://reference.wolfram.com/language/ref/ClassifierMeasurements.html][ClassifierMeasurements]] 来评估一个 *ClassifierFunction* 的好坏程度.
+其中, =test= 为另一部分人为标定的数据集. =cfunc= 是根据部分标定的数据训练得到的结果.
+
+#+begin_src mathematica
+  cfuncMeasure = ClassifierMeasurements[cfunc, test]
+  cfuncMeasure["Accuracy"]
+  cfuncMeasure["ConfusionMatrixPlot"]
+#+end_src
+
+其中的参数有:
++ *Accuracy*: fraction of correctly classified examples
++ *ConfusionMatrixPlot*: plot of the confusion matrix
++ *BestClassifiedExamples*: examples having the highest actual-class probability
+  samely: *WorstClassifiedExamples*.
+
+总结:
++ Classification as a supervised machine learning task of
+  predicting labels for new samples, based on a set of previously
+  labeled training samples
++ Classify: a machine learning super-function
+  + Works for various types of input--numerical features,
+    images, text, etc.
+  + ClassifierMeasurements: to evaluate the performance of
+    the ClassifierFunction created by Classify
++ Customize Classify to:
+  + Use different "Methods" or common classification algorithms
+    like Logistic Regression, Decision Trees, Nearest Neighbor etc.
+  + Use different UtlityFunction and IndeterminateThreshold
+    for making decisions
+  + Optimize performance according to different criteria
+    like training speed, actual runtime speed, memory usage,
+    or accuracy of predictions
+** Regression
+This part is to answer *How much* would something be.
+
++ *Linear Regression* [[https://reference.wolfram.com/language/ref/LinearModelFit.html][LinearModelFit]]
+
+  #+begin_src mathematica
+    lm = LinearModelFit[data, {f1, f2, ...}, {x1, x2, ...}]
+    lm["BestFit"] (* linear exp of f1, f2, ... *)
+  #+end_src
++ *Machine Learning Super Function* [[https://reference.wolfram.com/language/ref/Predict.html][Predict]] 
+  + =PerformanceGoal=
+  + Methods used to generate prediction:
+    + =BoostingMethod=
+  + Test of predicted results:
+    + Plot /distribution/ of predicted function on specific input:
+      =Plot[PDF[predictFunction[input, "Distribution"], x], {x, 0, 1}]=
+    + [[https://reference.wolfram.com/language/ref/PredictorMeasurements.html][PredictMeasurements]] to test predicted results.
+      + =ComparisionPlot= to plot predictions with data input.
+      + =StandardDeviation=
+      + =Report=
++ =FindFormula= to find a formula to describe the given data
+** Cluster Analysis
+The previous two parts use a lot of supervised machine-learning methods.
+This part is about some unsupervised machine learning methods,
+which will answer questions like:
++ How is the data organized?
++ Does the data have some inherent structure?
++ Do the samples sort themselves out into different groups and subgroups?
+  
+[[https://reference.wolfram.com/language/ref/FindClusters.html][FindClusters]] 来对输入的函数进行分类. 其中可以传入的参数:
++ =DistanceFunction= 对于输入的一个距离函数, 需要满足的条件:
+  $f(e_i, e_i) = 0, f(e_i, e_j) \geq 0, f(e_i, e_j) = f(e_j, e_i)$.
+
+  默认使用的距离函数根据不同的输入会有不同的结果.
+  如对于 Numeric data, 可以是 Euclid Distance;
+  对于 Boolean data, 使用的方法是 Matching Dissimilarity or
+  Jaccard Dissimilarity; 对于 String data, 方法为 Edit Distance
+  或 Hamming Distance.
+
+  [[https://reference.wolfram.com/language/ref/Nearest.html][Nearest]] 函数用来找最近的元素. =Nearest[list, query, <number>]=.
+  [[https://reference.wolfram.com/language/ref/FeatureNearest.html][FeatureNearest]], [[https://reference.wolfram.com/language/ref/FeatureSpacePlot.html][FeatureSpacePlot]]. 
++ =Method= 用来指定使用的分类方法
++ =CriterionFunction=
+
+其他类似的函数有 [[https://reference.wolfram.com/language/ref/ClusteringTree.html][ClusteringTree]], [[https://reference.wolfram.com/language/ref/Dendrogram.html][Dendrogram]], 以及 [[https://reference.wolfram.com/language/ref/ClusteringComponents.html][ClusteringComponents]]
+可以给出不同元素所对应的类别的一个 list.
+
+[[https://reference.wolfram.com/language/ref/ClusterClassify.html][ClusterClassify]] 函数可以通过使用 *Cluster* 的方式来构建一个分类函数.
+
+[[https://reference.wolfram.com/language/ref/LearnDistribution.html][LearnDistribution]] 和 [[https://reference.wolfram.com/language/ref/FindDistribution.html][FindDistribution]] 的作用和 [[https://reference.wolfram.com/language/ref/FindFormula.html][FindFormula]] 类似,
+可以根据输入来生成一个可能的分布.
+
+** Anomaly Detection
+Answer the question about *is this unusual?*.
+To perform anomaly detection, here are some methods:
++ Network instrusion
++ Fraudulent transaction
++ Unusual characteristics of diseased cells
+
+[[https://reference.wolfram.com/language/ref/AnomalyDetection.html][AnomalyDetection]] 可以在样本的基础上训练一个找不同函数,
+配合 [[https://reference.wolfram.com/language/ref/FindAnomalies.html][FindAnomalies]] 函数使用可以在输入中找到一个不同的函数结果.
+后者通过传入 =AcceptanceThreashold= 参数来改变默认的剔除阀值.
+这个找不同函数也可以用来 [[https://reference.wolfram.com/language/ref/DeleteAnomalies.html][DeleteAnomalies]]. 来防止不同的样本对后续分析的影响.
+
+或者是使用 [[https://reference.wolfram.com/language/ref/LearnDistribution.html][LearnDistribution]] 生成一个分布, 并使用 [[https://reference.wolfram.com/language/ref/RarerProbability.html][RarerProbability]]
+来找出那些不太可能出现的量 (通过概率来). 并且可以用这个生成的分布,
+来填补之前的 =Missing= 的数据. 使用的函数是 [[https://reference.wolfram.com/language/ref/SynthesizeMissingValues.html][SynthesizeMissingValues]].
+
+** Predict of Next Value
+Use [[https://reference.wolfram.com/language/ref/SequencePredict.html][SequencePredict]] to generate a [[https://reference.wolfram.com/language/ref/SequencePredictorFunction.html][SequencePredictFunction]],
+which could be used to generate the next value of input by learning
+sample data: =predictFunc[input, "RandomNextElement" -> num]=. 
+
+在 [[https://reference.wolfram.com/language/ref/SequencePredict.html][SequencePredict]] 使用不同的参数来处理输入:
++ =FeatureExtractor= 来指定如何提取输入的关键部分, 如 =SegmentedWords=
++ =Method= 中可以指定 =Markov= 链的长度 =Method -> {"Markov", "Order" -> 5}=,
+  类似这样.
+
+** Neural Networks
+#+begin_quote
+The good news is that the Wolfram Neural Net Repository and
+the Neural Net Framework in the Wolfram Language makes it really easy
+to incorporate this powerful technology into
+our project workflow.
+
+The bad news is that we could never do justice to covering
+this topic in just 10 minutes.
+#+end_quote
+
++ Neural networks are either chains or (acyclic) graphs of layers
++ Layers process arrays (a.k.a. tensors) of numbers
+  (a.k.a. neural activities)
++ Encoders and decoders convert the input to and output from
+  numerical arrays
++ Frameworks provide different loss functions
++ Frameworks provide built-in backpropagation and
+  stochastic gradient descent
++ Frameworks are highly optimized to run on (special) hardware
+
+所以关于神经网络的部分还得之后继续学.
+
+可以参考的网站:
++ [[https://resources.wolframcloud.com/NeuralNetRepository/][WOLFRAM NEURAL NET REPOSITORY]]
++ [[https://www.wolfram.com/language/12/neural-network-framework/perform-net-surgery-for-transfer-learning.html][Perform Net Surgery for Transfer Learning]]
+
+* Get the Message Across
+** Visualizations
+列举一些绘图用的函数以及其可能的用途和参数:
+
+/[Note: 因为这些参数并不只能用在一个函数中, 其他函数估计也可以, 但是这里只记录一次出现. ]/
+
++ [[https://reference.wolfram.com/language/ref/BarChart.html][BarChart]] 柱状图, 用于表现各组分的数量比较关系
+  + [[https://reference.wolfram.com/language/ref/ChartLabels.html][ChartLabels]] 用于给组分进行标记, 一个比较妙的标记方式:
+    =ChartLabels -> Keys @ data=
+
+    对于绘制的 *Label*, 默认是在下方 (x 轴),
+    通过 =Placed[Keys @ data, Top]=, 可以放在柱的顶部.
+    通过 =Callout[Keys @ data, Above]= 可以以箭头注记的方式标在顶部.
+  + [[https://reference.wolfram.com/language/ref/AxesLabel.html][AxesLabel]] 用于绘制坐标轴上的注记 (轴末端, 水平方向),
+    类似的还有 [[https://reference.wolfram.com/language/ref/FrameLabel.html][FrameLabel]] (框线侧, 框线方向) 和 [[https://reference.wolfram.com/language/ref/Frame.html][Frame]].
+    后者通过布尔值来判断是否在图的四周绘制框线.
+  + [[https://reference.wolfram.com/language/ref/PlotLabel.html][PlotLabel]] 用于绘制图顶部的图名称
+  + [[https://reference.wolfram.com/language/ref/PlotTheme.html][PlotTheme]] 用于标记图表的主体, 类似的有 [[https://reference.wolfram.com/language/ref/ChartStyle.html][ChartStyle]], [[https://reference.wolfram.com/language/ref/PlotStyle.html][PlotSytle]].
+    区别在于 *PlotTheme* 改变的是图表的数据标记, 框线之类的非主体要素;
+    *ChartStyle* 改变的是图表绘制的内容 (柱条颜色) 之类的主体内容整体指定;
+    *PlotStyle* 则是对每一个元素主体进行一一指定.
+  + [[https://reference.wolfram.com/language/ref/ImageSize.html][ImageSize]] 指定绘制的图表的大小
++ [[https://reference.wolfram.com/language/ref/RectangleChart.html][RectangleChart]] 可以用来绘制二维向量的柱状图,
+  每个矩形的横宽和竖高分别代表不同的向量的分量.
++ [[https://reference.wolfram.com/language/ref/BubbleChart.html][BubbleChart]] (泡泡图?) 可以用来绘制三维向量的图,
+  用在 $xOy$ 平面上半径为 $r$ 的不同大小的圆来表示 $\{x, y, z\}$ 这样的向量.
+
+  类似的还有 [[https://reference.wolfram.com/language/ref/GeoBubbleChart.html][GeoBubbleChart]]. 
+  + [[https://reference.wolfram.com/language/ref/ChartLegends.html][ChartLegends]] 给出图例
+
+    一个比较适合多数据的颜色的图例为 [[https://reference.wolfram.com/language/ref/BarLegend.html][BarLegend]].
+    这个函数适合配合 [[https://reference.wolfram.com/language/ref/ChartStyle.html][ChartStyle]] 一起使用, 如:
+    =ChartLegends -> BarLegend[{<ChartStyle>, QuantityMagnitude[MinMax[data]]}]=
+  + [[https://reference.wolfram.com/language/ref/Tooltip.html][Tooltip]] 一个对于导出图片来说没什么鸟用的 Mathematica Notebook 限定的华丽操作.
+    可以指定在 Mathematica 绘制出来的图片上, 当鼠标放置在特定元素上时,
+    弹出的自动提示框的样式.
++ [[https://reference.wolfram.com/language/ref/Manipulate.html][Manipulate]] 可以用来给图表添加交互性, 也是一个 Mathematica Notebook 限定的华丽操作.
+  像 Mathematica Engine 这样的就无福享受了.
++ 对数坐标轴, 有助于将中间的对象提取出来, 防止挤在一起
++ [[https://reference.wolfram.com/language/ref/Graph.html][Graph]] 关系图
+
+  一个非常酷的关系图的例子:
+
+  #+begin_src mathematica
+    data = (* a list *)
+    nearby = Flatten[Map[(Thread[# -> DeleteCases[Nearest[data, #, 3], #]])&, words]]
+    Graph[nearbys, VertexLabels -> Automatic]
+  #+end_src
+
+  或者用 [[https://reference.wolfram.com/language/ref/NearestNeighborGraph.html][NearestNeighborGraph]] 也可以实现类似的功能.
+
+  一个更加炫酷的例子:
+  
+  #+begin_src mathematica
+    wordPlot[w_String] := Graph[(x = Characters[w];
+      Thread[Drop[x, -1] -> Drop[x, 1]]), VertexLabels -> Automatic,
+      DirectedEdges -> True];
+    wordPlot["Shakespeare"]
+  #+end_src
+
+更多参考: [[https://reference.wolfram.com/language/guide/DataVisualization.html][Data Visualization]] 或者 [[https://www.wolfram.com/wolfram-u/courses/visualization-graphics/data-visualization-wolfram-language-vis201/][Data Visualization with the Wolfram Language]].
+[[https://www.wolfram.com/wolfram-u/courses/catalog/?topic=visualization-graphics][Visualization and Graphics]]. 
+
+** Automated Reports
+自动化一键生成报告, 很好. 不过因为不太能用到,
+(平时以 Org-mode 为主), 所以这部分快速一点:
+
++ [[https://reference.wolfram.com/language/ref/CreateDocument.html][CreateDocument]] 用来生成一个最终的文档
++ [[https://reference.wolfram.com/language/ref/CreateNotebook.html][CreateNotebook]] 配合 =CreateNotebook["Template"]=, 用于生成模版.
+  
+** Microsites and Web Apps
+因为 CloudDeploy 要 Credits, 所以这部分就是穷鬼看看就好了.
+
+其中将计算的结果用 =iframe= 的形式嵌入到网页中这个功能我觉得是可用的,
+不过可能需要有一些更加实际的场景才能让穷鬼花费自己的 Credits 去部署吧. 
+
+** Reproducible Research Checklist
+这个我觉得很有必要, 可复现性. 
+
+Publishing data-backed reproducible analyses enable the community to:
++ Verify results (Replication == Stronger evidence)
++ Build on existing results
++ Combine results for better insight
+
+为了达到上面的目的, 一个 checklist:
++ Build a flexible, modular iterative workflow in stages
+  (Question, Wrangle, Explore, Analyse, Communicate)
++ Plan for structured data analysis
++ Automate (write code) the process wherever possible.
+  (Avoid point and click).
++ Document the code; Use a notebook-based workflow to combine code
+  and visualizations along with text descriptions (styled and formatted
+  for better communication)
++ Record and preserve
+  + Sources: raw data, goals, references
+  + Process: explorations, final code, observations,
+    and comments (selections and rejections)
+  + Output: clean data, visualizations, reports, apps
++ Use version control
++ Prepare for obsolescence - things will change,
+  and sources will get removed. (存档或者对新资源重新利用)
+
+* Other Mathematica Functions
+因为官方的教程中大量使用了 Mathematica 中的缩写和函数式的知识,
+所以在这里进行一个记录以用来之后的查找.
++ [[https://reference.wolfram.com/language/ref/With.html][With]], 使用方法就像是 Lisp 中的 =let= 方法. 提供临时局部变量绑定. 
+  但是并不能做到按顺序进行依次赋值, 比如 =With[{a = 1, b = a + 1}, exp]=
+  这样的表达式是不能够实现的. 可以通过嵌套的 =With= 来曲线救国.
++ 函数 [[https://reference.wolfram.com/language/ref/Function.html][Function]]: 定义一个完整形式的函数 =Function[arg, exp]=,
+  如 =Function[{x, y}, x + y]= 生成一个函数.
+  (和 Lisp 中的 =(lambda (arg) exp)= 类似)
+
+  或者使用缩写形式: =(exp)&= 来表示一个表达式, 其中用 =#=, =##=, =#1=, =##2=
+  这样的方式来表示传递进来的参数. 其中:
+  + =#= 形式代表选择对应的传入参数, 默认为第一个参数,
+    带上数字后缀则表示对应的位置的参数, 比如 =#1= 为第一个传入的参数,
+    =#2= 为第二个传入的参数, 依此类推. 比如 =(#1 ^ #2)&[2, 3]= 就会变成 =2 ^ 3=.
+  + =##= 形式代表选择从某一位开始之后的传入参数, 默认从第一个参数开始,
+    带上数字后最则表示从对应位置开始的所有参数, 如 =##2= 为从第二位开始的所有参数.
+    比如 =(##2)&[1, 2, 3, 4, 5]= 就会返回 =Sequence[2, 3, 4, 5]=. *比较少用*. 
++ [[https://reference.wolfram.com/language/ref/Map.html][Map]] 系的函数: [[https://reference.wolfram.com/language/ref/Apply.html][Apply]] (相关函数: [[https://reference.wolfram.com/language/ref/Evaluate.html][Evaluate]]), [[https://reference.wolfram.com/language/ref/MapThread.html][MapThread]], [[https://reference.wolfram.com/language/ref/MapIndexed.html][MapIndexed]] 等.
+  一些简单的例子和缩写:
+
+  #+begin_src wolfram
+    (#^2)& /@ Range[5]  (* Abbrevation of Map[(#^2)&, Range[5]],
+                          but Table[i^2, {i, 5}] is better. *)
+    MapThread[(#1 -> #2)&, { {a, b}, {1, 2} }] (* Return {a -> 1, b -> 2} *)
+    MapIndexed[f, {a, b}] (* Return {f[a, {1}], f[b, {2}]} *)
+  #+end_src
+
+其他的参考:
++ [[https://reference.wolfram.com/language/tutorial/FunctionalOperations.html][Functional Operation]]
+
+#+begin_html
+<details><summary>Functional Programming Quick Start</summary>
+#+end_html
+参考 Wolfram U 上的 [[https://www.wolfram.com/wolfram-u/courses/programming-applications/functional-programming-quick-start-dev020/][Functional Programming Quick Start]] 课程.
+
++ *Everything is an Expression*
+  
+  除了基本的元素以外, 所有的 Mathematica 中的表达式的形式都可以归化为
+  =Head[elem1, elem2, ...]= 的形式. 而一些操作符号有其对应的缩写形式 (shorthand).
++ *Evaluation of Expressions*
+
+  使用 [[https://reference.wolfram.com/language/ref/Attributes.html][Attributes]] 可以查看函数的特性, 譬如对于 [[https://reference.wolfram.com/language/ref/Plot.html][Plot]] 函数,
+  =Attributes[Plot]= 的返回值为 ={HoldAll, Protected, ReadProtected}=.
+  其中 =Protected= 表示被保留, 不会被随便写掉.
+  而 =HoldAll= 表示 =Plot= 不会将其参数先执行求值后运算.
+  (类似于 SICP 中的 applicative-order 和 normal-order 的感觉. )
++ *List, the Functional Workhorse*
+  + *Constructing* a List: [[https://reference.wolfram.com/language/ref/Range.html][Range]], [[https://reference.wolfram.com/language/ref/Table.html][Table]]
+  + *Manipulation* and *Extraction*: [[https://reference.wolfram.com/language/ref/Part.html][Part]], 一般使用缩写 =list[[index]]=. 
++ *Procedural to Functional Programming*
+
+  #+begin_quote
+  Mathematica is a multi-paradigm language,
+  and while procedural programming is supported,
+  it is better to use the system using its native paradigm.
+  #+end_quote
+  + Lose the Loop: =Do[exp, {iterVar, start, end}]=,
+    但是效率不高, 所以并不推荐. 一般的历遍和建表的操作,
+    应该选用 [[https://reference.wolfram.com/language/ref/Map.html][Map]] 和 [[https://reference.wolfram.com/language/ref/Table.html][Table]].
+  + Conditional Programming:
+    + =If[condition, t, f]=, 或者是缩写形式 =t /; condtion=.
+    + 或者是 =func[var_?EvenQ]= 这样的 pattern 形式.
+      这样的形式可以用来替换 =Which= 的分支定义:
+
+      #+begin_src mathematica
+        func[n_] := Which[cond1, exp1, cond2, exp2]
+        (* The following are equal definitions *)
+        func[n_?cond1] := exp1;
+        func[n_?cond2] := exp2;
+      #+end_src
++ *Patterns and Rules*
+  + Extracting Parts with Patterns: 使用 =_= 来表示占空.
+    相关的函数有 [[https://reference.wolfram.com/language/ref/Cases.html][Cases]], [[https://reference.wolfram.com/language/ref/Position.html][Position]] 和 [[https://reference.wolfram.com/language/ref/Count.html][Count]].
+  + Transforming Expressions with Rules: 使用 =named_= 来为占空的匹配进行命名.
+    类似于 Regexp 中的命名匹配元素.
+    一个例子: ={x^2, x^3} /. x^power_ -> power=.
+  + Patterns and Functions: 在函数定义的时候的表也是一个 Pattern 的例子. 
+    
+
+#+begin_html
+</details>
+#+end_html
+
+* About Mathematica And Emacs
++ A helpful guide about mathematica and emacs can be seen [[https://rgoswami.me/posts/org-mathematica/][here]].
+
+  You may need first download [[https://github.com/stuartsierra/org-mode/blob/master/contrib/lisp/ob-mathematica.el][ob-mathematica.el]]
+  to your included path. And at [[https://github.com/stuartsierra/org-mode/blob/fd8a18151a7a64ded36c169f03c76bf96733bfd9/contrib/lisp/ob-mathematica.el#L34][line 34]], change
+  =(org-babel-get-header params :var)= to
+  =(org-babel--get-vars params)= according to this [[https://github.com/wose/ob-scad/issues/1][issue]].
+
+  And using [[http://ai.eecs.umich.edu/people/dreeves/mash/][mash.pl]] can help with evaluation.
++ And a mathematica [[https://microsoft.github.io/language-server-protocol/][LSP]] server can be seen at Github:
+  [[https://github.com/WolframResearch/LSPServer][WolframResearch]], or [[https://github.com/kenkangxgwe/lsp-wl][lsp-wl]], which need to write yourself
+  emacs code. (I choose the latter one.)
+
+  +Although I can't tell why it was slow to connect.+
++ To enable lsp-mode for org-src-mode when editing Mathematica code,
+  could refer to this [[https://github.com/emacs-lsp/lsp-mode/issues/2842#issuecomment-870807018][issue]]. (which I think is important,
+  especially for something like Mathematica with tons of functions.)
++ Also, you can use Jupyter and Wolfram Engine, which,
+  I think is a bit complicated.
