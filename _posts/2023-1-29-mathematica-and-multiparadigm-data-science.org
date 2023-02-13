@@ -1,15 +1,26 @@
 #+layout: post
 #+title: Mathematica and MultiParadigm Data Science
-#+date: 2023-2-6
+#+date: 2023-2-13
 #+options: _:nil ^:nil
 #+math: true
 #+categories: mathematica
 * 非常功利的理由
+#+begin_quote
+Update:
++ 2023-2-10: 参考 b 站 [[https://www.bilibili.com/video/BV1Rq4y1S7S8][视频]], 增加了一些函数和方法的使用情境.
+  更新了关于神经网络部分的一些记录.
+#+end_quote
+
 之后要用来分析数据, 所以学一些备用.
 
 教程是 Wolfram U 中的 [[https://www.wolfram.com/wolfram-u/courses/data-science/multiparadigm-data-science/][MultiParadigm Data Science]].
 本文的作用就是用来速查的, 尽可能忠实地复制原文,
-并随便添加一些注释 (在使用过后). 
+并随便添加一些注释 (在使用过后).
+
+#+begin_quote
+Update: [2023-2-10] 注: 因为这个完全是一个垃圾学习笔记,
+无脑缝合了各种文档的笔记, 所以会非常的混乱且没有逻辑. 
+#+end_quote
 
 What is multiparadigm data science:
 
@@ -426,9 +437,21 @@ And a possible checklist for such a process can be:
 + *Range Checking*: Reasonable and informative feature values
   + Use [[https://reference.wolfram.com/language/ref/Histogram.html][Histogram]] to plot out the data to check.
   + Use [[https://reference.wolfram.com/language/ref/Select.html?q=Select][Select]] to strip out suspecious values.
+  + 除了上面的方法, 还可以使用统计方式来找出存在误差的值.
+    如: 使用正态分布来剔除 $3 \sigma$ 外的值, 认为在 $3 \sigma$ 外的值为不正常的值.
+    一般适合总体符合正态分布的数据, 如人口数据, 测量误差, 生产加工质量,
+    考试成绩等. 不适合其他分布. 
+
+    或者是在箱线图中看数值是否存在异常. 比较普遍适用. 
+    
+    或者使用 [[https://reference.wolfram.com/language/ref/AnomalyDetection.html][AnomalyDetection]] 来生成查找非正常数据的函数.
+    这个处理的方式就比较无脑了. 
 + *Missing Data*: Occurrence of missing data
   + [[https://reference.wolfram.com/language/ref/DeleteCases.html][DeleteCases]] to match values with ="NA"= missing data,
     and delete them. /[Note: if you have enough data to delete...]/
+
+    注: 对于缺失太多的数据, 可以选择删除. 比如 40% 的缺失,
+    就不适合作为一个正经数据源来使用了. 
   + [[https://reference.wolfram.com/language/ref/ReplaceAll.html][ReplaceAll (/.)]] Applies a rule or list of rules in an attempt
     to transform each subpart of an expression =expr=.
     /[Note: Use it to replace missing value. ]/
@@ -438,6 +461,16 @@ And a possible checklist for such a process can be:
     + Replace with means:
       /[Note: Also, select with [[https://reference.wolfram.com/language/ref/Cases.html][Cases]] to provide better means.]/
       =data /. "NA" -> Mean[Select[data, NumbericQ]]=
+
+      使用平均值替代的, 适用于对 *个体精度要求不大*, *基数大* 的数据
+      根据定量和定性来进行区分具体使用的方法, 比如定量的数据可以考虑平均,
+      定性的数据可以考虑众数, 即出现次数最多的数据.
+    + [[https://reference.wolfram.com/language/ref/Interpolation.html][Interpolation]] 插值法, 即通过构造近似函数来补上缺失值.
+      + *牛顿插值法*: 适用于热力学温度, 地形测量,
+        定位等最求函数值的精确而不关心变化情况.
+        (这个因为可能会发生振荡而不太适合求解变化的情况. )
+      + *样条插值法*: 分段光滑曲线去插值, 连续且有连续曲率,
+        适用于零件加工, 要关心变化导数的问题. 
     + Replace with random value [[https://reference.wolfram.com/language/ref/RandomVariate.html][RandomVariate]]:
       + [[https://reference.wolfram.com/language/ref/NormalDistribution.html][NormalDistribution]]:
 	First get the $\mu$ and $\sigma$ out from good data by
@@ -577,6 +610,11 @@ by Steven Pinker
     注: 箱线图的 (线) 两端表示最大和最小, 中间的框表示第一四分位数,
     第三四分位数的一个范围. 最后中间的线表示中位数. 其反应了数据的:
     中心位置, 散布程度, 对称性的信息.
+
+    可以用箱线图来帮助了解数据是否有误. 如从上下极限可以找到是否有异常数值,
+    或者根据四分位距 $IQR = Q_3 - Q_1$ 来判断, 再通过设置一个合理区间来判断.
+    即设置上极限和下极限的区域为 $Q_1 - 1.5 \times IQR, Q_3 + 1.5 \times IQR$.
+    是一种比较普遍适用的方法. 
   + [[https://reference.wolfram.com/language/ref/DistributionChart.html][DistributionChart]] (默认) 得到的是 [[https://mode.com/blog/violin-plot-examples/][Violin Plots]] (小提琴图).
 
     注: 类似于箱线图的升级版本. 可以和人口年龄结构分布图类比一下.
@@ -824,6 +862,13 @@ sample data: =predictFunc[input, "RandomNextElement" -> num]=.
 + =Method= 中可以指定 =Markov= 链的长度 =Method -> {"Markov", "Order" -> 5}=,
   类似这样.
 
+#+begin_quote
+*灰色预测模型* $GM(1, 1)$
+
+适用于时间序列预测, 灾变预测, 波形预测, 系统预测.
+其中 $GM(1, 1)$ 表示仅含有一个变量的一阶微分方程模型.
+#+end_quote
+
 ** Neural Networks
 #+begin_quote
 The good news is that the Wolfram Neural Net Repository and
@@ -850,6 +895,174 @@ this topic in just 10 minutes.
 可以参考的网站:
 + [[https://resources.wolframcloud.com/NeuralNetRepository/][WOLFRAM NEURAL NET REPOSITORY]]
 + [[https://www.wolfram.com/language/12/neural-network-framework/perform-net-surgery-for-transfer-learning.html][Perform Net Surgery for Transfer Learning]]
++ [[https://reference.wolfram.com/language/tutorial/NeuralNetworksIntroduction.html][Introduction to Neural Nets]]
++ [[https://zh.d2l.ai/index.html][动手学深度学习]] (但是不是 Mathematica 的版本)
+
+#+begin_html
+<details><summary>Introduction to Neural Networks</summary>
+#+end_html
+
+*** Introduction to Neural Networks
+课程是 [[https://www.wolfram.com/wolfram-u/courses/machine-learning/introduction-neural-networks-ml010/][Wolfram U: Introduction to Neural Networks]] 的课程.
+
+#+begin_quote
+What are Neural Nets?
+
+*Modertn term*: [[https://en.wikipedia.org/wiki/Differentiable_programming][differentiable programming (wikipedia)]]. 
+#+end_quote
+
+**** Layers (Operator)
+/[Note: 因为我是照着英文从零开始学的, 所以并不知道名词应该怎么翻译. 故以下名词全部保留英文. ]/
+
+*Layer* 是一个网络中最基本的组成, 类似于一个运算子 (operator),
+但是只接受数值输入的 tensors:
+
+#+begin_src mathematica :exports both :results value pp
+  elem = ElementwiseLayer[Tanh];
+  {elem @ {1, 2, 3},
+  N @ Tanh @ {1, 2, 3}}
+#+end_src
+
+#+RESULTS:
+: { {0.7615941762924194, 0.9640275835990906, 0.9950547814369202}, {0.7615941559557649, 0.9640275800758169, 0.9950547536867305} }
+
+且 Layer 是可导的. (可导性为后续用于计算参数 "学习" 的一个前提. )
+
+#+begin_src mathematica
+  elem[{1, 2, 3}, NetPortGradient["Input"]]
+  D[Tanh[x], x] /. x -> {1., 2., 3.}
+#+end_src
+
+#+begin_html
+<details><summary>其他关于 Layers 的一些知识</summary>
+#+end_html
+
+在运算的时候可以指定 GPU 和 CPU 来进行运算:
+
+#+begin_src mathematica
+  elem[{1, 2, 3}, TargetDevice -> "GPU"]
+#+end_src
+
+/注: macOS 貌似没有对 GPU 的支持./
+
+/[等一下, 我突然发现讲课的人用的是 macOS, 且其 GPU 至少有 3 线程... 是我的电脑不配么...]/
+
+在新建 Layer 的时候可以指定输入的类型:
+
+#+begin_src mathematica
+  ElementwiseLayer[Tanh, "Input" -> {4, 32}]
+#+end_src
+
+上面的就是一个 $4 \times 32$ 的矩阵作为输入. 
+
+#+begin_html
+</details>
+#+end_html
+
+一些 Layer 有可学习的参数:
+
+#+begin_src mathematica
+  dot = LinearLayer[3, "Input" -> 2]
+#+end_src
+
+/注: 上面的是一个三维输出, 二维输入的一个线性 Layer./
+
+#+name: 2-to-3-layer-example
+#+header: :file ../_img/MMA/2-to-3-layer-example.svg
+#+begin_src dot :exports none
+  digraph G {
+    rankdir = LR;
+    node [shape = circle];
+
+    subgraph cluster_Output {
+      style = dashed;
+      label = "Output (x3)";
+      out1; out2; out3;  
+    }
+
+    subgraph cluster_Input {
+      style = dashed;
+      label = "Input (x2)";
+      in1 -> out1 [label = "w11"];
+      in1 -> out2 [lebel = "w12"];
+      in1 -> out3 [lebel = "w13"];
+      in2 -> out1 [label = "w21"];
+      in2 -> out2 [lebel = "w22"];
+      in2 -> out3 [lebel = "w23"];
+    }
+  }
+#+end_src
+
+#+RESULTS: 2-to-3-layer-example
+[[file:../_img/MMA/2-to-3-layer-example.svg]]
+
+[[{{ site.github.url }}/_img/MMA/2-to-3-layer-example.svg]]
+
+而默认是没有初始化这些未知的参数的, 所以需要通过初始化的方式 ([[https://reference.wolfram.com/language/ref/NetInitialize.html][NetInitialize]])
+来给一个 Layer 赋上随机的参数值. 使用 [[https://reference.wolfram.com/language/ref/NetExtract.html][NetExtract]] 可以提取出参数的具体值. 
+
+[[{{ site.github.url }}/_img/MMA/MMA-LinearLayer-Uninitialize.png]]
+
+通过 =?*Layer= 可以列出可用的各种 Layer. 
+
+**** Chain and Graph
+使用 [[https://reference.wolfram.com/language/ref/NetChain.html][NetChain]] 可以将多个 Layer 串联在一起, 将其输入和输出依次相连.
+但是这样得到的只是单输入的一个网络. 使用 [[https://reference.wolfram.com/language/ref/NetGraph.html][NetGraph]] 可以构建有多个输入的网络. 
+
+比如有一个函数是: =func = (Tanh @ #Input1 + LogisticSidmoid @ #Input2)&=,
+用网络来表示就是:
+
+#+begin_src mathematica
+  NetGraph[{ElementwiseLayer[Tanh], ElementwiseLayer[LogisticSigmoid], TotalLayer},
+  {NetPort["Input1"] -> 1, NetPort["Input2"] -> 2, {1, 2} -> 3}]
+#+end_src
+
+其中 =1=, =2= 对应的就是第一个参数 (节点列表) 中节点的顺序.
+于是对于这样的 =net=, 通过 =net @ <| "Input1" -> {...}, "Input2" -> {...} |>=
+的形式来进行计算.
+
+**** NetEncoder and NetDecoder
+使用 [[https://reference.wolfram.com/language/ref/NetEncoder.html][NetEncoder]] 可以对输入的数据进行一个解码.
+如对输入的图片以灰度形式转换为 $12 \times 12$ 的一个张量:
+
+#+begin_src mathematica
+  NetEncoder[{"Image", {12, 12}, "ColorSpace" -> "Grayscale"}]
+#+end_src
+
+参考文档:
++ [[https://reference.wolfram.com/language/tutorial/NeuralNetworksLargeDatasets.html][Training on Large Datasets]]
+
+或者可以直接通过 =*Layer[..., "Input" -> NetEncoder[...]]=
+来指定一个 Layer 输入的类型. 
+
+使用 [[https://reference.wolfram.com/language/ref/NetDecoder.html][NetDecoder]] 可以将张量转换为原始的输出.
+通过 =*Layer[..., "Output" -> NetDecoder[...]]= 的形式,
+可以来指定一个  Layer 输出的类型. 
+
+**** Training
+使用 [[https://reference.wolfram.com/language/ref/NetTrain.html][NetTrain]] 可以根据输入的数据来训练一个网络.
+
+一个输出的数据的例子如下: ={input -> output, {1, 2} -> 3}=, 
+类似这样.
+
+其使用 Gradient Descent (梯度下降) 的方式来对参数进行查找.
+但是其原理目前并不需要太过了解. 
+
+**** An Example: a Digit Classifier
+详细的介绍在 [[{{ site.github.url }}/_img/MMA/MMA-a-Digital-Number-Classifier-example.nb][Notebook]] 里面可以查看.
+简单的介绍如下:
+
++ 使用 [[https://en.wikipedia.org/wiki/LeNet][LeNet]] 来构建的神经网络, 主要包含的内容如下:
+
+  [[{{ site.github.url }}/_img/MMA/lenet-from-d2l-ai.svg]]
+
+  /[Note: 图片来源: [[https://zh.d2l.ai/chapter_convolutional-neural-networks/lenet.html#img-lenet][动手深度学习: LeNet]] ]/
++ 使用一个 NetGraph 来用于训练.
+
+注: 最终训练的网络结果可以在 [[{{ site.github.url }}/_img/MMA/trained-LeNet-for-digits.wlnet][这里]] 下载. 
+#+begin_html
+</details>
+#+end_html
 
 * Get the Message Across
 ** Visualizations
@@ -1056,3 +1269,433 @@ Publishing data-backed reproducible analyses enable the community to:
   especially for something like Mathematica with tons of functions.)
 + Also, you can use Jupyter and Wolfram Engine, which,
   I think is a bit complicated.
+
+* Others
+#+begin_quote
+All models are wrong. Some are useful. 
+#+end_quote
+
+** 线性规化, 非线性规化和多目标规化 - 最优方案
+*** 线性规划
+对于 [[https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationLinearProgramming.html][线性规化]] 的问题, 若有不等式方程组为条件:
+
+$$\left\{\begin{array}{lll}x_1 + x_2 & \leq & 6 \\\\ x_1 & \geq & 1 \\\\ x_2 & \geq & 1 \\\\ 240 x_1 + 120 x_2 & \leq & 1200\end{array}\right.$$
+
+想要求 $y = 40 x_1 + 30 x_2$ 的最大值. 
+
+使用 [[https://reference.wolfram.com/language/ref/LinearOptimization.html][LinearOptimization]] 方法来计算最小值时的变量取值.
+
+#+begin_src mathematica :exports both :results value pp
+  LinearOptimization[ - (40 x1 + 30 x2),
+    {x1 + x2 <= 6, x1 >= 1,  x2 >= 1,
+       240 * x1 + 120 * x2 <= 1200}, {x1, x2}]
+#+end_src
+
+#+RESULTS:
+: {x1 -> 4, x2 -> 2}
+
+或者直接扔到 [[https://reference.wolfram.com/language/ref/Minimize.html][Minimize]] 或者 [[https://reference.wolfram.com/language/ref/Maximize.html][Maximize]] 函数中可以得到结果:
+
+#+begin_src mathematica :exports both :results value pp
+  Maximize[{40 x1 + 30 x2,
+            x1 + x2 <= 6 && x1 >= 1 && x2 >= 1
+            && 240 * x1 + 120 * x2 <= 1200},
+    {x1, x2}]
+#+end_src
+
+#+RESULTS:
+: {220, {x1 -> 4, x2 -> 2}}
+
+并且上面的 *Minimize* 和 *Maximize* 方法还不只适用于线性规划:
+
+#+begin_src mathematica :exports both :results value pp
+  NMinimize[{x1^2 + x2^2 + x3^2 + 8,
+    x1^2 - x2 + x3^2 >= 0 && x1 + x2^2 + x3^2 <= 20 &&
+     -x1 - x2^2 + 2 == 0 && x2 + 2 * x3^2 == 3 &&
+     x1 >= 0 && x2 >= 0 && x3 >= 0}, {x1, x2, x3}]
+#+end_src
+
+#+RESULTS:
+: {10.651091807695447, {x1 -> 0.5521673359041438, x2 -> 1.2032591743672956, x3 -> 0.9478240343844963}}
+
+注: 并不适合多变元的问题. ([[https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationComparison.html][参考]])
+
+其他的方法有二次规划 ([[https://reference.wolfram.com/language/ref/QuadraticOptimization.html][QuadraticOptimization]]),
+罚函数法, 梯度法等, 可以参考文档:
++ [[https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationOverview.html][Constrained Opimization]]
++ [[https://reference.wolfram.com/language/tutorial/UnconstrainedOptimizationOverview.html][Unconstrained Optimization]]
+
+多个目标规化:
++ 每个目标都有一个完成情况的目标 $d_i^0$,
++ 取实际值函数 $f_i$, 于是可以得到正偏差 $d_i^+ = \max\{f_i - d_i^0\}$
+  以及负偏差 $d_i^- = -\min\{f_i - d_i^0, 0\}$.
++ 绝对约束是前提的约束, 而目标约束是对目标的一个要求,
+  类似于绝对约束是客观事实, 而目标约束是画的大饼应该有的样子,
+  比如利润目标应 $f_i \geq 2,000$ 之类的. 目标约束可以有一定的偏差,
+  于是可以加入正负偏差变量: $f_i + d_i^- - d_i^+ = d_i^0$.
+  
+  注: 上面的偏差公式的意义是: $f_i$ 可以比 $d_i^0$ 小 $d_i^-$,
+  可以比 $d_i^0$ 大 $d_i^+$. 如果一个目标约束只能偏大,
+  那么就不能有 $d_i^-$ 的项. 
+
+  好处: (为什么这样做), 将偏差用正负偏差变量来代替,
+  可以把目标函数变成等式的约束条件.
+  等式的约束条件也就是让我们可以不用考虑目标函数的约束了. 
++ 有限因子 $P_i$, 根据多个目标的重要程度来设定不同目标函数的权值.
+  一般靠查文献和瞎编得到.
+
+  于是多个目标的 "总的" 目标函数就变成了 $F = \sum P_i d_i^*$,
+  其中 $d_i^*$ 表示对于目标 $i$ 的希望: 如希望 $d_i^0$ 只能偏大,
+  不会偏小, 那么有 $d_i^* = d_i^+$, 如果是在附近, 那么就是 $d_i^* = d_i^+ + d_i^-$. 
+
+*** 贪心算法
+1. 选择一点 $p$, 对应有可行域 $F(p)$, 选择可行域中最大 $\max_{p_j \in F(p)} p_j$
+2. 将 $p_j$ 作为下一个 $p$ 重复步骤 1 直至没有更大的
+
+缺点: 容易陷入局部极值.
+
+*** 模拟退火
+为了防止贪心算法的局部极值的问题. 使用模拟退火的方式来做.
+适用于可信解过多, NP-hard 的问题. 
+
++ 在可见范围内随机选择一点, 如果该点比当前位置更高, 就直接选择该点;
+  若更低, 则选择根据当前值用一定概率来选择去不去.
++ 退火的概念就是让这个选择去不去的概率随时间慢慢减少,
+  确保最终会停留在最高值处. 
+
+** 多指标评估模型
+*** 层次分析法
+层次分析法的方法就是将目标和方案层之间, 通过一个准则层来进行连接.
+这类似于有一个评估的参数列表 $attr_i$, 希望得到一个最终的目标的决策: 
+
+#+name: analytic-hierachy-process
+#+header: :file ../_img/MMA/analytic-hierachy-process.svg
+#+begin_src dot :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = circle];
+
+    subgraph cluster_Goal {
+      style = dashed;
+      label = "Goal";
+      goal;
+    }
+
+    subgraph cluster_criteria {
+      style = dashed;
+      label = "Criteria"
+      {attr1, attr2, attr3} -> goal;
+    }
+
+    subgraph cluster_alternatives {
+      style = dashed;
+      label = "Alternatives";
+
+      a -> {attr1, attr2, attr3};
+      b -> {attr1, attr2, attr3};
+      c -> {attr1, attr2, attr3};
+      d -> {attr1, attr2, attr3};
+    }
+  }
+#+end_src
+
+#+RESULTS: analytic-hierachy-process
+[[file:../_img/MMA/analytic-hierachy-process.svg]]
+
+[[{{ site.github.url }}/_img/MMA/analytic-hierachy-process.svg]]
+
+即每个可选项都有 $n$ 个特征项 $attr_i$, 要根据这些特征项选择一个最优的可选项.
+于是就需要对特征按权值 $w_i$ 进行考虑, 最终在比较的时候, 考虑
+$\sum w_i attr_i$ 来作为最终的选择依据. 
+
+注: 不过为了让数据能够可以被更好地使用, 一开始一般可以先对数据进行归一化.
+即对于特征 $attr_i$, 每个可选项都有对应的值 $attr_i(x)$, 于是归一化即
+$attr_i(x) / \sum_x attr_i(x)$.
+
+通过一个矩阵来进行描述每个特征的权重:
+
+| $attr_i$ to $attr_j$ | $attr_1$      | $attr_2$ |
+|----------------------+---------------+----------|
+| $attr_1$             | $1$           | $5$      |
+| $attr_2$             | $\frac{1}{5}$ | $1$      |
+
+类似于上面这样. 比如上面认为 $attr_2$ 比 $attr_1$ 重要 $5$ 倍,
+(比例是随便编的). 即 $a_{ij}$ 表示第 $i$ 个元素对于第 $j$ 个元素重要 $a_{ij}$ 倍.
+
+为了让这个比例矩阵更加科学, 那么需要满足的是, 除了两两相比有大小,
+对于整体应满足可比性. 即不会出现 $A < B < C < A$ 这样的情况出现.
+于是就引入 *一致性检验*: 
++ 计算一致性比例 $CR = \frac{CI}{RI}, CI = \frac{\lambda_{max} - n}{n - 1}$,
++ 其中 $\lambda_{max}$ 为矩阵的最大特征值, $n$ 为指标数 (矩阵行数).
++ $RI$ 为平均随机一致性指标. (查表得到)
+
+  | $n$  | 1 | 2 |    3 |    4 |    5 |
+  |------+---+---+------+------+------|
+  | $RI$ | 0 | 0 | 0.52 | 0.89 | 1.12 |
++ $CR < 0.1$ 时为通过一致性检验.
+
+在得到矩阵后, 按列归一化, 按行求和后除以 $n$ 得到最终的权重值.
+
+注: 若准则层没有客观评价因素, 那么可以将其作为准则层,
+然后在其中加入可以衡量的客观因素, 重新引用层次分析法.
+
+其他资源 (MMA)
++ 一个 [[https://demonstrations.wolfram.com/PreferenceWeightsFromPairwiseComparisons/][代码]]
+
+*** TOPSIS 法
+有 $attr_i$ 一组的客观指标 (共 $n$ 个) 用于衡量 $x_i$ 各个对象.
+对于 $attr_i$ 有打分函数 $f_{\mathrm{rank_i}}$, 于是就可以用 TOPSIS 法来进行比较.
+
+如若有如下数据:
+
+| 对象 \ 指标 | $attr_1$                             | $attr_2$                             | $attr_3$                             |
+|-------------+--------------------------------------+--------------------------------------+--------------------------------------|
+| $x_1$       | $1$                                  | $-2$                                 | $6$                                  |
+| $x_2$       | $2$                                  | $0$                                  | $9$                                  |
+| 正理想解    | $\max f_{\mathrm{rank}_1}(attr_i(x_i))$ | $\max f_{\mathrm{rank}_2}(attr_i(x_i))$ | $\max f_{\mathrm{rank}_2}(attr_i(x_i))$ |
+| 负理想解    | $\min f_{\mathrm{rank}_1}(attr_i(x_i))$ | $\min f_{\mathrm{rank}_2}(attr_i(x_i))$ | $\min f_{\mathrm{rank}_2}(attr_i(x_i))$ |
+
+于是可以构造一个比较约定: 在 $n$ 维空间中,
+若一个对象距离正理想解越近, 且距离负理想解越远, 则视为最佳的选择. 
+
+适用于有客观指标的对象, 若没有客观指标,
+可以利用层次分析法来构建一个评价指标. 
+
+*** 熵权法
+对于 $n$ 个指标 $attr_i$, 考虑每个指标对应的对象的离散程度,
+通过离散程度, 也就是熵值来判断指标对综合评价的影响强弱.
+比如一个集中分布的指标就不如一个差异较大的指标更能够判断评价.
+于是使用熵值来作为判断指标的影响权值.
+
+适用于数据全面, 缺少文献或者主观依据的问题,
+比如有各种数据, 但是因为指标过于抽象, 不清楚哪个才是决定因素,
+也不能够像层次分析法一样直观地给出定性判断, 所以可以用熵权法.
+在统计的意义上建立评价体系. 适合 "公平公正" 的情况,
+但是不适合考虑数据之外的影响因素. 
+
+一个参考的文档: [[https://www.hindawi.com/journals/mpe/2020/3564835/][Effectiveness of Entropy Weight Method in Decision-Making]].
+
+1. 数据预处理: 将所有数据正规化, 如第 $j$ 个对象的第 $i$ 个指标的值 $x_{ij}$,
+   正规化为 $p_{ij} = \frac{x_{ij} - \min_j x_ij}{\max_j x_ij - \min_j x_ij}$.
+
+   (或者 $p_{ij} = \frac{x_{ij}}{\sum_j x_{ij}}$)
+2. 计算熵 [[https://reference.wolfram.com/language/ref/Entropy.html][Entropy]], 或者 $E_i = - \frac{\sum_j p_{ij} \mathrm{ln} p_{ij}}{\mathrm{ln} n}$.
+3. 以熵作为权值: $w_i = \frac{1 - E_i}{\sum_i (1 - E_i)}$
+
+** 图问题
+Mathematica 中的 [[https://reference.wolfram.com/language/ref/Graph.html][Graph]]:
+
+[[{{ site.github.url }}/_img/MMA/MMA-Graph-FindShortestPath-example.png]]
+
+其中:
++ 对于无向图中的符号 ●--●, 其为 =\[UndirectedEdge]=,
+  输入方法为 =ESC ue ESC=. 通过 =Ctrl - 7= 可以输入上标, 上标对应的是边的权值,
+  或者可以用 [[https://reference.wolfram.com/language/ref/UndirectedEdge.html][UndirectedEdge]] 来直接输入: =UndirectedEdge[u, v, t]=.
++ 使用 [[https://reference.wolfram.com/language/ref/FindShortestPath.html][FindShortestPath]] 来找到图中最短的路径.
+  使用 =Method= 参数可以指定找到最短路径的算法:
+  [[https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm][Dijkstra]], [[https://en.wikipedia.org/wiki/Bellman–Ford_algorithm][BellmanFord]]. (注: 其他还有 [[https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm][Floyd-Warshall]] 算法)
+
+  适用于货物运输问题, 设备更新问题这样的有一个起点和终点的规划模型的问题.
+  一般的想法是首先建立节点和节点之间的权, 最后使用找最短路径的方式来解决问题. 
++ 使用 [[https://reference.wolfram.com/language/ref/FindSpanningTree.html][FindSpanningTree]] 来找到一个最小生成树. 可用的 *Method* 有:
+  [[https://en.wikipedia.org/wiki/Kruskal%27s_algorithm][Kruskal]], [[https://www.sciencedirect.com/science/article/abs/pii/S0899825611000923][Minimum cost arborescences]], [[https://en.wikipedia.org/wiki/Prim%27s_algorithm][Prim]].
+
+  适用于通信建设, 管道铺设规划, 这样的没有起点和终点的规划模型的问题.
+  即想要让所有的点连接在一起的最小连接方法的问题. 
+  
+*** 蚁群算法
+在一个图中, 如何求得遍历所有点的最短路径的方法.
+且只经过城市 1 次. 其思想从蚁群如何寻找最短路径而来:
++ 蚂蚁经过路径会留下信息浓度 $\tau$, 其与经过路径的长度 $d_{ij}$ 成反比.
++ 蚂蚁在分叉路上更可能选择信息素浓度高的方向移动, 即
+  
+  $$P_{ij}^k(t) = \left\{\begin{array}{ll}\frac{\tau_{ij}(t)}{\sum_{s \in allowed_k} \tau_{is} (t)} & j \in allowed_k \\\\ 0 & j \notin allowed_k \end{array}\right.$$
+
+  其中, $P_{ij}^k(t)$ 为在 $t$ 时刻第 $k$ 只蚂蚁选择从 $i$ 到 $j$ 的概率.
+  $allowed_k$ 为 $k$ 蚂蚁未经过的城市集合.
+
+  为了加速收敛速度, 考虑距离的影响:
+  
+  $$P_{ij}^k(t) = \left\{\begin{array}{ll}\frac{[\tau_{ij}(t)]^\alpha \times [\frac{1}{d_{ij}(t)}]^\beta}{\sum_{s \in allowed_k} [\tau_{is} (t)]^\alpha \times [\frac{1}{d_{is}(t)}]^\beta} & j \in allowed_k \\\\ 0 & j \notin allowed_k \end{array}\right.$$
+
+  + 若 $\beta = 0$, 则完全为正反馈算法, 收敛速度较慢
+  + 若 $\alpha = 0$, 则完全为贪心算法, 容易陷入局部极值
++ 信息素随时间挥发, 故 $i$ 和 $j$ 节点之间 $t$ 时刻的信息素记为 $\tau_{ij}(t)$.
+  则 $\tau_{ij}(t + 1) = (1 - \rho) \tau_{ij} (t) + \sum_{k = 1}^m \Delta \tau_{ij}^k, 0 < \rho < 1$.
+  其中 $\Delta \tau_{ij}^k = \frac{Q}{L_k}$ 若 $k$ 经过 $d_{ij}$, 否则为 $0$, $L_k$ 为总路径长度;
+  $\rho$ 为一个信息素消失的速度. $Q$ 为一个常数. 
+
+其他资源 (MMA):
++ 一个代码的 [[https://demonstrations.wolfram.com/AntColonyOptimizationACO/][例子]]
++ 一个函数的 [[https://resources.wolframcloud.com/FunctionRepository/resources/AntColonyOptimization][库]]
+
+** 神经网络
+适用于: 预测类, 分类, 评价类型的问题.
+
+*** 感知机
+一个感知机模型 (最简单的神经网络) 由如下的部分组成:
++ 输入层: *Input* 为输入的信号 $x$
++ 激活函数: 综合判断输入信号是否达到 *阀值*
++ 输出层: *Output* 激活函数在输出层, 求得的函数就是输出值 $y$
+
+示意图:
+
+#+name: neural-network-sensor-machine
+#+header: :file ../_img/MMA/neural-network-sensor-machine.svg
+#+begin_src dot :exports none
+  digraph M {
+    rankdir = LR;
+    node [shape = point] output;
+    node [shape = circle];
+
+    subgraph cluster_Output {
+      style = dashed;
+      label = "Output";
+      f -> output [label = "y"];
+    }
+
+    subgraph cluster_Input {
+      style = dashed;
+      label = "Input";
+      x1 -> f [label = "w1"];
+      x2 -> f [label = "w2"];
+    }
+  }
+#+end_src
+
+#+attr_org: :width 0.32
+#+RESULTS: neural-network-sensor-machine
+[[file:../_img/MMA/neural-network-sensor-machine.svg]]
+
+[[{{ site.github.url }}/_img/MMA/neural-network-sensor-machine.svg]]
+
+若要在上面的模型中加入一个阈值.
+
+#+name: neural-network-sensor-machine-threshold
+#+header: :file ../_img/MMA/neural-network-sensor-machine-threshold.svg
+#+begin_src dot :exports none
+  digraph M {
+    rankdir = LR;
+    node [shape = point] output;
+    node [shape = circle];
+
+    subgraph cluster_Output {
+      style = dashed;
+      label = "Output";
+      sum -> f [label = "t = sum(wi * xi) - b"];
+      f -> output [label = "y"];
+    }
+
+    subgraph cluster_Input {
+      style = dashed;
+      label = "Input";
+      x1 -> sum [label = "w1"];
+      x2 -> sum [label = "w2"];
+      "-1" -> sum [label = "w3 = b"];
+    }
+  }
+#+end_src
+
+#+attr_org: :width 0.618
+#+RESULTS: neural-network-sensor-machine-threshold
+[[file:../_img/MMA/neural-network-sensor-machine-threshold.svg]]
+
+[[{{ site.github.url }}/_img/MMA/neural-network-sensor-machine-threshold.svg]]
+
+于是就可以加入一个阀值的考虑, 如果 =f(x) = x < 0 ? 0 : 1=,
+那么就变成了一个决断系统了. 
+
+注: 如果用 Mathematica 来的话, 就变成了一个简单的 *LinearLayer*:
+
+#+begin_src mathematica
+  layer = LinearLayer[1, "Input" -> 3]
+#+end_src
+
+大概就是这个样子的. 
+
+** 蒙特卡洛法
+当无法求得精确解的时候, 通过随机抽样, 根据统计试验求近似解.
+适用于可行域过大, 没有通用方法求出精确解的问题.
+
+注: 为了满足统计意义, 需要抽样数足够多.
+
+一个经典例子:
+
+[[{{ site.github.url }}/_img/MMA/MMA-MonteCarlo-method-and-pi.png]]
+
+蒙特卡洛法可以配合用于非线性规划来计算初始值,
+用于在非线性规划中辅助计算:
+1. 对于非线性多元函数 $f(\boldsymbol{x})$, 有 $n$ 个变元 $x_i$.
+   现在要在一组约束 $g_i(\boldsymbol{x})$ 下计算 $f$ 的最大 (小) 值. 
+2. 随机生成 $n$ 个变元, 记为 $\boldsymbol{x}^{(k)}$. 
+3. 判断约束 $g_i$ 是否被满足, 若是, 则进入下一步; 若否, 则重新生成. 
+4. 判断该结果是否为更大 (小) 值, 若是, 则更新最大 (小) 值; 若否,
+   则回到生成步骤重新开始. 
+
+其他参考:
++ [[https://reference.wolfram.com/language/howto/PerformAMonteCarloSimulation.html][How to | Perform a Monte Carlo Simulation]]
+
+** 传播模型
+可以参考 [[https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology][Compartmental models in epidemiology]].
+下面的模型原理非常简单, 基本只要搞清楚转换关系和约束关系即可. 
+
+*** 指数传播模型
++ $t$ 时刻传播数 $N(t)$
++ 单位时间传播的数量 $\lambda N(t) \Delta t$
++ 方程: $N(t + \Delta t) = N(t) + \lambda N(t) \Delta t$,
+  结果为 $N = N_0 e^{\lambda t}$ 类型的指数传播模型.
++ 一般只能用于描述初期的问题, 不太合理.
+
+*** SI 模型
++ 总数 $N$, 认为是不考虑变化的常数
++ 将人群分为易感染 (susceptible, 可感染) 和已感染 (infective),
+  用占比 $s(t)$ 和 $i(t)$ 来表示, 有 $s(t) + i(t) = 1$.
+  忽略治愈和死亡. 
++ 感染率: 已感染者每天接触的平均人数 $\lambda$ (日感染率),
+  接触可感染者时, 会将其感染成病人,
+  故一个已感染者传播的人数即为其接触的可感染人数 $\lambda s(t)$. 
++ 方程: $N i(t + \Delta t) - N i(t) = \lambda N s(t) i(t) \Delta t$.
+  一个例子:
+
+  #+begin_src mathematica
+    NDSolve[{i'[t] == 0.5* s[t] * i[t], s[t] + i[t] == 1, i[0] == 0.001},
+      {s, i}, {t, 0, 30}];
+    Plot[Evaluate[{s[t], i[t]} /. %[[1]]], {t, 0, 30}, PlotRange -> All]
+  #+end_src
+
++ 用 $i'(t)$ 来表示传染病曲线, 在高峰期 $i = 0.5$,
+  有 $t_m = \frac{1}{\lambda} \mathrm{ln} (\frac{1}{i_0} - 1)$
++ 但是没有考虑治愈
+
+*** SIS
++ 在 SI 模型上考虑治愈比例 $\mu$, 即每天被治愈的病人占总数的比例.
+  以及无免疫性, 即被治愈后仍然可以被感染.
++ 于是新的方程为:
+
+  $$\left\{\begin{array}{llll} i'(t) & = & \lambda i(t) (1 - i(t) - \mu i(t)) & t > 0\\\\i(0) & = & i_0 & \end{array}\right.$$
+
+*** SIR
++ 考虑治愈后不会被感染
++ $s'(t) = - \lambda i(t) s(t)$ 可感染人数的变化, 即被感染后的人数每天可以接触 $\lambda$ 人.
++ $i'(t) = \lambda i(t) s(t) - \mu i(t)$ 感染人数的变化为被感染的减去治愈的
++ $r'(t) = \mu i(t)$ 感染后治愈的人数的变化
++ $i(t) + s(t) + r(t) = 1$ 为总人数
+
+** 马尔科夫链
+适用于状态随机, 下一阶段只和当前状态有关的问题,
+如健康变化, 销售储存, 等价结构变化这样的问题.
+
+其他的参考资料:
++ [[https://www.wolfram.com/mathematica/new-in-9/markov-chains-and-queues/][Markov Chains and Queues]]
++ [[https://mathworld.wolfram.com/MarkovChain.html][Markov Chains]]
+
+#+begin_html
+<details><summary>一个题外话</summary>
+#+end_html
+
+后悔, 总之现在就是非常后悔, 如果当时我在概统课上好好听老师讲的关于赌博的问题的话,
+现在估计也不会花这么多的时间来学这些了. 害. 
+
+#+begin_html
+</details>
+#+end_html
