@@ -1,0 +1,522 @@
+#+layout: post
+#+title: Mathematica and Math Modeling
+#+date: 2023-2-16
+#+options: _:nil ^:nil
+#+math: true
+#+categories: mathematica
+* 非常功利的数学建模准备
+#+name: method-graphics
+#+header: :file ../_img/MMA/modeling-method-graphics.svg
+#+begin_src dot :exports none
+  digraph {
+    node [colorscheme = paired12, style = filled,
+          fontname = "Arial", fontcolor = "floralwhite",
+          color = lightgray, penwidth = 5, fixedsize = true];
+    edge [arrowsize = 1.5, penwidth = 3];
+
+    node [shape = point]
+      start [tooltip = "遇到问题 (摆大烂)", color = black];
+
+    node [fillcolor = 1,
+          width = 3.5, height = 2.5, fontsize = 45]
+      Question [shape = diamond, tooltip = "对问题进行分类"];
+
+    node [shape = circle];
+
+    node [fillcolor = 2, width = 3, fontsize = 45]
+      Optimize [tooltip = "优化问题"];
+      Predict [tooltip = "预测问题"];
+      Measure [tooltip = "评估问题"];
+      Arrange [tooltip = "运筹安排问题"];
+      Others [tooltip = "其他问题"];
+
+    node [fillcolor = 3, width = 2.7, fontsize = 35]
+      "Single/Multi\nGoal?" [shape = diamond, fixedsize = false,
+                    tooltip = "判断是否有多个目标"];
+      Single [tooltip = "单目标值的函数最优化"];
+      "Multi\nGoal" [tooltip = "多目标最优规划"];
+      Interpolation [URL = "https://en.wikipedia.org/wiki/Interpolation",
+                    tooltip = "Interpolation\n插值法\n用于根据数据来拟合函数. "];
+      Probability;
+      AI;
+      MonteCarlo [URL = "https://en.wikipedia.org/wiki/Monte_Carlo_method",
+                 tooltip = "Monte Carlo Method\nMonte Carlo 法\n以概率方法来计算问题. "];
+      "Graph" [tooltip = "Graph\n图\n可以将问题变换为和图相关的问题. "];
+      "Other\nOptimise" [tooltip = "其他可用的方法"];
+      Ranking [tooltip = "根据各种指标来对元素进行打分和评价"];
+      Automa [URL = "https://en.wikipedia.org/wiki/Cellular_automaton"
+             tooltip = "Cellular Automation\n元胞自动机\n可以用于模拟生物和物理之类的问题. "];
+      "Queuing\nTheory" [URL = "https://en.wikipedia.org/wiki/Queueing_theory"
+                        tooltip = "Queuing Theory\n排队论问题\n解决服务, 排队的问题. "];
+      "Gray\nModel" [URL = "https://en.wikipedia.org/wiki/Grey_relational_analysis"
+                    tooltip = "Gray Model (GRA Grey Relational Analysis)\n灰色预测模型\n适用于小样本的数据预测. "];
+      Classify [tooltip = "分类问题"];
+      Regression [tooltip = "回归模型\n用于从数据中猜测分布, 或者说, 拟合一个函数来描述数据. "];
+
+    node [fillcolor = 4, width = 2.7, fontsize = 35]
+      ARIMA [URL = "https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average"
+            tooltip = "AR (AutoRegression)\n自回归模型\n描述的是当前值和历史值的关系. "]
+      Linear;
+      NonLinear;
+      Relation [tooltip = "Correlation Analysis\n相关性分析\n可以用于对数据进行分类"
+               label = "Correlation\nAnalysis"];
+      PCA [URL = "https://en.wikipedia.org/wiki/Principal_component_analysis"
+          tooltip = "PCA (Principal Component Analysis)\n主成分分析法\n减少维数来集中数据从而找到主要的影响因素. "]
+      "Supervised\nLearning" [URL = "https://en.wikipedia.org/wiki/Supervised_learning",
+                             tooltip = "Supervised Learning\n监督学习\n根据标记过的样本来学习的方法. "];
+      "Path" [tooltip = "Shortest Path\n最短路径\n在图中的两点之间找到最短的路径. "];
+      "Tree" [tooltip = "Spanning Tree\n最小生成树\n在图中找到一个能够连接所有点的路径最小的树. "];
+      "Dynamic\nProgramming" [URL = "https://en.wikipedia.org/wiki/Dynamic_programming"
+                             tooltip = "Dynamic Programming\n动态规划\n适用于有重叠值问题和最优子结构性质的问题, 将问题分解成子问题来处理. "];
+      Markov [URL = "https://en.wikipedia.org/wiki/Markov_chain",
+              tooltip = "Markov Chain\nMarkov 链"];
+      Distribution [tooltip = "Distribution\n通过概率分布来进行预测."];
+      "Greedy\nAlgorithm" [URL = "https://en.wikipedia.org/wiki/Greedy_algorithm"
+                          tooltip = "Greedy Algorithm\n贪心算法\n在邻域寻找极值并移动到该位置. "];
+      PageRank [URL = "https://en.wikipedia.org/wiki/PageRank"
+               tooltip = "PageRank\nPageRank 排序算法\n通过连接关系来进行排序. "];
+      FCE [URL = "https://www.researchgate.net/publication/311993264_Using_a_fuzzy_comprehensive_evaluation_method_to_determine_product_usability_A_proposed_theoretical_framework",
+          tooltip = "FCE (Fuzzy Comprehensive Evaluation)\n模糊综合评价法\n建立在模糊数学上的一个东西, 适用于对问题给出一个评判标准. "];
+      Basic [shape = rect,
+            tooltip = "+ 通过 EWM 来计算样本特征的权值, 适用于无层次结构的问题. \n+ AHP 适用于在没有明确解决问题思路的问题中化简并分析问题. \n+ TOPSIS 在了解权重之后可以作为一个判断元素优劣的一个依据. "];
+      baseRegression  [label = "Basic", shape = rect
+                      tooltip = "和回归模型有关的知识点: \n+ 独立变量的数量\n+ 回归线的形状\n+ 度量变量的类型"];
+
+    node [fillcolor = 5, width = 2.5, fontsize = 34];
+      "Linear\nRegression" [tooltip = "Linear Regression\n线性回归\n在 Mathematica 中使用 LinearModelFit 进行线性回归. "];
+      "Logistics\nRegression" [tooltip = "Logistics Regression\n逻辑回归\n主要用于二元分类问题, 在 Mathematica 中使用 LogitModelFit 进行逻辑回归. "];
+      "Polynomial\nRegression" [tooltip = "Polynomial Regression\n多项式回归\n使用多项式进行拟合函数, 但是要防止因为使用的多项式阶数过高而造成过拟合. "];
+      "Stepwise\nRegression" [tooltip = "Stepwise Regression\n逐步回归\n适用于多个独立变量的问题. "];
+      "Ridge\nRegression" [tooltip = "Ridge Regression\n岭回归\n适用于共线性数据分析的方法, 类似于改良的最小二乘法. "];
+      "Lasso\nRegression" [tooltip = "Lasso Regression\n套索回归\n在 Mathematica 中的 Fit 和 FindFit 中有 LASSO, Ridge Regression 的支持. "];
+      "ElasictNet\nRegression" [tooltip = "ElasticNet Regression\n弹性回归"];
+      AR [URL = "https://en.wikipedia.org/wiki/Autoregressive_model"
+         tooltip = "AR (Autoregressive Model)\n自回归模型\n当前值和历史值的关系. "];
+      MA [URL = "https://en.wikipedia.org/wiki/Moving-average_model"
+         tooltip = "MA (Moving-Average Model)\n移动平均模型\n单一变量时间序列建模. "];
+      "Granger\nCausality\nTest" [URL = "https://en.wikipedia.org/wiki/Granger_causality"
+                                 tooltip = "Granger Causality Test\nGranger 因果关系检验\n可以用来检测两组时间序列之间是否存在因果关系. "];
+      "Decision\nTree" [URL = "https://en.wikipedia.org/wiki/Decision_tree"
+                tooltip = "Decision Tree\n决策树\n用层次树状结构为决策问题帮助选择最佳选项. "];
+      "Factor\nAnalysis" [URL = "https://en.wikipedia.org/wiki/Factor_analysis"
+                         tooltip = "Factor Analysis\n因子分析\n用少数因素来解释一群相关联的因素. "];
+      "Simulated\nAnnealing" [URL = "https://en.wikipedia.org/wiki/Simulated_annealing"
+                             tooltip = "Simulated Annealing\n模拟退火\n在贪心算法的基础上加入随机转移领域的几率, 随着时间变化转移几率逐渐减少. "];
+      ACO [URL = "https://en.wikipedia.org/wiki/Ant_colony_optimization_algorithms"
+          tooltip = "ACO (Ant Colony Optimization)\n蚁群算法\n用于计算最小生成树, 使用概率的方式. "]
+      AHP [URL = "https://en.wikipedia.org/wiki/Analytic_hierarchy_process",
+          tooltip = "AHP (Analytic Hierarchy Process)\n层次分析法\n在选择时引入量化指标来判断最终结果. "];
+      TOPSIS [URL = "https://en.wikipedia.org/wiki/TOPSIS",
+             tooltip = "TOPSIS\n优劣解距离法\n计算正负理想解, 以元素在特征空间距离正负理想解的距离来判断优劣. "];
+      EWM [URL = "https://www.hindawi.com/journals/mpe/2020/3564835/",
+          tooltip = "EWM (Entropy Weight Method)\n熵权法\n计算特征量的熵作为特征值对整体的影响强弱. "];
+
+    node [fillcolor = 6, width = 2.2, fontsize = 32];
+      "Random\nForest" [URL = "https://en.wikipedia.org/wiki/Random_forest"
+                       tooltip = "Random Forest\n随机森林\n整一堆决策树, 然后将其输出整合作为参考. "]
+    node [fillcolor = 7, width = 2.0, fontsize = 27];
+    node [fillcolor = 8, width = 1.5, fontsize = 25];
+    node [fillcolor = 9, width = 1.2, fontsize = 20];
+
+    start -> Question -> {Optimize, Predict, Measure, Arrange, Others};
+    Optimize -> {"Single/Multi\nGoal?", "Graph", "Other\nOptimise"};
+    Predict -> {Interpolation, Probability, "Gray\nModel", Regression};
+    Measure -> {Ranking, Classify};
+    Arrange -> {"Queuing\nTheory"};
+    Others -> {AI, MonteCarlo, Automa};
+
+    "Single/Multi\nGoal?" -> {Single, "Multi\nGoal"};
+    "Other\nOptimise" -> {"Dynamic\nProgramming", "Greedy\nAlgorithm"};
+    Classify -> {Relation, PCA};
+    Regression -> {ARIMA, baseRegression};
+    baseRegression -> {
+      "Linear\nRegression", "Logistics\nRegression",
+      "Polynomial\nRegression", "Stepwise\nRegression",
+      "Ridge\nRegression", "Lasso\nRegression",
+      "ElasictNet\nRegression" };
+
+    Single -> {Linear, NonLinear};
+    AI -> {"Supervised\nLearning"};
+    Ranking -> {Basic, PageRank, FCE};
+    Basic -> {AHP, TOPSIS, EWM};
+    "Graph" -> {"Path", "Tree"};
+    "Supervised\nLearning" -> {"Decision\nTree", "Factor\nAnalysis"};
+
+    "Probability" -> {Markov, Distribution};
+    "Decision\nTree" -> {"Random\nForest"};
+    "Greedy\nAlgorithm" -> {"Simulated\nAnnealing"};
+    "Tree" -> {ACO};
+    ARIMA -> {AR, MA, "Granger\nCausality\nTest"};
+  }
+#+end_src
+
+#+RESULTS: method-graphics
+[[file:../_img/MMA/modeling-method-graphics.svg]]
+
+#+begin_html
+<object data="{{ site.github.url }}/_img/MMA/modeling-method-graphics.svg" width="100%"></object>
+#+end_html
+
+注: 本篇为 [[{{ site.github.url }}/mathematica/mathematica-and-multiparadigm-data-science/][Mathematica and MultiParadigm Data Science]] 中和数学建模的一个整理.
+主要是为了方便查找和使用对应的算法和程序.
+
+思路是这样的: 因为准备时间有限, 所以尽可能地只使用尽可能少的工具.
+所以会尽可能地在 Mathematica 中去找到所有的建模所需的程序和函数. 
+
+* Optimize
+** Maximize & Minmize
+[[https://www.wolfram.com/language/core-areas/optimization/][Wolfram Optimization]]:
++ [[https://reference.wolfram.com/language/ref/LinearOptimization.html][LinearOptimization]] 适用于线性约束问题下的线性函数的最小值的查找.
+
+  #+name: linearoptimization
+  #+begin_src mathematica :results value pp
+    LinearOptimization[x + y, {x + 2 * y == 3, x >= 0, y >= 0}, {x, y}]
+  #+end_src
+
+  #+RESULTS: linearoptimization
+  : {x -> 0, y -> 3/2}
+
+  剩下的两个函数和其语法类似, 代码略. 
++ [[https://reference.wolfram.com/language/ref/FindMinimum.html][FindMinimum]] 适用于寻找邻域内的局部最小值, 寻找的方式有点像是贪心算法.
++ [[https://reference.wolfram.com/language/ref/Minimize.html][Minimize]] 适用于寻找全局的最小值
+
+  (注: 该函数对于 *非常多* 的变量的效果并不是很好.
+  +虽然我觉得我也没有可能遇到这种情况就是了...+)
+
+#+begin_html
+<details><summary>一个比较炫酷的例子</summary>
+#+end_html
+
+可以使用 [[https://reference.wolfram.com/language/ref/StepMonitor.html][StepMonitor]] 配合 [[https://reference.wolfram.com/language/ref/Sow.html][Sow]] 和 [[https://reference.wolfram.com/language/ref/Reap.html][Reap]] 来捕捉每一步具体的过程,
+可以用于计算和绘制查找最小值的过程:
+
+#+begin_src mathematica
+  With[{exp = (1 - x)^2 + 100*(-x^2 - y)^2 ,
+    xrange = {x, -1.5, 1.5}, yrange = {y, -1.5, 1.5}},
+   With[{res = Reap[NMinimize[exp, {x, y}, StepMonitor :> Sow[{x, y}]]]},
+    With[{path = res[[2, 1]], minValue = res[[1, 1]]},
+     ContourPlot[exp, xrange, yrange,
+      Epilog -> {Arrow[path], Point[path]},
+      Contours -> Table[10^-i, {i, -2, 10}],
+      ColorFunction -> (Hue[(Log[10, #] + 10)/12] &),
+      ColorFunctionScaling -> False,
+      ImageSize -> Medium]
+     ]]]
+#+end_src
+
+参考的是官方文档的 [[https://reference.wolfram.com/language/ref/NMinimize?view=all#151017442][StepMonitor]] 的例子.
+可能需要重新修改一下关于着色的函数. 
+
+#+begin_html
+</details>
+#+end_html
+
+** Graph
+[[https://reference.wolfram.com/language/guide/GraphsAndNetworks.html][Graphs & Networks]]:
++ [[https://reference.wolfram.com/language/ref/Graph.html][Graph]] 构建图结构, 适用于存在 "节点-边" 的结构的问题. 
++ [[https://reference.wolfram.com/language/ref/FindShortestPath.html][FindShortestPath]] 寻找两点之间最短路径. 
++ [[https://reference.wolfram.com/language/ref/FindSpanningTree.html][FindSpanningTree]] 寻找连接所有节点的最小生成树. 
++ Ant Conony Optimization 通过模拟蚁群和信息素的行为来尝试解决问题. 
+  + [[https://demonstrations.wolfram.com/AntColonyOptimizationACO/][Ant Colony Optimization (ACO) | WOLFRAM Demonstrations Project]]  
+  + [[https://resources.wolframcloud.com/FunctionRepository/resources/AntColonyOptimization][AntColonyOptimization | WOLFRAM FUNCTION REPOSITORY]]
++ [[https://reference.wolfram.com/language/ref/FindMaximumFlow.html][FindMaximumFlow]] 找到最大流. 
+** Other Optimise
++ Dynamic Programming +不熟+
+  + [[http://www.yaroslavvb.com/papers/wagner-dynamic.pdf][Dynamic Programming | www.yaroslavvb.com]]
++ Greedy Algorithm +不熟+
++ [[https://mathworld.wolfram.com/SimulatedAnnealing.html][Simulated Annealing]] 模拟退火, 在贪心算法基础上逐渐减少随机转移的概率.
+
+  或者直接调用函数 +莽就完事了+:
+  
+  #+begin_src mathematica
+    NMinimize[f, vars, Method -> "SimulatedAnnealing"]
+  #+end_src
+* Predict
+** Interpolation
+[[https://en.wikipedia.org/wiki/Interpolation][Interpolation | Wikipedia]]
++ [[https://reference.wolfram.com/language/ref/Interpolation.html][Interpolation]] 适用于根据数据来拟合一个函数, 可以用来拟合缺失的值.
+  不一定适合需要计算连续变化的问题, 适合函数值的一个结果.
++ [[https://reference.wolfram.com/language/ref/InterpolatingPolynomial.html][InterpolatingPolynomial]] 牛顿多项式插值法. 
++ [[https://reference.wolfram.com/language/ref/FindFormula.html][FindFormula]] 用于根据数据来找一个函数形式,
+  可以通过 =TargetFunctions= 来指定用来猜的函数. 
+** Probability
++ [[https://reference.wolfram.com/language/ref/FindDistribution.html][FindDistribution]] 根据数据来找出一个分布的概率函数.
+  可以用来判断函数的分布可能以及判断是否会有不同的数据分布.
+  + [[https://reference.wolfram.com/language/ref/RandomVariate.html][RandomVariate]] 根据概率分布来随机生成数据. 
+  + [[https://reference.wolfram.com/language/ref/AnomalyDetection.html][AnomalyDetection]] 得到一个能够用来判断异常数据的一个判断函数,
+    其核心是根据概率分布的一个解决方式. 
++ [[https://reference.wolfram.com/language/guide/MarkovProcesses.html][Finite Markov Processes | Wolfram Doc]] 有限 Markov 链,
+  适用于仅和当前状态有关的变化问题.
+  + [[https://reference.wolfram.com/language/ref/DiscreteMarkovProcess.html][DiscreteMarkovProcess]] 可以根据转移矩阵来生成一个 Markov 转移分布.
+    可以通过 [[https://reference.wolfram.com/language/ref/RandomFunction.html][RandomFunction]] 来对这个结果进行模拟. 
+** Gray Model
+可参考文档:
++ [[https://iopscience.iop.org/article/10.1088/1742-6596/1654/1/012104/pdf][The Grey Forecasting Model for the Medium-and Long-Term Load Forecasting | iop.org]]
+  
+** AutoRegression
++ [[https://reference.wolfram.com/language/ref/ARProcess.html][ARProcess]] 模拟 AR 过程 [[https://en.wikipedia.org/wiki/Autoregressive_model][Autoregressive Model | Wikipedia]] 自动回归模型
++ [[https://en.wikipedia.org/wiki/Vector_autoregression][Vector Autogression | Wikipedia]] 向量 AR 过程
++ [[https://reference.wolfram.com/language/ref/ARMAProcess.html][ARMAProcess]] 自回归滑动平均模型
++ [[https://reference.wolfram.com/language/ref/ARIMAProcess.html][ARIMAProcess]] 模拟 ARIMA 过程 [[https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average][Autoregressive Inegrated Moving Average | Wikipedia]]
+  
+* Measure
+** Ranking
+*** AHP
+可参考的文档:
++ [[https://demonstrations.wolfram.com/PreferenceWeightsFromPairwiseComparisons/][Preference Weights from Pairwise Comparisons | WOLFRAM Demonstrations Project]]
+*** TOPSIS
+[[https://en.wikipedia.org/wiki/TOPSIS][TOPSIS | Wikipedia]] 计算正负理想解以距离其距离正负理想解的距离来作为判断因素
++ [[https://reference.wolfram.com/language/ref/Max.html][Max]], [[https://reference.wolfram.com/language/ref/Min.html][Min]] 用于计算正负理想解
++ [[https://reference.wolfram.com/language/ref/EuclideanDistance.html][EuclideanDistance]] 用于计算距离 (其他的距离函数可以考虑 =?*Distance=)
+
+#+begin_html
+<details><summary>一个可行的代码</summary>
+#+end_html
+
+设数据的类型类似如下形式:
+
+#+name: topsis-example-data
+#+begin_src mathematica :exports both
+  data = Table[Table[RandomInteger[5], {i, 2}], {j, 3}]
+#+end_src
+
+#+RESULTS: topsis-example-data
+| 4 | 4 |
+| 4 | 0 |
+| 4 | 1 |
+
++ 计算正规化 (normalization) 数据的函数:
+
+  #+name: topsis-normalization-func
+  #+begin_src mathematica
+    normalData[data0_] := With[{ data = Transpose[data0] },
+      Transpose[(# / Sqrt[Total[#^2& /@ #]]) & /@ data]];
+  #+end_src
++ 如果需要安排权值 $w_i$, 那么考虑:
+
+  #+name: topsis-weight-assigning
+  #+begin_src mathematica
+    weightAssignData[data_, weight_] := MapThread[#1 * #2&, {#, weight}]& /@ data;
+  #+end_src
++ 计算正负理想解的函数:
+
+  #+name: topsis-worst-best-alternatives
+  #+begin_src mathematica
+    worstAlternative[data0_] := With[{ data = Transpose[data0] }, Min /@ data];
+    bestAlternative[data0_] := With[{ data = Transpose[data0] }, Max /@ data];
+  #+end_src
++ 最后使用距离函数, 并通过距离函数来评价:
+
+  #+name: topsis-rankfunc
+  #+begin_src mathematica
+    rankData[data_] := With[{ worst = worstAlternative[data], best = bestAlternative[data] },
+      SortBy[data, {EuclideanDistance[best, #]&, EuclideanDistance[worst, #]&}]];
+  #+end_src
+
+#+begin_html
+</details>
+#+end_html
+*** EWM
+[[https://www.hindawi.com/journals/mpe/2020/3564835/][Entropy Weight Method | Hindawi]] 使用数据本身的统计分布来作为权值的判断因素.
++ [[https://reference.wolfram.com/language/ref/Entropy.html][Entropy]] 用于计算数据的熵
+
+#+begin_html
+<details><summary>一些代码及解释</summary>
+#+end_html
+
+参考 [[https://www.hindawi.com/journals/mpe/2020/3564835/][上面]] 的论文, 直接摘取部分摘要:
+
+#+begin_quote
+Entropy weight method (EWM) is a commonly used weighting method
+that measures value dispersion in decision-making. The greater
+the degree of dispersion, the greater the degree of differentiation,
+and more information can be derived.
+#+end_quote
+
+假设数据样本有如下的形式:
+
+#+name: ewm-data
+#+begin_src mathematica
+  data = Table[Table[RandomReal[5], {j, 2}], {i, 5}]
+#+end_src
+
++ 首先正规化采样值
+
+  #+name: ewm-standardization
+  #+begin_src mathematica
+    standardData[data0_] := With[{ data = Transpose[data0] },
+      Transpose[# / Total[#]& /@ data]];
+  #+end_src
++ 然后计算每组指标对应的熵值并根据熵值来计算权值:
+
+  #+name: ewm-entropy
+  #+begin_src mathematica
+    weightData[data_] := With[{ entropydata = Entropy /@ Transpose[data] },
+      With[{ sum = Total[(1 - #)& /@ entropydata] }, ((1 - #) / sum)& /@ entropydata]];
+  #+end_src
+
+  Note: 或者可以考虑 $E = - \frac{\sum_j p_{ij} \mathrm{ln} p_{ij}}{\mathrm{ln} n}$. 
++ 于是打分函数就变成了一个 =MapThread[#1 * #2&, {standarddata, weightData[standarddata]}]=.
+  
+#+begin_html
+</details>
+#+end_html
+*** FCE
+FCE: Fuzzy Comprehensive Evaluation, 建立在模糊数学上.
+
+可以参考的几个应用:
++ [[https://link.springer.com/article/10.1007/s13202-018-0430-y#:~:text=Fuzzy%20comprehensive%20evaluation%20(FCE)%20is,water%20flooding%20effect%20of%20oilfield.][Application of fuzzy comprehensive evaluation to evaluate the effect of water flooding development]]
++ [[https://www.nature.com/articles/s41598-022-23887-2][Comprehensive evaluation model for health grade of multi-component compound release materials based on fuzzy comprehensive evaluation with grey relational analysis]]
++ [[https://www.eeer.org/journal/view.php?number=1165][The fuzzy comprehensive evaluation (FCE) and the principal component analysis (PCA) model simulation and its applications in water quality assessment of Nansi]]
++ [[https://www.hindawi.com/journals/mpe/2018/8710192/][Fuzzy Comprehensive Evaluation Method of Masonry Structure Safety Based on Grey Clustering Theory]]
+*** PageRank
+[[https://en.wikipedia.org/wiki/PageRank][PageRank | Wikipedia]] 用于衡量网络 (Graph) 中的节点的排序顺序. 
++ [[https://reference.wolfram.com/language/ref/PageRankCentrality.html][PageRankCentrality]] +佩奇算法+
++ [[https://reference.wolfram.com/language/ref/LinkRankCentrality.html][LinkRankCentrality]]
+
+  可以参考的论文: [[https://arxiv.org/abs/0902.3728][LinkRank: Finding communities in directed networks | arxiv]]
+** Classify
+*** PCA
+[[https://en.wikipedia.org/wiki/Principal_component_analysis][PCA (Principal Component Analysis) | Wikipedia]] 主成分分析.
++ [[https://reference.wolfram.com/language/ref/PrincipalComponents.html][PrincipalComponents]] 将一组数据集中汇聚到中心
+
+  #+begin_html
+  <details><summary>一个例子</summary>
+  #+end_html
+
+  如果有一个数据的分布并不在中心, 而是分散在四周,
+  想要将其变换并集中在中心:
+
+  #+name: pca-example-data
+  #+begin_src mathematica
+    data = With[{ dst1 = NormalDistribution[2, .75], dst2 = NormalDistribution[-1, 2] },
+      Table[{2 * a + b, a - 4 * b} /. { a -> RandomVariate[dst1], b -> RandomVariate[dst2] }, 10]];
+  #+end_src
+
+  使用 =ListPlot[PrincipalComponents[data]]= 来输出集中的图片:
+
+  [[{{ site.github.url }}/_img/MMA/pca-example.svg]]
+
+  #+begin_html
+  </details>
+  #+end_html
+*** Correlation Analysis
+[[https://en.wikipedia.org/wiki/Correlation][Correlation | Wikipedia]] 可以用相关性来对数据进行分类. 
++ [[https://reference.wolfram.com/language/ref/Correlation.html][Correlation]], [[https://reference.wolfram.com/language/ref/CorrelationTest.html][CorrelationTest]] 用于检测数据的相关程度
+* Arrange
+** Queuing Theory
+[[https://en.wikipedia.org/wiki/Queueing_theory][Queueing Theory | Wikipedia]] 用于安排服务和排队的问题. 
++ [[https://reference.wolfram.com/language/ref/QueueingProcess.html][QueueingProcess]]
++ [[https://reference.wolfram.com/language/ref/QueueingNetworkProcess.html][QueueingNetworkProcess]]
+* Others
+** MonteCario
+[[https://reference.wolfram.com/language/howto/PerformAMonteCarloSimulation.html][How to | Perform a Monte Carlo Simulation]]
+
++ [[https://reference.wolfram.com/language/ref/RandomVariate.html][RandomVariate]] 根据概率分布来随机生成
++ ~randomWalk[n_] := Accumulate[Prepend[RandomVariate[NormalDistribution[0, 1], n], 0]]~
+  随机游走的代码. 
+** Automa
+[[https://en.wikipedia.org/wiki/Cellular_automaton][Cellular Automation | Wikipedia]] 元胞自动机, 可以用于生物, 化学, 物理之类的模拟. 
++ [[https://resources.wolframcloud.com/FunctionRepository/resources/CellularAutomataCartogram][CellularAutomataCartogram | WOLFRAM FUNCTION REPOSITORY]]
+  
+** AI
+[[https://www.wolfram.com/language/core-areas/machine-learning/][Wolfram Machine Learning]]
+
+*** General Functions
++ [[https://reference.wolfram.com/language/guide/MachineLearningMethods.html][Machine Learning Methods]] Mathematica 中的一些内置的 AI 方法
++ [[https://reference.wolfram.com/language/ref/Classify.html][Classify]] 根据样本来生成分类函数
++ [[https://reference.wolfram.com/language/ref/FeatureExtract.html][FeatureExtract]] 尝试提取输入的样本的特征
++ [[https://reference.wolfram.com/language/ref/Predict.html][Predict]] 根据样板来生成预测函数
++ [[https://reference.wolfram.com/language/ref/FindClusters.html][FindClusters]] 根据样本寻找聚类
++ [[https://reference.wolfram.com/language/ref/DimensionReduction.html][DimensionReduction]] 将样本的维度缩小
++ [[https://reference.wolfram.com/language/tutorial/NeuralNetworksRegressionWithUncertainty.html][Regression with Uncertainty]] 回归. 
++ [[https://reference.wolfram.com/language/ref/LearnDistribution.html][LearnDistribution]] 根据样本猜测分布
++ [[https://reference.wolfram.com/language/ref/AnomalyDetection.html][AnomalyDetection]] 用于查找不同的数据
++ [[https://reference.wolfram.com/language/ref/SynthesizeMissingValues.html][SynthesizeMissingValues]] 用于填补 =Missing[]= 的数值
+
+*** Decision Tree & Random Forest
++ [[https://reference.wolfram.com/language/ref/method/DecisionTree.html][DecisionTree]] Wolfram Machine Learning Method. Wolfram 内置的方法,
+  可以用于 =Predict=, =Classify=, =LearnDistribution= 函数.
+
+  #+begin_html
+  <details><summary>类似于如下的一个决策树</summary>
+  #+end_html
+
+  比如说有这样的一个决策树:
+
+  #+name: decision-tree-example
+  #+header: :file ../_img/MMA/decision-tree-example.svg
+  #+begin_src dot :exports none
+    graph Decision_Tree {
+      node [shape = point] start [tooltip = "拿到问题"];
+      node [shape = rect]
+        "查相关文档"; "要不先看看别的问题?"; "尝试构建一个图";
+        "多目标最优规划"; "最短路径"; "最小生成树"; "单目标最优规划";
+        "考虑评分函数"; "PageRank?"; "使用其作为评分函数";
+        "AHP"; "EWM & TOPSIS"; "转换为约束的单目标"; "多目标规划";
+        "QueueingProcess"; "考虑元胞自动机?"; "考虑图和最大流?";
+      node [shape = diamond];
+      start -- "物理问题?";
+      "物理问题?" -- "管理问题?" [label = "否"];
+      "物理问题?" -- "是否有现成公式?" [label = "是"];
+
+      "是否有现成公式?" -- "查相关文档" [label = "是"];
+      "是否有现成公式?" -- "要不先看看别的问题?" [label = "否"]
+
+      "管理问题?" -- "网络分配问题?" [label = "是"];
+      "网络分配问题?" -- "尝试构建一个图" [label = "是"];
+      "尝试构建一个图" -- "最短路径" [label = "仅连接两点"];
+      "尝试构建一个图" -- "最小生成树" [label = "连接所有点"];
+
+      "网络分配问题?" -- "最优选择问题?" [label = "否"];
+      "最优选择问题?" -- "服务调度问题?" [label = "否"];
+      "服务调度问题?" -- "简单点服务?" [label = "是"];
+      "简单点服务?" -- "QueueingProcess" [label = "是"];
+      "简单点服务?" -- "能否构建简单网络?" [label = "否"];
+      "能否构建简单网络?" -- "考虑元胞自动机?" [label = "否"];
+      "能否构建简单网络?" -- "考虑图和最大流?" [label = "是"];
+      "最优选择问题?" -- "目标单一?" [label = "是"];
+      "目标单一?" -- "多目标最优规划" [label = "否"];
+      "目标单一?" -- "单目标最优规划" [label = "是"];
+      "单目标最优规划" -- "是否有现成评分公式" [label = "是"];
+      "是否有现成评分公式" -- "考虑评分函数" [label = "无"];
+      "是否有现成评分公式" -- "使用其作为评分函数" [label = "是"];
+      "多目标最优规划" -- "多目标严格约束?";
+      "多目标严格约束?" -- "转换为约束的单目标" [label = "是"];
+      "多目标严格约束?" -- "多目标规划" [label = "否"];
+      "管理问题?" -- "分类问题?" [label = "否"];
+      "分类问题?" -- "评估问题?" [label = "否"];
+      "分类问题?" -- "是否有必要AI?" [label = "是"];
+      "评估问题?" -- "是否有科学评价标准?" [label = "是"];
+      "评估问题?" -- "其他问题" [label = "否"];
+      "是否有科学评价标准?" -- "数据是否有结构特征?" [label = "否"];
+      "数据是否有结构特征?" -- "PageRank?" [label = "是"];
+      "数据是否有结构特征?" -- "直观判断依据?" [label = "否"];
+      "直观判断依据?" -- "AHP" [label = "是"];
+      "直观判断依据?" -- "EWM & TOPSIS" [label = "否"];
+
+      "多目标规划" [tooltip = "引入正负偏差变量来讲目标函数变成容易求解的等式关系. "];
+      "PageRank?" [tooltip = "适合图结构的问题, 研究相互之间的联系关系. 类似还有 LinkRank. "];
+      "AHP" [tooltip = "层次分析法, 尽可能将抽象指标分解成数值指标. "];
+      "EWM & TOPSIS" [tooltip = "熵权法, 根据数据统计性质赋权. TOPSIS, 根据数据分布正负理想解来评判数据. "];
+      "其他问题" [tooltip = "如无必要, 建议去掉. "]
+    }
+  #+end_src
+
+  #+RESULTS: decision-tree-example
+  [[file:../_img/MMA/decision-tree-example.svg]]
+
+  #+begin_html
+  <object data="{{ site.github.url }}/_img/MMA/decision-tree-example.svg" width="100%"></object>
+  #+end_html
+
+  #+begin_html
+  </details>
+  #+end_html
++ [[https://reference.wolfram.com/language/ref/method/RandomForest.html][RandomForest]] Wolfram Machine Learning Method. Wolfram 内置的方法,
+  可以用于 =Classify= 和 =Predict=. 
+  
+*** Neural Networks
+[[https://resources.wolframcloud.com/NeuralNetRepository/all/][Wolfram Neural Net Repository]] 官方的一个神经网络库,
+可以在已经实现的神经网络的基础上进行修改来用于新的问题. 
+
