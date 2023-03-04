@@ -1,6 +1,6 @@
 #+layout: post
 #+title: [Reading] Natural Language Processing in Lisp 01
-#+date: 2023-1-27
+#+date: 2023-02-23
 #+options: _:nil ^:nil
 #+math: true
 #+categories: reading
@@ -387,7 +387,7 @@ their limitations.
 <details>
 <summary>题外话</summary>
 #+end_html
-
+***** 随机的英文单词
 突然很好奇一个想法, 如果我有一个足够大的英语单词库 (比如 [[https://www.mit.edu/~ecprice/wordlist.10000][这个]]), 然后对其进行统计,
 比如说将 26 个字母每个字母都做一遍统计, 统计其从前一个字母,
 或者说前几个字母向下一个字母变化的概率.
@@ -664,15 +664,361 @@ their limitations.
 
 *[2023-1-25]*: 先暂停一下, 去搞一个
 
-#+begin_html
-</details>
-#+end_html
+(乐: 这个就是一个例题里面的一个东西. )
 
 #+begin_html
 </details>
 #+end_html
+
+*[2023-2-21]*: 回来继续
+
+#+begin_html
+</details>
+#+end_html
+
+*** FSTN in LISP
+**** 使用代码来储存 FSTN 的结构
+注: 如果有时间的话, 可以考虑直接用 =defmarco= 来实现类似的操作.
+并且为了防止占用 =#=, 在 clisp 里面用 =|#|= 的形式来描述. 
+
+#+name: swahili_fstn_expression_in_lisp
+#+begin_src common-lisp
+  (defvar haha-fstn "FSTN for haha! ")
+  (setq haha-fstn
+        '((Initial (1))
+          (Final (3))
+          (From 1 to 2 by h)
+          (From 2 to 3 by a)
+          (From 3 to 1 by !)))
+
+  (defvar swahili-1 "FSTN for Swahili. ")
+  (setq swahili-1
+        '((Initial (1))
+          (Final (5))
+          (From 1 to 2 by subj)
+          (From 2 to 3 by tense)
+          (From 3 to 4 by obj)
+          (From 4 to 5 by stem)))
+
+  (defvar abbreviations)
+  (setq abbreviations
+        '((subj ni u a tu wa)
+          (obj ni ku m tu wa)
+          (tense ta na me li)
+          (stem penda piga sumbua lipa)))
+#+end_src
+
+#+begin_html
+<details><summary>一些数据结构的其他代码</summary>
+#+end_html
+
+#+name: fstn-data-structure-in-lisp
+#+begin_src common-lisp
+  ;;; The Network Rules
+  (defun initial-nodes (network)
+    "Find Initial nodes in NETWORK. "
+    (nth 1 (assoc 'Initial network)))
+
+  (defun final-nodes (network)
+    "Find Final nodes in NETWORK. "
+    (nth 1 (assoc 'Final network)))
+
+  (defun transitions (network)
+    "Find Transitions for NETWORK. "
+    (cddr network))
+
+  ;;; The Transistion Rules
+  (defun trans-node (transition)
+    "Get From node from the TRANSITION. "
+    (getf transition 'From))
+
+  (defun trans-newnode (transition)
+    "Get To node from the TRANSISTION. "
+    (getf transition 'To))
+
+  (defun trans-label (transition)
+    "Get By node from the TRANSITION. "
+    (getf transition 'by))
+#+end_src
+
+注: 这里有一个小小的吐槽. 这样的话就相当于把一个 FSTN
+的形式给写死了. (指 =transitions= 的代码, 相当于是认为
+FSTN 的前两行就是 Initial 和 Final, 然后后面的全都是转移关系. 
+
+#+begin_html
+</details>
+#+end_html
+
+**** 根据 FSTN 的历遍机器 - Recognizer [低端版本]
+先定义算法的过程:
+1. 根据可能的 =Initial= nodes 建立一组可能的状态 (initial pool)
+2. 执行如下操作:
+   1. 选择其中的一个可能的状态 (将其从 pool 中移除)
+   2. 如果它处于 =Final= 状态, 则停止并说明识别成功,
+      否则执行下面的操作:
+      1. 计算它下一步可能的状态
+      2. 将那些可能的状态放到 initial pool 里面
+3. 如果可选的 pool 被清空了, 那么就说明识别不成功
+
+那么一个可能的状态长什么样呢? 即希望通过: =(state , remaining input)=
+的形式来记录. 这个计算下一步可能的状态的话, 分为三种情况:
++ 若 label 和 =remaining input= 的符合
++ 若 abbreviate 和 =remaining input= 符合
++ 若 label 是 =#=
+
+于是代码如下:
+
+#+name: recognize-by-fstn-common-lisp
+#+begin_src common-lisp
+  (defun recognize (network tape)
+    "Test if the TAPE matches NETWORK, return t if true, nil otherwise. "
+    (catch 'stop
+      (dolist (initial (initial-nodes network))
+        ;; Iterating the inital pool
+        (recognize-next initial tape network))
+      ;; return nil if fails
+      nil))
+
+  (defun recognize-next (state tape network)
+    "Iterate the tape by shorten the TAPE, move to next state by NETWORK. 
+  If TAPE is empties and in final STATE, meaning case matched, it will throw 'stop."
+    (if (and (member state (final-nodes network))
+             (null tape))                 ; final state and empty tape
+        (throw 'stop t)                   ; success and abort
+        (dolist (transition (transitions network))
+          (if (equal state (trans-node transition)) ; select start
+              ;; for every possible next-nodes
+              (dolist (newtape (recognize-move (trans-label transition) tape))
+                (recognize-next (trans-newnode transition) newtape network))))))
+
+  (defun recognize-move (label tape)
+    "Return a list of possible new tape by label. "
+    (if (equal (car tape) label)          ; first of tape matches label 
+        (list (cdr tape))
+        (if (member (car tape) (assoc label abbreviations))
+            (list (cdr tape))             ; if matches abbreviations
+            (if (equal label '|#|)        ; jump if #
+                (list tape)
+                '()))))                   ; return nil if all fails
+#+end_src
+
+#+begin_html
+<details><summary>注: 关于这个代码的一些注释</summary>
+#+end_html
+
+在计科导里面我们实现了一个图灵机,
+这里的状态转移基本上就非常像图灵机了,
+只是规则已经固定且形式上是一个变短的形式.
+
+不过现在还没有搞定如何处理位置和无限长度纸带的一个写法,
+之后有时间再试试看用 Common Lisp 来写一个图灵机.
+
+不过这个我觉得实在有点不太合理, 因为如果要按照上面的算法来进行的话,
+我们输入的文本就有很多的要求, 比如我们对于一个 Swahili 的语言,
+就需要提前分词: '(wa me tu lipa) 否则就无法处理. 
+这显然是和一开始的想法是违背的吧,
+毕竟一般可能会希望通过 'wametulip 这样直接的形式来.
+
+一个可能的想法就是将 Abbreviations 通过展开的方式,
+来替代提前分割的一个做法.
+
+并且还有一个问题就是这个问题里面的算法, 如果对于很多分支的话,
+就会因为搜索空间过大而搜索无力而死机了. 这样就非常痛苦.
+现实世界中这样的单词空间可以说是成百上千的量级了,
+如果不能够解决的话, 就会有一个搜索爆炸的问题.
+
+关于这个的话, 我觉得 Steven Wolfram 的一个 [[https://www.bilibili.com/video/BV1uj411V7ch/][视频]] 应该讲得挺好的,
+大致的一个思路就是通过概率的方式来减少历遍所有的可能域.
+而通过谈话模型来缩小可能的空间或者改变倾向. 有点像是蚁群算法,
+或者和我之前整的那个完全随机的那个单词生成的感觉很像,
+但是需要更加精细的操作. 
+
+而生成的代码就变得更加简单一点了:
+
+#+name: generate-by-fstn-common-lisp
+#+begin_src common-lisp
+  (defun generate (network)
+    "Print all possible tapes by NETWORK. "
+    (dolist (initial (initial-nodes network))
+      (generate-next initial '() network)))
+
+  (defun generate-next (node tape network)
+    "Append the TAPE and change NODE by NETWORK. "
+    (if (member node (final-nodes network))
+        (print tape)
+        (dolist (transition (transitions network))
+          (if (equal node (trans-node transition))
+              (generate-move transition tape network))
+          '())))
+
+  (defun generate-move (transition tape network)
+    (let ((by (trans-label transition))
+          (to (trans-newnode transition)))
+      (cond ((equal by '|#|)
+             (generate-next to tape network))
+            ((assoc by abbreviations)
+             (dolist (pattern (rest (assoc by abbreviations)))
+               (generate-next to (generate-append tape pattern) network)))
+            (t
+             (generate-next to (generate-append tape by) network)))))
+
+  (defun generate-append (list value)
+    (append list (list value)))
+#+end_src
+
+注: 这样的话如果有那种死循环的 FSTN. 
+那么你运行的时候就会非常痛苦. 
+
+#+name: loop-to-deadth-fstn-bad
+#+begin_src common-lisp
+  (setq deadly-fstn
+        '((Initial 1)
+          (Final 3)
+          (From 1 to 2 by h)
+          (From 2 to 1 by a)
+          (From 2 to 3 by -)))
+#+end_src
+
+一个可能的做法就是加入栈深度检查, 只要过深就退出,
+或者别的什么之类的. 并且这个程序也不能够让 Final node
+上的节点去选择其他可能的点.
+
+对上面网络的一个简单解释 (无 =#= 分支版本):
+1. 若当前状态不是 Final State:
+   + 若纸带为空, 则退出 (=nil=)
+   + 若纸带非空, 则:
+     + 若满足纸带匹配缩写规则或者缩写规则, 那么就按照规则缩短纸带
+     + 若不满足任何的以上两种规则, 就退出 (=nil=)
+2. 若当前状态是 Final State
+   + 若纸带为空, 则停止查找 (=stop=)
+   + 若纸带非空, 则退出 (=nil=)
+3. 因为纸带长度有限, 且因为不存在 =#=, 即纸带长度总会减少,
+   所以纸带总会为空, 若纸带为空:
+   若当前状态是 Final State, 则停止 (=stop=);
+   若当前状态不是 Final State, 则退出 (=nil=).
+4. 综上, 是成立的. 
+#+begin_html
+</details>
+#+end_html
+
+**** Finite-state Transducer
+#+begin_quote
+An FST is a more interesting kind of FSA that allows
+a string of output symbols to be produced as an input
+string is recognized.
+#+end_quote
+
+就是什么呢, 如果看过上面的一些注释或者看过代码的话,
+肯定会对这个代码感到十分不爽, 因为只能认证, 或者说识别,
+没法做更多的事情.
+
+于是就有了 Finite-State Transducer 的一个需求,
+即通过 FSTN 的规则来将将输入转换为输出.
+(有点像是带有写功能的图灵机? 很像啊. )
+
+于是有一个简单的记法:
+
+#+name: fstn-eng-french
+#+begin_example fstn
+  Name ENG_FRE:
+    Initial 1
+    Final 5
+    From 1 to 2 by WHERE
+    From 2 to 3 by BV
+    From 3 to 4 by DET-FEMN
+    From 4 to 5 by N-FEMN
+    From 3 to 6 by DET-MASC
+    From 6 to 5 by N-MASC.
+
+  WHERE abbreviates:
+    where_ou.
+  BV abbreviates:
+    is_est.
+  DET-FEMN abbreviates:
+    the_la.
+  DET-MASC abbreviates:
+    the_le.
+  N-FEMN abbreviates:
+    exit_sortie, shop_boutique, toliet_toilette.
+  N-MASC abbreviates:
+    policeman_gendarme. 
+#+end_example
+
+上面的例子实际上就是一个简单的 English-French 的翻译 FSTN.
+其中通过 =from_to= 的形式来记录 arc, 表示将读到的 =from= 转换为 =to=.
+
+于是在 Lisp 表述里面, 将 =from_to= 用 =(from to)= 的 List 形式来记录. 
+
+#+begin_html
+<details><summary>大概类似这样吧</summary>
+#+end_html
+
+#+begin_src common-lisp
+  (defvar eng-fre "English-French FSTN. ")
+  (setq eng-fre
+        '((Initial (1))
+          (Final (5))
+          (From 1 to 2 by WHERE)
+          (From 2 to 3 by BV)
+          (From 3 to 4 by DET-FEMN)
+          (From 4 to 5 by DET-MASC)
+          (From 3 to 6 by DET-MASC)
+          (From 6 to 5 by N-MASC)))
+
+  (setq abbreviations
+        '((WHERE (where ou))
+          (BE (is est))
+          (DET-FEMN (the la))
+          (DET-MASC (the le))
+          (N-FEMN (exit sortie) (shop boutique) (toliet toilette))
+          (N-MASC (policeman gendarme))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+那么前面的 =generate= 和 =recognize= 的函数实际上现在就是被重新合在一起了.
+通过 =recognize= 来读取, 再通过 =generate= 来转换并生成新的结果.
+
+*[2023/02/24]*: 先滚去学一点 Lisp, 不然写代码太难受了. 
 
 * 附录
+** Common Lisp 补注
+可以参考的一个 [[http://clhs.lisp.se/Front/index.htm][在线文档]]. 
+
+#+begin_html
+<details><summary>Common Lisp 补注</summary>
+#+end_html
+
+*** 简单的数据结构和类型
+嘿嘿, 想不到吧, 在 Lisp (Common Lisp) 里面, 只要用 List 就能够干翻一切乐.
+
+是否厌倦了在 List 里面使用 =car=, =cdr=? 试试 =nth=?
+
+#+name: common-lisp-nth
+#+begin_src common-lisp
+  (nth 1 '(0 1 2 3 4))
+#+end_src
+
+比如要一个 Hash 表?
+
+#+name: common-lisp-hash
+#+begin_src common-lisp
+  (assoc 'key
+         '((key value list)
+           (other-key value list and so on)))
+#+end_src
+
+*** Debugging and Testing
+平时写代码的时候我都忽略了一点, 就是如何调试和测试. (尤其是后者)
+
+在 Lisp 里面有 [[https://lispcookbook.github.io/cl-cookbook/debugging.html#trace][各种调试的方法]], 其中我认为比较好用的 (+我会的+):
++ =trace= 以及 =untrace=, 可以记录 (或取消) 一个方法的调用的参数
+
+#+begin_html
+</details>
+#+end_html
 ** 黑话表
 | ATN    | augmented transition network          |
 | CF-PSG | context-free phrase structure grammar |
@@ -697,7 +1043,7 @@ their limitations.
 #+begin_html
 <details><summary>简单的自动机绘图代码</summary>
 #+end_html
-
+*** 简单的自动机绘图代码
 #+name: ruby-fstn-dot-parser
 #+begin_src ruby
   nodes = /(Initial|Final)\s+((((\w+),\s*)|\w+)+)/
@@ -744,129 +1090,9 @@ their limitations.
 #+begin_html
 <details><summary>FSTN Parser</summary>
 #+end_html
-
+*** FSTN Parser
 一个简单的 FSTN Parser 在 [[{{ site.github.url }}/ruby/ruby-ebnf-try/][Ruby and EBNF]] 里面介绍了. 
 
 #+begin_html
 </details>
 #+end_html
-
-* COMMENT 注释
-#+begin_comment
-注: 这段在 Ruby and EBNF 里面介绍. 
-#+begin_html
-<details><summary>简单的自动机处理代码</summary>
-#+end_html
-
-注: 首先是用来匹配的代码, 只考虑了比较规范的书写, 其他的书写方式没有考虑,
-并且因为最近才刚学 ([[https://ruby-china.org/topics/41296][参考]]), 所以对 EBNF 的语法并不是很熟练.
-写得一般. 又臭又长. 在线的版本在 [[https://bnfplayground.pauliankline.com/?bnf=%3CFSTN%3E%20%3A%3A%3D%20(%3Cnamed_network%3E%0A%20%20%20%20%20%20%20%7C%20%3Cabbreviates%3E%20%20%20%20%20%20%20%20%20%20%20%0A%20%20%20%20%20%20%20%7C%20%3Copt_space%3E%20%3Cnew_line%3E)%2B%20%0A%0A%3Cnamed_network%3E%20%3A%3A%3D%20%3Copt_space%3E%20%22Name%22%20%3Cspace%3E%20%3Cvalid_name%3E%20%3Copt_space%3E%20%22%3A%22%20%3Copt_space%3E%20%3Cnew_line%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(%3Cdescriptions%3E%20(%3Copt_space%3E%20%3Cnew_line%3E)*)*%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20%20(%3Cdescriptions%3E%20%3Copt_space%3E)%20%22.%22%0A%3Cabbreviates%3E%20%3A%3A%3D%20%3Copt_space%3E%20%3Cvalid_name%3E%20%3Cspace%3E%20%22abbreviates%22%20%3Copt_space%3E%20%22%3A%22%20%3Copt_space%3E%20%3Cnew_line%3E%0A%20%20%20%20%20%20%20%20%20%20%20%20%20%20%3Cindent%3E%20%3Carrays%3E%0A%0A%3Cdescriptions%3E%20%3A%3A%3D%20%3Cindent%3E%20(%3Cnodes%3E%20%7C%20%3Carcs%3E)%0A%3Cnodes%3E%20%3A%3A%3D%20(%22Initial%22%20%7C%20%22Final%22)%20%3Cspace%3E%20%3Carray%3E%0A%3Carcs%3E%20%3A%3A%3D%20%22From%22%20%3Cspace%3E%20%3Cvalid_node_name%3E%20%3Cspace%3E%0A%20%20%20%20%20%20%20%22to%22%20%3Cspace%3E%20%3Cvalid_node_name%3E%20%3Cspace%3E%0A%20%20%20%20%20%20%20%22by%22%20%3Cspace%3E%20%3Cvalid_label%3E%0A%0A%3Carray%3E%20%3A%3A%3D%20(%3Cvalid_name%3E%20%3Copt_space%3E%20%22%2C%22%20%3Copt_space%3E)*%20%3Cvalid_name%3E%0A%3Carrays%3E%20%3A%3A%3D%20%3Carray%3E%20%3Copt_space%3E%20%22.%22%0A%0A%3Cvalid_char%3E%20%3A%3A%3D%20%5B0-9%5D%20%7C%20%5Ba-z%5D%20%7C%20%5BA-Z%5D%20%7C%20%22-%22%20%7C%20%22!%22%0A%3Cvalid_name%3E%20%3A%3A%3D%20%3Cvalid_char%3E%2B%0A%3Cvalid_node_name%3E%20%3A%3A%3D%20%5B1-9%5D%20%5B0-9%5D*%0A%3Cvalid_label%3E%20%3A%3A%3D%20%22%23%22%20%7C%20%3Cvalid_char%3E%2B%0A%0A%3Cindent%3E%20%3A%3A%3D%20%22%5Ct%22%2B%20%7C%20%3Cspace%3E%0A%3Cspace%3E%20%3A%3A%3D%20%22%20%22%2B%0A%3Copt_space%3E%20%3A%3A%3D%20%22%20%22*%0A%3Cnew_line%3E%20%3A%3A%3D%20%22%5Cn%22%2B&name=FSTN][这里]], 不过现在我觉得可能这个 EBNF 写得不是很好. 
-
-#+name: fstn-ebnf-description
-#+begin_src org
-  FSTN ::= (named_network
-         | abbreviates           
-         | opt_space new_line)+ 
-
-  named_network ::= opt_space "Name" space valid_name opt_space ":" opt_space new_line
-                  (descriptions (opt_space new_line)*)*
-                  (descriptions opt_space) "."
-  abbreviates ::= opt_space valid_name space "abbreviates" opt_space ":" opt_space new_line
-                indent arrays
-
-  descriptions ::= indent (nodes | arcs)
-  nodes ::= ("Initial" | "Final") space array
-  arcs ::= "From" space valid_node_name space
-         "to" space valid_node_name space
-         "by" space valid_label
-
-  array ::= (valid_name opt_space "," opt_space)* valid_name
-  arrays ::= array opt_space "."
-
-  valid_char ::= [0-9] | [a-z] | [A-Z] | "-" | "!"
-  valid_name ::= valid_char+
-  valid_node_name ::= [1-9] [0-9]*
-  valid_label ::= "#" | valid_char+
-
-  indent ::= "\t"+ | space
-  space ::= " "+
-  opt_space ::= " "*
-  new_line ::= "\n"+
-#+end_src
-
-(题外话: 写这个的时候我就想吐槽一下 Lisp 的强大,
-因为语法太简单了, 并且有 marco 这样变态的操作,
-用 Lisp 来实现这个估计要比我用现在这种方法实现得要轻松很多...
-下次用 Racket 来吧... )
-
-有上面的作为标准语法, 然后用 Ruby 中的 [[https://github.com/dryruby/ebnf][ebnf]] gem:
-
-#+name: ruby-fstn-ebnf-parser-load-gem
-#+header: :var FSTN_RULES = fstn-ebnf-description
-#+header: :session ruby-fstn-ebnf-parser
-#+begin_src ruby :export both
-  require 'ebnf' # https://github.com/dryruby/ebnf
-
-  EBNF.parse(FSTN_RULES).to_sxp
-#+end_src
-
-#+begin_html
-<details><summary>输出结果</summary>
-#+end_html
-
-#+RESULTS: ruby-fstn-ebnf-parser-load-gem
-#+begin_example
-(
- (terminal FSTN (plus (alt named_network abbreviates (seq opt_space new_line))))
- (rule named_network
-  (seq opt_space "Name" space valid_name opt_space ":" opt_space new_line
-   (star (seq descriptions (star (seq opt_space new_line))))
-   (seq descriptions opt_space) "." ))
- (rule abbreviates
-  (seq opt_space valid_name space "abbreviates" opt_space ":" opt_space
-   new_line indent arrays ))
- (rule descriptions (seq indent (alt nodes arcs)))
- (rule nodes (seq (alt "Initial" "Final") space array))
- (rule arcs
-  (seq "From" space valid_node_name space "to" space valid_node_name space "by"
-   space valid_label ))
- (rule array (seq (star (seq valid_name opt_space "," opt_space)) valid_name))
- (rule arrays (seq array opt_space "."))
- (rule valid_char (alt (range "0-9") (range "a-z") (range "A-Z") "-" "!"))
- (rule valid_name (plus valid_char))
- (rule valid_node_name (seq (range "1-9") (star (range "0-9"))))
- (rule valid_label (alt "#" (plus valid_char)))
- (rule indent (alt (plus "\\t") space))
- (rule space (plus " "))
- (rule opt_space (star " "))
- (rule new_line (plus "\\n")))
-#+end_example
-
-#+begin_html
-</details>
-#+end_html
-
-#+name: ruby-fstn-ebnf-parser-define-class
-#+header: :session ruby-fstn-ebnf-parser
-#+begin_src ruby
-  class FSTN
-    include EBNF::PEG::Parser
-    attr_reader :ast, :abbreviates, :networks
-
-    production(:abbreviates) do |value|
-      puts value
-    end
-
-    def initialize
-      @ast = EBNF.parse(FSTN_RULES).make_peg.ast
-      @abbreviates = {}
-      @networks = {}
-      @terminal = nil
-    end
-  end
-#+end_src
-
-#+begin_html
-</details>
-#+end_html
-#+end_comment
