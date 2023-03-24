@@ -1,0 +1,1464 @@
+#+layout: post
+#+title: A Simple Regexp for Parser
+#+date: 2023-03-24
+#+math: true
+#+categories: misc
+* About
+实际上就是编译原理课上的一个实践.
+按照我的理解, 这个部分更像是 Token 的 Parser 部分.
+一个简单的例子:
+
+#+begin_example ruby
+tokenrize = input.scan(/\(|[^\s]|\)/)
+parse(tokenrize)
+#+end_example
+
+可以认为, 这部分的 Regexp 的作用就是将输入的部分一点一点切作臊子,
+然后喂给之后的 parser. 
+
+#+begin_html
+<details><summary>Note:</summary>
+#+end_html
+
+尽管在这里, =tokenrize= 和 =parse= 是分开的,
+然而更多的情况下应该可以合并在一起.
+在 =parse= 部分的东西可以考虑参考之前写的一篇
+[[{{ site.github.url }}/ruby/ruby-ebnf-try/][Ruby And EBNF (Very Navie)]]. 里面做的差不多就是 =parse= 的工作.
+(以及一点点的 translate 的工作).
+
+实际上还可以认为正则表达式就是一个不考虑匹配的结构的 parser. 
+于是就可以在 =parse= 的过程中将其融合进去. 
+
+#+begin_html
+</details>
+#+end_html
+
+那么知道了正则表达式的这么个作用, 接下来就可以去尝试实现了. 
+
+* Finite Automa 有限自动机
+** 想到自动机
+如果要匹配一段哭声 =wuwuwu~=. 在 Ruby 的 Regexp 中,
+可以如下书写 =/(wu)+~/=. 但是如果看过之前的
+[[{{ site.github.url }}/reading/natural-language-processing-in-lisp/][Natural Language Processing in Lisp]] 的话,
+估计会想到用一个有限自动机去匹配这一段的内容.
+
+#+begin_html
+<details><summary>如果自动机看起来不是那么的直观的话</summary>
+#+end_html
+
++那么只需要让它变得直观就好了.+
+
+假如我就是一个小学生, 然后想要写一个程序来匹配这个东西.
+(还真别说, 我小时候还真的想过如何做这种东西).
+很明显, 很可能写出这样的东西:
+
+#+begin_example c
+  recognize: 
+  if (getchar() == 'w') {
+    if (getchar() == 'u') {
+      if (getchar() == '~') {
+        return true;
+      } else {
+        goto recognize;
+      }
+    }
+  }
+
+  return false;
+#+end_example
+
+(Note: 我小时候肯定不会写 C 的. 看到我们老师小孩小学就会写 C 语言,
+真的让人十分惊讶. 甚至还有专门因为给小孩教编程然后写书的... 害.
+不过为了体现是坑爹的我小时候写的东西的感觉, 我加入了 =goto= 语句. )
+
+#+begin_html
+<details><summary>程序框图 (点击展开)</summary>
+#+end_html
+
+#+begin_example
+[0x100003ee4]>  # sym._test (int64_t arg_20h);
+                                     ┌────────────────────────────────────────────────────┐
+                                     │  0x100003ee4                                       │
+                                     │ ; [00] -r-x section size 176 named 0.__TEXT.__text │
+                                     │   ;-- section.0.__TEXT.__text:                     │
+                                     │   ;-- func.100003ee4:                              │
+                                     │   ; NULL XREF from aav.0x100000020 @ +0xb0(r)      │
+                                     │   ; CALL XREF from main @ 0x100003f68(r)           │
+                                     │ 108: sym._test (int64_t arg_20h);                  │
+                                     │ ; var int64_t var_4h @ x29-0x4                     │
+                                     │ ; arg int64_t arg_20h @ sp+0x40                    │
+                                     │ ; var int64_t var_10h @ sp+0x10                    │
+                                     │ ; var int64_t var_10h_2 @ sp+0x18                  │
+                                     │ sub sp, sp, 0x20                                   │
+                                     │ stp x29, x30, [var_10h]                            │
+                                     │ add x29, var_10h                                   │
+                                     │ b 0x100003ef4                                      │
+                                     └────────────────────────────────────────────────────┘
+                                         v
+                                         │
+                                      ┌──┘
+           ┌────────────────────────────┐
+           │                          │ │
+           │                    ┌──────────────────────────────────────────────────────────────┐
+           │                    │  0x100003ef4                                                 │
+           │                    │ ; CODE XREFS from sym._test @ 0x100003ef0(x), 0x100003f30(x) │
+           │                    │ ; int getchar(void)                                          │
+           │                    │ bl sym.imp.getchar;[oa]                                      │
+           │                    │ subs w8, w0, 0x77                                            │
+           │                    │ b.ne 0x100003f38                                             │
+           │                    └──────────────────────────────────────────────────────────────┘
+           │                            f t
+           │                            │ │
+           │                            │ └──────────────────────────────────────────────────┐
+           │                 ┌──────────┘                                                    │
+           │                 │                                                               │
+           │             ┌────────────────────┐                                              │
+           │             │  0x100003f00       │                                              │
+           │             │ b 0x100003f04      │                                              │
+           │             └────────────────────┘                                              │
+           │                 v                                                               │
+           │                 │                                                               │
+           │     ┌───────────┘                                                               │
+           │     │                                                                           │
+           │ ┌─────────────────────────────────────────────┐                                 │
+           │ │  0x100003f04                                │                                 │
+           │ │ ; CODE XREF from sym._test @ 0x100003f00(x) │                                 │
+           │ │ ; int getchar(void)                         │                                 │
+           │ │ bl sym.imp.getchar;[oa]                     │                                 │
+           │ │ subs w8, w0, 0x75                           │                                 │
+           │ │ b.ne 0x100003f34                            │                                 │
+           │ └─────────────────────────────────────────────┘                                 │
+           │         f t                                                                     │
+           │         │ │                                                                     │
+           │         │ └───────────────────────────────────────────────┐                     │
+           │         └───────┐                                         │                     │
+           │                 │                                         │                     │
+           │             ┌────────────────────┐                    ┌────────────────────┐    │
+           │             │  0x100003f10       │                    │  0x100003f34       │    │
+           │             │ b 0x100003f14      │                    │ b 0x100003f38      │    │
+           │             └────────────────────┘                    └────────────────────┘    │
+           │                 v                                         v                     │
+           │                 │                                         │                     │
+           │     ┌───────────┘                                         │                     │
+           │     │                                                     └──┐                  │
+           │     │                                                        │ ┌────────────────┘
+           │     │                                                        │ │
+           │ ┌─────────────────────────────────────────────┐        ┌─────────────────────────────────────────────┐
+           │ │  0x100003f14                                │        │  0x100003f38                                │
+           │ │ ; CODE XREF from sym._test @ 0x100003f10(x) │        │ ; CODE XREF from sym._test @ 0x100003f34(x) │
+           │ │ ; int getchar(void)                         │        │ stur wzr, [var_4h]                          │
+           │ │ bl sym.imp.getchar;[oa]                     │        │ b 0x100003f40                               │
+           │ │ subs w8, w0, 0x7e                           │        └─────────────────────────────────────────────┘
+           │ │ b.ne 0x100003f30                            │            v
+           │ └─────────────────────────────────────────────┘            │
+           │         f t                                                │
+           │         │ │                                                │
+           │         │ └──────────────────┐                             │
+           │    ┌────┘                    │                             │
+           │    │                         │                             └──────────────────┐
+           │    │                         │                                                │
+           │┌────────────────────┐    ┌────────────────────┐                               │
+           ││  0x100003f20       │    │  0x100003f30       │                               │
+           ││ b 0x100003f24      │    │ b 0x100003ef4      │                               │
+           │└────────────────────┘    └────────────────────┘                               │
+           │    v                         v                                                │
+           │    │                         │                                                │
+    ┌──────│────┘                         │                                                │
+    │      └──────────────────────────────┘                                                │
+    │                                                                                      │
+┌─────────────────────────────────────────────┐                                            │
+│  0x100003f24                                │                                            │
+│ ; CODE XREF from sym._test @ 0x100003f20(x) │                                            │
+│ movz w8, 0x1                                │                                            │
+│ stur w8, [var_4h]                           │                                            │
+│ b 0x100003f40                               │                                            │
+└─────────────────────────────────────────────┘                                            │
+    v                                                                                      │
+    │                                                                                      │
+    └──────────────────────────┐                                                           │
+                               │ ┌─────────────────────────────────────────────────────────┘
+                               │ │
+                         ┌──────────────────────────────────────────────────────────────┐
+                         │  0x100003f40                                                 │
+                         │ ; CODE XREFS from sym._test @ 0x100003f2c(x), 0x100003f3c(x) │
+                         │ ldur w0, [var_4h]                                            │
+                         │ ; [00] -r-x section size 88 named 0.__TEXT.__text            │
+                         │ ldp x29, x30, [var_10h]; test.c:4   recognize:               │
+                         │ add sp, arg_20h                                              │
+                         │ ret                                                          │
+                         └──────────────────────────────────────────────────────────────┘
+#+end_example
+
+Generated by [[https://github.com/radareorg/radare2][radare2]] =agf > output.txt=.
+
+Compiled from: (on macos m1)
+
+#+begin_example c
+#include <stdio.h>
+
+int test() {
+  recognize: 
+  if (getchar() == 'w') {
+    if (getchar() == 'u') {
+      if (getchar() == '~') {
+        return 1;
+      } else {
+        goto recognize;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+int main() {
+  printf(">>");
+  printf("res: %d\n", test());
+}
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+那么如果将上面的那段程序框图仔细分析之后,
+就可以并不困难地发现程序里面存在着的 "网状" 的逻辑关系.
+那么想要匹配这样的一个东西, 实际上就是在一个个块里面根据条件进行游走判断:
+如果匹配 xxx, 那么就到下一个块, 否则就变成 =return false=.
+
+那么自然就会想到如何将代码进行优化和简化,
+能够自动根据规则进行构造任意匹配规则序列.
+于是你就发现, 自己重新发明了自动机. 
+
+啊, 斯巴拉希~.
+
+#+begin_html
+</details>
+#+end_html
+
+(Note: 尽管现在的 NLP 应该并不是像现在这样编译原理一样的处理方法吧... )
+
+** 自动机的匹配 NFA 与 DFA
+比如对于上面提到的这个自动机:
+
+#+name: simple-fa-for-wuwuwu
+#+begin_src dot :file ../_img/finite-state-machine/simple-fa-for-wuwuwu.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = point] in, out;
+    3 [shape = doublecircle];
+    node [shape = circle];
+    in -> 0;
+    0 -> 1 [label = "w"];
+    1 -> 2 [label = "u"];
+    2 -> 3 [label = "~"];
+    2 -> 0;
+    3 -> out;
+  }
+#+end_src
+
+#+RESULTS: simple-fa-for-wuwuwu
+[[file:../_img/finite-state-machine/simple-fa-for-wuwuwu.svg]]
+
+[[{{ site.github.url }}/_img/finite-state-machine/simple-fa-for-wuwuwu.svg]]
+
+实际上, 上面的自动机有一个漂亮的学名: /Non-determine Finite Automaton/
+(/非确定有限自动机/, 简称 /NFA/). 之所以这么说,
+是因为在状态 2 的时候, 因为跳转边的存在,
+计算机并不能确定自己将要前往的下一个状态是 =0= 还是 =3=,
+除非两条路都走, 否则并不能决定, 于是就叫做非确定的.
+
+自然, 对应的有 /确定有限自动机/ (DFA). 比如上面的图可以对应写作如下 DFA:
+
+#+begin_src dot :file ../_img/finite-state-machine/simple-fa-dfa-wuwuwu.svg :exports none
+  digraph {
+      rankdir = LR;
+      node [shape = point] in, out;
+      3 [shape = doublecircle];
+      node [shape = circle];
+      in -> 0;
+      0 -> 1 [label = "w"];
+      1 -> 2 [label = "u"];
+      2 -> 3 [label = "~"];
+      2 -> 1 [label = "w"];
+      3 -> out;
+  }
+#+end_src
+
+#+RESULTS:
+[[file:../_img/finite-state-machine/simple-fa-dfa-wuwuwu.svg]]
+
+[[{{ site.github.url }}/_img/finite-state-machine/simple-fa-dfa-wuwuwu.svg]]
+
+当然, 可能还有其他更多的模型, 可以有很多的构造方式.
+显然, 对于这样的一个 DFA, 因为其结构非常的简单,
+每个节点根据读取的输入都明确对应一个边和下一个节点,
+使用它来匹配输入简直不要太简单:
+
+#+begin_src lisp
+  (defun dfa-match-tape (dfa tape)
+    (labels ((iter (tape state)
+               (if (car tape)
+                   (let ((next            ; next is next state of dfa at state reading first tape
+                           (fa-next dfa state (car tape))))
+                     (if next             ; there next to go
+                         (iter (cdr tape) next)
+                         NIL))            ; failed to match next
+                   (if (final-p dfa state) ; if final state when empty tape
+                       T
+                       NIL))))
+      (iter tape (initial-node dfa))))
+#+end_src
+
++尽管我现在的 Lisp 代码写得还挺丑的 (悲).+
+
+** 自动机的转换 NFA 到 DFA
+显然, DFA 这么好, 肯定是想要通过各种手段来将 NFA 变成 DFA.  
+那么这个过程如何构造呢? 一个朴素的想法如下:
+
++ 拿到一个 NFA (和 =/b*(ab|ba)+/= 等价)
+
+  #+begin_src dot :file ../_img/finite-state-machine/nfa-example.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape = point] in, out;
+      5 [shape = doublecircle];
+      node [shape = circle];
+      in -> 0;
+      0 -> 1;
+      1 -> 4 [label = "b"];
+      1 -> 2 [label = "a"];
+      1 -> 3 [label = "b"];
+      2 -> 5 [label = "b"];
+      3 -> 5 [label = "a"];
+      4 -> 1;
+      5 -> 1;
+      5 -> out;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/nfa-example.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/nfa-example.svg]]
++ 将通过直接连接 ($\varepsilon$, 或者就是无 label 的箭头) 在一起的节点看作是一个点,
+  比如以从 =0= 出发, 可以通过直接跳转到达的节点为例, 即 =(0 1)=:
+
+  #+begin_src dot :file ../_img/finite-state-machine/nfa-example-0-closure.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape = point] in, out;
+      5 [shape = doublecircle];
+      in [color = orange];
+      node [shape = circle];
+      1 [label = "(0 1)", color = orange];
+      in -> 1 [color = orange];
+      1 -> 4 [label = "b"];
+      1 -> 2 [label = "a"];
+      1 -> 3 [label = "b"];
+      2 -> 5 [label = "b"];
+      3 -> 5 [label = "a"];
+      4 -> 1 [style = dashed, color = gray];
+      5 -> 1 [style = dashed, color = gray];
+      5 -> out;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/nfa-example-0-closure.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/nfa-example-0-closure.svg]]
++ 然后将从 =(0 1)= 出发的所有相同标记的边看作是一条边,
+  比如从 =(0 1)= 出发的 =b -> 3= 和 =b -> 4= 可以同一成 =b -> (3 4)=,
+  将 =(3 4)= 作为新的一个节点去进行处理.
+
+  并且发现因为从 =4= 出发实际上还能够直接到达 =1=,
+  所以最终将 =(1 3 4)= 作为新的一个节点:
+
+  #+begin_src dot :file ../_img/finite-state-machine/nfa-example-0-arcs.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape = point] in; out;
+      in [color = orange];
+      5 [shape = doublecircle];
+      node [shape = circle];
+      1 [label = "(0 1)", color = orange];
+      2 [label = "(2)", color = orange];
+      3 [label = "(1 3 4)", color = orange];
+      in -> 1 [color = orange];
+      1 -> 2 [label = "a", color = orange];
+      1 -> 3 [label = "b", color = orange];
+      2 -> 5 [label = "b"];
+      3 -> 5 [label = "a"];
+      3 -> 3 [label = "b", color = orange];
+      3 -> 2 [label = "a"];
+      5 -> 1 [style = dashed, color = gray];
+      5 -> out;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/nfa-example-0-arcs.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/nfa-example-0-arcs.svg]]
++ 依次类推,
+  继续对 =(1 3 4)= 和 =(2)= 进行处理直到所有历遍的新的节点组都是已经记录过的节点组,
+  并且所有可能历遍的边都已经历遍过了:
+
+  #+begin_src dot :file ../_img/finite-state-machine/nfa-example-more-arcs.svg :exports none
+    digraph {
+      rankdir = LR;
+      edge [color = orange];
+      node [shape = point, color = orange] in; out;
+      node [shape = circle, color = orange];
+      1 [label = "(0 1)"];
+      {rank = same; 2 [label = "(2)"]; 3 [label = "(1 3 4)"];}
+      {rank = same; node [shape = doublecircle]; 4 [label = "(1 2 5)"]; 5 [label = "(1 5)"];}
+      in -> 1;
+      1 -> 2 [label = "a"];
+      1 -> 3 [label = "b"];
+      2 -> 5 [label = "b"];
+      3 -> 3 [label = "b"];
+      3 -> 4 [label = "a"];
+      5 -> 3 [label = "b"];
+      5 -> 2 [label = "a"];
+      4 -> 3 [label = "b"];
+      4 -> 2 [label = "a"];
+      5 -> out;
+      4 -> out;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/nfa-example-more-arcs.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/nfa-example-more-arcs.svg]]
++ 那么总的来说, 实际上做的事情如下:
+  1. 从起始节点开始, 找到一个闭包,
+     从该闭包出发的所有的目标节点根据边的类型进行分类,
+     作为接下来查找的节点.
+  2. 对于要查找的节点, 重复上面的操作,
+     找闭包, 如果该闭包并没有记录过, 则对接下来的节点继续搜索;
+     否则便结束.
+  3. Note: 什么是闭包? 一个简单的解释就是从节点出发,
+     仅经过直接跳转就能够到达的节点的集合. 
++ 用简单的代码来实现如下:
+  #+begin_src lisp
+    ;;; Note: This code is only pseudo code. 
+    (defun nfa-to-dfa (nfa)
+      (let ((dstate `((,(find-closure nfa (initial-node nfa)) 0)))
+            (stack  (out-nodes nfa (initial-node nfa)))
+            (dfa '()))
+        (loop while stack
+              do (let ((node (pop stack)))
+                   (unless (assoc node dstate)
+                     (push `(,from ,by ,to)) ; push dfa arc to output
+                     (push `(,node ,(new-node-name))) ;  
+                     (loop for elem in (out-nodes nfa node)
+                           do (push elem stack)))))))
+  #+end_src
+
+  #+begin_html
+  <details><summary>一些更加真实的代码</summary>
+  #+end_html
+  
+  如果使用如下的形式来表示自动机:
+
+  #+begin_src lisp
+    (defvar nfa-example
+      '((Initial 0)
+        (Final 3 4)
+        (0 a 1) (0 b 2)
+        (1 b 3) (3 ee 1)
+        (2 a 4) (4 ee 0)))
+  #+end_src
+
+  即通过 =(from-state by to-state)= 这样的形式来表示一条边.
+
+  于是就可以定义对应的数据结构:
+
+  #+begin_html
+  <details><summary>详细的代码</summary>
+  #+end_html
+
+  #+begin_src lisp
+    ;;; Data struct define
+    ;;; 
+    ;;; An example of FA:
+    ;;; 
+    ;;; #+begin_src lisp
+    ;;;   (defun *nfa*
+    ;;;     '((Initial 0)
+    ;;;       (Final 1 2)
+    ;;;       (from by to)
+    ;;;       (0 a 1)
+    ;;;       (0 ee 2)))
+    ;;; #+end_src
+    ;;; 
+    ;;; The =ee= stands for empty arc.
+    (defun node (nfa start)
+      (let ((res '()))
+        (loop for elem in (cddr nfa)
+              do (if (eq start (car elem))
+                     (push (cdr elem) res)))
+        res))
+
+    ;;; Initial node of NFA
+    (defun initial-node (fa)
+      (cadr (nth 0 fa)))
+
+    ;;; Final node of NFA
+    (defun final-node (fa)
+      (cdr (nth 1 fa)))
+
+    ;;; If NODE is initial node in NFA.
+    (defun initial-p (nfa node)
+      (if (find node (cdr (nth 0 nfa))) T NIL))
+
+    ;;; If NODE is FINAL node in NFA.
+    (defun final-p (nfa node)
+      (if (find node (cdr (nth 1 nfa))) T NIL))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  那么接下来要解决的就是如何找到闭包.
+  实际上非常的简单:
+
+  #+begin_src lisp
+    (defun find-closure (nfa node)
+      (let ((closure (list node))
+            (next-to-search (list node)))
+        ;; 如果还有要找的
+        (loop while next-to-search
+              ;; 对于当前节点, 历遍所有周围的节点 (能通过 =EE= 访问到的)
+              do (loop for elem in (next-node nfa (pop next-to-search))
+                       ;; 如果周围的节点不在 closure 中,
+                       ;; 则添加到 closure 中, 于是就能找到所有的周围节点. 
+                       do (unless (find elem closure)
+                            (push elem next-to-search))))))
+  #+end_src
+
+  #+begin_html
+  <details><summary>更加真实的代码</summary>
+  #+end_html
+
+  #+begin_src lisp
+    ;;; Find closure from START in NFA.
+    ;;; Return CLOSURE and NEXT informations.
+    ;;; 
+    ;;; Note: NEXT having the form =((A (1 2)) (B (2 3)))=,
+    ;;; expressing arc with =A= symbol going to =(1 2)=,
+    ;;; =B= symbol going to =(2 3)=.
+    ;;; 
+    ;;; For example,
+    ;;; 
+    ;;; #+begin_example
+    ;;; NFA:
+    ;;;               A        B
+    ;;;             +---> (2) >---+
+    ;;;            /  A            \
+    ;;; (0) ---> (1) ---> (3) ---> (5)
+    ;;;            \            B  /
+    ;;;             +---> (4) >---+
+    ;;; #+end_example
+    ;;; 
+    ;;; 
+    ;;; So the closure would like this:
+    ;;; 
+    ;;; | start | closure | next              |
+    ;;; | 0     | (0 1 4) | (A (2 3)) (B (5)) |
+    ;;; | (2 3) | (2 3 5) | (B (5)            |
+    ;;; | (5)   | (5)     | NIL               |
+    ;;; 
+    (defun find-closure (nfa start)
+      (let ((stack (if (atom start) `(,start) start))
+            (closure (if (atom start) `(,start) start))
+            (bys `()))
+        (loop while stack
+              do (loop for elem in (node nfa (pop stack))
+                       do (let ((by (car elem))
+                                (to (cadr elem)))
+                            (if (eq by 'ee)
+                                (unless (find to closure)
+                                  (push to closure)
+                                  (push to stack))
+                                (if (assoc by bys)
+                                    (push to (cadr (assoc by bys)))
+                                    (push `(,by (,to)) bys))))))
+        (values (sort closure #'<) bys)))
+  #+end_src
+
+  注: 为了方便之后的处理,
+  将其中找从 closure 出发的到达的边按照边的类型进行分类的操作也一起做了. 
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  于是就可以直接完成最后的工作了:
+
+  #+begin_src lisp
+    ;;; Find assoc pairs in dstate, works like =assoc= function.
+    ;;; Return NIL if not found. If found, return VAL. Assoc like ((KEY . VAL)). 
+    (defun dstates-assoc (closure dstates)
+      (labels ((iter (dstate)
+                 (if (car dstate)
+                     (if (equal closure (caar dstate))
+                         (cadr (car dstate))
+                         (iter (cdr dstate)))
+                     '())))
+        (iter dstates)))
+
+    ;;; NFA to DFA turn NFA to DFA
+    ;;; Return DFA of NFA.
+    ;;; 
+    ;;; The rule is like below (For example):
+    ;;; 
+    ;;; #+begin_example
+    ;;; NFA: /a+b/
+    ;;;      A        B
+    ;;; (0) ---> (1) ---> (2)
+    ;;;   \      /
+    ;;;    +-<<-+
+    ;;; #+end_example
+    ;;; 
+    ;;; + Start from initial node =0=,
+    ;;;   find the initial closure =(0)=, name it with new id =0=,
+    ;;;   next is =(A (1))=.
+    ;;; + Search next node =(1)=,
+    ;;;   find closure =(1 0)=, name it with new id =1=,
+    ;;;   next is =(A (1)) (B (2))=.
+    ;;; + Search next node =(1)=,
+    ;;;   find closure =(1 0)=, already in dstate, stop.
+    ;;; + Search next node =(2)=,
+    ;;;   find closure =(2)=,
+    ;;;   next is empty.
+    ;;; 
+    ;;; #+name: dstate
+    ;;; | closure | new id |
+    ;;; | (0)     |      0 |
+    ;;; | (0 1)   |      1 |
+    ;;; | (2)     |      2 |
+    ;;; 
+    (defun nfa-to-dfa (nfa)
+      ;; Get the initial node done
+      (multiple-value-bind (closure next) (find-closure nfa (initial-node nfa))
+        (let (
+              ;; store closure with its name in DSTATE
+              (dstate `((,closure ,(reset-counter))))
+              ;; store unsearched node in STACK
+              (stack (mapcar (lambda (elem) (append elem `(,(reset-counter)))) next))
+              ;; store new final NODES
+              (final '())
+              ;; store translated DFA
+              (dfa '()))
+          (loop while stack
+                do (let* ((elem (pop stack))
+                          (by (nth 0 elem))
+                          (to (nth 1 elem))
+                          (from (nth 2 elem))
+                          (to-name NIL))
+                     (multiple-value-bind (to-closure to-next) (find-closure nfa to)
+                       ;; If TO-CLOSURE is searched: stop.
+                       ;; If TO-CLOSURE is not searched:
+                       ;;   add TO-CLOSURE to DSTATE;
+                       ;;   push next to STACK.
+                       (unless (setq to-name (dstates-assoc to-closure dstate))
+                         (push (list to-closure (setq to-name (inc-counter))) dstate)
+                         (loop for to-elem in to-next
+                               do (push (append to-elem `(,to-name)) stack)))
+                       ;; Translate nfa to dfa.
+                       (push (list from by to-name) dfa)
+                       ;; If it is final node, and not in FINAL, add it to FINAL.
+                       (if (and (final-closure-p nfa to-closure)
+                                (not (find to-name final)))
+                           (push to-name final)))))
+          ;; add final information to dfa (Final ...)
+          (push (append '(Final) final) dfa)
+          ;; add initial information to dfa (Initial ...)
+          (push (list 'Initial (reset-counter)) dfa))))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  一些测试的例子: 
+  
+  #+begin_src lisp
+    ;; RES:
+    ;; ((INITIAL 0)
+    ;;  (FINAL 4 2)
+    ;;  (4 A 1) (4 B 3)
+    ;;  (3 A 4) (0 B 3)
+    ;;  (2 B 2) (1 B 2)
+    ;;  (0 A 1))
+    (nfa-to-dfa
+     '((Initial 0)
+        (Final 3 4)
+        (0 a 1) (0 b 2)
+        (1 b 3) (3 ee 1)
+        (2 a 4) (4 ee 0)))
+  #+end_src
+
+  #+begin_src dot :file ../_img/finite-state-machine/nfa-to-dfa-example.svg :exports none
+    digraph {
+      rankdir=LR
+      subgraph cluster_NFA {
+        label = "NFA";
+        style = dashed;
+        color = gray;
+        node [shape=point] nstart;
+        node [shape=doublecircle] n3;n4;
+        node [shape=circle];
+        n0 [label = "0"];
+        n1 [label = "1"];
+        n2 [label = "2"];
+        n3 [label = "3"];
+        n4 [label = "4"];
+        nstart -> n0;
+        n0 -> n1 [label="A"];
+        n0 -> n2 [label="B"];
+        n1 -> n3 [label="B"];
+        n3 -> n1 [label="EE"];
+        n2 -> n4 [label="A"];
+        n4 -> n0 [label="EE"];
+      }
+
+      subgraph cluster_DFA {
+        label = "DFA";
+        style = dashed;
+        color = gray;
+        node [shape=point] dstart;
+        node [shape=doublecircle] d4;d2;
+        node [shape=circle];
+        d0 [label = "0"]; 
+        d1 [label = "1"]; 
+        d2 [label = "2"]; 
+        d3 [label = "3"]; 
+        d4 [label = "4"]; 
+        dstart -> d0;
+        d4 -> d1 [label="A"];
+        d4 -> d3 [label="B"];
+        d3 -> d4 [label="A"];
+        d0 -> d3 [label="B"];
+        d2 -> d2 [label="B"];
+        d1 -> d2 [label="B"];
+        d0 -> d1 [label="A"];
+      }
+
+      n4 -> dstart [style = invis];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/nfa-to-dfa-example.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/nfa-to-dfa-example.svg]]
+
+如是, 我们便能够将一个 NFA 转换为一个容易匹配的 DFA 进行对字符的匹配和处理. 
+
+** 正则表达式到 NFA 与 DFA
+但是哪怕已经实现了 NFA 到 DFA 的如此巨大的一个化简,
+但是构造 NFA 本身仍然是一个麻烦的事情.
+
+具体有多麻烦, [[{{ site.github.url }}/ruby/turing-machine/][可以参考计科导如何构造图灵机的一个过程]]. 
+
+#+begin_html
+<details><summary>一些没啥用的饼</summary>
+#+end_html
+
+实际上, 我曾经想过如何用一种类似编译的方式去简化图灵机的构造.
+比如循环和分支的总的结构在上面的文章中只有一个简单的介绍. 
+不过现在仍然还想不到什么很好的解决方法.
+
+不过, 实际上在这里做的事情可能可以有点用处.
+毕竟这个目标是将正则表达式变成自动机的一个算法.
+不过可能只是因为正则表达式比较简单的缘故吧. 
+
+#+begin_html
+</details>
+#+end_html
+
+并且正如 "正则" 表达式之名, (Regular Expression), 它非常规整,
+也很容易进行识别与匹配. (仅指简单的几个规则, 复杂一点的就会有点问题,
+之后会写)
+
+** 最简单的规则集的约定
+现在假设有如下的 Regexp 的表达式的 AST:
+
+#+begin_src lisp
+  (defvar regexp-example
+    '(seq (or a b)
+          (star (seq d e))))
+#+end_src
+
+规定最简单的规则集如下:
++ =seq= 连续序列的匹配: =/abc/= 等价于 =(seq a b c)=.
++ =or= 或关系匹配: =/a|b|c/= 等价于 =(or a b c)=.
++ =star= 零个或多个对应字符的匹配: =/a*/= 等价于 =(star a)=.
++ =plus= 一个或多个对应字符的匹配: =/a+/= 等价于 =(plus a)=.
++ =query= 零个或一个对应字符的匹配: =/a?/= 等价于 =(query a)=.
++ 并且规则可以嵌套使用, 如 =/(ab)+/= 等价于 =(plus (seq a b))=.
+
+** 最简单规则集的映射关系
+现在想要将这些简单的规则映射到 NFA 的网络中, 于是需要一些简单的映射关系.
+一个比较方便的做法如下:
+
++ 对于单个字符 =char= 的匹配,
+  假设规定了起点状态 =start_state = 0=,
+  以及终点状态 =final_state = 1=,
+  那么对于这个字符的匹配就变成了 =(0 char 1)=.
+
+  #+begin_src dot :file ../_img/finite-state-machine/char-linking-start-and-final.svg :exports none
+    digraph {
+      rankdir = LR;
+      subgraph cluster {
+        label = "NFA";
+        style = dashed;
+        color = gray;
+        node [shape = circle];
+        0 -> 1 [label = "char"];
+      }
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/char-linking-start-and-final.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/char-linking-start-and-final.svg]]
+
++ 对于非单个字符的匹配,
+  假设已经匹配得到了一个网络,
+  要经过该网络连接起点状态 =start_state = 0= 以及终点状态 =final_state = 1=.
+  那么就可以构造直接跳转连接起点和终点:
+
+  #+begin_src dot :file ../_img/finite-state-machine/block-linking-start-and-final.svg :exports none
+    digraph {
+      rankdir = LR;
+      subgraph cluster_F {
+        label = "NFA"
+        style = dashed; color = gray;
+        rank = same;
+        node [shape = point];
+        start -> by -> end [style = invis]
+        by [shape = circle, style = dashed, color = grey, label = "..."];
+      }
+      node [shape = circle];
+      0 -> start; end -> 1;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/block-linking-start-and-final.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/block-linking-start-and-final.svg]]
+  
+  #+begin_html
+  <details><summary>代码的实现</summary>
+  #+end_html
+
+  #+begin_src lisp
+    ;;; Iterator in regexp-to-nfa.
+    ;;; Return NFA START END.
+    ;;; 
+    ;;; Currently supported regexp structure are:
+    ;;; + *Sequence*: =seq=, calls =regexp-seq-to-nfa=,
+    ;;;   which turn sequence into chained nfa in row.
+    ;;; + *Star*: =star=, calls =regexp-star-to-nfa=,
+    ;;;   which matches a symbol zero or more times.
+    ;;; + *Plus*: =plus=, calls =regexp-plus-to-nfa=,
+    ;;;   which matches a symbol one or more times.
+    ;;; + *Or*: =or=, calls =regexp-or-to-nfa=,
+    ;;;   which branchs between multi symbols.
+    ;;; + *Query*: =query=, calls =regexp-query-to-nfa=,
+    ;;;   which matches a symbol zero or one time.
+    (defun regexp-to-nfa-iter (re)
+      (let ((start (inc-counter))
+            (end (inc-counter)))
+        (if (atom re)
+            (values `((,start ,re ,end)) start end) ; re is atom
+            (let ((type (car re))
+                  (body (cdr re)))
+              (cond ((eq type 'seq)
+                     (regexp-seq-to-nfa body start end))
+                    ((eq type 'star)
+                     (regexp-star-to-nfa (car body) start end))
+                    ((eq type 'plus)
+                     (regexp-plus-to-nfa (car body) start end))
+                    ((eq type 'or)
+                     (regexp-or-to-nfa body start end))
+                    ((eq type 'query)
+                     (regexp-query-to-nfa (car body) start end)))))))
+  #+end_src
+  
+  #+begin_html
+  </details>
+  #+end_html
+
++ 对于一个 =seq= 结构, 将其子结构的头尾依次相连:
+
+  #+begin_src dot :file ../_img/finite-state-machine/matrix-seq.svg :exports none
+    digraph {
+      rankdir = LR;
+      subgraph cluster_1 {
+        style = dashed; color = gray;
+        label = "NFA-1"
+        sytle = dashed; color = gray;
+        rank = same;
+        node [shape = point];
+        start1 -> by1 -> end1 [style = invis]
+        by1 [shape = circle, style = dashed, color = grey, label = "..."];
+      }
+      subgraph cluster_2 {
+        style = dashed; color = gray;
+        label = "NFA-2"
+        sytle = dashed; color = gray;
+        rank = same;
+        node [shape = point];
+        start2 -> by2 -> end2 [style = invis]
+        by2 [shape = circle, style = dashed, color = grey, label = "..."];
+      }
+      dots [shape = rect, style = dashed, color = gray, label = "..."];
+      node [shape = circle];
+      end1 -> dots -> start2;
+      0 -> start1;
+      end2 -> 1;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/matrix-seq.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/matrix-seq.svg]]
+
+  #+begin_html
+  <details><summary>代码的实现</summary>
+  #+end_html
+
+  #+begin_src lisp
+    ;;; Regexp seq to NFA.
+    ;;; Return nfa start end.
+    ;;; 
+    ;;; For example,
+    ;;; 
+    ;;; #+begin_example
+    ;;; Regexp: /abc/
+    ;;; Input: (regexp-seq-to-nfa '(a b c) 1 2)
+    ;;; Return: ((1 EE 3) (3 A 4) (4 EE 5) (5 B 6) (6 EE 7) (7 C 8) (8 EE 2))
+    ;;; NFA:
+    ;;;               A                 B                 C
+    ;;; (1) ---> (3) ---> (4) ---> (5) ---> (6) ---> (7) ---> (8) ---> (2)
+    ;;; #+end_example
+    ;;; 
+    (defun regexp-seq-to-nfa (body start end)
+      (let ((res '())
+            (ss start))
+        (loop for elem in body
+              do (multiple-value-bind (rule s e) (regexp-to-nfa-iter elem)
+                   (setq res (nconc res `((,ss ee ,s)) rule))
+                   (setq ss e)))
+        (nconc res `((,ss ee ,end)))
+        (values res start end)))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
++ 对于 =or= 结构为分支类,
+  可以构建从起点出发的各种到达不同分支的跳转,
+  最终会聚到终点.
+
+  #+begin_src dot :file ../_img/finite-state-machine/regexp-or-nfa.svg :exports none
+    digraph {
+      rankdir = LR;
+      dots [shape = rect, style = dashed, color = gray, label = "......", width=3.5];
+
+      subgraph cluster_1 {
+        style = dashed; color = gray;
+        label = "NFA-1"
+        sytle = dashed; color = gray;
+        rank = same;
+        node [shape = point];
+        start1 -> by1 -> end1 [style = invis]
+        by1 [shape = circle, style = dashed, color = grey, label = "..."];
+      }
+      subgraph cluster_2 {
+        style = dashed; color = gray;
+        label = "NFA-2"
+        sytle = dashed; color = gray;
+        rank = same;
+        node [shape = point];
+        start2 -> by2 -> end2 [style = invis]
+        by2 [shape = circle, style = dashed, color = grey, label = "..."];
+      }
+
+      node [shape = circle];
+      0 -> {start1, start2, dots};
+      {end1, end2, dots} -> 1;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/regexp-or-nfa.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/regexp-or-nfa.svg]]
+  
+  #+begin_html
+  <details><summary>代码实现</summary>
+  #+end_html
+
+  #+begin_src lisp
+    ;;; Regexp or to NFA.
+    ;;; Return nfa start end.
+    ;;; 
+    ;;; For example,
+    ;;; 
+    ;;; #+begin_example
+    ;;;   Regexp: /a|b/
+    ;;;   Input: (regexp-or-to-nfa '(a b) 1 2)
+    ;;;   Return: ((1 EE 3) (3 A 4) (4 EE 2) (1 EE 5) (5 B 6) (6 EE 2))
+    ;;;   NFA:
+    ;;;                A
+    ;;;      +--> (3) ---> (4) >--+
+    ;;;     /                      \
+    ;;;   (1)                      (2)
+    ;;;     \          B           /
+    ;;;      +--> (5) ---> (6) >--+
+    ;;; #+end_example
+    (defun regexp-or-to-nfa (body start end)
+      (let ((res '()))
+        (loop for elem in body
+              do (multiple-value-bind (rule s e) (regexp-to-nfa-iter elem)
+                   (setq res (nconc res `((,start ee ,s)) rule `((,e ee ,end))))))
+        (values res start end)))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
++ 对于 =star=, =query=, =plus= 这样的重复出现次数的情况,
+  实际上是异曲同工的.
+  + 以 =plus= 开始, 如果匹配了一个对应的块,
+    那么可以结束, 也可以重新继续进行匹配相应的块.
+    于是示例如下:
+
+    #+begin_src dot :file ../_img/finite-state-machine/regexp-plus-nfa.svg :exports none
+      digraph {
+        rankdir = LR;
+        subgraph cluster_F {
+          label = "NFA"
+          rank = same;
+          style = dashed; color = gray;
+          node [shape = point];
+          start -> by -> end [style = invis]
+          by [shape = circle, style = dashed, color = grey, label = "..."];
+        }
+        node [shape = circle];
+        0 -> start; end -> 1;
+        1 -> 0 [constraint=false];
+      }
+    #+end_src
+
+    #+RESULTS:
+    [[file:../_img/finite-state-machine/regexp-plus-nfa.svg]]
+
+    [[{{ site.github.url }}/_img/finite-state-machine/regexp-plus-nfa.svg]]
+    
+    #+begin_html
+    <details><summary>代码实现</summary>
+    #+end_html
+
+    #+begin_src lisp
+      ;;; Regexp plus to nfa.
+      ;;; Return nfa start end.
+      ;;; 
+      ;;; For example,
+      ;;; 
+      ;;; #+begin_example
+      ;;; Regexp: /a+/
+      ;;; Input: (regexp-plus-to-nfa 'a 1 2)
+      ;;; Return: ((1 EE 3) (3 A 4) (4 EE 3) (4 EE 2))
+      ;;; NFA:
+      ;;;               A
+      ;;; (1) ---> (3) ---> (4) ---> (2)
+      ;;;            \      /
+      ;;;             +-<<-+
+      ;;; #+end_example
+      ;;; 
+      (defun regexp-plus-to-nfa (body start end)
+        (multiple-value-bind (rule s e) (regexp-to-nfa-iter body)
+          (values (nconc `((,start ee ,s)) rule `((,e ee ,s) (,e ee ,end)))
+                  start end)))
+    #+end_src
+
+    #+begin_html
+    </details>
+    #+end_html
+  + =query= 和 =plus= 的效果十分类似,
+    即可以选择跳过或者执行一次内容:
+
+    #+begin_src dot :file ../_img/finite-state-machine/regexp-query-nfa.svg :exports none
+      digraph {
+        rankdir = LR;
+        subgraph cluster_F {
+          label = "NFA"
+          rank = same;
+          style = dashed; color = gray;
+          node [shape = point];
+          start -> by -> end [style = invis]
+          by [shape = circle, style = dashed, color = grey, label = "..."];
+        }
+        node [shape = circle];
+        0 -> start; end -> 1;
+        0 -> 1 [constraint=false];
+      }
+    #+end_src
+
+    #+RESULTS:
+    [[file:../_img/finite-state-machine/regexp-query-nfa.svg]]
+
+    [[{{ site.github.url }}/_img/finite-state-machine/regexp-query-nfa.svg]]
+
+    #+begin_html
+    <details><summary>代码实现</summary>
+    #+end_html
+
+    #+begin_src lisp
+      ;;; Regexp query to nfa.
+      ;;; Return nfa start end.
+      ;;; 
+      ;;; For example,
+      ;;; 
+      ;;; #+begin_example
+      ;;; Regexp: /a?/
+      ;;; Input: (regexp-query-to-nfa 'a 1 2)
+      ;;; Return: ((1 EE 3) (3 A 4) (3 EE 4) (4 EE 2))
+      ;;; NFA:
+      ;;;               A
+      ;;; (1) ---> (3) ---> (4) ---> (2)
+      ;;;            \      /
+      ;;;             +->>-+
+      ;;; #+end_example
+      ;;; 
+      (defun regexp-query-to-nfa (body start end)
+        (multiple-value-bind (rule s e) (regexp-to-nfa-iter body)
+          (values (nconc '()
+                         `((,start ee ,s))
+                         rule
+                         `((,s ee ,e) (,e ee ,end)))
+                  start end)))
+    #+end_src
+
+    #+begin_html
+    </details>
+    #+end_html
+  + =star= 就像是 =plus= 和 =query= 的组合实现,
+    毕竟从某种程度上来说, =(star a)= 就等价于 =(plus (query a))=.
+
+    #+begin_src dot :file ../_img/finite-state-machine/regexp-star-nfa.svg :exports none
+      digraph {
+        rankdir = LR;
+        subgraph cluster_F {
+          label = "NFA"
+          rank = same;
+          style = dashed; color = gray;
+          node [shape = point];
+          start -> by -> end [style = invis]
+          by [shape = circle, style = dashed, color = grey, label = "..."];
+        }
+        node [shape = circle];
+        0 -> start; end -> 1;
+        0 -> 1 [constraint=false];
+        1 -> 0 [constraint=false];
+      }
+    #+end_src
+
+    #+RESULTS:
+    [[file:../_img/finite-state-machine/regexp-star-nfa.svg]]
+
+    [[{{ site.github.url }}/_img/finite-state-machine/regexp-star-nfa.svg]]
+
+    #+begin_html
+    <details><summary>代码实现</summary>
+    #+end_html
+
+    #+begin_src lisp
+      ;;; Regexp star to nfa.
+      ;;; Return nfa start end.
+      ;;; 
+      ;;; For example,
+      ;;; 
+      ;;; #+begin_example
+      ;;; Regexp: /a*/
+      ;;; Input: (regexp-start-to-nfa 'a 1 2)
+      ;;; Return: ((1 EE 3) (3 A 4) (4 EE 3) (4 EE 2) (3 EE 4))
+      ;;; NFA:
+      ;;;             +-<<-+
+      ;;;            /  A   \
+      ;;; (1) ---> (3) ---> (4) ---> (2)
+      ;;;            \      /
+      ;;;             +->>-+
+      ;;; #+end_example
+      ;;; 
+      (defun regexp-star-to-nfa (body start end)
+        (multiple-value-bind (rule s e) (regexp-to-nfa-iter body)
+          (values (nconc '()
+                         `((,start ee ,s))
+                         rule
+                         `((,e ee ,s) (,e ee ,end) (,s ee ,e)))
+                  start end)))
+    #+end_src
+    
+    #+begin_html
+    </details>
+    #+end_html
+
+这样就得到了最后的转换函数了, 尽管转换得到的 NFA 并不一定很好看,
+至少已经完成了转换的操作了.
+
+#+begin_src lisp
+  ;;; Regexp or to NFA.
+  ;;; Return nfa start end.
+  (defun regexp-or-to-nfa (body start end)
+    (let ((res '()))
+      (loop for elem in body
+            do (multiple-value-bind (rule s e) (regexp-to-nfa-iter elem)
+                 (setq res (nconc res `((,start ee ,s)) rule `((,e ee ,end))))))
+      (values res start end)))
+#+end_src
+
+#+begin_html
+<details><summary>一些测试的例子</summary>
+#+end_html
+
++ =/(a|b)+c?/=
+
+  #+begin_src lisp
+    ;;; RES:
+    ;; ((INITIAL 1)
+    ;;  (FINAL 2)
+    ;;  (1 EE 3) (3 EE 5) (5 EE 7) (7 A 8) (8 EE 6) (5 EE 9)
+    ;;  (9 B 10) (10 EE 6) (6 EE 5) (6 EE 4) (4 EE 11) (11 EE 13) (13 C 14) (13 EE 14)
+    ;;  (14 EE 12) (12 EE 2))
+    (regexp-to-nfa '(seq (plus (or a b)) (query c)))
+  #+end_src
+
+  #+begin_src dot :file ../_img/finite-state-machine/regexp-to-nfa-example-1.svg :exports none
+    digraph {
+    rankdir=LR
+    node [shape=point] start;
+    node [shape=doublecircle] 2;
+    node [shape=circle];
+    start -> 1;
+    1 -> 3 [label="EE"];
+    3 -> 5 [label="EE"];
+    5 -> 7 [label="EE"];
+    7 -> 8 [label="A"];
+    8 -> 6 [label="EE"];
+    5 -> 9 [label="EE"];
+    9 -> 10 [label="B"];
+    10 -> 6 [label="EE"];
+    6 -> 5 [label="EE"];
+    6 -> 4 [label="EE"];
+    4 -> 11 [label="EE"];
+    11 -> 13 [label="EE"];
+    13 -> 14 [label="C"];
+    13 -> 14 [label="EE"];
+    14 -> 12 [label="EE"];
+    12 -> 2 [label="EE"];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/regexp-to-nfa-example-1.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/regexp-to-nfa-example-1.svg]]
+
+  (Note: 还有很多的没有的边, 感觉可以修正一下,
+  不过可以转换成 DFA 的话, 应该可以暂时不管这部分. )
+
+  #+begin_src lisp
+    ;;; RES
+    ;; ((INITIAL 0)
+    ;;  (FINAL 3 2 1)
+    ;;  (0 A 2) (1 C 3) (1 B 1) (2 C 3) (2 B 1) (2 A 2)
+    ;;  (1 A 2) (0 B 1))
+    (nfa-to-dfa (regexp-to-nfa '(seq (plus (or a b)) (query c))))
+  #+end_src
+
+  #+begin_src dot :file ../_img/finite-state-machine/regexp-to-nfa-to-dfa-example-1.svg :exports none
+    digraph {
+    rankdir=LR
+    node [shape=point] start;
+    node [shape=doublecircle] 3;2;1;
+    node [shape=circle];
+    start -> 0;
+    0 -> 2 [label="A"];
+    1 -> 3 [label="C"];
+    1 -> 1 [label="B"];
+    2 -> 3 [label="C"];
+    2 -> 1 [label="B"];
+    2 -> 2 [label="A"];
+    1 -> 2 [label="A"];
+    0 -> 1 [label="B"];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/regexp-to-nfa-to-dfa-example-1.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-1.svg]]
+  
+  (Note: 实际上, 生成的 DFA 不一定是最简的形式.
+  关于这个, 实际上还是可以补救一下的. )
++ =/0b(1(0|1)*|0)/= 二进制数匹配
+  
+  #+begin_src lisp
+    ;;; RES
+    ;; ((INITIAL 1)
+    ;;  (FINAL 2)
+    ;;  (1 EE 3) (3 0 4) (4 EE 5) (5 B 6) (6 EE 7) (7 EE 9)
+    ;;  (9 EE 11) (11 1 12) (12 EE 13) (13 EE 15) (15 EE 17) (17 0 18) (18 EE 16)
+    ;;  (15 EE 19) (19 1 20) (20 EE 16) (16 EE 15) (16 EE 14) (15 EE 16) (14 EE 10)
+    ;;  (10 EE 8) (7 EE 21) (21 0 22) (22 EE 8) (8 EE 2))
+    (regexp-to-nfa '(seq 0 b (or (seq 1 (star (or 0 1))) 0)))
+  #+end_src
+
+  #+begin_src dot :file ../_img/finite-state-machine/regexp-to-nfa-example-2.svg :exports none
+    digraph {
+    rankdir=LR
+    node [shape=point] start;
+    node [shape=doublecircle] 2;
+    node [shape=circle];
+    start -> 1;
+    1 -> 3 [label="EE"];
+    3 -> 4 [label="0"];
+    4 -> 5 [label="EE"];
+    5 -> 6 [label="B"];
+    6 -> 7 [label="EE"];
+    7 -> 9 [label="EE"];
+    9 -> 11 [label="EE"];
+    11 -> 12 [label="1"];
+    12 -> 13 [label="EE"];
+    13 -> 15 [label="EE"];
+    15 -> 17 [label="EE"];
+    17 -> 18 [label="0"];
+    18 -> 16 [label="EE"];
+    15 -> 19 [label="EE"];
+    19 -> 20 [label="1"];
+    20 -> 16 [label="EE"];
+    16 -> 15 [label="EE"];
+    16 -> 14 [label="EE"];
+    15 -> 16 [label="EE"];
+    14 -> 10 [label="EE"];
+    10 -> 8 [label="EE"];
+    7 -> 21 [label="EE"];
+    21 -> 22 [label="0"];
+    22 -> 8 [label="EE"];
+    8 -> 2 [label="EE"];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/regexp-to-nfa-example-2.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/regexp-to-nfa-example-2.svg]]
+
+  转换为 DFA:
+
+  #+begin_src dot :file ../_img/finite-state-machine/regexp-to-nfa-to-dfa-example-2.svg :exports none
+    digraph {
+    rankdir=LR
+    node [shape=point] start;
+    node [shape=doublecircle] 6;5;4;3;
+    node [shape=circle];
+    start -> 0;
+    2 -> 6 [label="0"];
+    3 -> 5 [label="1"];
+    5 -> 5 [label="1"];
+    5 -> 4 [label="0"];
+    4 -> 5 [label="1"];
+    4 -> 4 [label="0"];
+    3 -> 4 [label="0"];
+    2 -> 3 [label="1"];
+    1 -> 2 [label="B"];
+    0 -> 1 [label="0"];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/finite-state-machine/regexp-to-nfa-to-dfa-example-2.svg]]
+
+  [[{{ site.github.url }}/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-2.svg]]
+  
+#+begin_html
+</details>
+#+end_html
+
+** 正则表达式的结构提取
+那么既然是编译原理的课程, 显然会想要让事情更进一步变得更加简单吧.
+于是便可以尝试根据正则表达式来直接生成 Regexp 的结构.
+
+#+begin_html
+<details><summary>一些关于 Lisp 的一些注记</summary>
+#+end_html
+
++ 我使用的是 [[http://www.sbcl.org][SBCL]] 发行版.
+  之前也用过 [[https://clisp.sourceforge.io][CLISP]] 和 [[http://www.lispworks.com][LISPWORKS]].
+
+  不过因为我并不是很擅长 Common Lisp, 只能算是一个初学者. 
+  在使用的过程中发现了一些小小的不同.
+  不过不一定正确:
++ 在 Common Lisp 里面的符号貌似是不区分大小的.
+
+  #+begin_src lisp
+    (eq 'A 'a)                              ; T
+    (eq #\A #\a)                            ; NIL
+  #+end_src
++ 上面的 =#\A= 更像是一个字符的感觉.
+  可以通过这样来得到: 
+
+  #+begin_src lisp
+    (concatenate 'list "string")
+  #+end_src
++ 于是就有一个比较尴尬的事情了,
+  如果想要实现匹配字符串的话,
+  可能就需要在构造正则表达式的时候用 =#\A= 这样的形式来实现.
+
+  #+begin_src lisp
+    ;;; RES: NIL
+    (dfa-match-tape
+     (nfa-to-dfa
+      (regexp-to-nfa
+       '(seq a b c)))
+     (concatenate 'list "abc"))
+
+    ;;; T
+    (dfa-match-tape
+     (nfa-to-dfa
+      (regexp-to-nfa
+       '(seq #\a #\b #\c)))
+     (concatenate 'list "abc"))
+  #+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+但是在构造这个能够 Parse 正则表达式的机器的时候出现了一点点的小问题.
+现有的规则有点不够用了...
+
+(欲知后事如何? 请等我解决之后再更新. )
+
+* 后记
+还是旁听的课有意思, 可以自己选择感兴趣的东西去做.
+甚至还没有考试和作业的压力. 次修什么的都弱爆了,
+旁听才是王道! 
+
+不过这个学期真的是太 TMD 忙了,
+没啥时间去做自己喜欢做的事情,
+属于是有点因为学而学了. 
