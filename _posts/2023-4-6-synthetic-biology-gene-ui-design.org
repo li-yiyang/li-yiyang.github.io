@@ -1,0 +1,303 @@
+#+layout: post
+#+title: Synthetic Biology Notes
+#+date: 2023-04-14
+#+options: _:nil ^:nil
+#+math: true
+#+categories: igem
+* Let 丈育 gain Knowledge!
+** About
+本文旨在作为一个对生物印象几乎没有的外系学生快速跳读合成生物学导论一书的笔记,
+以及为了之后快速查找, 对目前所正在构建的项目有一个基本认知的帮助笔记.
+
+本笔记充满了实用主义的功利思想, 所记录的内容具有非常强的偏向性.
+请在参考的时候注意这一点. 
+
+** Synthetic Biology Quick Notes
+#+begin_quote
+合成生物学是指按照一定的规律和已有的知识: ① 设计和建造新的生物部件, 装置和系统;
+② 重新设计已有的天然生物系统为人类的特殊目的服务. [Synthetic Biology
+is: A) the design and construction of new biological parts, devices, and systems,
+and B) the re-design of existing, natural biological systems for useful purposes.
+#+end_quote
+
+*** 一些概念的解释
+**** 合成生物学的基础
++ 设计
++ 模拟
++ 实验
+
+**** 合成生物学的研究内容
++ 工程化功能模块
++ 接口
++ 开发平台
++ 调控和通讯系统
++ 各种功能模块的仿真, 预测算法和相应软件
+  + 通过合理的突变调整转录和翻译的动力学属性,
+    操纵子结合亲和性以及转录因子结合协同性等都有助于使模块达到预期目标.
+  + 理想情况下, 模型应该能够捕捉生物系统的动态行为,
+    在活体实验之前通过计算机模拟等方式在优化设计策略, 调试等方面给出建议.
+  + 瓶颈: 计算工具, 从活体细胞中确定速度常数, 在不同模块, 系统下的速度常数计算.
+    
+**** 合成生物学的工程本质
++ 标准化
+  + 建立生物功能的定义, 建立识别生物部件的方法以及标准生物部件的注册登记
++ 解耦
+  + 将复杂问题分解成简单问题, 将复杂系统分解成简单的要素, 在统一框架下分别设计
++ 抽提
+  + 建立装置和模块的层次, 允许不同层次间的分离和有限的信息交换,
+    开发重设计的和简化的装置和模块, 构建具有统一接口的部件库
+  
+*** Module Concepts
+**** 模块化设计和构建概念
++ 标准化
++ 解耦
++ 抽提
+
+**** 模块的基本属性
++ 外部特性: 
+  + 接口
+  + 功能
+  + 状态
++ 内部特性:
+  + 逻辑
+
+**** 模块设计的三个特征因素
++ 信息隐藏: 信息隐藏是指在设计和确定模块时,
+  一个模块内包含的信息对于不需要这些信息的其他模块来说是不能访问或知晓的
++ 内聚 - 耦合: 一个模块内部各成分之间相关联程度的度量
++ 封闭性 - 开放性: 如果一个模块可以作为一个独立体被应用, 则称模块具有封闭性;
+  如果一个模块可以被扩充, 则称模块具有开放性.
+  
++ 本底环境对模块设计的影响
+  
+**** BioBrick 生物 "零件"
+可以参考一个标准制定的 [[http://dspace.mit.edu/bitstream/handle/1721.1/45139/BBFRFC12.txt][文档]] 是 BBF RFC-12. 
+
++ Terminators 终止子部件
++ DNA 部件
++ Reporters 报告/显示部件
++ Receivers and Senders 信号接收和发送部件
++ Primers 引物部件
++ Inverters 转换部件
++ Promoters 启动子部件
+
+其中对于这些部件:
++ 标准前后缀 (在文档中有说明)
++ 传递的信息
+
+**** 标准定量机制
++ PoPS (RNA polymerase per second, RNA 聚合酶每秒)
++ RIPS (ribosomal initiations per second) mRNA 翻译水平
+**** 逻辑拓扑结构
++ 串联
+
+  #+begin_src dot :file ../_img/iGEM/gene-ui/topological-series-chain.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape=point] in, out;
+      node [shape=rect];
+      in -> "Module 1" -> "Module 2" -> "..." -> "Module N" -> out;
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/iGEM/gene-ui/topological-series-chain.svg]]
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/topological-series-chain.svg]]
+  
++ 单输入
+
+  #+begin_src dot :file ../_img/iGEM/gene-ui/topological-single-input.svg :exports none
+    digraph {
+      node [shape=rect];
+      "Main Module" -> {"Module 1", "Module 2", "...", "Module N"};
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/iGEM/gene-ui/topological-single-input.svg]]
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/topological-single-input.svg]]
+  
++ 多输入
+
+  #+begin_src dot :file ../_img/iGEM/gene-ui/topological-single-input.svg :exports none
+    digraph {
+      node [shape=rect];
+      subgraph cluster_A {
+        style = dashed;
+        {"Module 1", "Module 2", "...", "Module 3"} -> "Main Module";
+      }
+      subgraph cluster_B {
+        style = dashed;
+        {"Module A", "Module B", "Module C"} -> {"Main Module A", "Main Module B"};
+      }
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/iGEM/gene-ui/topological-single-input.svg]]
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/topological-single-input.svg]]
+  
++ 反馈
+
+  #+begin_src dot :file ../_img/iGEM/gene-ui/topological-feedback.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape=plain] control [label="⨷"];
+      node [shape=point] in, out, env;
+      node [shape=rect]
+      {rank = same; "Object", env;};
+      {rank = same; "Implement Part", "Feedback Part"};
+      in -> control [label="Input Signal"];
+      control -> "Control Part" -> "Implement Part" -> "Object";
+      "Object" -> out [label="Output Signal"];
+      env -> "Object" [label="noise"; constraint=false];
+      "Object" -> "Feedback Part" [constraint=false];
+      "Feedback Part" -> control [label="±", constraint=false];
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/iGEM/gene-ui/topological-feedback.svg]]
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/topological-feedback.svg]]
+
++ 前馈
+
+  #+begin_src dot :file ../_img/iGEM/gene-ui/topological-feed-forward-loop.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape=plain] control [label="⨷"];
+      node [shape=point] in, out, middle;
+      node [shape=rect]
+      {rank=same; in -> middle [label="x"]};
+      {rank=same; "Feed Forward", "Control"};
+      {rank=same; "Channel 1", "Channel 2"};
+      {"Channel 1", "Channel 2"} -> control;
+      control -> out [label="z"];
+      "Control" -> "Feed Forward" [label = "y"];
+      "Control" -> "Channel 2";
+      "Feed Forward" -> middle [dir=back];
+      middle -> "Channel 1";
+    }
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/iGEM/gene-ui/topological-feed-forward-loop.svg]]
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/topological-feed-forward-loop.svg]]
+  
+**** 生物系统的层次化结构
+#+begin_src dot :file ../_img/iGEM/gene-ui/structure-of-bio-system.svg :exports none
+  digraph {
+    rankdir = BT;
+    node [shape=record];
+    part [label="Part 1 | Part 2 | ... | Part n"];
+    device [label="Device 1 | Device 2 | ... | Part n"];
+    system [label="System"];
+    part -> device -> system;
+  }
+#+end_src
+
+#+RESULTS:
+[[file:../_img/iGEM/gene-ui/structure-of-bio-system.svg]]
+
+[[{{ site.github.url }}/_img/iGEM/gene-ui/structure-of-bio-system.svg]]
+
++ Part 基因部件
+  + 启动子 Promoter (P)
+    + 不同启动子效率不同
+  + RBS 核糖体结合位点: 结合核糖体以开始转录
+  + 终止子 Terminator (T)
+    + 不同终止子有强弱之分
+  + 操纵子: 基因表达调节装置
++ Device 生物装置
+  + 报告基因 (reporter) 使得产物容易被检测出来的基因
+  + 转换器 (inverter) 接受信号时停止下游基因转录, 未接收信号时开启下游基因转录
+  + 信号传导装置 (signaling) 环境与细胞之间或者邻近细胞与细胞之间
+    接收信号和传递信号的装置
+  + 蛋白质生成装置 (protein generator) 产生具有一定功能蛋白质的装置
+  + ... 基因开关, 双稳态开关, 逻辑门, Repressilator
++ System 生物系统
+  + 群体感应 (quorum sensing QS)
+  + ...
+*** 数学模拟与性能分析
+**** Differential Equation
+这个时候一个非常无聊的问题就是如何整一个数值求解系统.
+尽管这些已经有 [[https://en.wikipedia.org/wiki/List_of_numerical_libraries][一堆]] 的现成的库了...
+
++ 平衡反应方程 \(B + C \overset{p}{\rightarrow} A\)
+
+  \[\frac{\mathrm{d}[A]}{\mathrm{d}t} = \frac{1}{1 + [B] \times [C]} \times p\]
+  
++ 质量作用定律
+
+  元反应的反应速率与各反应物浓度的幂的乘积成正比:
+  在 \(a A + b B \rightarrow g G + h H\) 中, 反应速率为 \(v = k [A]^m [B]^n\),
+  \([A], [B]\) 为反应物浓度, \(m, n\) 为反应物级数, \(k\) 为反应速率常数.
++ 米氏方程 Michaelis-Menten Equation
+
+  \[V = \frac{V_{\mathrm{max}}[S]}{K_{\mathrm{m}} + [S]}\]
+
+  \(K_{\mathrm{m}}\) 为酶性质决定的米氏常数,
+  \(V_{\mathrm{max}}\) 为酶被底物饱和时的反应速度.
++ 西尔方程 Hill Equation
+
+  $$\begin{matrix}\frac{\mathrm{d} A}{\mathrm{d} t} & = & \frac{(a - \xi) X^m}{X^m + X_M^m} + \xi - \delta A & \mathrm{possitve}\\\\\frac{\mathrm{d} A}{\mathrm{d} t} & = & \frac{a - \xi}{1 + (X / X_M)^m} + \xi - \delta A & \mathrm{negative}\end{matrix}$$
+
++ Logistic 模型
+
+  \[\frac{\mathrm{d} N}{\mathrm{d} t} = r N, r = b - d\]
+
++ 主方程 Master Equation
+
+  可逆反应 \(I \overset{b}{\underset{c}{\rightleftharpoons}} A\), \(A \overset{H \cdot G(A)}{\rightarrow} \mathrm{mRNA} \overset{K}{\rightarrow} \mathrm{Protein} \overset{r}{\rightarrow} \phi\),
+  \(A\) 以 \(G(A) = 0\ \mathrm{or}\ 1\) 表示是否开启工作, 以 \(H\) 速率转录为 mRNA;
+  mRNA 以 \(K\) 速率翻译成蛋白质, 蛋白质以 \(r\) 速率降解为 \(\phi\).
+  
+  故可以使用概率函数进行描述:
+
+  $$\begin{matrix}f_{xy}(t) & = & P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 0] \\\\ g_{xy}(t) & = & P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 1]\end{matrix}$$
+
+  可以有如下方程: 
+
+  \[\begin{matrix}\frac{\mathrm{d} f_{xy}}{\mathrm{d} t} & = & b g_{xy} - c f_{xy} + (x + 1) f_{x+1,y} - x f_{xy} + K x f_{x, y+1} - (K x + r y) f_{xy} \\\\ \frac{\mathrm{d} g_{xy}}{\mathrm{d} t} & = & -b g_{xy} + c f_{xy} + G(A) H g_{x - 1, y} + (x + 1) g_{x + 1, y} \\\\ & & -(H G(A) + x) g_{xy} + K x g_{x, y - 1} + r (y + 1) g_{x, y + 1} - (K x + r y) g_{x y}\end{matrix}\]
+
++ 随机微分方程
+
+  \[\begin{matrix}\frac{\mathrm{d} x}{\mathrm{d} t} & = & - x + H \cdot G(t) \\\\ \frac{\mathrm{d} y}{\mathrm{d} t} & = & K X - r y \end{matrix}\]
+  
+**** 性能指标
++ 稳定性: 暂态扰动消失后的时间响应性质上, 了解系统能够承受的最大干扰的幅值和频率.
+
+  +松开手, 一个东西是否会倒+
+
+  + 可以引入参数摄动法来分析, 以及控制理论 (之后查找).
+  + 相位面分析
++ Robustness 健壮性: 在异常和危险情况下系统生存的关键.
+
+  +用锤子敲一下, 这个东西是否会倒+
+
+  + 参数状态敏感性
+  + 系统模型的建立
++ 响应快速性: 稳定状态的系统对于外界改变的快速反应能力. (不应该影响健壮性和稳定性).
+
+**** 稳定性和健壮性的措施
++ 冗余
++ 反馈控制
++ 特异性和保真度
+  
+**** Pattern Recognition and Machine Learning
+虽然但是, 可以考虑当代显学 Transformer 在 NLP 也就是在文本序列中的应用的迁移.
+
+* 后记
+** 不愧是工程竞赛
+实际上感觉这本书里面讲的生物部分并不是很多 (也可能只是因为我都跳过了),
+
+但是对于工程的部分, 几乎和其他的工程里面的要求都差不多. 
+* COMMENT LocalWords
+#  LocalWords:  BioBrick  LocalWords Menten Michaelis PoPS polymerase
+#  LocalWords:  ribosomal RBS Repressilator QS DocString  SubGraph
+#  LocalWords:  Modelica
