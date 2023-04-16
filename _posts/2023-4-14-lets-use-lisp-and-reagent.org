@@ -1,0 +1,972 @@
+#+layout: post
+#+title: 关于啥也不会的新手尝试使用不知名框架的折腾故事
+#+date: 2023-04-16
+#+options: _:nil ^:nil
+#+math: true
+#+categories: igem
+* Let's use Lisp and Reagent to Build An Electron App
+** Why?
++ Why Lisp? And Why Not JS?
+
+  #+begin_html
+  <details><summary>请听我狡辩</summary>
+  #+end_html
+  
+  其实我也说不好为什么要用 ClojureScript 这样的 Lisp 系列的语言,
+  明明 JavaScript 和 TypeScript 已经足够好了,
+  并且 ClojureScript 是一个超级小众的语言...
+  最重要的是, 我并不是很会用 ClojureScript,
+  这简直就是找死.
+
+  实际上, 使用 JS 对我来说, 已经是去年此时的事情了
+  (指计科导的写网页的事情 [[{{ site.github.url }}/jekyll/how-to-make-a-static-web/][How to Make a Website]]).
+  经过一年的孜孜不倦的忘记, 已经达到了完全看不懂原来代码的程度了.
+  而最近我又非常好奇 Lisp 系列的一个编程思想.
+  (怎么说我的梦想都还是能够将我的 [[{{ site.github.url }}/ruby/ri-lang/][りlang]] 变成一个真正的合理的,
+  并且是一个能够进行辅助物理学进行科学计算的一个平台. )
+
+  所以哪怕是在吃屎, 毕竟是我自己选择的道路,
+  既然决定了追求刺激, 那么就贯彻到底呗.
+  (虽然对同组的人可能并不是很友好,
+  但是在我的最终设计中, 这个节点编辑器应该可以接受任意语言作为后台...
+  希望如此)
+
+  #+begin_html
+  </details>
+  #+end_html
++ Why Node Editor? And Why Not Use Existence Lib?
+
+  #+begin_html
+  <details><summary>别说你甚至听都没有听过节点编辑器</summary>
+  #+end_html
+  
+  节点编辑器实际上已经有非常多的现成的框架了,
+  自己写基本很难超过现成的框架. 并且考虑用节点编程,
+  听上去就像是 LabView 这样的多此一举的坑爹玩意.
+
+  节点编辑器的关键在于抽象, 至少我是这么认为的.
+  至少当前我用过的大部分的节点编辑器, 都有这样的一个问题:
+  不够直观, 或者说, 虽然能够直观的将代码使用网状的类似于流程图的形式来表示,
+  但是当规模变大之后, 就会像是一滩烂泥一样向外摊开.
+  然后这种非线性的代码组织逻辑的优点就变成了缺点.
+  (比如 LabVIEW, Blender 的节点图等), 对于小工程来说,
+  这样的节点图很妙, 但是大工程来说, 还是线性的代码好一点... 
+
+  或者类似于 Modelica 这样的提供了抽象节点的编辑器:
+  能够将多个节点组合在一起作为一个新的元件复用,
+  这我觉得是非常棒的. 尽管 Modelica 并不能说是一个编程语言吧...
+  但是它的节点用图形和记号来表示含义而不是用填表的形式,
+  实际上就是我想要的一个状态.
+
+  现有的很多的 JS 的库, 貌似大多数都是前一种的思路: 一个填表节点,
+  一堆连线. (react-diagram, rete, lightgraph.js,
+  虽然 lightgraph.js 还有 subgraph 的概念); 并且貌似都不太能够自定义节点
+  (react-diagram 貌似可以). 所以我的思路是这样的:
+  + 学习 Modelica 的图标直观表示
+  + 同时通过点击节点弹出编辑菜单
+  #+begin_html
+  </details>
+  #+end_html
++ Why Not Ask AI?
+
+  #+begin_html
+  <details><summary> 嘿嘿, 子非鱼, 安知鱼之乐? </summary>
+  #+end_html
+  
+  实际上一开始我并没有使用 AI, 所以在经历了约两周的一个边学边改,
+  最后得到的是一个不能添加, 一堆报错的一个垃圾玩意:
+
+  [[{{ site.github.url }}/_img/iGEM/gene-ui/demo-4-14.gif]]
+  
+  不过现在浅浅地尝试了一下 AI 之后, 只能说真香.
+  (在最后也许我会考虑将我和 AI 聊天的记录放上来,
+  或者部分放上来 (如果太大了的话))
+
+  使用 AI 的一个好处就是可以让你从对于一个东西半生不熟的状态,
+  很快地就能够进入到一个能用的中等水平吧... 虽然不能说完美,
+  但是能用就行了, 我将会考虑在之后用 AI 来辅助我学习和干活.  
+
+  #+begin_html
+  </details>
+  #+end_html
+
+** So, what's this about?
+一个节点编辑器, 使用 ClojureScript, Reagent 和 Re-frame 来制作.
+以下是具体的技术栈介绍以及相关的链接:
++ [[https://clojurescript.org][ClojureScript]] (实际上是将 [[https://clojure.org][Clojure]] 编译成 JavaScript 的实现)
+
+  #+begin_html
+  <details><summary> 如果想要非常快速地掌握 ClojureScript </summary>
+  #+end_html
+
+  这里是我学习 ClojureScript 做的一些简单的笔记,
+  如果相信我的话, 可以试试看看这个来学习.
+  (不过不如用 AI 辅助学习... )
+
+  #+begin_html
+  <details><summary>不过至于为什么是洋文, 这个就任君想象了. 一个比较靠谱的故事是这样的: </summary> 
+  #+end_html
+
+  当时刚刚接触 ClojureScript 的时候, 我还很年轻, 不知道天高地厚;
+  更不知道未来的学习压力将会把我拖垮. 我只是普通地好奇 Lisp,
+  普通地摆大烂. 但是摆大烂怎么说也是不太名正言顺,
+  所以我认为, 不妨乘机学习一下英文表达能力呢? 嘿嘿嘿,
+  反正是摆大烂, 不如贯彻到底. 
+
+  [[{{ site.github.url }}/_img/meme/korewa-unmei.jpg]]
+
+  (嘿嘿嘿... )
+  
+  #+begin_html
+  </details>
+  #+end_html
+  
+  + About
+
+    This is a quick note form [[https://funcool.github.io/clojurescript-unraveled/][Clojure Unrevaled]].
+    Aimed to quick ref of Clojure (personal use mainly).
+
+    A more faster [[https://cljs.info/cheatsheet/][Cheatsheet]] from ClojureScript official site.
+  + Basic about Clojure
+
+    #+begin_html
+    <details><summary>Data</summary>
+    #+end_html
+    + Data Expression
+
+      #+caption: Data Expressions
+      | Types                    | EBNF                                                                | Description                                                                             |
+      |--------------------------+---------------------------------------------------------------------+-----------------------------------------------------------------------------------------|
+      | Numbers                  | ~(+¦-)? [\d]+ (.[\d])? (e-?[\d]+)?~                                 |                                                                                         |
+      | Keywords                 | ~:[\w]+~ or ~(keyword <string>)~                                    |                                                                                         |
+      | Namespaced keywoards     | ~::[\w]+~, ~:<namespace>/[\w]+~ or ~(keyword <namespace> <string>)~ | namespace/keyword                                                                       |
+      | Symbols                  | ~[\w\*\+\!-_'\?]~                                                   |                                                                                         |
+      | Strings                  | ~".*"~                                                              |                                                                                         |
+      | Characters               | ~\<charname>~                                                       | charname for example: ~\newline~                                                        |
+      | [[List][List]]                     | ~(list <items>)~ or ~'(<items>)~                                    | for backquote: =`(~(+ 1 2) 3)= $\rightarrow$ =(3 3)=                                             |
+      | Vectors                  | ~[<items>]~, ~(vector <items>)~ or ~(vec <list>)~                   |                                                                                         |
+      | Maps                     | ~{(<key> <val> ,?)+}~, or ~(hash-map (<key> <val>)+)~               | Like hash table                                                                         |
+      | Sets                     | ~#{<items>}~ or ~(set [<items>])~                                   | Union Note: ~(<set> <item>)~ test whether ~<item>~ in ~<set>~. Note that literal specific don't allow duplicate item. |
+      | Queues                   | ~#queue []~                                                         | Persistent and immutable queue.                                                         |
+      | Atom (ClojureScript)     | ~(atom <val>)~                                                      | Mutable value within.                                                                   |
+      | Volatile (ClojureScript) | ~(volatile! <val>)~                                                 | Like Atom but not observation and validation ability.                                   |
+    + Data Manipulate
+      
+      #+caption: General Data Functions
+      | Functions | Rule         | Description                               |
+      |-----------+--------------+-------------------------------------------|
+      | =type=    | =(type [x])= | Type of =x=, named symbol.                |
+      | =<type>?= |              | Like =list?=, =vector?=, test value type. |
+      + List
+        
+        #+caption: Functions about List
+        | Function | Example                                                         | Descriptions                                                                            |
+        |----------+-----------------------------------------------------------------+-----------------------------------------------------------------------------------------|
+        | ~cons~   | ~(cons 0 (cons 1 ()))~                                          | [[https://en.wikipedia.org/wiki/Linked_list][Linked List]]                                                                             |
+        | ~conj~   | ~(conj '(1 2) 0) ;; => (0 1 2)~, ~(conj [1 2] 0) ;; => [1 2 0]~ | Note the different between list and vector.                                             |
+        | ~pop~    | ~(pop stack)~                                                   | Return like ~(rest stack)~, won't modify ~stack~, similar function: ~rest~, ~peek~ (pop last one). |
+      + Vector
+        
+        #+caption: Function about Vector
+        | Function | Example                        | Description                                                        |
+        |----------+--------------------------------+--------------------------------------------------------------------|
+        | ~nth~    | ~(nth [1 2 3] 0) ;; => 1~      | Start from ~0~. Likely ~(<vector> <index>)~.                       |
+        | ~assoc~  | ~(assoc <vector> <pos> <val>)~ | Insert ~val~ at ~pos~ in ~vector~. Raise error when out of bounds. |
+        | ~mapv~   | ~(mapv <func> <seq>)~          | Like ~map~, but return Vector.                                     |
+      + Map
+        
+        #+caption: Function about Map
+        | Function             | Example                         | Description                                    |
+        |----------------------+---------------------------------+------------------------------------------------|
+        | ~conj~               | ~(conj <map> ([<key> <val>])+)~ | Append to map.                                 |
+        | ~assoc~ and ~dissoc~ | ~(assoc <map> <key> <val>)~     | ~assoc~ append by key; ~dissoc~ delete by key. |
+        | ~(<map> <key>)~      |                                 | Read by key.                                   |
+        | ~keys~               | ~(keys <map>)~                  | List of keys.                                  |
+      + Sets
+        #+caption: Function about Sets
+        | Function                        | Example                                | Description               |
+        |---------------------------------+----------------------------------------+---------------------------|
+        | ~clojure.set/difference~        | ~(clojure.set/difference <set> <set>)~ | Difference of two sets.   |
+        | ~clojure.set/union~             |                                        | Union of two sets.        |
+        | ~clojure.set/intersection~      |                                        | Intersection of two sets. |
+        | ~contains?~ or ~(<set> <item>)~ |                                        | Test if contains.         |
+      + Queue (like a changeable list)
+      + Atom and Volatile (ClojureScript)
+        
+        #+caption: General Atom Functions
+        | Functions                   | Rule                                                             | Description                                                                             |
+        |-----------------------------+------------------------------------------------------------------+-----------------------------------------------------------------------------------------|
+        | ~deref~                     | ~(deref <atom>)~ or  ~@<atom>~                                   | Read the value of Atom.                                                                 |
+        | ~swap!~                     | ~(swap! <atom> update <key> <func>)~                             | See if ~atom~ is ~(atom {:key val})~, and ~(swap! atom update :key inc)~ will increase ~val~. |
+        | ~reset!~                    | ~(reset! <atom> <val>)~                                          | Replace ~atom~ value with new ~val~.                                                    |
+        | ~add-watch~, ~remove-watch~ | ~(add-watch <atom> <key> <func>)~, ~(remove-watch <atom> <key>)~ | Call ~func~ if ~key~ of ~atom~ is changed.                                              |
+
+        #+caption: General Volatile Functions
+        | Functions   | Rule                | Description       |
+        |-------------+---------------------+-------------------|
+        | ~volatile?~ | ~(volatile? <obj>)~ | Test if volatile. |
+        | ~vswap~     |                     | Same as atom.     |
+        | ~vreset!~   |                     | Same as atom.     |
+      + Destructing
+        + ~(let [[x _ y] [0 1 2]] [y x]) ;; => [2 0]~,
+          like ~multiple-value-bind~ in common lisp.
+        + it works like function parameter assignment:
+          ~(let [[x y & more] [0 1 2 3 4]] ...)~.
+          
+          Note: the total could be passed in as
+          ~(let [[_ & para :as total] [1 2 3]] ...)~.
+        + Also, it could be named assignment:
+          ~(let [{x :xvar} {:xvar ...}] ...)~.
+
+          And unbound will fall back to ~nil~
+          unless specified with ~:or~:
+          ~(let [{name :name :or {name ...}} {...}] ...)~.
+
+          Note: the total map could be assigned by:
+          ~(let [{name :name :as total} {...}] ...)~.
+        + For more, please refer [[https://gist.github.com/john2x/e1dca953548bfdfb9844][Clojure Destructuring Tutorial and Cheat Sheet]]
+    #+begin_html
+    </details>
+    #+end_html
+
+    #+begin_html
+    <details><summary>Assignment</summary>
+    #+end_html
+
+    + Basic Assignment
+      + Variable assignment: =(def <var> <val>)=
+      + Local bound: =(let [(<var> <val>)+] body)=, like other Lisp but less =()=.
+      + Function assignment: =(defn <fname> <docstring>? body ...)=
+      + Single form:
+        #+begin_src clojure
+          (defn 1+
+            "Return 1 + given number."
+            [x]
+            (+ 1 x))
+        #+end_src
+      + Multi form:
+        #+begin_src clojure
+          (defn n+
+            "Return 1 + given number `(n+ x)' or n + given number `(n+ x 1)'."
+            ([x] (+ 1 x))
+            ([x n] (+ n x)))
+        #+end_src
+        Note: Kinda like functions in Mathematica.
+      + Multimethods
+        #+begin_src clojure
+          (defmulti multi-func
+            "docstring"
+            (fn [param] (:key param))
+            :default :key)
+
+          (defmethod multi-func :key-1 [param] (...))
+          (defmethod multi-func :key-2 [param] (...))
+
+          (multi-func {:key :key-1})
+          (multi-func {:key :key-2})
+        #+end_src
+
+        Add ~:hierarchy~ keyword can describe hierarchy relation for multimethods.
+        If not provided, it will use global hierarchy instead. 
+        + Multi param: =[& params]= treat params as a list.
+        + [[Protocol][Protocol]] like Java's interface.
+      + Anonymous Functions
+        + =(fn [params] body ...)=
+        + =#(body)= and use =%N= for Nth param.
+          Note: =%= is equal to =%=, =%&= is likely to =[& param]=.
+          Looks like =#&= in Mathematica.
+        + =(def var #(func))= Like Scheme, could assign variable with function.
+    + Namespace
+      #+begin_src clojure
+        (ns namespace
+          (:require other-package
+                    [other-package :as alias-other-package]
+                    [other-package :refer [symbols-in-others-package]]
+                    [other-package :exclude [excluded-symbols]])
+          (:refer-clojure :exclude [func]))
+      #+end_src
+      + ~ns~ to self-define namespace
+      + ~(require pkg)~ or ~(:require ...)~ in ~ns~ load other packages
+        with alias name.
+  
+        ~(:refer ...)~ in ~ns~ load symbols in other packages for easy use.
+
+        use ~(:refer-clojure ...)~ dealing with ~cljs.core~ namespace.
+      + load symbols by ~namespace/symbols~.
+      + The file should be orgnized like below:
+
+        #+begin_example
+          app
+          └── src
+              └── namespace
+                  ├── core.cljs
+                  └── main.cljs
+        #+end_example
+
+        with namespace of ~namespace.core~ and ~namespace.main~. 
+    + Protocol
+      Note: to understand, referring to [[https://boxofpapers.hatenablog.com/entry/2014/02/02/054500][「標準実装」という概念はない]] and
+      Java Interface would help. 
+
+      #+begin_src clojure
+        (defprotocol protocol-name
+          "docstring about the protocol"
+          (method [this] "docstring"))
+
+        (extend-type type-name
+          protocol-name
+          (function-from-protocol [this] ...)
+          another-protocol-name
+          (function-from-another-protocol [this] ...))
+
+        (extend-protocol protocol-name
+          type-name
+          (function-from-protocol [this] ...))
+      #+end_src
+
+      + Protocol works like giving different objects likely interface.
+        Kinda like Duck-type in Ruby. And ~extend-type~ and ~extend-protocol~
+        works like Ruby's ~mix-in~ and Python's ~__int__~ like definition.
+
+        +Although I think I'd prefer Ruby's flavor more.+
+      + To test if an object having specific protocol:
+        ~(statisfies? protocol object)~.
+    + Hierarchy and Type System
+      + *Hierarchy* ~(derive [children parent])~
+
+        Like ~class Children < Parent~ in Ruby.
+  
+        Provide a local hierachy ~(derive [h children parent])~ where ~h~
+        is a hierarchy space create by ~(make-hierarchy)~. 
+        + ~(ancestors [tag])~ or ~(ancestors [h tag])~ for local hierarchy.
+        + ~(descendants [tag])~ or ~(descendants [h tag])~ for local hierarchy.
+        + ~(isa? [child parent])~ or ~(isa? [h child parent])~ for local hierarchy.
+      + *Type* ~(deftype [name [& fields] & opts+specs])~
+
+        Like ~struct name { fields }~ in C.
+        Or more likely of [[http://www.lispworks.com/documentation/lw70/CLHS/Body/m_defstr.htm][defstruct]] in Common Lisp.
+        Provides reader and constructor.  
+        + *Constructor* ~(name. <fields>)~ append a ~.~ after the type name
+          will be a constructor function name. Or use ~->name~ or ~(new name ...)~.
+        + *Reader* ~(.-fieldname <object-of-type>)~ prefix ~.-~ of a field name
+          will read field value of ~<object-of-type>~.
+        + *Reify* ~(reify [& opt-spec])~ for quick create objector without
+          pre-defining a type.  
+      + *Record* ~(defrecord [name [& fields] & opts+specs])~
+
+        Like type but a little different.
+        + *Constructor* ~(name. ...)~, ~(->name ...)~, ~(new name ...)~.
+          An additional ~map->name~ constructor function. 
+        + *Reader* ~(<record-object> :key)~.
+        + *Hierarchy* ~(defrecord name [field] h (...))~.
+    #+begin_html
+    </details>
+    #+end_html
+
+    #+begin_html
+    <details><summary>Flow Control</summary>
+    #+end_html
+
+    + Condition
+      #+caption: Functions related with conditions
+      | Command  | EBNF                                         | Description                                                                          |
+      |----------+----------------------------------------------+--------------------------------------------------------------------------------------|
+      | ~if~     | ~(if <cond> <true> <false>?)~                |                                                                                      |
+      | ~cond~   | ~(cond (<cond> <exp>)+ (:else <exp>)?)~      | Like ~(cond ((= x 1) x))~, but less ~()~.                                            |
+      | ~case~   | ~(case <exp> (<val> <exp>)+ <fallback>?)~    |                                                                                      |
+      | ~condp~  | ~(condp = <exp> (<val> <exp>)+ <fallback>?)~ | Maps each ~<val>~ with ~(= <exp> <val>)~. Return ~<fallback>~ if fails. Like ~case~. |
+      | ~filter~ | ~(filter <func> <list>)~                     | Select ~<list>~ if ~<func>~ true.                                                    |
+
+    + Iteration
+      #+caption: Functions related with iterations
+      | Command  | EBNF                                                                            | Description                                                  |
+      |----------+---------------------------------------------------------------------------------+--------------------------------------------------------------|
+      | ~do~     | ~(do <exp>+)~                                                                   | Block of code, return value of last ~exp~.                   |
+      | ~for~    | ~(for [(<var> <range>)+ (:(while¦when) <cond>)? (:let [<var> <val>])?] <body>)~ | ~(for [x [1 2 3] y [4 5]] [x y])~                            |
+      | ~doseq~  |                                                                                 | Like ~for~ but return ~nil~.                                 |
+      | ~loop~   | ~(loop [<init-key-val>] body)~                                                  | Assign initial variable and loop                             |
+      | ~recur~  | ~#(if (= % 1) 1 (+ (recur (inc %)) %))~                                         | Like Y-combinder in \lambda calcus                                 |
+      | ~map~    | ~(map <func> <data>)~                                                           | ~<data>~ can be vector or list                               |
+      | ~run!~   |                                                                                 | Like ~map~ but return ~nil~.                                 |
+      | ~reduce~ | ~(reduce <func> <init> <data>)~                                                 | ~#(if data (recur %1 (%1 init (car data)) (cdr data)) init)~ |
+
+    + Threading Macro
+      Used to quickly build nested function calls.
+
+      #+captions: Threading Marcos
+      | Marcos              | Name               | Examples                       | Descriptions                |
+      |---------------------+--------------------+--------------------------------+-----------------------------|
+      | ~->~                | thread-first macro | ~(-> x f1 f2 f3)~              | equal to ~(f3 (f2 (f1 x)))~ |
+      | ~->>~               | thread-last macro  | ~(->> x f1 f2 f3)~             | equal to ~(f3 (f2 (f1 x)))~ |
+      | ~as->~              | thread-as macro    | ~(as-> x $ (map inc $) (...))~ | assign a temp name for ~x~  |
+      | ~some->~, ~some->>~ | thread-some macro  | same as ~->~                   | could be used to avoid null |
+      | ~cond->~, ~cond->>~ | thread-cond macro  | ~(cond-> x (<cond> <exp>)+)~   | apply ~exp~ if ~cond~       |
+
+    #+begin_html
+    </details>
+    #+end_html
+
+    #+begin_html
+    <details><summary>ClojureScript and JavaScript</summary>
+    #+end_html
+
+    + Conversion between JavaScript
+      JavaScript methods are stored in ~js~ namespace,
+      and can be accessed like ~(js/parseInt "...")~.
+
+      Some shorthand of writing function call:
+      #+caption: Conversion from JavaScript to ClojureScript
+      | Shorthand               | Equal to               | JavaScript         | Description and Notes                                  |
+      |-------------------------+------------------------+--------------------+--------------------------------------------------------|
+      | ~(.log js/console ...)~ | ~(js/console.log ...)~ | ~console.log(...)~ | Function call                                          |
+      | ~(.-PI js/Math)~        | ~js/Math.PI~           | ~Math.PI~          | Read attribute, see [[Hierarchy and Type System][Hierarchy and Type System]] for more |
+      | ~#js {:key val}~        | ~(js-obj key val)~     | ~{key: val}~       | Like record, use ~clj->js~, ~js->clj~ for convert.     |
+
+    + Google Closure Library
+      #+begin_src clojure
+        (ns app.core
+          (:require [goog.dom :as dom]))
+
+        (def element (dom/getElement "body"))
+      #+end_src
+
+      for more information, see [[https://google.github.io/closure-library/api/][Closure Generated API Docs]]
+      + Load JavaScript via Google Closure Library:
+        In js file, provide module like:
+
+        #+begin_src javascript
+          goog.provide("javascript.util");
+
+          goog.scope(function() {
+              var module = javascript.util;
+              module.func = function(para) { /* ... */ };
+          });
+        #+end_src
+
+        Then could call in ClojureScript:
+
+        #+begin_src clojure
+          (require '[javascript.util :as util])
+          (util/func ...)
+        #+end_src
+
+    + Hot Load
+    + Electron
+    #+begin_html
+    </details>
+    #+end_html
+  #+begin_html
+  </details>
+  #+end_html
++ [[https://reagent-project.github.io][Reagent]], 是 [[https://react.dev][React]] 的 ClojureScript 的绑定
++ [[https://github.com/day8/re-frame][Re-frame]], 一个类似于简化 Reagent 设计的一个框架.
++ [[https://github.com/thheller/shadow-cljs][shadow-cljs]], 用于配置和与 npm 进行沟通
++ [[https://www.electronjs.org][Electron]], 一个类似于将网页作为本地软件的一个框架
+  (如果说难听点, 就是 chromium 内核. )
+* Overview of the Structure
+** File and shadow-cljs
+一个使用 shadow-cljs 以及 npm 共同管理的 ClojureScript 应有类似如下的文件结构:
+
+(注: 不一定所有的都是这样的结构, 所以折叠了吧. )
+
+#+begin_html
+<details><summary> 文件结构 (展开) </summary>
+#+end_html
+
+#+begin_example
+  .
+  ├── package-lock.json
+  ├── package.json
+  ├── rescources
+  │   ├── main.js
+  │   └── public
+  │       ├── css
+  │       │   └── main.css
+  │       ├── index.html
+  │       └── js
+  ├── shadow-cljs.edn
+  └── src
+      └── app
+          ├── main
+          │   └── core.cljs
+          └── renderer
+              └── core.cljs
+#+end_example
+
+一点简单的解释:
++ 依赖文件
+  + =package.json= 可以通过 =npm init= 来新建,
+    通过 =npm install= 会生成 =package-lock.json=.
+
+    #+begin_html
+    <details><summary> package.json 的一些设置 </summary>
+    #+end_html
+
+    略去了一些无关的东西... 
+
+    #+begin_src json
+      {
+           ...
+          "main": "rescources/main.js",
+          "scripts": {
+              "build": "shadow-cljs compile main renderer",
+              "test": "echo \"Error: no test specified\" && exit 1"
+          },
+          "devDependencies": {
+              "electron": "^24.0.0",
+              "electron-devtools-installer": "^3.2.0"
+          },
+          "dependencies": {
+              "react": "^18.2.0",
+              "react-dom": "^18.2.0",
+              "shadow-cljs": "^2.22.9"
+          }
+      }
+    #+end_src
+
+    #+begin_html
+    </details>
+    #+end_html
+  + =shadow-cljs.edn= 里面包含了 shadow-cljs 的依赖,
+    一些动作的设定之类的东西.
+
+    #+begin_html
+    <details><summary> shadow-cljs.edn </summary>
+    #+end_html
+
+    #+begin_src clojure
+      ;; shadow-cljs configuration
+      {:source-paths ["src"]                  ; where clojurescript file stores
+
+       :dev-http {4000 "rescources/public"}   ; run shadow-cljs watch ...
+                                              ; open localhost:4000 to preview
+
+       :dependencies                          ; package dependencies
+       [
+        [cider/cider-nrepl "0.30.0"]          ; for Cider in Emacs to use
+        [reagent "1.2.0"]                     ; Reagent
+        [re-frame "1.3.0"]z                   ; re-frame
+        [binaryage/devtools "1.0.7"]          ; devtools
+        ]
+
+       :builds                                ; run shadow-cljs compile ... to build
+       {:main                                 ; shadow-cljs compile main
+        {
+         :target :node-script                 ; for electron usage
+         :output-to "rescources/main.js"      ; output dir
+         :main app.main.core/main             ; main function entry
+         }
+
+        :renderer                             ; shadow-cljs compile renderer
+        {
+         :target :browser                     ; for browser
+                                              ; NOTE: The render process in Electron
+                                              ; runs under the browser enviroment.  
+         :output-dir "rescources/public/js"   ; output path
+         :asset-path "js"
+         :modules {
+                   :renderer                  ; compile to renderer.js
+                   {:init-fn app.renderer.core/start!}}}}}
+    #+end_src
+
+    #+begin_html
+    </details>
+    #+end_html
++ 代码
+  + =src= 下面包含着 ClojureScript 的代码文件,
+    通过文件夹来设置 namespace, 如:
+    =src/app/main/core.cljs= 来表示 =(ns app.main.core)=. 
+  + =app/main= 作为 Electron 的入口
+
+    #+begin_html
+    <details><summary> app/main/core.js </summary>
+    #+end_html
+
+    #+begin_src clojure
+      (ns app.main.core
+        (:require ["electron" :refer [app BrowserWindow]]))
+
+      (def main-window (atom nil))            ; main window
+
+      (defn init-browser []
+        (reset! main-window                   ; set the window with size 800x600
+                (BrowserWindow.
+                 (clj->js {:width 800
+                           :height 600})))
+
+        ;; it should be resource/public/index.html,
+        ;; __dirname in javascript tells Electron where to find file
+        (.loadURL ^js/electron.BrowserWindow @main-window
+                  (str "file://" js/__dirname "/public/index.html"))
+
+        ;; Deal with situation when closing window
+        (.on ^js/electron.BrowserWindow @main-window "closed"
+             #(reset! main-window nil)))
+
+      (defn main
+        "Main function for Electron app."
+        []
+        (.on app "window-all-closed" #(.quit app)) ; quit app
+        (.on app "ready" init-browser))
+    #+end_src
+
+    #+begin_html
+    </details>
+    #+end_html
+  + =app/renderer= 作为 Electron 的界面渲染部分,
+    以下主要关注这部分的代码. 
+    
+#+begin_html
+</details>
+#+end_html
+    
+** re-frame
+(注: 这里仅仅只是说是作为前端界面的一个结构, 不是网页结构. )
+
+这里使用如下的一个事件结构 (re-frame 的一个结构) 来进行软件基本框架的搭建:
+
+#+begin_src dot :file ../_img/iGEM/gene-ui/re-frame-gene-ui.svg :exports none
+  digraph {
+    rankdir = LR; fontname = "Arial";
+    node [shape = circle, fixedsize = true, width = 1.3, fontname = "Arial"];
+    edge [dir = both, fontname = "Arial"];
+
+    core [label = "Core\n(core.cljs)"];
+
+    subgraph cluster_Render {
+      style = dashed;
+      label = "Renderer"
+
+      subgraph cluster_View {label = "View";
+        view [label = "View\n(view.cljs)"];}
+      subgraph cluster_Control {label = "Control";
+        event [label = "Event\n(event.cljs)"];}
+
+      subgraph cluster_Model {
+        rank = same; label = "Model"
+        db [label = "Database\n(db.cljs)"];
+        sub [label = "Subscribe\n(sub.cljs)"];
+        sub -> db [label = "register\nsubscribtion\ndata"];
+      }
+
+      edge [style = dashed];
+      event -> db [label = "update\ndatabase"];
+      view -> sub [label = "subscribe\ndata"];
+      view -> event [label = "dispatch\nevent"];
+    }
+
+    core -> view [label = "Call Render\nProcess"]
+  }
+#+end_src
+
+#+RESULTS:
+[[file:../_img/iGEM/gene-ui/re-frame-gene-ui.svg]]
+
+[[{{ site.github.url }}/_img/iGEM/gene-ui/re-frame-gene-ui.svg]]
+
+#+begin_html
+<details><summary> 对上面的结构的一个说明 </summary>
+#+end_html
+
+这个结构在我看来十分类似 Rails 里面的 MVC 结构. 
+
+#+begin_html
+<details><summary> About MVC...</summary>
+#+end_html
+
+注: 并非 re-frame 使用的就是 MVC 模型来进行软件工程建构.
+只是我觉得它使用的方式和 Rails 里面的 MVC 模型很像...
+不妨类比一下.
+
+以下是 Claude 对 re-frame 中 MVC 模型的的介绍 (注: 括号内是我的注记)
+
+1. 用户与 Components 交互
+   (对应 =view.cljs= 中的代码, 通过使用 Reagent 的 Hiccup 构建)
+2. Components 触发事件, 事件被 Event dispatcher 接收并交给对应的 Event Handler 处理. 
+   (对应 =event.cljs= 中的代码,
+   通过 =reg-event-db= 和 =reg-event-fx= 来处理事件并更新数据库)
+3. Event Handler 会更新应用状态 Subscription, 并产生 Side Effect.
+4. Components 监听到 Subscription 的改变, 更新 View.
+   (对应 =sub.cljs= 中的代码)
+5. Side Effect 被执行, 进行必要的副作用操作 (更新数据库之类的). 
+
+#+begin_html
+</details>
+#+end_html
+
+简单来说就是, 在设计的时候, 考虑将视图 (View), 数据逻辑 (Model),
+和控制 (Controller) 进行分离来进行构建, 通过标准的接口调用,
+实现模块化. 
+
++ 在 =view.cljs= 中, 我将要绘制控制界面 (Art-board), 节点 (Nodes),
+  连线 (Arcs) 以及接口 (Ports). (应该一些最基本的事件是在其中处理)
++ 在 =events.cljs= 中, 我将要处理事件逻辑.
++ 在 =sub.cljs= 中,
+  将会声明并使得在 =db.cljs= 中定义的数据库通过接口暴露给其他部分调用.
++ *View and Hiccup*: 在 Reagent 中通过使用 Hiccup 来进行描述 HTML 的形式:
+
+  #+begin_html
+  <details><summary> 详细介绍和例子 </summary>
+  #+end_html
+
+  + Hiccup 的形式
+
+    #+begin_src clojure
+      [:div.class-name                        ; <div>
+       [:h1#id-name                           ;   <h1 id="id-name">
+        "Lucky Me"]                           ;     Lucky Me
+                                              ;   </h1> 
+       [:p {:style {:color :yellow}}          ;   <p style="color: yellow;">
+        "Haha"]                               ;     Haha
+                                              ;   </p> 
+       [:span                                 ;   <span> <!-- with click event -->
+        {:on-click #(println "Clicked")}]]    ;   </span>
+                                              ; </div>
+    #+end_src
+  + 最简单的形式:
+
+    #+begin_src clojure
+      (defn view [] [:h1 "Hello"])
+
+      (reagent.dom/render                     ; Render into `app-container'. 
+       [view]
+       (js/document.getElementById "app-container"))
+    #+end_src
+  + 稍微复杂一点但是会比较高效的做法:
+    
+    #+begin_src clojure 
+      (defn view []
+        (let [nodes (subscribe [:nodes])]
+          (fn [] ...)))
+    #+end_src
+
+    使用这样的方式的好处在于一开始会计算得到 =(fn [])= 的结果,
+    然后之后就不会再计算, 而是一直沿用.
+  + 关于 =key=
+    
+    通过给元素设立一个 =key= 的 metadata 可以让 Reagent 在更新的时候,
+    只渲染对应的 =key= 而不是全部渲染:
+
+    #+begin_src clojure
+      (for [node nodes]
+        ^{:key node-id} [draw-node node])
+    #+end_src
+  #+begin_html
+  </details>
+  #+end_html
++ *Subscribe Data*: 在 =re-frame= 框架中,
+  有 =subscribe= 和 =cursor= 的两个关于数据的方法.
+
+  #+begin_html
+  <details><summary> 详细介绍和例子 </summary>
+  #+end_html
+
+  + =subscribe= 的例子:
+    + 比如在 =sub.cljs= 中如下注册数据接口:
+
+      #+begin_src clojure
+        ;;; db, for example: `{:nodes [1 2 3]}'.
+        (reg-sub :nodes (fn [db] (db :nodes)))
+      #+end_src
+
+      那么在 =view.cljs= 中通过 =subscribe= 来进行注册信息:
+
+      #+begin_src clojure
+        (subscribe [:node])
+      #+end_src
+    + 或者如果想要传入参数, 可以使用下面的形式:
+
+      #+begin_src clojure
+        ;;; db, for example: `{:nodes {:key1 1 :key2 2}}'.
+        (reg-sub :node (fn [db [_ key]] ((db :nodes) key)))
+      #+end_src
+
+      在 =view.cljs= 中:
+
+      #+begin_src clojure
+        (subscribe [:node :key1])
+      #+end_src
+
+      然而这样的做法不如使用 =cursor= 更加高明.
+      可以精确更新某一路径而不是整个结构.
+    + =subscribe= 实际上得到的是一个 =atom= 容器,
+      通过 =@(subscribe ...)= 的形式可以得到值. 
+  + =cursor= 的例子:
+    + 通过 =(cursor :state)= 的形式新建,
+      使用 =(get-in cursor [:nested ...])= 进入深层的路径
+    + 通过 =(assoc-in cursor [:key] value)= 进行修改状态
+    + =cursor= 的感觉更像是 C 语言里面的指针, 但是并不完全一样.
+  #+begin_html
+  </details>
+  #+end_html
++ *Dispatch Events and Update Database*:
+  通过 =reg-event-db= 和 =reg-event-fx= 来定义如何处理事件,
+  并且通过 =dispatch= 来进行调用.
+
+  #+begin_html
+  <details><summary> 详细介绍和例子 </summary>
+  #+end_html
+
+  + =reg-event-db= 和 =reg-event-fx= 的使用例子
+
+    如下注册一个事件:
+    
+    #+begin_src clojure
+      (reg-event-db                           ; regist event using database
+       :update-mouse-position                 ; event name
+       (fn [db [_ mouse]]                     ; event arguments
+         (-> db
+             (assoc :mx (.-clientX mouse))
+             (assoc :my (.-clientY mouse)))))
+    #+end_src
+
+    然后在 =view.cljs= 中使用 =(dispatch [:update-mouse-position mouse])=
+    这样的形式来进行调用事件.
+
+    相比 =reg-event-db= 其仅仅只修改 =database= 状态,
+    =reg-event-fx= 除了修改 =database=, 还可以进行其他带有 Side Effect 的事情.
+
+  #+begin_html
+  </details>
+  #+end_html
+#+begin_html
+</details>
+#+end_html
+
+* The Project
+该部分暂时还请移步 [[https://github.com/li-yiyang/write-myself-a-node-editor][仓库]] 吧...
+
+(写完之后再同步进来... )
+
+* COMMENT A Note for Gene UI, A Node Editor Solution
+项目还在一个初期构建中, 实在是不太好意思放上链接.
+不过需要反省的是, 我可能花了太多的时间在 UI 前端的部分上了,
+属于是搬门弄斧, 自讨苦吃了.
+
+接下来我要专注后端逻辑层面的一个设计了, 至于前端的部分,
+等后端实现了之后, 要么有前端组的同学来帮忙, 要么到时候再和稀泥吧.
+
+** Module Design
+*** 模块
+需要将模块, 也就是一个节点进行一个处理:
++ 接口: Ports In, Out, Relation, Others, Custom
++ 功能: DocString
++ 逻辑: Code, SubGraph
++ 状态: Local Variables, Local Bindings
+
+于是一个节点可能为如下所示的一个结构:
+
+#+begin_src clojure
+  (defnode node-type
+    {:doc "Docstring"
+     :states {:var-1 "1"
+              :var-2 2}
+     :port {:name-1 (number-port. args "Docstring")
+            :name-2 (string-port. args "Docstring")}
+     :on-tragger #(func...)
+     :on-event #(func...)})
+
+  (def node (node-type. :dec "..."))
+
+  (def node-2 (another-node-type :dec "..."))
+
+  (link-between node :name-2 node-2 :name-of-port)
+#+end_src
+
+那么如何将一个网状的节点通过线性的代码进行描述?
+如何将一个线性的代码转换成网状的节点?
+
++ 一个简单的想法就是通过类似于 [[https://modelica.org][Modelica]] 来实现.
+
+  #+begin_example modelica
+    model FirstOrder "Document string"
+      parameter Real T "Docstring"
+      Real x "Docstring";
+    initial equation
+      x = 0 "Docstring";
+    equation
+      der(x) = 1 - x "Docstring";
+    end FirstOrder;
+  #+end_example
+
+  实际上是因为我想要向类似 Modelica 一样做一些模拟.
+  (尽管不如直接调包... )
++ 或者用图的形式去表示 (感觉 Modelica 的形式很像这样):
+  维护一个节点列表和一个边关系列表,
+  然后使用一个类似于有限自动机的东西去进行一个处理.
+  好处是非常容易表达和处理, 坏处就是可能没法输出一些很好的代码,
+  不太适合人来编辑 (对于 Modelica
+  这样的我觉得除了最小的部分会有人愿意用代码来写,
+  其他估计也不会真的用代码来书写吧... )
+
+  一个伪代码:
+  
+  #+begin_src clojure
+    (defn eval-graph [graph]
+      (threading [node (graph :initial-nodes)]
+                 (eval-node node)))
+
+    (defn finite-state-machine [arc]
+      (let [node (arc :to-node)
+            id   (arc :id)
+            val  (arc :val)]
+        (set (node id) val)
+        (when (arg-full? node)
+          (eval-node node))))
+
+    (defn eval-node [node]
+      (funcall (node :func))
+      (when (node :out-ports)
+        (threading [arc (node :out-ports)]
+                   (finite-state-machine arc))))
+  #+end_src
+
+  其中假设有一个 =threading= 函数能够很好地处理多任务.
++ 直接变成代码模板来进行处理, 类似于使图变成语法树这样来实现.
+  好处是实现方便, 坏处是这样就没有节点编辑器图结构的优点了.
+
+  比如对于一个 LISP 代码:
+  
+  #+begin_src clojure 
+    (fun a b c)
+  #+end_src
+
+  可以变成一个类似于 =(node :in [a b c] :out [])= 这样的一个节点.
+  而函数调用:
+
+  #+begin_src clojure
+    (+ (- a b) (/ c d))
+  #+end_src
+
+  就可以看作是输出连接到输入的两个东西.
+  这种的话就是在做连接的时候做一个类似于类型判断的事情, 看看能不能放,
+  然后再是否添加边.
+
+  为什么会坚持这一点呢? 是因为我希望除了能够对用户友好以外,
+  还应当对编程人员友好. 举个例子, Mathematica 就是一个非常坑爹的例子,
+  实际上, 我个人认为, 它的前端虽然非常好, 但是同时也限制了它的后端发展,
+  是它没法像是一个真正的编程语言一样用, 这样就很可惜. 
++ 或者直接学习一下其他领域的一些东西吧
+  + [[https://cycling74.com/products/max][Max]] 一个合成器控件
+  + [[http://puredata.info][Puredata]] 一个界面非常朴素但是很有趣的一个东西
+
+当然, 肯定不能只有最底层的节点而没有高层的抽象,
+需要能够用户通过节点的连接进行自定义新的节点.
+以及还要能够根据不同等级的抽象层进行调用不同层级的节点组 (Namespace).
+毕竟很多时候, 建模组并不需要关心实验组的部分,
+而实验组也不需要关心建模组要做的部分.
+
+*** 实现的步骤
+1. Graph (Node) Expression and Evaluation (in Code)
+2. Graph (Node) GUI and Interface
+3. Graph compiled to Code (Speed Up Evaluation)
+4. Build Modules and Write Extensions
+5. Meet Requirement
+
+*** Graph (Node) GUI and Interface
+
+*** Graph (Node) Expression and Evaluation (in Code)
+* COMMENT LocalWords
+#  LocalWords:  TypeScript LocalWords LabView LabVIEW Modelica rete
+#  LocalWords:  lightgraph subgraph cljs edn json MVC multimethods
+#  LocalWords:  param params pre EBNF cond
