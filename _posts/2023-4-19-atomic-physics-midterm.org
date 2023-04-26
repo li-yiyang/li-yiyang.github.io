@@ -1,0 +1,925 @@
+#+layout: post
+#+title: 原子物理补天
+#+date: 2023-04-19
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+#+begin_html
+<style>img {max-width: 50%;}</style>
+#+end_html
+* 通用的一些小技巧
+** 公式速通尝试
++ Millikan 油滴实验:
+  \(m g = q E \Rightarrow q_e = \mathrm{gcd}(\{\frac{m_i g}{E}\})\)
+
+  \(m\) 油滴质量, \(q\) 电荷, \(E\) 电场
++ 库仑散射公式:
+  \(\tan \frac{\theta}{2} = \frac{Z e^2}{2 \pi \varepsilon_0 \mu v_0^2 b}\)
+
+  \(\theta\) 散射角, \(\mu\) 约化质量, \(v_0\) 粒子速度, \(b\) 瞄准距离
++ 卢瑟福散射截面:
+  \(\sigma(\theta) = \frac{\mathrm{d} \sigma}{\mathrm{d} \Omega} = (\frac{1}{4 \pi \varepsilon_0})^2 (\frac{Z e^2}{2 E_k})^2 \frac{1}{\sin^4 \frac{\theta}{2}}\)
+
+  \(\sigma\) 散射截面, \(\Omega\) 散射立体角, \(\theta\) 散射偏向角, \(Z\) 原子序数
++ 卢瑟福背散射:
+  \(k = (\frac{m_1 \cos \theta \pm \sqrt{m_2^2 - m_1^2 \sin^2 \theta_1}}{m_1 + m_2})^2\)
+
+  \(m_1\) 为入射粒子质量, \(m_2\) 为靶粒子质量, \(\theta_1\) 为实验室系下的偏转角度
++ 氢原子光谱: \(\sigma = \frac{1}{\lambda} = R (\frac{1}{n_f^2} - \frac{1}{n_i^2})\)
++ 弗兰克 - 赫兹与改进
++ 黑体辐射
+  + 基尔霍夫定律
+    \(\frac{r_1(\lambda, T)}{\alpha_1(\lambda, T)} = \frac{r_2(\lambda, T)}{\alpha_2(\lambda, T)} = \frac{c}{4} \rho(\lambda, T)\)
+  + Stefan-Boltzmann 定律:
+    \(E_0(T) = \sigma T^4\)
+  + Wien 位移定律:
+    \(T \lambda_m = b\)
+  + 普朗克黑体辐射
+    \(r_0(\lambda, T) = \frac{2 \pi h c^2}{\lambda^5} \frac{1}{e^{\frac{h c}{k T \lambda}} - 1}\)
++ 光电效应 \(h \nu = E_k|_{= \frac{1}{2} m v^2} + W_e\)
++ 康普顿散射
+  \(\Delta \lambda = \frac{h}{m_0 c} (1 - \cos \varphi) = \lambda_c (1 - \cos \varphi) = 2 \lambda_c \sin^2 \frac{\varphi}{2}\)
+  + 康普顿波长 \(\lambda_c = \frac{h}{m_0 c}\)
++ 波尔氢原子理论
+  + 经典轨道, 定态条件,
+    频率条件 \(h \nu = E_n - E_m\),
+    角动量量子化条件 \(m_e \nu r = n \hbar\) (驻波)
+  + \(E_n = - \frac{\mu e^2 Z^2}{2 (4 \pi \varepsilon_0)^2 \hbar^2 n^2}\)
+  + \(r_n = \frac{4 \pi \varepsilon_0 \hbar^2}{\mu e^2} \frac{n^2}{Z}\)
+  + 里德伯原子
++ 物质波:
+  \(\lambda = \frac{h}{p}, \nu = \frac{E}{h}\)
++ 电子晶体衍射 (布拉格衍射) \(\delta = 2 d \sin \theta = \frac{2 n + 1}{2} \lambda\)
++ 海森堡不确定性原理 \(\Delta x \cdot \Delta p_x \geq \frac{\hbar}{2}, \Delta E \cdot \Delta t \geq \frac{\hbar}{2}\)
++ 概率波
+  + 平面波 \(\Psi(\boldsymbol{r}, t) = \Psi_0 e^{- i \frac{2 \pi}{h}(E t - \boldsymbol{p} \cdot \boldsymbol{r})}\)
+  + 连续性, 单值性, 归一化
++ 态叠加
+  + \(\langle A| = \varphi^{*}, |B \rangle = \psi\)
+  + 物理不可分: \(\langle f|i \rangle = \sum \langle f|i \rangle_k\),
+    
+    物理可分 (跃迁概率已知) \(|\langle f|i \rangle|^2 = \sum |\langle f|i \rangle|^2\)
+  + 中间态 \(\langle f|v \rangle \langle f|i \rangle = \langle f|i \rangle\)
+  + 独立事件 \(\langle fF|iI \rangle = \langle f|i \rangle \langle F|I \rangle\)
++ 薛定谔方程 \(i \hbar \frac{\partial}{\partial t} \Psi(\boldsymbol{r}, t) = (- \frac{\hbar^2}{2m} \frac{\partial^2}{\partial \boldsymbol{r}^2} + U(\boldsymbol{r}, t)) \Psi(\boldsymbol{r}, t)\)
+  + 无限深势阱 \(\psi = A \sin \frac{n \pi}{l} x \Rightarrow n^2 \frac{h^2}{8 m a^2}\) (驻波解)
+  + 抛物线势阱 \(E_n = (n + \frac{1}{2}) \hbar \omega\)
+  + 散射
+    \(\Phi_{\mathrm{before}} = A e^{+ i k_1 x} + B e^{-i k_1 x},
+    \Phi_{\mathrm{after}} = C e^{- k_2 x}\)
+  + 隧穿
+    \(\Phi_{\mathrm{before}} = A e^{+ i k_1 x} + B e^{- i k_2 x},
+    \Phi_{\mathrm{in}} = D e^{- k_2 x} + F e^{k_2 x},
+    \Phi_{\mathrm{after}} = C e^{k_3 x}\)
++ 平均值和算符 \(\langle \psi|\hat{A}|\psi \rangle\)
+  + 对易与非对易 \([\hat{A}, \hat{B}] = 0 \mathrm{or} \neq 0\)
+  + 动量算符 \(\hat{p} = i \hbar \frac{\partial}{\partial \boldsymbol{r}}\);
+    坐标算符 \(\hat{\boldsymbol{r}} = \boldsymbol{r}\);
+    能量算符 \(\hat{H} = - \frac{\hbar^2}{2 m} \nabla^2 + U\);
+    角动量算符 \(\hat{L} = \sum \hat{L}_i\). 
++ 氢原子解
+
+  主量子数 \(n\);
+  轨道角动量 \(l = 0, 1, \dots, n - 1\), 对应 \(s, p, d, \dots\);
+  磁量子数 \(m = 0, \pm 1, \pm 2, \dots, \pm l\)
++ 施特恩-盖拉赫实验 \(\boldsymbol{F} = \boldsymbol{\mu} \nabla \cdot \boldsymbol{B} = \mu_{jz} \partial_z B\) (非均匀磁场),
+  \(\mu_{jz} = m_j \hbar\) 分裂成 \(m_j = 0, \pm 1, \dots, \pm j\) 条谱线. 
++ 原子状态 \(^{2s + 1}l_{j}\), \(l = s, p, d, \dots\)
++ 电子自旋 \(s = \sqrt{s (s + 1)} \hbar\)
+  + 朗德因子 \(g = 1 + \frac{j(j + 1) - l(l + 1) + s(s + 1)}{2 j (j + 1)}\),
+    \(g_j = \frac{3}{2} + \frac{1}{2}(\frac{s(s + 1) - l(l + 1)}{j (j + 1)})\)
++ 碱金属双线:
+  轨道贯穿 + 原子实极化 (+ 自旋磁矩 + 轨道磁矩 [精细结构] (+ 核磁矩 + 电子磁矩 [超精细结构]))
+
+  能级间隔 \( \Delta E = \frac{R h c \alpha^2 {Z^{*}}^4}{n^3 l(l + 1)} = 2 \mu_B B_{\mathrm{in}}\)
++ 精细结构
+  + 相对论质量修正: \(\Delta E_n' = - \frac{Z^2 \alpha^2}{n^2} E_n [\frac{3}{4} - \frac{n}{l + 1/2}]\)
+  + 达尔文修正: \(\Delta E_n'' = - \frac{Z^2 \alpha^2}{n^2} n E_n\)
++ 兰姆移位: \(U = \frac{a}{2} [F(F + 1) - I(I + 1) - J(J + 1)]\),
+  \(\Delta E = U(F = 1) - U(F = 0) = \hbar^2\)
++ 塞曼效应: \(\Delta E = m_j g B \mu_B\)
++ 斯塔克效应: \(\Delta E = e E a_0\)
++ 核磁共振: \(h f = 2 \mu_z (B_{\mathrm{ext}} + B_{\mathrm{local}})\)
+
+** 原子尺度的常数
++ 电子质 (能) 量: \(m_e c^2 = 0.511MeV\)
++ \(\hbar c = 197 MeV \cdot fm = 197 eV \cdot nm\)
++ \(\frac{e^2}{4 \pi \varepsilon_0} = 1.44 MeV \cdot fm = 1.44 eV \cdot nm\)
+* 物质基本结构
+#+begin_html
+<details><summary>关于 "原子" 的吐槽:</summary>
+#+end_html
+
+导师: 这件事比较 trick 的一点就是, "原子" 那个是日本人做的.
+只是他们用的是汉字. 而 "中国" 这个是我们做的.
+做那个的机器现在还在物理所里面.
+
+不过现在所里面的大杀器能干的事情更多了... 
+
+#+begin_html
+</details>
+#+end_html
+
+** 电子
+*** Millikan 油滴实验
+#+name: Millikan-oil-expriment
+#+begin_src dot :file ../_img/pieces/atomic-physics/millikan.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = rect];
+    "喷雾器\nAtomizer" -> "油滴" [label = "产生"];
+    "X-Ray" -> "油滴" [label = "带电"];
+    {rank=same; "电场", "重力"};
+    "油滴" -> "电场" [label = "F = q E", dir=back];
+    "油滴" -> "重力" [label = "F = mg", dir=back];
+    "电场" -> "重力" [label = "平衡", dir=both, constraint=true];
+  }
+#+end_src
+
+#+RESULTS: Millikan-oil-expriment
+[[file:../_img/pieces/atomic-physics/millikan.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/millikan.svg]]
+
++ 油滴质量 \(\Leftarrow\) 关闭电场, 通过空气阻力来进行测量质量
++ \(m g = q E \Rightarrow q = \frac{m g}{E}\) 并取最大公约数为 \(q_e\)
+
+** 原子
+*** 粒子散射实验 (盖革-马斯顿实验)
+#+name: Geiger-Marsden-experiment
+#+begin_src dot :file ../_img/pieces/atomic-physics/Geiger-Marsden-experiment.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = rect];
+    "α Source" -> "Gold Foil" -> "Screen";
+  }
+#+end_src
+
+#+RESULTS: Geiger-Marsden-experiment
+[[file:../_img/pieces/atomic-physics/Geiger-Marsden-experiment.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/Geiger-Marsden-experiment.svg]]
+
+*** 汤姆逊散射
+**** 库仑散射公式
+\[\tan \frac{\theta}{2} = \frac{Z e^2}{2 \pi \varepsilon_0 \mu v_0^2 b}\]
+
+假设: 
++ *原子核不动* (注: 加入等效质量 \(\mu = \frac{m_1 m_2}{m_1 + m_2}\) 可以进行修正)
++ 忽略电子对散射影响
++ 仅考虑电场力
++ 认为是单次散射
+
+建立坐标如下:
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/scattering.svg]]
+
++ 将速度在平面上按 \(z\) 方向和 \(x\) 方向进行分解:
++ \(z\) 方向上的速度变化: \(\dot{v}_z = - \frac{Z e^2}{4 \pi \varepsilon_0 \mu r^2} \sin \phi\); 
++ 角动量守恒: \(v_0 b = \dot{\phi} r^2\);
++ 于是 \(\int_{-\pi}^{\theta} - \frac{Z e^2}{4 \pi \mu \varepsilon_0} \sin \phi \mathrm{d}\phi
+  = \int_0^{v_0 \sin \theta} v_0 b \mathrm{d}v_z\);
+  解得 \(\frac{Z e^2}{4 \pi \varepsilon_0 \mu} (\cos \theta + 1) = \frac{1}{2} v_0^2 b \sin \theta\),
+  即 \(b = \frac{Z e^2}{2 \pi \varepsilon_0 \mu v_0^2} \frac{1}{\tan \frac{\theta}{2}}\); 或者 \(tan \frac{\theta}{2} = \frac{Z e^2}{2 \pi \varepsilon_0 \mu v_0^2 b}\).
+
+*** 卢瑟福散射截面
+[[{{ site.github.url }}/_img/pieces/atomic-physics/rutherford.svg]]
+
+\[\sigma(\theta) = \frac{\mathrm{d}\sigma}{\mathrm{d}\Omega} = (\frac{1}{4 \pi \varepsilon_0})^2 (\frac{Z e^2}{2 E_k})^2 \frac{1}{\sin^4 \frac{\theta}{2}}\]
+
+假设:
++ 每个被散射的 \(\alpha\) 粒子仅被一个原子散射
++ 靶在单位体积内均匀分布, 但是认为互不遮挡,
+  即等效为一个二维的平面靶
+  (面原子数为 \(n t s\), \(n\) 为原子数密度, \(t\) 为厚度, \(s\) 为面积)
++ 认为 \(\alpha\) 粒子均匀入射, 平行出射 (探测器和粒子源相对距离都比金箔尺寸大)
+
+有映射关系: 均匀 \(\alpha \overset{b}{\rightarrow} \theta(b) \overset{\mathrm{d}b \rightarrow \mathrm{d}\sigma}{\rightarrow} \mathrm{d}\Omega \rightarrow p(\Omega)\) (不均匀的概率分布).
++ \(\mathrm{d} b \rightarrow \mathrm{d}\sigma: \mathrm{d}\sigma = 2 \pi b \mathrm{d}b\)
++ \(\theta \rightarrow \mathrm{d}\Omega: \mathrm{d}\Omega = \frac{2 \pi r \sin \theta \cdot r \mathrm{d}\theta}{r^2}\)
++ 于是 \(\frac{\mathrm{d}\sigma}{\mathrm{d}\Omega} = \frac{b}{\sin \theta} \frac{\mathrm{d}b}{\mathrm{d}\theta}
+  = - (\frac{1}{4 \pi \varepsilon_0})^2 (\frac{Z e^2}{\mu v_0^2})^2 \frac{1}{sin^4 \frac{\theta}{2}}\);
+  且可以得到在 \(\Omega\) 处, \(\mathrm{d}\Omega\) 立体角内接受到的散射粒子数量  \(N(\Omega) = N n s t \frac{\mathrm{d}\sigma}{s}\).
+  
+  其中 \(\mathrm{d}\Omega \approx \frac{s'}{r^2}\), 其中 \(s'\) 为探测环面积. 并且应有:
+  + \(\mathrm{d}N \sim \frac{1}{\sin^4 \frac{\theta}{2}}\) (转动探测器来实现)
+  + \(\mathrm{d}N \sim \frac{1}{v_0^4}\) (改变 \(\alpha\) 粒子速度, 比如用薄云母减速)
+  + \(\mathrm{d}N \sim Z^2\) (可以用来测量 \(Z\))
+
+注意:
++ \(\theta \rightarrow 0 \Rightarrow b\) 大, 则说明电子屏蔽作用不可忽视, \(\alpha\) 粒子与中性原子散射,
+  散射公式不成立.
++ 通过计算在近日点的能量, 可以得到近日点位置 \(r_m\).
+  并且在其最小时 (显然就是对心碰撞时候), 可以用来估算原子核大小.
+
+*** 卢瑟福背散射谱仪
+#+name: Rutherford-Backscattering-Spectrometer
+#+begin_src dot :file ../_img/pieces/atomic-physics/RBS.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = rect];
+    "离子源" -> "加速器" -> "样品";
+    "探测器" -> "样品" [dir=back, style=dashed];
+  }
+#+end_src
+
+#+RESULTS: Rutherford-Backscattering-Spectrometer
+[[file:../_img/pieces/atomic-physics/RBS.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/RBS.svg]]
+
++ 通过研究入射粒子损失的能量来分析元素的种类, 损失后能量比 \(k = \frac{E}{E_0}\):
+
+  \[k = (\frac{m_1 \cos \theta_1 \pm \sqrt{m_2^2 - m_1^2 \sin^2 \theta_1}}{m_1 + m_2})^2\]
+
+  其中 \(m_1\) 为入射粒子质量, \(m_2\) 为靶粒子质量 (\(m_1 < m_2\)).
+  \(\theta_1\) 为实验室系的散射角.
++ 不同元素对应不同能量位置
++ 峰面积正比元素含量
+
+* 波尔的氢原子理论
+** 不连续的实验现象
+*** 氢原子光谱
+\[\sigma = \frac{1}{\lambda} = R (\frac{1}{n_f^2} - \frac{1}{n_i^2})\]
+
+*** 弗兰克 - 赫兹实验
+#+name: Franck-Hertz-Experiment
+#+begin_src dot :file ../_img/pieces/atomic-physics/franck-hertz.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = rect];
+    subgraph cluster {style = dashed; label = "低压水银蒸汽"; "栅极 G" [shape=plain]; };
+    "热阴极 K" -> "栅极 G" [label = "电子束\nU0"];
+    "栅极 G" -> "板极 A" [label = "电子束\nUr"];
+  }
+#+end_src
+
+#+RESULTS: Franck-Hertz-Experiment
+[[file:../_img/pieces/atomic-physics/franck-hertz.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/franck-hertz.svg]]
+
+于是随着电压 \(U_0\) 的增加面可以看到电流增加的同时发现有陷峰: 
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/F-H-res.svg]]
+
+实验原理:
++ 为什么会损失能量: 碰撞使得被撞原子中的电子发生跃迁, 吸收了能量,
+  非弹性碰撞 (电子损失能量, 激发汞原子)
++ 为什么会有不损失能量: 弹性碰撞
++ 为什么会有整数倍的能量损失陷峰: 多次碰撞
+
+实验装置的局限和改进:
++ 局限: 边加速边碰撞, 分辨率不高
++ 改进: 将加速和碰撞区分离
+
+  #+name: Improved-Franck-Hertz
+  #+begin_src dot :file ../_img/pieces/atomic-physics/franck-hertz-improve.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape = rect];
+      subgraph cluster {style = dashed; label = "低压水银蒸汽";
+      "碰撞区域" [shape = plain];};
+      "热阴极 K" -> "栅极 G1" -> "碰撞区域" -> "栅极 G2" -> "板极 A" [label = "电子束"];
+    }
+  #+end_src
+
+  #+RESULTS: Improved-Franck-Hertz
+  [[file:../_img/pieces/atomic-physics/franck-hertz-improve.svg]]
+
+  [[{{ site.github.url }}/_img/pieces/atomic-physics/franck-hertz-improve.svg]]
+
+  令 \(G_1, G_2\) 等电位, 可使得其中电子只碰撞不加速. 
+*** 黑体辐射 (能量量子化)
+一些行话:
++ 平衡热辐射: 吸收能量等于同一时间内辐射的能量. 
++ 辐射本领: \(r(\lambda, T) = \frac{\mathrm{d}E(\lambda, T)}{\mathrm{d}\lambda}\)
+  温度为 \(T\) 的物体, 单位事件内从单位表面积辐射出来的波长在 \(\lambda\)
+  附近 \(\mathrm{d}\lambda\) 的辐射功率为 \(\mathrm{d}E(\lambda, T)\), 
++ 总辐射本领: 单位面积上发生的各种波长的辐射总功率 (\(W/m^2\)).
+  \(E(T) = \int \mathrm{d}E(\lambda, T) = \int r(\lambda, T) \mathrm{d}\lambda\)
++ 吸收本领: 入射到物体上的辐射, 吸收的和入射的辐射之比称为吸收本领 \(\alpha(\lambda, T)\).
++ 基尔霍夫定律: \(\frac{r_1(\lambda, T)}{\alpha_1(\lambda, T)} = \frac{r_2(\lambda, T)}{\alpha_2(\lambda, T)} = r_0(\lambda, T) = \frac{c}{4} \rho(\lambda, T)\).
+  任何物体在同一温度 \(T\) 下的辐射本领与吸收本领成正比,
+  比值只与 \(\lambda\) 和 \(T\) 有关, 与材料无关.
++ Stefan-Boltzmann 定律:
+  
+  \[E_0(T) = \sigma T^4\]
+
+  黑体总辐射本领与 \(T^4\) 成正比
++ Wien 位移定律
+
+  \[T \lambda_m = b\]
+
+  极值波长 \(\lambda_m\) 和 \(T\) 乘积为常数.
++ (经典) 黑体辐射分布曲线推导
+  + Wein 公式: \(r_0(\lambda, T) = C_1 \lambda^{-5} e^{-C_2 / \lambda T}\)
+
+    (经典麦克斯韦速度分布律)
+  + Rayleigh-Jeans 公式: \(r_0(\lambda, T) = 2 \pi \lambda^{-4} k T c\)
+
+    (能均分定理推导)
+*** TODO 普朗克黑体辐射公式
+\[r_0(\lambda, T) = \frac{2 \pi h c^2}{\lambda^5} \frac{1}{e^{\frac{h c}{k T \lambda}} - 1}\]
+
+*** 光电效应
+\[h \nu = \frac{1}{2} m v^2 + W_e\]
+
++ 电流饱和值 \(i_m \sim I\) (光强)
++ 遏止电压 \(U_0 = \frac{W_e}{h}\)
+
+光电效应的应用:
++ 红外夜视仪
++ 光电倍增管 PMT
+  + 性能描述: 效率, 分辨, 增益
+  + 一次事件的信号输出 (为什么会有两个峰?
+    因为粒子能量太高穿透玻璃发生切伦科夫光. )
+*** 康普顿散射
+\[\Delta \lambda = \frac{h}{m_0 c} (1 - \cos \varphi) = \lambda_c (1 - \cos \varphi) = 2 \lambda_c \sin^2 \frac{\varphi}{2}\]
+
++ 光子动量 \(p = \frac{E}{c} = \frac{h \nu}{c} = \frac{h}{\lambda}\)
++ 认为弹性碰撞:
+
+  [[{{ site.github.url }}/_img/pieces/atomic-physics/compton.svg]]
+
+  \[\left\{\begin{matrix} h \nu_0 + m_0 c^2 & = & h \nu + m c^2 & (E)\\\\  h \nu_0 & = & m v \cos \theta + h \nu \cos \varphi & (p_x)\\\\  h \nu \sin \varphi & = & m v \sin \theta & (p_y)\\\\ m & = & \frac{m_0}{\sqrt{1 - \frac{v^2}{c^2}}}\end{matrix}\right.\]
+
+  #+begin_html
+  <details><summary> 解的方法 </summary>
+  #+end_html
+
+  解还比较 tricky...
+  + 将上面的 \(p_x\) 式和 \(p_y\) 式通过三角函数 \(1 = \sin^2 \theta + \cos^2 \theta\) 进行一个约化:
+
+    \[(h \nu_0 - h \nu \cos \varphi)^2 + (h \nu \sin \varphi)^2 = (m v)^2\]
+
+    左边又可以展开变成 \(h^2 \nu_0^2 - 2 \cos \varphi h^2 \nu \nu_0 + h^2 \nu^2\). 
+    
+  + 然后利用 \(E\) 式来进行求解, 其中用到 \(p = h \nu / c\):
+  + 不如看 [[https://zh.wikipedia.org/wiki/康普頓散射][维基百科上的推导]]...
+  #+begin_html
+  </details>
+  #+end_html
+
+讨论
++ 原波长 \(\lambda_0\) 成分: X 射线和电子碰撞的时候, 和整个原子相互作用,
+  这个时候 \(m_0\) 为整个原子质的进制质量, 不是很小的电子质量 (相干散射).
+
+  (就是 \(\Delta \lambda \rightarrow 0\) 近似认为是原波长)
++ 康普顿轮廓
++ 光电效应中不考虑动量守恒: 束缚能
++ 逆康普顿散射
+
+意义:
++ 支持了光量子, 证实了光量子具有动量 \(p = E / c = h \nu / c = h / \lambda\)
++ 应用: 高能光子源, 光子光子对撞机, 加速器束流能量测量系统
+  
+** 波尔氢原子理论的解释
+三个基本假设:
++ 经典轨道 + 定态条件: 原子存在一系列确定能量的稳定状态
++ 频率条件: \(h \nu = E_n - E_m\)
++ 角动量量子化条件: \(2 \pi r \cdot m_e \nu = n h, m_e \nu r = n \frac{h}{2 \pi} = n \hbar\)
+
+  (从电子在轨道上形成驻波可以来理解: \(2 \pi r = n \lambda\). )
+
+#+begin_html
+<details><summary>解一下</summary>
+#+end_html
+
++ 动力学方程: \(\frac{Z e^2}{4 \pi \varepsilon_0 r^2} = \mu \frac{v^2}{r}\), 其中 \(\mu\) 为等效质量
++ 量子化条件: \(\mu v r = n \hbar\) 
++ 解得 \(v_n = \frac{Z e^2}{4 \pi \varepsilon_0 n \hbar}, r_n = \frac{4 \pi \varepsilon_0 \hbar^2}{\mu e^2} \frac{n^2}{Z}\)
++ 于是可以解得能量:
+  \(E_n = \frac{1}{2} \mu v_n^2 - \frac{Z e^2}{4 \pi \varepsilon_0 r} = - \frac{\mu e^2 Z^2}{2 (4 \pi \varepsilon_0)^2 \hbar^2 n^2}\)
++ 同样可以解得里德伯常量: \(R_H = -\frac{E_n n^2}{h c} = \frac{2 \pi^2 \mu e^4 Z^2}{(4 \pi \varepsilon_0)^2 h^3 c}\)
+  
+#+begin_html
+</details>
+#+end_html
+
+一些注记:
++ 对应原理: /在量子数很大而改变很小的情况下, 量子理论和经典结果趋近/. 
++ 使用约化质量 \(\mu = \frac{m_e m_p}{m_e + m_p}\) 进行修正.
+  
+  并且还能够拓展到其他的类氢原子:
+  + 类氢光谱: \(Z > Z_H = 1\), 核外只有一个电子的离子
+  + 奇异原子: 原子轨道上一个电子被其他带负电粒子替代
+    + \(e- \rightarrow \mu-\) 得到 \(\mu\) 子原子
+    + \(p+ \rightarrow \mu+\) 正 \(\mu+\) 子素
+    + \(\pi+, \pi-\) 原子
+    + ...
++ 非量子化轨道: 巴尔末系限外有连续谱. 来源于自由电子和氢离子结合产生的光谱
+
+  自由电子和氢离子结合成一个氢原子的时候,
+  即电子从非量子化轨道跃迁到一个量子化轨道,
+  原子向外辐射一个光子, 能量为 \(h \nu = E_e - E_n\).
++ 里德伯原子: 原子中有一个电子被激发到很高的能级
+  + 平均寿命长
+  + 邻近能级差小 (辐射光谱, 敏感探测)
+  + 容易被电离, 然后加磁场使得不同质量的同位素分离
+  + 能用来产生高强度激光
++ 波尔理论的局限
+  + 经典轨道概念
+  + 半经典半量子
+  + 强度, 极化, 选择定则无法解释, 也无法解释更加复杂的原子
+  + 稳定性, 同一性, 再生性无法解释
+* 量子力学初步
+** 波粒二象性
+*** 德布罗意物质波
+\[\lambda = \frac{h}{p} = \frac{h}{m v}, \nu = \frac{E}{h} = \frac{m c^2}{h}\]
+
+*** 戴维孙 - 革末电子晶体衍射
+#+name: Davisson–Germer-Experiments
+#+begin_src dot :file ../_img/pieces/atomic-physics/davisson-germer.svg :exports none
+  digraph {
+    node [shape = rect];
+    "电子枪" -> "晶体" [label = "电子束"];
+    "探测器" -> "晶体" [label = "散射线", dir = back];
+  }
+#+end_src
+
+#+RESULTS: Davisson–Germer-Experiments
+[[file:../_img/pieces/atomic-physics/davisson-germer.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/davisson-germer.svg]]
+
+通过观察电子在晶体 (能量计算波长和 X 射线接近) 上的衍射来论证电子的波动性.
+(布拉格公式: 波程差 \(\delta = 2 d \sin \theta = \frac{2 n + 1}{2} \lambda \Rightarrow\) 加强)
+
+其他观测微观粒子波动性实验:
++ 汤姆逊电子衍射实验
++ 双缝干涉实验
+
+微观粒子波动性应用:
++ 电子显微镜 (分辨本领 \(\delta\theta_m \approx 1.22 \lambda / D\))
+
+物质波的统计解释 (玻恩):
++ 波动性: \(\varphi^{*} \varphi\) 表现出现概率大
+
+*** 海森堡不确定性原理
+\[\Delta x \cdot \Delta p_x \sim h\]
+
+#+begin_html
+<details><summary> 解释 </summary>
+#+end_html
+
++ 电子 (单缝) 衍射的不确定性
+  + 电子经过缝的位置不确定性 \(\Delta x = b\)
+  + 一级衍射角 \(\sin \varphi = \frac{\lambda}{b}\); 对应了动量的不确定性:
+    \(\Delta p_x = p \sin \varphi = p \frac{\lambda}{b}\).
+  + 于是得到不确定性关系 \(\Delta x \Delta p_x = p \lambda = h\)
++ 波的解释:
+  + 要测量一个波的动量 \(p = \frac{h}{\lambda}\), 就要测量它的波长.
+  + 要测量一个波的波长, 固定一点然后检测上升沿和下降沿 (类似于示波器的 trigger),
+    显然, 测量的时间越长, 测量的平均 \(\overline{\lambda}\) 越接近 \(\lambda\), \(\Delta p \rightarrow 0\). 
+  + 要测量一个波的位置, (有点像是相位的感觉), 显然, 测量的时间越短, \(\Delta x \rightarrow 0\).
+#+begin_html
+</details>
+#+end_html
+
+说明:
++ 1927 E.H.Kennard 现代精确不等式 (不确定度定义为标准偏差)
+  \(\sigma_x \cdot \sigma_p \geq \frac{\hbar}{2}\)
++ 能量和时间的不确定关系 \(\Delta E \cdot \Delta t \geq \frac{\hbar}{2}\)
+
+  #+begin_html
+  <details><summary>相关的一个拓展</summary>
+  #+end_html
+
+  + 不等式的得到: \(\Delta x \cdot \Delta p = c \Delta t \cdot \Delta(\frac{h \nu}{c}) = \Delta (h \nu) \cdot \Delta t = \Delta E \cdot \Delta t \geq \frac{\hbar}{2}\)
+  + 激发态寿命和自然谱线宽度: 激发态寿命 \(\Delta t \rightarrow \Delta E \rightarrow \Delta \nu\) 
+
+  #+begin_html
+  </details>
+  #+end_html
++ 好量子数: (用来描述波包的一个有定值的量) \(n, l, m\).
+  
+** 薛定谔方程
+*** 概率波和波函数
++ 自由粒子平面波函数: \(\Psi(\boldsymbol{r}, t) = \Psi_0 e^{- i \frac{2 \pi}{h} (E t - \boldsymbol{p} \cdot \boldsymbol{r})}\)
++ 波函数的统计解释:
+  \(\Psi(\boldsymbol{r}, t)\) 的物理意义在于波函数的模的平方代表时刻 \(t\),
+  在空间 \(\boldsymbol{r}\) 处单位体积元中微观粒子出现的概率.
+
+  #+begin_html
+  <details><summary>一些错误的观点纠正</summary>
+  #+end_html
+
+  + *[错误观点]*: 波由粒子组成, 是大量粒子运动的表现.
+
+    无法解释单个电子就具有波动性的实验.
+  + *[错误观点]*: 粒子由波组成, 波是基本组成单元 (波包)
+
+    实验上观测到的电子, 总处于一个小区域内, 其广延不会超过原子大小 \(\approx 1 \mathring{A}\).
+
+  #+begin_html
+  </details>
+  #+end_html
++ 波函数应满足的条件
+  + 连续性: 概率不会在某处突变, 波函数必须处处连续
+
+    注: 之后在隧穿中, 会用到在边界上的连续条件. 
+  + 单值性: 任意体积元内只有一个概率
+  + 有限性: 概率不可能无限大, 波函数有限
+  + 归一化: \(\int_{\Omega} \Psi^{*}(\boldsymbol{r}, t) \Psi(\boldsymbol{r}, t) \mathrm{d}V = 1\)
+
+    注: 因为归一化的性质存在, 所以对 \(\phi(\boldsymbol{r}, t) = C \psi(\boldsymbol{r}, t)\),
+    认为描述的相对机率意志, 故描述的是同一机率波. 
+    
+*** 态叠加原理
++ Dirac 符号 bra: \(\langle A| = \varphi^{*}\), ket: \(|B \rangle = \psi\)
+  + 一个事件的表示: 事件从初态 \(i\) 到末态 \(f\) 的概率 \(w_{i \rightarrow f} = |\langle f|i \rangle|^2\).
++ 概率概率服从的规则
+  + 从初态到末态, 存在 \(n\) 个 _物理不可分_ 的路径: \(\langle f|i \rangle = \sum_n \langle f|i \rangle_n\)
+
+    类似于相干叠加. 
+  + 若 \(n\) 个相互独立的末态 \(f_1, \dots, f_n\) 跃迁概率已知,
+    则总概率 \(|\langle f|i \rangle|^2 = \sum_n |\langle f|i_n \rangle_n|^2\)
+
+    类似对应 _物理可分_ 的情况, 类似于非相干叠加.  
+  + 初态 \(i\) 到末态 \(f\) 的跃迁之间必须经过某一中间态 \(v\),
+    则跃迁概率幅为 \(\langle f|i \rangle = \langle f|v \rangle \langle v|i \rangle\).
+  + 两个独立微观粒子的体系, 同时发生跃迁的概率幅 \(\langle fF|iI \rangle = \langle f|i \rangle \langle F|I \rangle\)
+
+  #+begin_html
+  <details><summary>双缝衍射</summary>
+  #+end_html
+
+  #+name: Double-Slit
+  #+begin_src dot :file ../_img/pieces/atomic-physics/yangs-elec.svg :exports none
+    digraph {
+      rankdir = LR;
+      node [shape = rect];
+      "电子源" -> {"缝1: 探测器 1", "缝2: 探测器 2"} -> "显示屏 x";
+    }
+  #+end_src
+
+  #+RESULTS: Double-Slit
+  [[file:../_img/pieces/atomic-physics/yangs-elec.svg]]
+
+  [[{{ site.github.url }}/_img/pieces/atomic-physics/yangs-elec.svg]]
+
+  + 在两个路径之间没有区别的时候:
+
+    \[I = |\sum \langle x|S \rangle|^2 = |\langle x|S \rangle_1 + \langle x|S \rangle|^2 = I_1 + I_2 + ...\]
+
+    有干涉项, 故有衍射现象. 
+  + 在两个路径之间可以区别的时候: (有探测器的情况)
+
+    \[I = \sum |\langle x|S \rangle|^2 = I_1 + I_2\]
+
+    没有干涉项, 故没有衍射现象. 
+  #+begin_html
+  </details>
+  #+end_html
+*** 薛定谔方程
+\[i \hbar \frac{\partial}{\partial t} \Psi(\boldsymbol{r}, t) = (- \frac{\hbar^2}{2m} \frac{\partial^2}{\partial \boldsymbol{r}^2} + U(\boldsymbol{r}, t)) \Psi(\boldsymbol{r}, t)\]
+
+#+begin_html
+<details><summary>证明推导</summary>
+#+end_html
+
++ 经典波动理论的波动方程: \(\frac{\partial^2 y}{\partial t^2} = v^2 \frac{\partial^2 y}{\partial x^2}\)
++ 进行类比, 将波函数 \(\Psi(x, t) = \Psi_0 e^{\frac{i}{\hbar}(\boldsymbol{p} \cdot \boldsymbol{r} - E t)}\) 代入
++ 令 \(E = \frac{\boldsymbol{p}^2}{2 m}\) (非相对论), 则有方程:
+  \(i \hbar \frac{\partial}{\partial t} \Psi(\boldsymbol{r}, t) = - \frac{\hbar^2}{2m} \frac{\partial^2}{\partial \boldsymbol{r}^2} \Psi(\boldsymbol{r}, t)\)
++ 使用算符进行表示: \(\hat{H} = - \frac{\hbar^2}{2m} \frac{\partial^2}{\partial \boldsymbol{r}^2} + U(\boldsymbol{r}, t)\),
+  能量算符 \(\hat{E} = i \hbar \frac{\partial}{\partial t}\),
+  动量算符 \(\hat{\boldsymbol{p}} = i \hbar \frac{\partial}{\partial \boldsymbol{r}}\).
++ 所以可以写成 \((\hat{E} - \hat{H}) \Psi(\boldsymbol{r}, t) = 0\). 
++ \(U(\boldsymbol{r}, t)\) 势能场决定了粒子状态变化的情况.
+  
+#+begin_html
+</details>
+#+end_html
+
+分离变量法求解:
++ \(\Psi(\boldsymbol{r}, t) = \Phi(\boldsymbol{r}) T(t)\)
++ 时间项方程 \(i \hbar \frac{\mathrm{d} T(t)}{\mathrm{d} t} = E T(t) \Rightarrow T(t) \propto e^{- i \frac{i}{\hbar} E t}\),
+  概率与时间无关 (定态波函数方程)
++ \(\Phi\) 项方程 \((- \frac{\hbar^2}{2m} \nabla^2 + U) \Phi = E \Phi\)
+
+讨论:
++ 态叠加:
+  + 若 \(\psi_1 \dots, \psi_n\) 是方程的解, 其线性组合 \(\psi = \sum C_i \psi_i\) 也是解
+  + 若 \(\psi_1, \dots, \psi_n\) 是可能的状态, \(\psi = \sum C_i \psi_i\) 也是可能的状态
+
+#+begin_html
+<details><summary>一维无限深势阱, 有限深势阱以及抛物线势阱</summary>
+#+end_html
+
+对于无限深势阱:
+
+\[U(x) = \left\{\begin{matrix}0 & 0 < x < a\\\\\infty & x \leq 0, x \geq a\end{matrix}\right.\]
+
++ \(\Phi\) 项方程: \(- \frac{\hbar^2}{2m} \nabla^2 \Phi + U \Phi = E \Phi\)
++ 边界条件: \(\Psi = 0, (x \leq 0, x \geq a)\)
++ 解 \(\Phi = A \sin \frac{n \pi}{a} x\), \(E_n = n^2 \frac{h^2}{8 m a^2}\)
+
+对于有限深势阱:
+
+\[U(x) = \left\{\begin{matrix}0 & x < 0\\\\ U_0 & x > 0 \end{matrix}\right.\]
+
+对于抛物线势阱 (谐振子):
+
+\[U(x) = \frac{1}{2} k x^2\]
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+<details><summary>一维散射和隧穿</summary>
+#+end_html
+
+一维散射问题:
+
+\[U = \left\{\begin{matrix} 0 & x < 0\\\\ U_0 & x > 0 \end{matrix}\right.\]
+
++ 边界条件: \(x \rightarrow \infty, \Phi \rightarrow 0\)
++ 通解为 \(\Phi_j(x) = A e^{i k_j x} + B e^{- i k_j x}\)
+  有边界方程可以得到: \(\Phi_1(x) = A e^{+ k_1 x} + B e^{- k_1 x}, \Phi_2(x) = C e^{-k_2 x}\)
++ 得到一个解: 正向传播和反向传播, 以及在势垒后的衰减波
+
+隧穿问题:
+
+\[U = \left\{\begin{matrix}U_0 & 0 < x < a\\\\ 0 & x < 0, x > a \end{matrix}\right.\]
+
++ 投射系数 \(T \approx e^{- \frac{2 a}{\hbar} \sqrt{2 m (U_0 - E)}}\)
++ 前级为波, 在势垒里面衰减波, 在后级为波
+
+应用: STM
++ 隧道电流 \(I\) 和针尖距离关系: \(I \propto U e^{- A \sqrt{\Phi} S}\).
+  其中 \(S\) 为样品和针尖距离, \(U\) 为加在上面的电压,
+  \(A\) 为常数, \(\Phi\) 为平均势垒高度.
+
+注: 关于 AFM (原子力显微镜)
++ 和隧穿有点不太一样, 但是用的原理差不多: 可以用电流来测高度. 
++ 原子间作用力大小用高度来反应.
+  比如: 光摄, 音叉之类的
+
+#+begin_html
+</details>
+#+end_html
+
+*** 平均值与算符
++ 力学量的平均值 \(\overline{A} = \int_{- \infty}^{+ \infty} \Psi^{*}(\boldsymbol{r}) \hat{A} \Psi(\boldsymbol{r}) \mathrm{d}\boldsymbol{r}\),
+  其中 \(\hat{A}\) 为力学量的算符, 如
+  + 动量算符: \(\hat{\boldsymbol{p}} = - i \hbar \frac{\partial}{\partial \boldsymbol{r}}\). 
+  + 坐标算符: \(\hat{\boldsymbol{r}} = \boldsymbol{r}\)
+  + 能量 (哈密顿) 算符: \(\hat{H} = - \frac{\hbar^2}{2m} \nabla^2 + U(\boldsymbol{r})\)
+  + 角动量算符: \(\hat{\boldsymbol{L}} = \sum_i \hat{L}^2_i\)
+  + 也可以用 \(\langle \psi| \hat{A} | \psi\rangle = \sum_{\mu\nu} c_{\mu}^{* } c_{\nu} \langle \psi_{\mu}| \hat{A} |\psi_{\nu} \rangle
+    =\sum_{\mu\nu}c_{\mu}^{*}c_{\nu} R_{\nu} \delta_{\mu\nu}\),
+    其中 \(R_{\nu}\) 为本征值. 
+
++ 算符的本征方程: \(\hat{A} \psi_A = A \psi_A\)
++ 算符的对易关系:
+
+  有泊松方程 \([\hat{A}, \hat{B}] = \hat{A} \cdot \hat{B} - \hat{B} \cdot \hat{A}\)
+  + 对易 \([\hat{A}, \hat{B}] = \hat{A} \cdot \hat{B} - \hat{B} \cdot \hat{A} = 0\)
+  + 非对易 \([\hat{A}, \hat{B}] = \hat{A} \cdot \hat{B} - \hat{B} \cdot \hat{A} \neq 0\)
+
+    如: \([\hat{x}, \hat{p}] = i \hbar\)
+
+*** TODO 氢原子解
+\[\Psi_{n,l,m}(r, \theta, \phi) = R_{n,l}(r) \Theta_{l,m}(\theta) \Phi_m(\phi)\]
+
++ 主量子数 (能量): \(n = 1, 2, 3, \dots\)
++ 轨道角动量 (角动量): \(l = 0, 1, \dots, n - 1\)
++ 磁量子数 (核外角动量在 \(z\) 上分量大小) \(m = 0, \pm 1, \pm 2, \dots, \pm l\)
+
+#+begin_html
+<details><summary>解的一些具体过程</summary>
+#+end_html
+对 \(\Phi = R(r) Y(\theta, \varphi)\) 展开, 有:
+
+\[\frac{1}{R}\frac{\mathrm{d}}{\mathrm{d}r}(r^2 \frac{\mathrm{d}R}{\mathrm{d}r}) + \frac{2 \mu E}{\hbar^2} r^2 + \frac{2 \mu e^2}{4 \pi \varepsilon_0 \hbar^2 r} r^2
+= - \frac{1}{Y} [\frac{1}{\sin \theta} \frac{\partial}{\partial \theta}(\sin \theta \frac{\partial Y}{\partial \theta}) + \frac{1}{\sin^2 \theta} \frac{\partial^2 Y}{\partial \varphi^2}] = \lambda\]
+
++ 径向方程: \(\frac{1}{r^2}\frac{\mathrm{d}}{\mathrm{d}r}(r^2 \frac{\mathrm{d}R}{\mathrm{d}r}) + \frac{2 \mu E}{\hbar^2} R +
+  \frac{2 \mu e^2}{4 \pi \varepsilon_0 \hbar^2 r} R - \frac{\lambda}{r^2} R = 0\)
++ 角方程: \(\frac{1}{\sin \theta} \frac{\partial}{\partial \theta}(\sin \theta \frac{\partial Y}{\partial \theta}) + \frac{1}{\sin^2 \theta} \frac{\partial^2 Y}{\partial \varphi^2} = - \lambda Y\)
+
+#+begin_html
+</details>
+#+end_html
+
+* 电子自旋和原子能级的精细结构
+** 前置知识
+*** 施特恩-盖拉赫实验
+#+name: Stern
+#+begin_src dot :file ../_img/pieces/atomic-physics/stern.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = "rect"];
+    "高温炉 (> 银原子)" -> "非均匀磁场" [label = "光阑 (准直)"];
+    "非均匀磁场" -> "探测屏" [label = "偏转"];
+  }
+#+end_src
+
+#+RESULTS: Stern
+[[file:../_img/pieces/atomic-physics/stern.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/stern.svg]]
+
+细节的一些说明: 
++ 实验现象: 加磁场前后探测屏上的粒子从一条分裂成两条 (偶数条)
++ 原理: 磁矩在非均匀磁场中受力 \(\boldsymbol{F} = \boldsymbol{\mu} \nabla \boldsymbol{B}\),
+  所以在经过非均匀磁场后, 会受到一个和角动量有关的力发生偏转. 
+
+  #+begin_html
+  <details><summary>更加详细</summary>
+  #+end_html
+
+  + 实验只施加 \(z\) 方向上的梯度, 即 \(\partial_x \boldsymbol{B}\) 和 \(\partial_y \boldsymbol{B}\) 为零
+  + 电偶极矩: \(\boldsymbol{p} = q \boldsymbol{l}\),
+    电场中受力 \(\boldsymbol{F} = \boldsymbol{p} \nabla \cdot \boldsymbol{E}, U = - \boldsymbol{p} \cdot \boldsymbol{E}\)
+  + 磁偶极矩: \(\boldsymbol{\mu} = I S \boldsymbol{n} = - \frac{e}{2 m_e} \boldsymbol{L}\),
+    磁场中受力: \(\boldsymbol{F} = \boldsymbol{\mu} \nabla \boldsymbol{B}, \boldsymbol{M} = \boldsymbol{\mu} \times \boldsymbol{B}\)
+
+  #+begin_html
+  </details>
+  #+end_html
+  + 因为有偶数条, 可以说明空间角动量 (\(\mu\)) 的量子化
+  + 但是轨道角动量 \(2l + 1\) 无法被解释 \(\rightarrow\) 需要更加完整的量子化理论
++ 实验证明了:
+  + 空间是量子化的
+  + 电子的自旋假设正确且 \(s = 1/2\)
+  + 电子磁矩数值为 \(\mu_{s,z} = \pm \mu_B, g_s = 2\)
+    
+*** 电子自旋
+假设:
++ 电子有自旋, 电子的自旋带来了一个 \(\mu_s\) 的磁矩
++ 认为电子的自旋角动量 \(\boldsymbol{S}\), 磁矩 \(\mu_s = - \frac{e}{m_e}S, \mu_s = \frac{e \hbar}{m_e} \sqrt{s(s + 1)}\).
+
+  #+begin_html
+  <details><summary>更加详细的推导</summary>
+  #+end_html
+  
+  从角动量的量子化:
+
+  \[L^2 = l (l + 1) \hbar^2, L_z = m_l \hbar\]
+
+  类比假设电子的角动量量子化:
+
+  \[S^2 = s(s + 1) \hbar^2, s = 1/2; S_z = m_s \hbar, m_s = \pm1/2\]
+
+  于是由 \(\boldsymbol{\mu}_l = - \frac{\mu_B}{\hbar}, \boldsymbol{\mu}_{lz} = - m_l \boldsymbol{\mu}_B\),
+  有 \(\mu_s = - \frac{g_s \mu_B}{\hbar} \boldsymbol{S}, \mu_{sz} = - m_s g_s \mu_B\),
+  其中 \(g_s = 2\).
+
+  #+begin_html
+  </details>
+  #+end_html
++ 总磁矩 = 轨道磁矩 + 自旋磁矩 + 核磁矩  
++ 轨道与自旋耦合: \(\boldsymbol{J} = \boldsymbol{L} + \boldsymbol{S}\), \(J = \sqrt{j (j + 1)} \hbar\).
+  (\(\boldsymbol{J}\) 为总角动量, \(j = l + s, l + s - 1, \dots, |l - s|\)
+  共有 \(2 \min\{s, l\} + 1\) 个值)
++ 朗德因子 \(g_j = \frac{3}{2} + \frac{1}{2}(\frac{s(s + 1) - l(l + 1)}{j(j + 1)})\)
+
+  代表的物理含义:
+  + 自旋作为内禀的转动自由度, 应有相关的磁矩
+
+  计算 \(g\) 因子:
+  + \(^{2s + 1}L_j \rightarrow g = 1 + \frac{j(j + 1) - l(l + 1) + s(s + 1)}{2j(j + 1)}\)
+  + \(L\) 的符号: \(s = 0, p = 1, d = 2, f = 3, g = 4, h = 5, \dots\)
+*** 碱金属双线
++ 碱金属价电子与原子实:
+  + 最外层只有一个电子, 价电子和其余部分和核形成一个紧固的原子实
+  + 原子实认为是一个带正电的整体
++ 碱金属能级和氢原子区别
+  + 能级除了和 \(n\) 有关, 还和 \(l\) 有关, 原因:
+    轨道贯穿效应 + 原子实极化
+    + 轨道贯穿效应: 外层电子进入原子实 \(Z^{*}\) 增加, 能量降低
+    + 原子实极化: 价电子对原子实产生的电场使得原子实极化,
+      偶极子使得价电子获得了负的电势能
+  + 碱金属原子能量高低取决于电子组态 \(n, l\)
+    \(E_{nl} = - \frac{1}{2} m_e c^2 \alpha^2 \frac{ {Z_{nl}^{ * } }^2}{n^2} = - \frac{1}{2} m_e c^2 \alpha^2 \frac{1}{(n - \Delta_{nl})^2}\)
++ 自旋轨道相互作用:
+  + 以电子为参考的旋转系中:
+    + 原子实在电子处产生的磁场:
+      \(\boldsymbol{B} = - \frac{1}{4 \pi \varepsilon_0} \frac{Z^{* } e \boldsymbol{v} \times \boldsymbol{r}}{c^2 r^3} =
+      \frac{1}{4 \pi \varepsilon_0} \frac{Z^{*} e \boldsymbol{L}}{m_e c^2 r^3}\)
+    + 于是 (电子) 自旋磁矩的能量:
+      \(U = \boldsymbol{\mu}_s \cdot \boldsymbol{B} = \frac{Z^{*} e^2}{4 \pi \varepsilon_0 m_e^2 c^2} \frac{1}{r^3} \boldsymbol{S} \cdot \boldsymbol{L}\)
+  + 在原子实静止系中: \(U = \frac{1}{2} \frac{Z^{*} e^2}{4 \pi \varepsilon_0 m_e^2 c^2} \frac{1}{r^3} \boldsymbol{S} \cdot \boldsymbol{L}\)
+  + 耦合能量: \(E_{l,s} = \frac{R h c \alpha^2 {Z^{*}}^4}{n^3 l (l + \frac{1}{2})(l + 1)} \frac{j(j + 1) - l(l + 1) - s(s + 1)}{2}\)
+  + 于是有能级分裂: \(\Delta E = \frac{R h c \alpha^2 {Z^{*}}^4}{n^3 l (l + 1)}\)
+  + 可以反过来估算内磁场大小 \(\boldsymbol{B}_{in} = \frac{\Delta E}{2 \mu_B}\)
++ 纳黄线
+
+** 氢原子精细结构
+*** 相对论质量效应修正
++ 修正方式: 量子力学采用微扰理论来处理一阶小量,
+  零阶近似下能量和波函数.
++ 相对论质量效应:
+  \(\Delta E_n' = \langle - \frac{p^4}{8 m_e^3 c^2} \rangle =
+  -\frac{1}{2 m_e c^2} [E_n^2 + 2 E_n \frac{Z e^2}{4 \pi \varepsilon_0} \langle \frac{1}{r} \rangle + \frac{Z^2 e^4}{(4 \pi \varepsilon_0)^2} \langle \frac{1}{r^2} \rangle]\)
++ 相对论势能项 (达尔文修正)
+  \(\Delta E_n'' = - \frac{Z^2 \alpha^2}{n^2} n E_n\)
+  
+*** 精细结构
+\[E_{nj} = E_n - \frac{Z^2 \alpha^2}{n^2} E_n (\frac{3}{4} - \frac{n}{j + \frac{1}{2}})\]
+
+*** 兰姆移位
+#+name: Lamb
+#+begin_src dot :file ../_img/pieces/atomic-physics/lamb.svg :exports none
+  digraph {
+    rankdir = LR;
+    node [shape = rect];
+    "氢原子产生器" -> "电子枪" -> "磁铁" -> "表面电离探测器"
+  }
+#+end_src
+
+#+RESULTS: Lamb
+[[file:../_img/pieces/atomic-physics/lamb.svg]]
+
+[[{{ site.github.url }}/_img/pieces/atomic-physics/lamb.svg]]
+
++ 通过加热是氢分子分解产生氢原子
++ 使用电子枪轰击氢原子使其跃迁到 \(2^2 S_{1/2}, 2^2 P_{1/2}\)
+
+*** 超精细结构
+原子核磁矩 \(\boldsymbol{\mu}_I\), 在和电子产生的磁场相耦合 \(U = \boldsymbol{\mu} \cdot \boldsymbol{B}_e = A \boldsymbol{I} \cdot \boldsymbol{J}\),
+耦合得到 \(\boldsymbol{F} = \boldsymbol{I} + \boldsymbol{J}\). 最终有总能量 \(U = \frac{a}{2} [F(F+1) - I(I+1) - J(J+1)]\)
+
+对于氢原子, \(I = 1/2, J = 1/2\), 故 \(F = 0, 1, U = \frac{1}{4}a, - \frac{3}{4} a, \Delta E = a = \hbar^2\).
+在这两个能级之间跃迁差的能量放出的波长 \(\lambda = 21cm\).
+
+\(21cm\) 谱线的应用:
++ 无线电波可以穿过地球大气层被观测到,
+  可以穿过可见光是不透明的星际云等巨大星际介质区域
++ 假定氢原子在整个星系中均匀分布,
+  所以通过测量每条线的多普勒效应计算每个旋臂的相对速度.
++ 跃迁性质: 自发跃迁机率低, 被宇宙尘埃吸收概率小 (携带信息久远),
+  低温碰撞 (粒子数反转)
++ 宇宙学红移 \(\rightarrow\) 接收到的波长随产生时间变长 \(\rightarrow\) 气体云团的视向速度
++ 谱线观测 \(\rightarrow\) 氢分布图 \(\rightarrow\) 银河系旋臂结构
++ 赛曼效应 \(\rightarrow\) 星系内磁场
+  
+*** 赛曼效应
+原子磁矩和外磁场发生相互作用, 导致原子能级和原子光谱线的分裂现象.
+
++ 弱磁场中 \(U = - m_J g_J \boldsymbol{\mu}_B \cdot \boldsymbol{B}\)
++ 于是能量根据 \(m_J = 0, \pm 1, \dots, \pm j\) 变成了 \(2j + 1\) 条谱线
++ 磁量子数的选择定则: \(\Delta m = m_{J_1} - m_{J_1} = 0, \pm 1\)
+
+#+begin_html
+<details><summary>例题: 通过计算朗德因子来进行计算 (正常) 能级分裂</summary>
+#+end_html
+
++ \(^1P_1\):
+  \(s = 0, j = 1, g = 1 + \frac{2 - 2 + 0}{2} = 1, m_J = 0, \pm1, \Delta E = [1, 0, -1] B \mu_B\)
++ \(^2P_{3/2}\):
+  \(s = \frac{1}{2}, j = \frac{3}{2},
+  g = 1 + \frac{\frac{15}{4} - 2 + \frac{3}{4}}{2 \frac{15}{4}} = \frac{4}{3},
+  m_J = \pm \frac{1}{2}, \pm \frac{3}{2}, \Delta E = [2, \frac{2}{3}, - \frac{2}{3}, -2] B \mu_B\)
++ \(^4D_{1/2}\):
+  \(s = \frac{3}{2}, j = \frac{1}{2}, g = 1 + \frac{\frac{3}{4} - 6 + \frac{63}{4}}{2 \times \frac{3}{4}} = 0,
+  m_J = \pm \frac{1}{2}, \Delta E = 0\)
+
+#+begin_html
+</details>
+#+end_html
+
+塞曼效应和偏振
++ 实验现象:
+  + 沿着外磁场方向观察: 可以看到 \(\Delta m = \pm 1\) 的两条谱线, 为圆偏振光
+    + \(\Delta m = + 1\), 左旋圆偏振光, \(\sigma^+\)
+    + \(\Delta m = - 1\), 右旋圆偏振光, \(\sigma^-\)
+  + 垂直外磁场方向观察: 可以看到 \(\Delta m = 0, \pm 1\) 三条谱线, 均为线偏振光
+    + \(\Delta m = 0\), 偏振方向沿外磁场方向 \(z, \pi_z\)
+    + \(\Delta m = \pm 1\), 垂直于观测方向 \(x\) 与外磁场方向 \(z, \pi_y\)
++ 光子有自旋 \(S = 1, S_z = \pm 1\)
+
+反常塞曼效应:
++ 上下能级 \(S_1, S_2\) 都不等于零, \(g_1, g_2 \neq 1\), 非单态能级的跃迁
+
+超精细结构的塞曼分裂:
++ 外磁场的强度远小于原子核感受到的电子磁矩产生的磁场强度
+  
+*** 斯塔克效应
+电偶极矩可以写成 \(\boldsymbol{D} = - \sum e \boldsymbol{r}\), 在外电场中的能量 \(U = - \boldsymbol{D} \cdot \boldsymbol{E}\),
+原子在外电场中引起的能量变化 \(U = - (- e \boldsymbol{r}) \cdot \boldsymbol{E} = e E z\). 
+
+*** 核磁共振
+质子有内禀自旋角动量和自旋磁偶极矩, 两者方向相同.
+在均匀磁场中的两个量子态的能量差 \(\Delta E = 2 \mu_z B\).
+
+在交变电磁场下的质子在满足 \(h f = 2 \mu_z B\) 的时候, 则会使得磁矩和角动量反向,
+产生自旋 - 倒逆现象, 说明交变电磁场中会有可测量的净能量吸收. 
+* 其他的无关的东西
++ [[https://maxima.sourceforge.io][maxima]] 如果未来有可能, 我希望能够为学着它写一点代码,
+  或者说, 最终能够给它贡献一些代码就好了.
++ 如果能有一个 "第一性原理" 就好了...
+
+  怎么说呢? 不知道是因为我没认真听课还是什么,
+  感觉在原子物理里面有一个和其他物理课都不同的一个 "混乱感".
+  感觉更像是数据结构而不像是其他的物理课.
+
+  +别说了, 这周还有数据结构, 淦, 还没复习...+
+
+  感觉这样的 "第一性原理" 可能并不是很好找到... 
+* COMMENT LocalWords
+#  LocalWords:  Wien LocalWords Wein PMT Kennard ket STM AFM
