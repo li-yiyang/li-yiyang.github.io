@@ -1,0 +1,461 @@
+#+layout: post
+#+title: Data Structure Quick
+#+date: 2023-04-28
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+* 序论
+程序 = 数据结构 + 算法
+
+** 数学基础
++ 取整函数: =(floor <num>)=, =(ceiling <num>)=
++ L'Hopital Rule \(\frac{0}{0}, \frac{\infty}{\infty} \rightarrow \frac{f'}{g'}\)
++ 级数和近似 \(\sum x^k \approx \frac{1}{k + 1} x^{k + 1}\)
++ 递归方程
+  
+** 算法分析
+观察点: (和输入对象大小的一个关系)
++ Time Complexity 执行时间
++ Space Complexity 执行空间
+
+当然, 小孩子才会做选择, 数据结构的梦想就是时间和空间的共同优化.
+所以并不一定要时间复杂度最小就意味着空间复杂度已经就不能保证了.
+只是一般会是一个 tradeoff 的过程. 
+  
+如何计算算法的速度:
++ 通过基础算子进行计算
++ 通过比较大小:
+  + \(O(f)\) 表示上极限, Worst Case 的感觉, 如 \(c O(f) > f\)
+  + \(\Omega(f)\) 表示下极限, Best Case 的感觉, 如 \(c \Omega(f) < f\)
+  + \(\Theta(f)\) 有点像是区间的感觉, 如 \(c' \Theta(f) < f < c'' \Theta(f)\)
+    
+** 算法关心的内容
+一般来说, 有下面的算法内容:
++ 访问: *Access* to the object
++ 删除: *Erasing* an object
++ 插入: *Insertion* of a new object
++ 替换: *Replacement* of the object
++ 连接: *Concatenate* the two lists
++ 判断: *Determine* if one is a sub-list of the other
+
+* 计算机中的信息
+** 信息储存方式 (物理)
++ 物理储存 Cache 汇编和编译器可见, 但是对软件不可见
+
+  Note: 理论上不可见啦, 可以通过熔断的方式来访问一些不该访问的 Cache,
+  实现系统安全的破坏. 
++ 虚拟储存 Visual Memory, Registers, Program Counter
+  对程序员可见.
+  + 程序员访问数据的粒度 (最小的 =W=, =B=, =D= 这样的单元),
+    
+    硬件决定了数据的长度 (如 =LW=, =LB=, =LD= 这样的在汇编中的东西).
+
+    一些高性能计算的机器可以一次读取数个 8 位的 bit, 可以快速填充数据. 
++ 计算机的储存的实现
+  + Registers 使用电容和晶体管实现, 因为电容会漏电, 所以只能用在高速刷新的情况
+  + Main Memory: 因为内存的读写是破坏性的, 所以在读完之后需要重新写回去,
+    导致了内存墙的读写速度问题. 于是通过构建存储的层次结构来加速存储.
+  + Disk SSD: 5 年一大关, 会随着使用而逐渐坏掉, 因为读写速度很慢,
+    但是可以以 block 的形式返回大量数据, 所以后面会需要 B 树这样的数据结构.
++ 访问的局限性: 程序本身的特性, 即在计算机储存系统设计中:
+  硬件依赖局部性来提高内存访问速度, 具体有:
+  + 时间局部性: 被访问的单元不久之后就会被访问
+  + 空间局部性: 被访问的单元边上接近的单元不久之后就会被访问
+    
+** 数据的内存分配方式
++ 连续 Contiguous
+
+  #+name: Contiguous Data
+  #+begin_src dot :file ../_img/pieces/data-struct/contiguous-data.svg :exports none
+    digraph {
+      n [shape = record, label = "0|1|2|...|n"];
+    }
+  #+end_src
+
+  #+RESULTS: Contiguous Data
+  [[file:../_img/pieces/data-struct/contiguous-data.svg]]
+
+  [[{{ site.github.url }}/_img/pieces/data-struct/contiguous-data.svg]]
+
+  类似于数组的实现方式
++ 连接 (Linked)
+
+  #+name: Linked-Data
+  #+begin_src dot :file ../_img/pieces/data-struct/linked-data.svg :exports none
+    digraph {
+      rankdir = LR;
+      rank = same;
+      node [shape = record, label = "<car> car|<cdr> cdr"] a, b, c;
+      a:cdr -> b:car; b:cdr -> c:car;
+    }
+  #+end_src
+
+  #+RESULTS: Linked-Data
+  [[file:../_img/pieces/data-struct/linked-data.svg]]
+
+  [[{{ site.github.url }}/_img/pieces/data-struct/linked-data.svg]]
+
+  包含本身和下一个储存对象地址的引用
++ 索引 (Indexed)
+
+  #+name: Indexed-Data
+  #+begin_src dot :file ../_img/pieces/data-struct/indexed-data.svg :exports none
+    digraph {
+      node [shape = record];
+      parent [label = "<1> a|<2> b| ..."];
+      child_1 [label = "<1> v11|<2> v12| ... |"];
+      child_2 [label = "<1> v21|<2> v22| ... |"];
+      parent:1 -> child_1;
+      parent:2 -> child_2;
+    }
+  #+end_src
+
+  #+RESULTS: Indexed-Data
+  [[file:../_img/pieces/data-struct/indexed-data.svg]]
+
+  #+RESULTS:
+  [[{{ site.github.url }}/_img/pieces/data-struct/indexed-data.svg]]
+
+  一般给操作系统使用 (大规模的文件管理),
+  将文件以索引的形式来串联, 每一个元素都指引到一个大的储存文件的地址. 
+
+基本上在这样的一个基础上就可以构建出各种各样的数据结构.
+用来表示各种各样的数据.
+
+** 关于内存分配的管理 =sizeof=, =malloc= 和 =free=
++ =sizeof= 在 compile time 进行解析, 是一个运算符不是函数
++ =malloc= 和 =free= 的管理系统类似于一个环状链表,
+  链表中的指针指向堆中的元素的地址.
+  + 分配的时候有一种贪心算法的感觉
+  + 
+** 其他的一些东西 (有时间补充)
+下面的参考一篇文章 [[https://lwn.net/Articles/250967/][What every programmer should know about memory, Part 1]]
+
+一个计算机的简化结构如下:
+
+#+name: CPU-North-Sourth-Bridge
+#+begin_src dot :file ../_img/pieces/data-struct/cpu-north-sourth-bridge.svg :exports none
+  digraph {
+    node [shape = rect];
+    edge [dir = both]
+    {"CPU 1", "CPU 2"} -> "Northbridge" [label = "FSB"];
+    "Northbridge" -> "Southbridge";
+
+    node [shape = plain];
+    {rank = same; "RAM" -> "Northbridge"};
+    {rank = same; "PCI-E" -> "Southbridge" -> "SATA\nUSB"};
+  }
+#+end_src
+
+#+RESULTS: CPU-North-Sourth-Bridge
+[[file:../_img/pieces/data-struct/cpu-north-sourth-bridge.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/cpu-north-sourth-bridge.svg]]
+
+* 线性数据结构
+** 链表 Linked List
+一个常见的链表的例子:
+
+#+begin_src c
+  typedef struct LinkedList {
+    int val;
+    LinkedList * next;
+    /*
+      Two-Directed LinkedList:
+      LinkedList * previous;
+    ,*/
+  } LinkedList;
+#+end_src
+
+注记:
++ 通常还会在链表中加入指向头尾的指针和总长度的计数.
+  
+  显然, 将尾指针指向头指针你就得到了一个环形数据结构
++ 线性表的操作: 查找, 插入, 替换, 删除, 下一个, 前一个的复杂度都是 \(O(n)\).
++ 在找到节点 =node= 的前提下, 如何用 \(O(1)\) 的方法来插入和删除 (链表)
+  + (在之前) 插入 =node->prev->next = new_node; new_node->next = node;=
+  + 删除 =node->prev->next = node->next;=
+
+** 栈 Stack (FILO)
+简单的栈可以通过一个指向栈尾的指针 =stack= 来实现:
++ 入栈: =*(++stack) = elem;=
++ 出栈: =val = *(stack--);=
+
+当然, 要考虑边界条件的处理.
+
+** 队列 Queue (FIFO)
++ 在 Linked List 中, 双指针维护一个头 =head= 和尾 =tail=
+  + 入队 =*(++tail) = elem;=
+  + 出队 =val = *(head++);=
+  + 当然, 这样在数组中比较不太现实, 所以可以使用环形数组来实现队列
++ 通过双向链表可以实现一个双端队列 (Deque), 类似于同时拥有队列和栈的性质的玩意儿
+
+Note: 在 Client-Server 模型中便有队列的概念,
+一个可视化的服务器队列 (负载平衡) 演示模型可以看一篇博文: [[https://samwho.dev/load-balancing/][Load Balancing]].
+
+** 表 Hash
++ 插入, 查找, 删除都是 \(O(1)\) 的复杂度
+
+  (通过空间换时间)
++ 简单原理介绍: \(\mathrm{val} \overset{f_{\mathrm{Hash}}}{\rightarrow} \mathrm{idx} \rightarrow \mathrm{Bucket}\)
+
+  将值通过 \(f_{\mathrm{Hash}}\) 哈希函数映射为 =idx=,
+  而 =Bucket= 则为用来处理同映射的桶.
+
+  #+begin_src lisp
+    (defun hash-find (val)
+      (let* ((idx    (hash-f val))
+             (bucket (nth idx *buckets*)))
+        (find val bucket)))
+
+    (defun hash-insert (val)
+      (let* ((idx    (hash-f val))
+             (bucket (nth idx *buckets*)))
+        (push val bucket)))
+  #+end_src
+
+  大概是这么个感觉.
++ Hash 函数的种类
+  + 取模函数
+  + 整数解释法
+    + 将 =val= 作为一个整数来进行处理, 比如限定为 32 位
+    + 高位可以选择溢出或者通过切片后相加
+  + 哈希编码: 多项式相加
+
+Note: 一个应用即是 IP <-> 域名之间的快速查找
+
+* 树
+** 一般的树的理论
+| 术语                                       | 解释                             |
+|--------------------------------------------+----------------------------------|
+| Root                                       | node without parent              |
+| Internal Node                              | at least one child               |
+| External Node (Leaf)                       | no children                      |
+| Ancestors (Grandparent, Grand-grandparent) | parent or ancestor of the parent |
+| Depth                                      | the number of ancestors          |
+| Height                                     | maximum depth of any node        |
+| Descendant                                 |                                  |
+| Siblings                                   | of same parent                   |
+
+*** 树的标示方式
++ 双亲标示法
+
+  #+begin_src c
+    typedef struct ParentTree {
+      ParentTree * parent;
+      int val;
+    } ParentTree;
+  #+end_src
+
+  通过指向父元素来构建树
++ 孩子链表表示法
+
+  #+begin_src c
+    typedef ChildTree {
+      int val;
+      ChildTreeList * nodes;
+    } ChildTree;
+  #+end_src
+
+  通过指向子节点来标示树
++ 孩子兄弟法
+
+  #+begin_src c
+    typedef SiblingTree {
+      int val;
+      SiblingTree * firstChild;
+      SiblingTree * nextSibling;
+    } SiblingTree;
+  #+end_src
+
+  左指孩子, 右指兄弟,
+  (实际上有点像是把孩子链表表示法中的 =ChildTreeList= 用头指针来代替了的感觉. )
+
+*** 历遍树的方式
++ 先序遍历 Pre-order Traversal
+
+  #+begin_src lisp
+    (defun pre-order-travel (tree func)
+      (cons
+       (func (value tree))
+       (mapcar (lambda (sub-tree) (pre-order-travel sub-tree func))
+               (childs tree))))
+  #+end_src
++ 后序遍历 Post-order Traversal
+
+  #+begin_src lisp
+    (defun post-order-travel (tree func)
+      (let ((sub-tree (mapcar (lambda (sub-tree) (post-order-travel sub-tree func))
+                              (childs tree))))
+        (cons (func (value tree)) sub-tree)))
+  #+end_src
+
+*** 树和森林
++ 森林 -> (二叉) 树
+  + 使用孩子兄弟法进行表示
+  + 对于树根 (Root) 的兄弟, 即其他的树
++ 树 -> 森林 (还原)
+  
+** 二叉树
+二叉树的节点是同构的, 所以算法好写
+
+*** 二叉树的分类
++ 完全二叉树 (Complete Binary Tree)
++ 完美二叉树 (Perfect Binary Tree)
++ 真二叉树 (Full Binary Tree)
+
+*** 历遍二叉树
+参考 [[https://zh.wikipedia.org/wiki/树的遍历][Wikipedia]] 上的配图解释感觉很好理解, 下面的代码仅供参考:
+
++ 中序遍历
+  
+  #+begin_src lisp 
+    (defun mid-order-binary-tree (tree func)
+      (let ((left  (mid-order-binary-tree (left  tree) func))
+            (mid   (func (value tree)))
+            (right (mid-order-binary-tree (right tree) func)))
+        (tree :root  mid
+              :left  left
+              :right right)))
+  #+end_src
++ 先序遍历
+
+  #+begin_src lisp
+    (defun pre-order-binary-tree (tree func)
+      (let ((mid   (func (value tree)))
+            (left  (pre-order-binary-tree (left  tree) func))
+            (right (pre-order-binary-tree (right tree) func))))
+      (tree :root mid
+            :left left
+            :right right))
+  #+end_src
++ 后序遍历
+
+  #+begin_src lisp
+    (defun post-order-binary-tree (tree func)
+      (let ((left  (post-order-binary-tree (left  tree) func))
+            (right (post-order-binary-tree (right tree) func))
+            (mid   (func (value tree))))
+        (tree :root mid
+              :left left
+              :right right)))
+  #+end_src
++ 层次遍历法: 每一层进行遍历, 但是会失去父子关系
+
+*** 查找二叉树
++ 二分查找
++ Fibonacci 数查找
++ 二叉平衡树调平衡
+** B 树和 B+ 树
+*** 多路树 Multi-way Tree
+多路树, 顾名思义就是一个节点有多个出边的树.
+并且通过添加一些虚空边的形式来让这个树的结构更加统一.
+
+#+name: Multi-way-Tree
+#+begin_src dot :file ../_img/pieces/data-struct/multiway-tree.svg :exports none
+  digraph {
+    "k1 k2 ... kn" -> {"k ≤ k1", "k1 ≤ k ≤ k2", "...", "kn ≤ k"};
+  }
+#+end_src
+
+#+RESULTS: Multi-way-Tree
+[[file:../_img/pieces/data-struct/multiway-tree.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/multiway-tree.svg]]
+
+一些多路树的例子, 其中记号为 =(min, max)= 最小出边 =min= 条, 最大出边 =max= 条:
++ =(1, 2)= 树, 有点像是一个二叉树
++ =(2, 4)= 树, 最少 2 个, 最多 4 个出边
+
+*** B 树和 B+ 树
+为什么使用 B 树:
++ 访存模型: CPU (1 cycle \(\approx 1ns\)) \(\leftarrow\) Memory (\(>100\) cycles) \(\leftarrow\) Disk (\(\approx ms\))
++ 因为 IO 到硬盘速度很慢, 一次循环要的时间比较长, 于是为了提高效率,
+  所以增加一次取数据的数量 (更大的 block), 使得效率提升.
+
+B+ 树和 B 树:
++ 实际上区别在于 B+ 树更像是一个链表, 但是通过 B 树的组织形式来进行快速查找.
+  
+** 红黑树
+*** 红黑树的平衡调节
++ 红黑树的平衡: 黑色平衡
+  
+  相当于是在计数的时候忽略红色节点. 对于黑色高度的计数的一个例子:
+
+  #+begin_src lisp
+    (defun count-black-height (node)
+      (labels ((count+1-if-black (n) (if (black? n)
+                                         (count-black-height n)
+                                       (1+ (count-black-height n)))))
+              (if (leaf? node)
+                  (if (black? node) 1 (error "This tree is not red-black-tree"))
+                (max (count+1-if-black (left node))
+                     (count+1-if-black (right node))))))
+  #+end_src
+
+  并且还要求黑色节点的高度不会超过两倍.
++ 调平衡的方式和 AVL 的调平衡类似, 但是根节点必须是黑色的
+
+*** 红黑树和 B 树的转换
+
+* 一些做过的题目的注记
++ 比较复杂度: 基本上就是 \((\frac{1}{c})^n, c, \log n, n^k, n \log n, n!, c^n, n^{\log n}, n^n\)
+  这样的大小关系.
++ 如何将递归用栈来表示 (实际上就是手动维护函数栈调用)
++ 经典递归问题: 汉诺塔
+
+  #+begin_src lisp
+    (defun move-tower (n from to other)
+      (if (eq n 1)
+          (move from to)                    ; move only one
+          (progn
+            (move-tower (1- n) from other to) ; move first `n - 1' to OTHER place
+            (move-tower 1 from to other)      ; move last one to TO place
+            (move-tower (1- n) other to from) ; move first `n - 1' from OTHER to TO place
+            )))
+  #+end_src
++ Hash 函数的平均查找长度
++ =malloc= 和 =free=
+  + 伙伴二进制地址
+
+    #+begin_src lisp
+      (defun addr-cal (addr base)
+        (let ((low (* base (1- (floor (/ addr base))))))
+          (if (eq 0 (mod low (* 2 base)))
+              low
+              (+ low (* 2 base)))))
+    #+end_src
++ 二叉树
+  + 二叉树的还原
+  + Huffman 编码:
+
+    #+begin_src lisp
+      (defun huffman-tree (sequence-with-frequence)
+        (if (eq 1 (length sequence-with-frequence))
+            (item (first sequence-with-frequence))
+            (let* ((seq    (sort-by frequence sequence-with-frequence))
+                   (first  (pop seq))
+                   (second (pop seq)))
+              (huffman-tree
+               (cond (make-node :frequence (+ (frequence first)
+                                              (frequence second))
+                                :left      (item first)
+                                :right     (item second))
+                     seq)))))
+    #+end_src
+  + 树的类型的判断
+    + 完全二叉树
+    + 堆, 堆的变化
+    + 二叉排序树
++ =(m, M)= 树
+  + 插入, 删除, 查找
++ B+ 树
+* 注
+因为是次修的网安, 所以感觉就随便一些吧. (虽然感觉之后可能要把这个次修给退了,
+所以可能这课不太能摆烂... 感觉次修不如旁听. )
+
+关于标题, 确实是 Quick, 因为真的没有时间去复习了. 
+
+又: 看题目啊... 悲. 
+* COMMENT LocalWords
+#  LocalWords:  L'Hopital LocalWords SSD tradeoff Pre Deque AVL
