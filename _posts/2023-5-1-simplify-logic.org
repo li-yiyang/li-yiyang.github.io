@@ -883,31 +883,33 @@ OK, 那么前置知识大概就是这么多了吧.
 #+begin_src lisp :tangle ../_img/pieces/q-m-simplify.lisp
   (defun remove-dominate (table)
     "Remove dominate elements in TABLE. "
-    (let ((title (first table))
-          (body  (rest table)))
-      (labels ((detect-dominate (the-row)
+    (let ((title  (first table))
+          (remain (sort (rest table) (lambda (a b) (exp-leq (first a)
+                                                            (first b))))))
+      (labels ((detect-dominate (the-row body)
                  (let ((the-id (first the-row))
                        (the-content (rest the-row))
-                       (dominate? T)
-                       (found NIL))
-                   (loop for row in body
-                         while (not found)
-                         if (not (equal (first row) the-id))
+                       (dominate? T))
+                   (loop for val in the-content
+                         for idx from 1
+                         while dominate?
+                         if (eq val 'X)
                            do (progn
-                                (setq dominate? T)
-                                (loop for elem-a in (rest row)
-                                      for elem-b in the-content
-                                      while dominate?
-                                      do (progn
-                                           (setq dominate?
-                                                 (not (and (eq elem-b '_)
-                                                           (eq elem-a 'X))))
-                                           (setq found dominate?)))))
+                                (setq dominate? NIL)
+                                (loop for row in body
+                                      while (not dominate?)
+                                      if (and (not (equal (first row) the-id))
+                                              (eq (nth idx row) val))
+                                        do (setq dominate? T))))
                    dominate?)))
-        (loop for row in (sort (rest table) #'exp-leq)
-              if (detect-dominate row)
-                do (setq body (delete-if (lambda (r) (equal r row)) body)))
-        (cons title body))))
+        (loop for idx from 0
+              while (< idx (length remain))
+              if (detect-dominate (nth idx remain) remain)
+                do (progn
+                     (setq remain (nconc (print (subseq remain 0 idx))
+                                         (print (nthcdr (1+ idx) remain))))
+                     (setq idx (1- idx))))
+        (cons title remain))))
 #+end_src
 
 注: 这里实际上还应该做一个按照表达式的复杂度进行排序的操作,
@@ -917,7 +919,7 @@ OK, 那么前置知识大概就是这么多了吧.
   (defun exp-greater (a b)
     "Compare expressions A and B if A > B. "
     (cond ((and (atom a) (atom b))
-           (if (and (symbolp a) (symbolp b)) NIL (> a b)))
+           (if (and (symbolp a) (symbolp b)) NIL (< a b)))
           ((and (not (atom a)) (atom b)) T)
           ((and (atom a) (not (atom b))) NIL)
           (t (if (> (length a) (length b))
