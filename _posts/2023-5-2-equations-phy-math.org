@@ -1,0 +1,329 @@
+#+layout: post
+#+title: 数学物理方程
+#+date: 2023-05-02
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+* 数学物理方程
+#+name: Overview
+#+begin_src dot :file ../_img/pieces/math-phy-equations-overview.svg
+  digraph {
+    node [shape=rect];
+    "建立方程\n边界条件\n初始条件"
+    -> "化为标准形式"
+    -> { "双曲型 (Δ > 0)", "抛物型 (Δ = 0)", "椭圆型 (Δ < 0)" }
+    -> "处理 (齐次/非齐次) 条件"
+    -> "处理初始条件 (叠加)"
+    -> "求解常微分方程";
+  }
+#+end_src
+
+#+RESULTS: Overview
+[[file:../_img/pieces/math-phy-equations-overview.svg]]
+
+[[{{ site.github.url }}/_img/pieces/math-phy-equations-overview.svg]]
+
+** 各类型数学物理方程的导出
+*** 波动方程 \(u_{tt} - a^2 u_{xx} = f(x, t)\)
++ 弦振动方程:
+
+  \[\left\{\begin{matrix}T_1 \cos \alpha_1 - T_2 \sin \alpha_2 = 0 \\\\ T_2 \sin \alpha_2 - T_1 \sin \alpha_1 \end{matrix}\right.\]
+
+  通过 \(\sin \alpha = \frac{\tan \alpha}{\sqrt{1 + \tan^2 \alpha}} \rightarrow \partial_x u; \cos \alpha = \frac{1}{1 + \tan^2 \alpha} \rightarrow 1\) 进行化简
++ 均匀薄膜的微小横振动
+
+  类似二维的弦振动
+
+  \[u_{tt} - a^2 \Delta_2 u = f(x, y, t)\]
++ 杆振动方程
+
+  通过相对伸长量和受力方程 \(F = k \delta(\partial_x u)= \rho \partial_{tt} u \delta x\)
+
+  Note: 杆的微小横向振动方程 \(u_{tt} + a^2 u_{xxxx} = F\)
+
+  类似可以得到空气中的声波方程:
+
+  \[s_{tt} - a^2 \Delta_3 s = 0, (a^2 = \frac{\gamma p_0}{\rho_0})\]
++ 电磁波方程
+
+  通过消元来得到 \(\boldsymbol{E}_{tt} - a^2 \Delta_3 \boldsymbol{E} = 0\)
++ 传输线方程
+  
+  \[\left\{\begin{matrix}j_x = - G v - C v \\\\  v_x = - R j - L j \end{matrix}\right.\]
+  
+  通过消元得到最终的结果
+
+对应求解方法:
++ 达朗贝尔公式 [适用于无限长和半无限长的无外力]
+
+  对于初始条件 \(u(x) = \varphi(x), u_t(x) = \psi(x)\), 其解为:
+  
+  \[u(x, t) = \varphi(x + a t) + \varphi(x - a t) + \int_{x - a t}^{x + a t} \psi(x) \mathrm{d}t\]
+
+  唯一需要考虑的是边界条件和奇偶性延拓的做法. 
++ 分离变数法
+  
+  平面极坐标系下的波动方程的分离变数: 
+
+  \[\partial_{tt} u - a^2 \nabla^2 u = 0 \Rightarrow u = X(\boldsymbol{r}) T(t)\]
+
+  分解得到 \(\frac{T''(t)}{a^2 T(t)} = \frac{\nabla^2 X(\boldsymbol{r})}{X(\boldsymbol{r})} = - k^2\). 于是可以求解得到:
+
+  \[T = \left\{\begin{matrix} C \cos k a t + D \sin k a t & (k \neq 0) \\\\ C + D t & (k = 0)\end{matrix}\right.\]
+
+  以及 \(\frac{1}{\rho} (\partial_{\rho} \rho \partial_{\rho} X(\boldsymbol{r})) + \frac{1}{\rho^2} \partial_{\varphi\varphi}X(\boldsymbol{r}) + k X(\boldsymbol{r}) = 0\),
+  进一步分解:
+  \(X(\boldsymbol{r}) = R(\rho) \Phi(\varphi) \Rightarrow \frac{\Phi''(\varphi)}{\Phi(\varphi)} = - (k \rho^2 + \rho (\rho R''(\rho) + R'(\rho)) / R(\rho)) = - \lambda^2\).
+  于是可以求解得到:
+
+  \[\Phi(\varphi) = \left\{\begin{matrix}E \cos k a t + F \sin k a t & (\lambda \neq 0)\\\\ E + F t & (\lambda = 0)\end{matrix}\right.\]
+
+  以及 \(R''(\rho) + \frac{1}{\rho} R'(r) + (k - (\frac{\lambda}{\rho})^2) R(\rho) = 0\). 
+  
+  + 傅里叶级数 [适用于在双端约束条件下的问题]
+
+    \[u(x, t) = \sum_{n = 0}^{\infty} T_n(t) \cos \frac{n \pi x}{l}\]
+
+    + 找边界条件确定 \(x\) 的三角函数展开形式
+      + \(u = 0 \Rightarrow \sin \omega x\) 
+      + \(u_x = 0 \Rightarrow \cos \omega x\)
+    + 然后代入 \(\partial_{tt} - a^2 \partial_{xx} = f\),
+      相当于是 \(T'' - a^2 T = \int f (\sin | \cos)\)
+  + 冲量定理 [初始条件为零]
+
+    将问题变成求解无外力的有初始条件和有外力的无初始条件.
+
+    然后利用冲量定理将有外力的无初始条件转换成求解无外力的有初始条件的解的叠加. 
+*** 扩散方程 \(u_t - a^2 u_{xx} = 0\)
+根据扩散定律 \(q = - \kappa \nabla u\) 可以得到;
+或者根据通量方程可以得到. 
+
++ 热传导
++ 物质浓度扩散
++ 电流场 \(\partial_t + \nabla \cdot \boldsymbol{j} = 0 \rightarrow \boldsymbol{j} = \sigma \boldsymbol{E} = \sigma \nabla \varphi\)
+
+有源扩散 \(u_t - a^2 u_{xx} = F\)
++ 扩散源强度和浓度无关的情况 \(F(x, t)\)
++ 扩散源强度和浓度成正比的情况 \(F = \lambda u\)
+
+  对应的方程有衰变方程 \(u_t - a^2 \Delta u + \frac{\ln 2}{\tau} u = 0\)
++ 稳定分布 \(u_t = 0\), 变成泊松方程
+
+通过分离变量可以求解:
+
+\[u = T(t) v(\boldsymbol{r}) \Rightarrow \begin{matrix}T(t) & = & e^{- k^2 a^2 t}\\\\ \Delta v(\boldsymbol{r}) + k^2 v(\boldsymbol{r}) & = & 0 \end{matrix}\]
+
+或者使用傅里叶级数法来求解 (对 \(X(x)\) 进行展开)
+
+*** 泊松方程 \(\Delta u = F\) 和拉普拉斯方程 \(\Delta u = 0\)
+拉普拉斯方程在极坐标系下的通解:
+
+\[u = E + F \ln \rho + \sum_{m=1}^{\infty} (A_m \cos m \varphi + B_m \sin m \varphi) (C_m \rho^m + D_m \rho^{-m})\]
+
+求解泊松方程一般可以先找一个特解, 利用叠加原理来求解.
+
+常见的特解:
++ 均匀外场: \(\boldsymbol{E}_0\), 其对应特解为 \(- \boldsymbol{E}_0 \cdot \boldsymbol{r}\)
++ 点电荷: \(\frac{1}{r}\)
+
+以及边界条件的处理:
++ 一般在圆域内有自然边界条件:
+  + \(\boldsymbol{r} \rightarrow 0 \Rightarrow\) 有限
++ 如果遇到 \(f(x, y)\) 形式的边界条件, 可以先在 \(x, y\) 下猜特解,
+  然后变换到 \(\rho, \varphi\) 下. 
+*** 薛定谔方程 \(- \frac{\hbar^2}{2 m} \Delta u + (V - E) u = 0\)
+** 边界方程和定解条件
+个人理解: 一个方程能解的条件, 或者说能帮助确定其解的条件即为其定解条件
++ 初始条件
++ 边界条件 (衔接条件)
+
+如何写出边界条件并对其进行 (分类) 求解.
+
+*** 第一类边界条件 \(u(\boldsymbol{r}, t)|_{\Sigma} = f(M, t)\)
+边界值固定的边界条件, 比如端点固定, 端点恒温, 端点浓度一定. 
+
+*** 第二类边界条件 \(\partial_n u|_{\Sigma} = f(M, t)\)
+边界值导数固定的边界条件, 比如受到恒定外力 \(f = k \partial u\) 之类的. 
+
+*** 第三类边界条件 \((u + H \partial_n u)|_{\Sigma} = f(M, t)\)
++ 自由冷却: 左边 \(\delta q_l = k_1 \partial_n u\) 和右边 \(\delta q_r = k_r (u - u_0)\) 以及热平衡
+
+*** 齐次边界条件和非齐次边界条件
++ 齐次边界条件: 线性的边界方程
++ 非齐次边界条件: 非线性的边界方程
+
+*** 衔接条件
+两段函数的边界条件之间的关系
+
+** 数学物理方程的分类 (双变元线性二阶偏微分方程)
+二阶偏微分方程
+
+\[\sum_{j=1}^n \sum_{i=1}^n a_{ij} u_{x_i x_j} + \sum_{i = 1}^n b_i u_{x_i} + c u + f = 0\]
+
+在 \(a_{ij}, b_i, c, f\) 仅为 \(x_k\) 的函数时为线性方程.
+
+线性方程满足 *叠加原理*.
+
+基本只考虑双变元线性偏微分方程:
+
+\[a_{11} u_{xx} + 2 a_{12} u_{xy} + a_{22} u_{yy} + b_1 u_x + b_2 u_y + c u + f = 0\]
+
+做变元替换: \(x, y \rightarrow \xi, \eta\), 使得 \(u_x = u_{\xi} \xi_x + u_{\eta} \eta_x, ...\)
+
+然后代入双变元线性偏微分方程里面可以得到:
+
+\[A_{11} u_{\xi\xi} + 2 A_{12} u_{\xi\eta} + A_{22} u_{\eta\eta} + B_1 u_{\xi} + B_2 u_{\eta} + C u + F = 0\]
+
+其中:
+
+\[\left\{\begin{matrix} A_{11} & = & a_{11} \xi_x^2 + 2 a_{12} \xi_x \xi_y + a_{22} \xi_y^2 \\\\ A_{12} & = & a_{11} \xi_x \eta_x + a_{12} (\xi_x \eta_y + \xi_y \eta_x) + a_{22} \xi_y \eta_y \\\\ A_{22} & = & a_{11} \eta_x^2 + 2 a_{12} \eta_x \eta_y + a_{22} \eta_y^2 \\\\ B_1 & = & a_{11} \xi_{xx} + 2 a_{12} \eta_x \eta_y + a_{22} \eta_y^2\\\\ B_2 & = & a_{11} \eta_{xx} + 2 a_{12} \eta_{xy} + a_{22} \eta_{yy} + b_1 \eta_x + b_2 \eta_y \\\\ C & = & c \\\\ F & = & f\end{matrix}\right.\]
+
+使得 \(A_{11} = 0\), 即对应的特征方程 \(a_{11} y'^2 + 2 a_{12} y' + a_{22} = 0\)
+解作为 \(\xi_x/\xi_y = y'\) 的值, 那么就可以将方程进行化简.
+而 \(y\) 对应特征线方程:
+
+\[\begin{matrix}y' & = & \frac{a_{12} + \sqrt{a_{12}^2 - a_{11} a_{22}}}{a_{11}}\\\\ y' & = & \frac{a_{12} - \sqrt{a_{12} - a_{11} a_{22}}}{a_{11}}\end{matrix}\]
+
+根据特征方程的判别式 \(\Delta = a_{12}^2 - a_{11} a_{22}\) 的不同,
+将方程进行分类. (一个简单的记忆方法: 对应天体运动的能量正负)
+
+Note: 一个没什么鸟用的计算流程
+
++ 计算 \(\Delta = a_{12}^2 - a_{11} a_{22}\) 判断方程类型
++ 根据不同的类型进行计算
+
+  一个比较普通的过程如下:
+  + 计算特征线方程 (求解微分方程 \(y' = \frac{a_{12} \pm \Delta}{a_{11}}\))
+  + 将解作为 \(\xi, \eta\) 的表达式 (可能需要换元 \(\xi, \eta \rightarrow \alpha, \beta\))
+  + 代入对应的方程求解 \(u\)
+
+#+begin_src lisp
+  (defun cal (exp)
+    (let ((Δ (cal-Δ-of exp)))
+      (cond ((> Δ 0) (cal-hyperbola-of exp))
+            ((= Δ 0) (cal-parabola-of  exp))
+            ((< Δ 0) (cal-ellipse-of   exp)))))
+#+end_src
+
+*** 双曲型方程 \(\Delta = a_{12}^2 - a_{11} a_{22} > 0\)
+由特征线方程得到:
+
+\[\xi(x, y) = C_{\xi}, \eta(x, y) = C_{\eta}\]
+
+#+begin_src lisp
+  (defun cal-hyperbola-of (exp)
+    (multiple-value-bind (dy-dx-1 dy-dx-2)
+        (calculate-dy-dx exp)
+      (let* ((ξ (solve-differential dy-dx-1))
+             (η (solve-differential dy-dx-2))
+             (ɑ (/ (+ ξ η) 2))
+             (β (/ (- ξ η) 2))
+             (A12 (calculate-A12 exp))
+             (B1  (calculate-B1  exp))
+             (B2  (calculate-B2  exp))
+             (C   (calculate-C   exp))
+             (F   (calculate-F   exp)))
+        `(= (+ (∂ u ,ɑ ,ɑ) (∂ u ,β ,β))
+            (* (/ -1 ,A12)
+               (+ (* (+ ,B1 ,B2) (∂ u ,ɑ))
+                  (* (- ,B1 ,B2) (∂ u ,β))
+                  (* 2 ,C u)
+                  (* 2 ,F)))))))
+#+end_src
+
+于是最终得到方程:
+
+\[u_{\xi\eta} = - \frac{1}{2 A_{12}} [B_1 u_{\xi} + B_2 u_{\eta} + C u + F]\]
+
+做变元替换 \(\xi, \eta \rightarrow \alpha + \beta, \alpha - \beta\) 得到最终方程:
+
+\[u_{\alpha\alpha} - u_{\beta\beta} = - \frac{1}{A_{12}} [(B_1 + B_2) u_{\alpha} + (B_1 - B_2) u_{\beta} + 2 C u + 2 F]\]
+
+*** 抛物型方程 \(\Delta = a_{12}^2 - a_{11}a_{22} = 0\)
+特征线方程约化为单个方程:
+
+\[y' = \frac{a_{12}}{a_{11}} \Rightarrow \xi\]
+
+找一个和 \(\xi\) 无关的 \(\eta\), 其需要满足 \(\eta_x / \eta_y \neq \sqrt{a_{22}} / \sqrt{a_{11}}\).
+(一般可以取 \(\eta = x\), 怎样简单怎么来. )
+
+最终得到解:
+
+\[u_{\eta\eta} = - \frac{1}{A_{22}} [B_1 u_{\xi} + B_2 u_{\eta} + C u + F]\]
+
+*** 椭圆型方程 \(\Delta = a_{12}^2 - a_{11}a_{22} < 0\)
+得到的是复数特征线, 最终的结果:
+
+\[u_{\xi\eta} = - \frac{1}{2 A_{12}} [B_1 u_{\xi} + B_2 u_{\eta} + C u + F]\]
+
+做代换 \(\xi, \eta \rightarrow \alpha + i \beta, \alpha - i \beta\)
+
+\[u_{\alpha\alpha} + u_{\beta\beta} = - \frac{1}{A_{12}} [(B_1 + B_2) u_{\alpha} + i (B_2 - B_1) u_{\beta} + 2 C u + F]\]
+
+*** 常系数线性方程
+若所有的系数都是常数, 令 \(u(x, t) = e^{\lambda x + \mu t} v(x, t)\),
+然后可以将 \(v_t, v_x\) 项消去. 
+
+** 求解数学物理方程的方法
+*** 达朗贝尔公式
+波动方程 \((\partial_{tt} - a^2 \partial_{xx}) u = 0 \Leftrightarrow (\partial_t + a \partial_x)(\partial_t - a \partial_x) u = 0\),
+做代换 \(x, y \rightarrow \frac{1}{2}(\xi + \eta), \frac{1}{2a} (\xi - \eta)\), 最终有 \(\frac{\partial^2}{\partial \xi \partial \eta} u = 0\), 得到:
+
+\[u = f_1(x + a t) + f_2(x - a t)\]
+
+求解方法 [倘若抛开数学不谈, 求解波动方程可以只代入公式暴力算就完事了]:
+
++ 初始条件:
+  + 初始位移 \(u|_{t=0} = f_1(x) + f_2(x) = \varphi(x)\)
+  + 初始速度 \(u_t|_{t=0} = a f_1'(x) - a f_2'(x) = \psi(x)\)
+
+  最终可以得到
+
+  \[u(x, t) = \frac{1}{2} [\varphi(x + a t) + \varphi(x - a t)] + \frac{1}{2 a} \int_{x - at}^{x + at} \psi(\xi) \mathrm{d}\xi\]
++ 边界条件
+
+  边界条件可以通过奇延拓 (\(u(x = 0) = 0\))
+  或者偶延拓 (\(u\) 在一端自由) 来拓展成全边界的结果.
+
+*** (齐次方程) 分离变数法
+将 \(u = X(x) T(t)\) 分解成两个非相关项来进行计算.
+于是 \(\partial_x u\) 就可以被拆开来计算了. 
+
+*** 级数求解法
+**** 常点领域 (展它)
+**** 正则领域 (其实就是有奇点, 只要不是无穷阶, 还是能展的)
+**** 本征值问题
++ 化成施图姆 - 刘维尔本征值方程
+
+  设有方程:
+
+  \[p(x) y'' + q(x) y' + c(x) y = 0\]
+
+  两边乘因子
+
+  \[\mu(x) = \frac{1}{p(x)} e^{\int \frac{p(x)}{q(x)} \mathrm{d}x}\]
+
+  于是本征值方程如下:
+
+  \[\frac{\mathrm{d}}{\mathrm{d}x} [\mu(x) \frac{\mathrm{d}y}{\mathrm{d}x}] + c(x) \mu(x) y = 0\]
+  
++ 计算本征函数的正交性
+
+  一个本征值对应一个本征函数.
+  两个本征函数的 \(\int y_n y_m \mathrm{d}x = \delta_{nm}\). 
+*** 非齐次方程的处理方法
+**** (傅里叶) 级数法
+\[\left\{\begin{matrix}u_{tt} - a^2 u_{xx} & = & f(x, t) \\\\ u_x|_{x=0} & = & 0\\\\ u_x|_{x=l} & = & 0\end{matrix}\right.\]
+
+相当于是将方程 \(u_{tt} - a^2 u_{xx} = f(x, t)\) 中的 \(f(x, t)\) 对 \(x\) 进行傅里叶展开.
+
+**** 冲量定理法
+\[\left\{\begin{matrix} u_{tt} - a^2 u_{xx} & = & f(x, t)\\\\ u|_{x=0} & = & 0\\\\ u|_{x=l} & = & 0\\\\ u|_{t=0} & = & \varphi(x)\\\\ u_t|_{t=0} & = & \psi(x)\end{matrix}\right.\]
+
+应用的是叠加原理, 认为是在时刻 \(\tau\), 短暂时间 \(\delta t\) 里, 有冲量 \(I \delta(t - \tau)\). 
+相当于是将 \(f(x, t)\) 对 \(t\) 展开到 \(\{\delta(\tau)\}\) 空间.
+
+*** 非齐次边界条件处理
+类似于猜特解...
+
+不妨令 \(v(x, t) = A(t) x + B(t)\).

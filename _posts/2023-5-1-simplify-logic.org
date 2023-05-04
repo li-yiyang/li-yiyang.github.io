@@ -1061,6 +1061,40 @@ B D + \bar{B} \bar{D} + A B + B C
 不过当前的代码基本上还是用于个人了解使用,
 难说能不能有很好的效率和所谓的稳定性.
 
+** 实际上真的好用么?
+我不太觉得, 因为在游戏里面的体验并不是很好就是了...
+
+比如计数器那关的代码:
+
+#+begin_src lisp
+  (let* ((pos 1)
+         (truth-tbl
+           (cons
+            '((A B C D) VAL)
+            (loop for input from 0 to (1- (expt 2 4))
+                  collect (let* ((bits (to-bits input 4))
+                                 (count (count 1 bits)))
+                            (list bits
+                                  (nth pos (reverse (to-bits count 3)))))))))
+    (exp-latex-format
+     (simplify-formatted
+      (strip-zero-and-format truth-tbl))))
+#+end_src
+
+#+RESULTS:
+: A B \bar{D} + A \bar{C} D + A \bar{B} C + \bar{B} C D + \bar{A} B C + B \bar{C} D
+
+最终化简结果:
+
+\[A B \bar{D} + A \bar{C} D + A \bar{B} C + \bar{B} C D + \bar{A} B C + B \bar{C} D\]
+
+其实也没有多简单, 甚至还有点地狱绘图的感觉... 
+
+[[{{ site.github.url }}/_img/pieces/pic-of-hell-q-m-simpilfy.jpg]]
+
+原因我觉得可能是因为只用了两种门而没有用其他的门,
+看来这个算法一般般欸. 要是有那种可以根据目标进行简化的算法就好了. 
+
 * Others
 ** 深夜的 EMO
 在我调查并编写复现这个算法的时候, 我突然感到了十分的惶恐,
