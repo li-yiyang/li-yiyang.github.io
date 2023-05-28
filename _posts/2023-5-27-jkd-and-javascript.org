@@ -1,0 +1,616 @@
+#+layout: post
+#+title: 无聊的网页编写小教程
+#+date: 2023-05-28
+#+options: _:nil ^:nil
+#+math: true
+#+categories: misc
+#+begin_html
+<style>
+.container {
+  border: 2px solid;
+  border-radius: 5px;
+  padding: 10px;
+}
+</style>
+#+end_html
+
+* Why?
+因为给别人讲计科导 JavaScript 和网页设计,
+写了一个示例网页, 所以整理一下留下来作为介绍推广用.
+
+(注: 假设读者已经知道大概的 HTML, JavaScript 和 CSS 语法,
+若否, 可以看看之前的 [[{{ site.github.url }}/jekyll/how-to-make-a-static-web/][How to Make A Website]] 的教程. )
+
+* 一个网页
+** HTML Elements
+显然, 一个最简单的网页应该长这个鸟样:
+
+#+begin_src html
+  <!DOCTYPE html>
+  <html>
+    <head>
+      <meta charset="UTF-8">        <!-- 防止编码问题 -->
+      <title>A Simple Title</title> <!-- 网页标题 -->
+      <script></script>             <!-- JS 代码 -->
+      <style></style>               <!-- CSS 属性 -->
+    </head>
+    <body></body>
+  </html>
+#+end_src
+
+那让我们加点料吧:
+
+比如给这个网页的 =body= 里面加个标题:
+
+#+begin_src html
+  <body>
+    <h1>Click Me! </h1>
+  </body>
+#+end_src
+
+那么这下, 我们就得到了一个看起来就很想让人按下去的一个标题了.
+
+#+begin_html
+<div class="container">
+  <h1>Click Me!</h1>
+</div>
+
+<details><summary>一些说明</summary>
+#+end_html
+
+如果你好奇查看了一下我的源码,
+那么你应该可以看到上面的代码被一个 =class=
+为 =container= 的 =div= 包裹着.
+
+类似的, 你也应该可以在大多数网站的源码里面看到类似的标题,
+但是为什么是 =container= 呢? 
+
+注: 因为我不是啥正经的前端, 所以我没法给出正确的一个解答,
+但是作为一个屁事管得特别多的无聊的鸟人,
+所以我抓了一个写前端的苦逼问了一下.
+
+结论类似于是这样的: 使用 =container= 这样的标记,
+可以更加方便地定位元素.
+
+而对于 (我用过的) 一些框架, 大多是选择 =container= 来进行定位渲染,
+而不是直接使用 =body= 来定位, 防止出现一些因为使用 =body= 来渲染,
+导致不同的框架的渲染被冲突掉.
+
+比如使用 [[https://reagent-project.github.io][Reagent]] 框架, 渲染在 =body= 上的元素,
+就有可能将其他在 =body= 上添加的其他元素给吞掉了.
+
+嘛, 不过在这里, 就完全只是个人的需要来写 CSS 而已啦.
+
+#+begin_html
+</details>
+#+end_html
+
+可惜, 这个标题不论你按下多少次也没有任何的反应.
+啊, 这可是一个没有灵魂的标题啊...
+
+** 让我们来搞点有趣的
+那么现在修改 =h1= 标签, 来让这个标签能够响应点击的操作:
+
+#+begin_src html
+  <h1 onclick="alert('Yha! You clicked me.')">
+    Click Me!
+  </h1>
+#+end_src
+
+现在点点看? 
+
+#+begin_html
+<div class="container">
+  <h1 onclick="alert('Yha! You clicked me.')">
+    Click Me!
+  </h1>
+</div>
+#+end_html
+
+哦哦哦, 现在好像会弹出一个提示框了欸.
+
+但是就这样好像也太无聊了一些,
+如果说, 点击之后, 能够发生什么一些别的事情,
+那该多好呢.
+
+那么比如说我们可以改变元素的一个颜色:
+
+#+begin_src html
+  <h1 onclick="alert('Yha! You clicked me.');
+               this.style.color = 'green';
+               alert('Wow, I am green now.');">
+    Click Me!
+  </h1>
+#+end_src
+
+现在再点点看? 
+
+#+begin_html
+<div class="container">
+  <h1 onclick="alert('Yha! You clicked me.');
+               this.style.color = 'green';
+               alert('Wow, I am green now.');">
+    Click Me!
+  </h1>
+</div>
+#+end_html
+
+点点看嘛...
+
+其中, =this.style.color= 表示的是当前元素,
+也就是 =h1= 这个标题元素的 =style= 属性的 =color= 被设置为了 =green=.
+也就是你所见到的, 它, 会变色欸.
+
+原则上你可以用这样的方式, 来对每一个网页上的元素进行一个事件绑定,
+这样就可以完成各种的事情了.
+
+** 就这? 能不能来点更加漂亮的
+*** 一些 "丑" 的设计
+那么不妨来一些比较丑的操作: 每一次点击的时候, 都会随机变换颜色,
+比如在红色, 绿色, 黑色, 黄色之间进行随机切换:
+
+#+begin_src html
+  <h1 onclick="alert('Yha! You clicked me.');
+             let color = random_choose(['red', 'green', 'black', 'yellow']);
+             this.style.color = color;
+             alert('Wow, I am ' + color + ' now.');">
+#+end_src
+
+假设我们有 =random_choose= 这样的一个函数,
+能够从一个数组里面随机选择一个元素. 
+
+在 =script= 中填入这样的函数定义:
+
+#+begin_src html
+  <script>
+    function random_choose(list) {
+        let pick = Math.floor(Math.random() * list.length);
+        return list[pick];
+    }
+  </script>
+#+end_src
+
+这个时候, 我们的结果如下:
+
+#+begin_html
+<script>
+    function random_choose(list) {
+        let pick = Math.floor(Math.random() * list.length);
+        return list[pick];
+    }
+</script>
+<div class="container">
+  <h1 onclick="alert('Yha! You clicked me.');
+               let color = random_choose(['red', 'green', 'black', 'yellow']);
+               this.style.color = color;
+               alert('Wow, I am ' + color + ' now.');">
+    Click Me!
+  </h1>
+</div>
+#+end_html
+
+现在这个就有了一些趣味了.
+
+#+begin_html
+<details><summary>关于 "丑" 设计的扯淡</summary>
+#+end_html
+
+大家都喜欢好看的东西, 讨厌难看的东西.
+只不过对于不同的人, 好看的东西和难看的东西的规定并不相同,
+对于难看的东西的忍耐阀值和对于好看的东西的追求的冲动不同而已.
+
+至少我是这么认为的, 尽管我自认为并没有多少的审美情趣,
+也没啥对美的追求, 甚至对难看的东西有非常强大的忍耐能力.
+
+若以次为前提的话, 不难理解为何会有各种神奇的设计海报和设计产品了:
+因为设计的周期和时间和金钱而不得不进行的妥协,
+因为甲方的喜好和设计师的摆烂, 等等.
+
+但是这样的丑设计, 就像是 "自然而然" 地产生的东西.
+就好像是使用随机的方式来进行配色:
+
+#+begin_html
+<script>
+function random_int(max) {
+    return Math.floor(Math.random() * max);
+}
+
+function random_color() {
+    let red   = random_int(256);
+    let blue  = random_int(256);
+    let green = random_int(256);
+    return "rgb(" + red + ", " + blue + ", " + green + ")";
+}
+
+function update_random_color() {
+    let container = document.getElementById("random_colors");
+    for (const elem of container.children) {
+        elem.style.background = random_color();
+    }
+}
+</script>
+
+<style>
+.color_block {
+    width: 20%;
+    height: 100px;
+    display: inline-block;
+}
+</style>
+
+<div id="random_colors" onclick="update_random_color();">
+<div class="color_block"></div>
+<div class="color_block"></div>
+<div class="color_block"></div>
+<div class="color_block"></div>
+</div>
+
+<script>update_random_color()</script>
+
+#+end_html
+
+(点击可以切换颜色)
+
+这样的配色可能并不会很好看, 但是也并不是说一定会不好看.
+没有学过相关知识的人, 可能只能够像这样随机抛色子来决定颜色,
+然后对得到的颜色用自己的审美判断来进行筛选.
+
+实际上如果用数学来描述的话, 每个人的色彩偏好可能会是一个特殊的函数:
+
+#+begin_src lisp
+  (defun rank-colors (&rest colors))
+#+end_src
+
+而根据自己的偏好打分, 和自己的喜好阀值, 会以这样的东西作为一个概率,
+来让自己选择或者是不选择这套配色:
+
+#+begin_src lisp
+  (defun choose-color-sets (personal-threshold &optional try-times)
+    (let ((color-set (random-color-set))
+          (loss-rate 0.001))
+      (if (probability-choose-by personal-threshold
+                                 (apply #'rank-colors color-set))
+          color-set
+          (choose-color-sets (* (1- loss-rate) personal-threshold)
+                             (if try-times (1- try-times) 10)))))
+#+end_src
+
+当然, 每个人的最大容忍次数也是有限的, 有可能今天的运气实在是不太好,
+或者说, 用一个比较更加被常用的借口: 今天没有灵感.
+怎么扔色子都遇不到一个能看的配色, 于是你的容忍阀值就会渐渐地掉下来了,
+甚至可能最后连阀值都不管了, 直接选了一个配色, 或者说, 开摆.
+
+当然, 上面的更像是一种普通人的一个配色过程, 对于科班出身的画家,
+我想他们应该会有一种更加有逻辑和积累的配色的预设方案,
+在这样的预设下的随机, 便能够更加容易规避 "丑" 的配色.
+
+不过说起来, 尽管很多时候都没法说出自己要什么,
+但是却能够一下子说出自己不想要什么. 就好像看到一个 "丑" 海报,
+就能够立刻说出, 该死, 这海报真丑. 但是设计的时候,
+却不知道要做什么来变得不丑. 
+
+#+begin_html
+</details>
+#+end_html
+
+实际上, 哪怕代码稍微丑一点, 只要能动, 就没有什么关系了.
+但是如果能够让代码也变得漂亮一些的话,
+那么写代码就不会是一个社畜的生活而是一个享受的过程了.
+
+上面的代码中的 =onclick= 如果不进行一些规划的话,
+就会越写越大, 变得十分的丑陋了,
+所以不妨将这个 =onclick= 的代码用一个函数进行包裹,
+这样就会更加简单一些. (代码略)
+
+*** 添加一些记忆
+但是现在就只有一个点击按钮, 其他啥也没有, 这太无聊了.
+所以不妨加入一个计数器, 来记录一下点击的次数:
+
+#+begin_src javascript
+  var counter = 0;
+
+  function increase_counter() {
+      counter += 1;
+  }
+#+end_src
+
+但是只有增加, 没有显示可不行啊,
+所以不妨再添加一个函数, 用来在网页上显示点击的次数:
+
+#+begin_src javascript
+  function increase_counter() {
+      counter += 1;
+      render_counter_times();
+  }
+
+  function render_counter_times() {
+      let elem = document.getElementById('counter');
+      elem.innerHTML = "You've clicked " + counter + " times."
+  }
+#+end_src
+
+现在试试看:
+
+#+begin_html
+<details><summary>代码</summary>
+#+end_html
+
+#+begin_src html
+  <script>
+    function increase_counter() {
+        counter += 1;
+        render_counter_times();
+    }
+
+    function render_counter_times() {
+        let elem = document.getElementById('counter');
+        elem.innerHTML = "You've clicked " + counter + " times."
+    }
+
+    function change_color_randomly(elem) {
+        elem.color = random_choose(['red', 'green', 'black', 'yellow']);
+    }
+  </script>
+
+  <h1 id="title"
+      onclick="change_color_randomly(this);
+               increase_counter();">
+    Click Me.
+  </h1>
+  <h2 id="counter">
+    You've clicked 0 times.
+  </h2>
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+  <script>
+    var counter_1 = 0;
+
+    function increase_counter_1() {
+        counter_1 += 1;
+        render_counter_1_times();
+    }
+
+    function render_counter_1_times() {
+        let elem = document.getElementById('counter_1');
+        elem.innerHTML = "You've clicked " + counter_1 + " times."
+    }
+
+    function change_color_randomly(elem) {
+        elem.style.color = random_choose(['red', 'green', 'black', 'yellow']);
+    }
+  </script>
+
+<div class="container">
+  <h1 id="title_1"
+      onclick="change_color_randomly(this);
+               increase_counter_1();">
+    Click Me.
+  </h1>
+  <h2 id="counter_1">
+    You've clicked 0 times.
+  </h2>
+</div>
+#+end_html
+
+#+begin_html
+<details><summary>更加工整的代码</summary>
+#+end_html
+
+在上面的代码里面, 如果我们想要对 =increase_counter= 做更多的操作,
+使得其能够进行拓展, 除了最朴素的在函数里面做添加逻辑的方式,
+我们其实还能够做一些更加漂亮的操作.
+
+#+begin_src javascript
+  var increase_counter_hook = [];
+
+  function increase_counter() {
+      counter += 1;
+      increase_counter_hook.map((f) => { f.call(); });
+  }
+
+  increase_counter_hook.push(() => {
+      // increase counter update html
+      let elem = document.getElementById("counter");
+      elem.innerHTML = "You clicked " + counter + " times.";
+  })
+
+  increase_counter_hook.push(() => {
+      // append body with ...
+      let elem = document.getElementById("unordered_list");
+      let list = document.createElement("li");
+      list.innerHTML = "...";
+      elem.appendChild(list);
+  })
+#+end_src
+
+这里使用了一个 =hook= 的操作, 让计算的时候,
+能够在最后收尾的之后执行一串函数. 类似的,
+你也可以定义一个 =before_increase_counter_hook= 在增加计数器前进行操作,
+等等.
+
+这样的操作利用了 JavaScript 是支持函数式编程的语言的特性,
+并且能够将函数作为数据进行传递. 相当于将所有要在 =increase_counter=
+计算结束后的函数, 都用 =hook= 来进行储存, 然后统一调用.
+
+这样的话, 拓展性很强, 并且代码也会比较好维护就是了.
+尽管并不能使得程序更加厉害就是了. (不过我认为, 可读性还是比较重要的.)
+
+#+begin_html
+</details>
+#+end_html
+
+*** 添加一些有趣的事情
+假如我们想要一个能够随机生成句子的函数,
+而我们又知道, 一个句子不过就是: "主语 - 谓语 - 宾语".
+所以我们的 =create_sentence= 函数,
+实际上只需要将 =create_object=, =create_verb_p=, =create_subject=
+的函数结果连接在一起即可.
+
+而同样的, 一个主语可以是一个由形容词修饰的名词,
+于是 =create_object= 就可以是一个由 =choose_adj=, =choose_noun= 来实现.
+
+于是代码不难写:
+
+#+begin_html
+<details><summary>代码</summary>
+#+end_html
+
+#+begin_src javascript
+  function create_sentence() {
+      return [
+          create_object(),
+          create_verb(),
+          create_subject()
+      ].join(" ") + ". ";
+  }
+
+  function create_object() {
+      return [
+          choose_adj(),
+          choose_noun()
+      ].join(" ");
+  }
+
+  function create_verb() {
+      return [
+          choose_adv(),
+          choose_verb()
+      ].join(" ");
+  }
+
+  function create_subject() {
+      return [
+          choose_adj(),
+          choose_noun()
+      ].join(" ");
+  }
+
+  function choose_noun() {
+      let nouns = ["人", "狗", "鸡"];
+      return random_choose(nouns);
+  }
+
+  function choose_verb() {
+      let nouns = ["吃", "跑", "跳"];
+      return random_choose(nouns);
+  }
+
+  function choose_adj() {
+      let nouns = ["漂亮的", "随便的", "丑陋的"];
+      return random_choose(nouns);
+  }
+
+  function choose_adv() {
+      let nouns = ["温柔地", "轻轻地", "用力地"];
+      return random_choose(nouns);
+  }
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+但是上面的代码是否也未免有点太长了吧, 是吧.
+那么有没有办法, 将这个代码的长度缩短一些,
+能够更加方便修改和拓展一些呢?
+
+下面就是一个方法:
+
+#+begin_src javascript
+  const rule  = {
+      sentence : ["object", "spliter", "verb_p", "spliter", "subject", "eof"],
+      object   : [["adj", ""], "spliter", "noun"],
+      verb_p   : [["adv", ""], "spliter", "verb"],
+      subject  : [["adj", ""], "spliter", "noun"],
+      noun     : [["小狗", "小猫", "小鸭", "小猪", "小狼"]],
+      adj      : [["聪明的", "漂亮的", "无聊的", "随便的"]],
+      adv      : [["开心地", "轻轻地", "伤心地"]],
+      verb     : [["跑", "玩", "吃"]],
+      spliter  : [""],
+      eof      : [". "]
+  }
+
+  function create_sentence (terminal = "sentence") {
+      let sequence = rule[terminal];
+      if (typeof sequence === "undefined") {
+          return terminal;
+      } else {              
+          return sequence.map((elem) => {
+              return create_sentence(Array.isArray(elem) ? random_choose(elem) : elem);
+          }).join("");
+      }
+  }
+#+end_src
+
+那么这个和上面的代码有什么不同呢?
+不同的地方就在于, 新的代码以数据本身作为过程的描述,
+所构造的 =create_sentence= 函数就是一个将数据描述的过程进行执行的一个函数.
+而上面的代码, 实际上是直接去构造过程本身了.
+
+尽管旧的代码长了点, 但是它足够直观, 构造起来也很快.
+新的代码则稍微抽象了点, 不够直观.
+
+嘛, 人各有好就是了.
+
+*** 关于调试
+#+begin_src javascript
+  const dbg = true;
+  function dbg_log(message) { if (dbg) { console.log(message) } };
+#+end_src
+
+建议可以这样做.
+
+以及在要调试的函数执行前:
+
+#+begin_src javascript
+  function func_to_debug(arg) {
+      dbg_log("func_to_debug(" + arg + ")");
+      // ...
+#+end_src
+
+这样的话, 方便追踪, 也容易调试.
+并且哪怕留下了 =dbg_log=, 只要把 =dbg= 给设为 =false=,
+哪怕最后交作业来不及了, 也能够很快地从 =debug= 环境变成 =release= 环境.
+
+*** 关于增加新的代码
+如果需要重构代码的话, 建议不要把旧的代码给删掉,
+而是把旧的函数名字改成 =func_to_write_old=, 这样,
+如果最后发现重构不太行的话, 也能够把 =_old= 给去掉,
+使用旧的代码而不是遇到工期的爆炸.
+
+** 可怕的 CSS
+嘛, 实际上现在得到的也不过就是一个毛坯.
+如果想要精装修的话, 你就得写点 CSS 了.
+
+不过写 CSS 可能实在是过于麻烦了, 这里就不展开介绍了.
+
+* final demo
+我只写了一个非常简单的一个例子: (+我称其为地狱少女风+)
+
+#+begin_html
+<iframe src="{{ site.github.url }}/_img/pieces/spell-of-the-god.html" title="demo" width="100%" height="400px"></iframe>
+#+end_html
+
+最终的代码在 [[{{ site.github.url }}/_img/pieces/spell-of-the-god.html][这里下载]].
+
+* 最后
+写着写着有点不想写了, 好麻烦. 
+
+不过这种随性就能够编程的感觉, 我觉得还是很有意思的,
+上面的代码大概花了快两个小时 (连带讲解和查资料). 
+
+突然想到和别人讨论对于物理系同学, 应该编程还是推公式好.
+我觉得吧, 还是编程比较好一些. 如果程序本身可以表示得严谨和清晰,
+那么它们代替公式的能力还是很有前景的.
+
+不过可惜现在感觉人们想到编程就是人工智能大杀特杀,
+说到公式就是数学的严谨炫酷, 我觉得是有些不妥的.
+
+(难道计算机一开始发明出来, 不就是为了帮助人们推公式的吗?
+只不过人们发现计算机能干的事情实在是太多了,
+所以就把推公式这茬给忘了吧...)
