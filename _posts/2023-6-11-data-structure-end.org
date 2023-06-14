@@ -1,0 +1,946 @@
+:PROPERTIES:
+:header-args: :tangle ../_img/pieces/data-struct/data-struct-linked-list.lisp
+:END:
+#+title: 数据结构 [期末]
+#+date: 2023-06-14
+#+layout: post
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+* Preface
+既然认清了自己不是寄系人的事实, 我发现我已经飘了, 这下是复习不完了.
+不过你要说这是啥整活操作... 好像也是欸.
+
+(注: 因为时间来不及, 所以一些没有写代码. )
+
+** 代码
+#+name: data-struct-linked-list-defpackage
+#+begin_src lisp
+  ;;; Data Struct
+  (defpackage :data-struct
+    (:use :cl))
+
+  (in-package :data-struct)
+#+end_src
+
+总的代码应该会放在 [[{{ site.github.url }}/_img/pieces/data-struct/data-struct-linked-list.lisp][这个]] 地方.
+
+** 一些帮助代码
+#+begin_html
+<details><summary>虽然叫做帮助代码, 但是可能没啥帮助作用, 折叠了</summary>
+#+end_html
+
+*** 杂项
+生成一个比较函数:
+
+#+name: eq-to
+#+begin_src lisp
+  (defun eq-to (value)
+    "Generate a compare func to test if equal to VALUE."
+    (lambda (another) (eq value another)))
+#+end_src
+
+根据规则提取列表中的元素: 
+
+#+name: pick-elem-of
+#+begin_src lisp
+  (defun pick-elem-of (lst &optional (rule 'random))
+    "Pick elem of LST by RULE."
+    (if (null lst)
+        NIL
+        (cond ((eq rule 'first)  (first lst))
+              ((eq rule 'last)   (car (last lst)))
+              ((eq rule 'middle) (pick-elem-of 2))
+              ((eq rule 'random) (nth (random (length lst)) lst))
+              ((integerp rule)   (nth (floor (/ (length lst) rule)) lst))
+              (T (pick-elem-of lst 'random)))))
+#+end_src
+
+过滤函数:
+
+#+name: filter-function
+#+begin_src lisp
+  (defun filter (func lst &key (map NIL))
+    "Filter a LST by FUNC."
+    (loop for elem in lst
+          if (funcall func elem)
+            collect (if map (funcall map elem) elem) into success
+          else
+            collect (if map (funcall map elem) elem) into fail
+          finally (return (values success fail))))
+#+end_src
+
+*** 列表
+将一个列表中的元素使用某个元素连接在一起:
+
+#+name: list-join
+#+begin_src lisp
+  (defun join (lst &optional (spliter "~%"))
+    "Join elements in LST, splitted by SPLITER."
+    (cond ((null lst) "")
+          ((= (length lst) 1) (format nil "~A" (first lst)))
+          (T (format nil "~A~A~A"
+                (first lst)
+                (format nil spliter)
+                (join (cdr lst) spliter)))))
+#+end_src
+
+*** 矩阵计算
+将矩阵进行一个转置操作:
+
+#+name: matrix-transpose
+#+begin_src lisp
+  (defun transpose (matrix)
+    (apply #'mapcar #'list matrix))
+#+end_src
+
+或者提取出矩阵中的某个元素:
+
+#+name: element-of-nested-object-at
+#+begin_src lisp
+  (defmacro at (nested &rest indexs)
+    "Nested nth for NESTED via INDEXS. 
+  For example: (at matrix row col) -> (nth col (nth row matrix))"
+    (if (null indexs)
+        nested
+        (cons 'at (cons `(nth ,(car indexs) ,nested) (cdr indexs)))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+* 树
+** 树的表示
+一棵树, 需要有节点和节点的叶子.
+
+假设一颗树通过一个链表来进行表现:
+
+#+name: tree-expression
+#+begin_src lisp :tangle no
+  (defvar *tree-example*
+    '(1
+      (2 (5 6) 7)
+      (3 (8 9 10) 11)
+      (4 12 13 14)))
+#+end_src
+
+#+begin_html
+<details><summary>数据结构的一些读取</summary>
+#+end_html
+
+测试一个元素是否为树的叶子:
+
+#+name: tree-leafp
+#+begin_src lisp
+  (defun leafp (elem)
+    "Test if an ELEM is a leaf."
+    (atom elem))
+#+end_src
+
+读取节点的值:
+
+#+name: tree-node
+#+begin_src lisp
+  (defun tree-node (elem)
+    "Read node info from ELEM."
+    (if (leafp elem)
+        elem
+        (first elem)))
+#+end_src
+
+读取节点的叶子:
+
+#+name: tree-leaf
+#+begin_src lisp
+  (defun tree-leaf (elem)
+    "Read leaves of ELEM."
+    (if (leafp elem)
+        NIL
+        (rest elem)))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+** 历遍树
+倘若想要历遍一颗树, 通常有两种方法.
+(对于二叉树, 实际上还会多一种先序遍历. )
+
+#+name: tree-pre-order-iter
+#+begin_src lisp
+  (defun pre-order (tree func &optional (parent NIL))
+    "Pre-order iterate the TREE via FUNC."
+    (let ((node (tree-node tree))
+          (leaf (tree-leaf tree)))
+      (cons
+       (funcall func node parent)
+       (loop for elem in leaf
+             if (leafp elem)
+               collect (funcall func elem node)
+             else
+               collect (pre-order elem func node)))))
+#+end_src
+
+或者是后序遍历:
+
+#+name: tree-post-order-iter
+#+begin_src lisp
+  (defun post-order (tree func &optional (parent NIL))
+    "Post-order iterate the TREE via FUNC."
+    (let* ((node (tree-node tree))
+           (leaf (tree-leaf tree))
+           (leaves (loop for elem in leaf
+                         if (leafp elem)
+                           collect (funcall func elem node)
+                         else
+                           collect (post-order elem func node))))
+      (cons (funcall func node parent) leaves)))
+#+end_src
+
+#+begin_html
+<details><summary>绘制代码</summary>
+#+end_html
+
+#+name: draw-a-tree
+#+begin_src lisp
+  (defun draw-tree (tree &key
+                           (labelfn NIL)
+                           (iter #'pre-order)
+                           (caller NIL)
+                           (embedding NIL)
+                           (headers '("node [shape=\"circle\"];")))
+    "Turn Tree to Graphviz code."
+    (labels ((node-name (node)
+               (if (atom node) node (join node "_"))))
+      (when embedding (format t "digraph {~%"))
+      (format t "~A" (join headers))
+      (funcall iter tree
+               (lambda (node parent)
+                 (format t "node_~A [label=\"~A\"];~%"
+                         (node-name node)
+                         (if labelfn (funcall labelfn node) (node-name node)))
+                 (when parent
+                   (format t "node_~A -> node_~A;~%"
+                           (node-name parent) (node-name node)))
+                 (when caller
+                   (funcall caller node parent))))
+      (when embedding (format t "}"))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: example-tree-draw
+#+headers: :tangle no :results output
+#+begin_src lisp :exports none
+  (draw-tree *tree-example*)
+#+end_src
+
+#+name: example-tree-draw-digraph
+#+headers: :var data=example-tree-draw :tangle no
+#+headers: :file ../_img/pieces/data-struct/tree-example.svg
+#+begin_src dot :exports none
+  digraph {
+  $data
+  }
+#+end_src
+
+#+RESULTS: example-tree-draw-digraph
+[[file:../_img/pieces/data-struct/tree-example.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/tree-example.svg]]
+
+#+begin_html
+<details><summary>一些绘图的代码</summary>
+#+end_html
+
+#+name: pre-order-iter-tree
+#+headers: :tangle no :results output
+#+begin_src lisp
+  (let ((previous NIL)
+        (counter 1))
+    (draw-tree
+     ,*tree-example*
+     :iter #'pre-order
+     :caller (lambda (node -)
+               (when previous
+                 (format t "node_~A -> node_~A [label=\"~A\",color=grey, constraint=false, style=dashed];~%"
+                         previous node counter)
+                 (incf counter))
+                 (setq previous node))))
+#+end_src
+
+#+name: pre-order-iter-tree-dot
+#+headers: :tangle no :file ../_img/pieces/data-struct/pre-order-iter-tree.svg
+#+headers: :var data=pre-order-iter-tree
+#+begin_src dot :exports none
+  digraph {
+    $data
+  }
+#+end_src
+
+#+RESULTS: pre-order-iter-tree-dot
+[[file:../_img/pieces/data-struct/pre-order-iter-tree.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/pre-order-iter-tree.svg]]
+
+#+name: post-order-iter-tree
+#+headers: :tangle no :results output
+#+begin_src lisp
+  (let ((previous NIL)
+        (counter 1))
+    (draw-tree
+     ,*tree-example*
+     :iter #'post-order
+     :caller (lambda (node -)
+               (when previous
+                 (format t "node_~A -> node_~A [label=\"~A\",color=grey, constraint=false, style=dashed];~%"
+                         previous node counter)
+                 (incf counter))
+               (setq previous node))))
+#+end_src
+
+#+name: post-order-iter-tree-dot
+#+headers: :tangle no :file ../_img/pieces/data-struct/post-order-iter-tree.svg
+#+headers: :var data=post-order-iter-tree
+#+begin_src dot :exports none
+  digraph {
+    $data
+  }
+#+end_src
+
+#+RESULTS: post-order-iter-tree-dot
+[[file:../_img/pieces/data-struct/post-order-iter-tree.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/post-order-iter-tree.svg]]
+
+#+begin_html
+</details>
+#+end_html
+
+** (m, M) 树
+为了让树的节点更加的统一, 加入修正 (约束) 使得节点数量有限,
+比如最大叶子数不超过 =M= 个, 最小叶子数不少于 =m= 个的树,
+并且修改节点为一个链表, 表现叶子和节点链表关系, 称为 m-M-树.
+
+比如一个节点为 =(2 4)=, 那么其叶子为 =1, 3, 5=, 即数据表示如下:
+
+#+name: m-M-tree-example
+#+begin_src lisp :tangle no
+  (defvar *m-M-tree-example*
+    '((10 20 27)
+      ((5))
+      ((17))
+      ((23 25)
+       ((21)) ((24)) ((26)))
+      ((28))))
+#+end_src
+
+#+name: m-M-tree-example-draw
+#+headers: :tangle no :results output 
+#+begin_src lisp :exports none
+  (draw-tree *m-M-tree-example*
+             :headers '("node [shape=\"record\"]")
+             :labelfn (lambda (node) (join node " | ")))
+#+end_src
+
+
+#+name: m-M-tree-example-dot
+#+headers: :file ../_img/pieces/data-struct/m-M-tree-example.svg
+#+headers: :tangle no :var data=m-M-tree-example-draw
+#+begin_src dot :exports none
+  digraph {
+    $data
+  }
+#+end_src
+
+#+RESULTS: m-M-tree-example-dot
+[[file:../_img/pieces/data-struct/m-M-tree-example.svg]]
+
+[[{{ site.github.url }}/_img/pieces/data-struct/m-M-tree-example.svg]]
+
+**** 查找
+实际上和 \(k\) 分法很像, 因为节点 \(n\) 有数据  \((a_1^n, a_2^n, \dots, a_l^n), m \leq l \leq M\),
+于是对于要查找的值 \(v\), 若不在 \(a_j^n\) 中, 则应落在 \(a_i^n, a_{i+1}^n\) 之间,
+于是去查找该节点的第 \(i\) 个节点:
+
+#+name: search-in-m-M-tree
+#+begin_src lisp
+  (defun search-m-M-tree (value tree)
+    "Search VALUE in TREE (m-M-tree)."
+    (let ((node (first tree))
+          (idx  0))
+      (if (null node)
+          NIL                             ; Not Found
+          (if (find value node)
+              value
+              (progn
+                (loop while (and (nth idx node)
+                                 (< (nth idx node) value))
+                      do (incf idx))
+                (search-m-M-tree value (nth (1+ idx) tree)))))))
+#+end_src
+
+**** 插入和删除
+插入和删除需要遇到的一个问题是节点的调整:
+1. 若操作后节点 \(n\) 的数据数量 \(l\) 小于 \(m\), 则需要从其他节点处借用
+2. 若操作后节点 \(n\) 的数据数量 \(l\) 大于 \(M\), 则需要分散到其他节点处
+   
+*** B 树和 B+ 树
+在正经 m-M 树上做更多的约束, 和一个链表对应,
+但 B+ 树里面放的不是数据, 而是链表的索引.
+
+*** 红黑树
+可以参考 [[https://en.wikipedia.org/wiki/Red–black_tree][Wikipedia]]. 在平衡树的基础上加上颜色, 满足黑色节点高度的平衡. 
+
+** 胜者树和败者树
+胜者树和败者树与堆很像.
+* 图
+** 图的表示
++ 可以用邻接矩阵来表示图:
+  
+  #+name: graph-example
+  #+headers: :tangle no
+  #+begin_src lisp
+    (defvar *matrix-graph-example*
+      '((NIL A   B   C   D)
+        (A   NIL T   T   NIL)
+        (B   NIL NIL T   NIL)
+        (C   NIL NIL NIL T)
+        (D   NIL T   NIL NIL)))
+  #+end_src
+
+  #+begin_html
+  <details><summary>一些访问和读取</summary>
+  #+end_html
+  
+  + 绘制矩阵对应的图:
+
+    #+name: draw-matrix-graph
+    #+begin_src lisp
+      (defun draw-matrix-graph (graph-matrix &key
+                                               (embedding NIL)
+                                               (headers '("layout=fdp;"
+                                                          "node [shape=\"circle\"];")))
+        "Trun GRAPH-MATRIX into digraph."
+        (when embedding (format t "digraph {~%"))
+        (format t "~A~%" (join headers))
+        (let ((nodes (rest (first graph-matrix))))
+          (loop for node in nodes do
+            (format t "node_~A [label=\"~A\"];~%" node node))
+          (loop for from-node in nodes
+                for row from 1 do
+                  (loop for to-node in nodes
+                        for col from 1 do
+                        (when (at graph-matrix row col)
+                          (format t "node_~A -> node_~A;~%"
+                                   from-node to-node)))))
+        (when embedding (format t "}")))
+    #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  #+name: matrix-graph-draw
+  #+headers: :tangle no :results output
+  #+begin_src lisp :exports none
+    (draw-matrix-graph *matrix-graph-example*)
+  #+end_src
+  
+  #+name: matrix-graph-draw-dot
+  #+headers: :file ../_img/pieces/data-struct/matrix-graph-draw.svg
+  #+headers: :tangle no :var data = matrix-graph-draw
+  #+begin_src dot :exports none
+    digraph {
+      $data
+    }
+  #+end_src
+  
+  #+RESULTS: matrix-graph-draw-dot
+  [[file:../_img/pieces/data-struct/matrix-graph-draw.svg]]
+  
+  [[{{ site.github.url }}/_img/pieces/data-struct/matrix-graph-draw.svg]]
++ 可以用邻接链表来表示图:
+
+  #+name: arc-graph
+  #+headers: :tangle no
+  #+begin_src lisp
+    (defvar *arc-graph-example*
+      '(:nodes (A B C D)
+        :arcs ((A B NIL)
+               (B C NIL)
+               (C A NIL)
+               (C D NIL))))
+  #+end_src
+
+  #+begin_html
+  <details><summary>一些辅助代码</summary>
+  #+end_html
+  
+  #+name: arc-graph-draw
+  #+begin_src lisp
+    (defun draw-arc-graph (arc-graph &key
+                                       (embedding NIL)
+                                       (headers '("layout=fdp;"
+                                                  "node [shape=\"circle\"];")))
+      "Trun ARC-GRAPH into digraph."
+      (when embedding (format t "digraph{~%"))
+      (format t "~A~%" (join headers))
+      (mapcar (lambda (node) (format t "node_~A [label=\"~A\"];~%" node node))
+              (getf arc-graph :nodes))
+      (mapcar (lambda (arcs) (format t "node_~A -> node_~A [label=\"~A\"];~%"
+                                     (first arcs) (second arcs)
+                                     (if (nth 2 arcs) (nth 2 arcs) "")))
+              (getf arc-graph :arcs))
+      (when embedding (format t "}")))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  #+name: arc-graph-example-draw
+  #+headers: :tangle no :results output
+  #+begin_src lisp :exports none
+    (draw-arc-graph *arc-graph-example*)
+  #+end_src
+
+  #+name: arc-graph-example-draw-dot
+  #+headers: :tangle no :var data = arc-graph-example-draw
+  #+headers: :file ../_img/pieces/data-struct/arc-graph-draw.svg
+  #+begin_src dot :exports none
+    digraph {
+      $data
+    }
+  #+end_src
+
+  #+RESULTS: arc-graph-example-draw-dot
+  [[file:../_img/pieces/data-struct/arc-graph-draw.svg]]
+  
+  [[{{ site.github.url }}/_img/pieces/data-struct/arc-graph-draw.svg]]
+
+#+begin_html
+<details><summary>一些辅助代码</summary>
+#+end_html
+
+读取所有的节点:
+
+#+name: graph-nodes
+#+begin_src lisp 
+  (defun nodes-of-graph (graph &key (type 'arc-graph))
+    "Find all nodes of GRAPH, in TYPE."
+    (cond ((eq type 'arc-graph)    (getf graph :nodes))
+          ((eq type 'matrix-graph) (rest (first graph)))
+          (T NIL)))
+#+end_src
+
+读取当前节点的邻接边:
+
+#+name: next-arcs
+#+begin_src lisp
+  (defun next-arcs-of (graph node &key (type 'arc-graph))
+    "Find all next arcs of NODE in GRAPH, in TYPE."
+    (cond ((eq type 'arc-graph)    (let ((arcs (getf graph :arcs)))
+                                     (remove-if-not (eq-to node) arcs :key #'first)))
+          ((eq type 'matrix-graph) (let ((header (rest (first graph)))
+                                         (filter (rest (assoc node (rest graph)))))
+                                     (loop for next in header
+                                           for weight in filter
+                                           if weight
+                                             collect (list node next weight))))
+          (T NIL)))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+** 图的历遍
+主要有两种: 深度优先和广度优先. (主要以顶点边的表示为主)
+
++ 深度优先 \(O(n + e)\), 其中 \(n\) 为节点个数, \(e\) 为边个数 (近似为 \(n^2\))
+  
+  #+name: depth-first-iter
+  #+begin_src lisp
+    (defun depth-first-iter (func graph &key
+                                          (arc-func NIL)
+                                          (start NIL)
+                                          (type 'arc-graph))
+      "Depth first iteration, apply FUNC to GRAPH nodes."
+      (let* ((nodes (copy-list (nodes-of-graph graph :type type)))
+             (begin (if start start (first nodes)))
+             (collection '()))
+        (labels ((depth-first (node)
+                   (when (find node nodes)
+                     ;; Eval node
+                     (push (funcall func node) collection)
+                     (setq nodes (remove node nodes))
+                     ;; Search next immediately
+                     (loop for arc in (next-arcs-of graph node :type type) do
+                       (progn
+                         ;; (arc-func arc back-arc?)
+                         (if arc-func (funcall arc-func arc (find (second arc) nodes)))
+                         (depth-first (second arc)))))))
+          ;; If remain nodes, keeping searching.
+          (loop while (not (null nodes))
+                do (let ((node (if (find begin nodes) begin (first nodes))))
+                     (depth-first node)))
+          collection)))
+  #+end_src
++ 广度优先
+  
+  #+name: breadth-first-iter
+  #+begin_src lisp
+    (defun breadth-first-iter (func graph &key
+                                            (arc-func NIL)
+                                            (start NIL)
+                                            (type 'arc-graph))
+      "Breadth first iteration, apply FUNC to GRAPH nodes."
+      (let* ((nodes (copy-list (nodes-of-graph graph :type type)))
+             (begin (if start start (first nodes)))
+             (collection '()))
+        (labels ((breadth-first (&rest to-search)
+                   (let ((nexts '()))
+                     ;; Next to search
+                     (loop for node in to-search
+                           if (find node nodes) do
+                             (progn
+                               ;; Eval nodes
+                               (push (funcall func node) collection)
+                               (setq nodes (remove node nodes))
+                               ;; Add next to search nodes
+                               (loop for arc in (next-arcs-of graph node :type type)
+                                     do (progn
+                                          (when arc-func
+                                            (funcall arc-func
+                                                     arc (find (second arc) nodes)))
+                                          (when (find (second arc) nodes)
+                                            (push (second arc) nexts))) )))
+                     ;; If there's nodes next to search
+                     (if nexts (apply #'breadth-first nexts)))))
+          (loop while (not (null nodes))
+                do (let ((node (if (find begin nodes) begin (first nodes))))
+                     (breadth-first node)))
+          collection)))
+  #+end_src
++ 一些应用:
+  + 历遍的边收集起来就是一个生成树 (并不是最小的)
+
+    #+name: generate-a-tree
+    #+begin_src lisp
+      (defun iter-generate-tree (graph &key
+                                         (iter #'depth-first-iter)
+                                         (type 'arc-graph))
+        "Generate a tree of GRAPH by DEPTH-FIRST-ITER or BREADTH-FIRST-ITER."
+        (let ((nodes (nodes-of-graph graph :type type))
+              (back-arcs '())
+              (arcs '()))
+          (funcall iter #'identity graph
+                   :type type
+                   :arc-func (lambda (arc back?)
+                               (if back?
+                                   (push arc arcs)
+                                   (push arc back-arcs))))
+          (values (list :nodes nodes :arcs arcs)
+                  back-arcs)))
+    #+end_src
+  + 历遍的时候遇到的返回边就是一个环
+
+    #+name: count-ring
+    #+begin_src lisp
+      (defun count-ring-of (graph &key
+                                    (iter #'depth-first-iter)
+                                    (type 'arc-graph))
+        "Count ring number of a GRAPH by DEPTH-FIRST-ITER or BREADTH-FIRST-ITER."
+        (let ((count 0))
+          (funcall iter #'identity graph
+                   :type type
+                   :arc-func (lambda (- back?)
+                               (when (not back?) (incf count))))
+          count))
+    #+end_src
+  + 可以通过历遍来判断是否是连通图 (若存在中断, 则为非连通图)
+
+** 图的生成树
+实际上关心的是最小生成树 (Prim 算法). (和 Dijkstra 算法比较类似)
+
++ 初始起点出发, 扔到 Blue Cloud 中
++ 对于从 Blue Cloud 中节点能够出发到达的新的节点,
+  选择最短的边能到的节点并加入到 Blue Cloud 中.
++ 循环直到没有剩下的节点
+
+** 图的最短路径
+*** Dijkstra 和 Floyd 算法
+**** Dijkstra
+核心是一个 Blue Cloud 的扩张和松弛边:
++ 初始将所有的节点的距离设为 \(\infty\), 而起点设为 \(0\)
++ 将起点添加到 Blue Cloud 中, 并更新邻近的节点的距离为当前节点距离加上边权重,
+  并且更新邻近的顶点的距离
++ 将最小的 (非 Blue Cloud 内的) 顶点添加到 Blue Cloud 中并重复操作. 
+  
+**** Floyd
+节点 \(i\) 到 \(j\) 之间的最短距离用 \(d_{ij}\) 表示, 则取一个中间节点 \(k\),
+那么 \(d_{ij} = d_{ik} + d_{kj}\ \mathrm{iif}\ d_{ij} < d_{ik} + d_{kj}\).
+
+#+name: floyd-shortest-length
+#+headers: :tangle no
+#+begin_src lisp
+  (defun floyd-compare (a b)
+    "Compare A and B in Floyd Algorithm."
+    (if (and a b) (< a b)                 ; a < b if
+        (if a NIL T)))                    ; a = NIL(infinity) => NIL
+
+  (defun floyd-shotest-path (graph-matrix &key
+                                            (compare #'floyd-compare))
+    "Floyd shortest path."
+    (let ((matrix (copy-list graph-matrix))
+          (max (1- (length graph-matrix))))
+      (labels ((add (a b)
+                 (if (and a b) (+ a b) NIL)))
+        (loop for mid from 1 to max do
+          (loop for start from 1 to max do
+            (loop for end from 1 to max
+                  if (funcall compare
+                              (at matrix start end)
+                              (add (at matrix start mid)
+                                   (at matrix mid start)))
+                    do (setf (at matrix start end)
+                             (add (at matrix start mid)
+
+                                  (at matrix mid start)))))))
+      matrix))
+#+end_src
+
+(注: =compare= 还有点问题, 没时间改了. )
+
+*** 拓扑序
+算法应该不只一种, 提供一种倒着数的方法: 选择没有出边的节点,
+删除节点和相邻的边并且对该节点标号, 然后循环直到节点为空.
+* 排序
++ \(O(n^2)\): 冒泡, 选择, 插入 (希尔)
++ \(O(n \log n)\): 归并, 堆, 快排
++ \(O(n+k)\): 桶 (基数)
+  
+** 内部排序
+*** 插入排序
+每次都选择未排序的部分中最符合的部分, 然后插入到排序好了的部分的前面:
+
+#+name: inseart-sort
+#+begin_src lisp
+  (defun insert-sort (lst &key
+                            (key #'identity)
+                            (compare #'<))
+    "Insert sort."
+    (labels ((iter (sorted unsort)
+               (if (null unsort)
+                   sorted
+                   (multiple-value-bind (pick rest)
+                       (select-most unsort :key key :compare compare)
+                     (iter (append sorted (list pick)) rest)))))
+      (iter '() lst)))
+#+end_src
+
+#+begin_html
+<details><summary>其中的 select-most 部分</summary>
+#+end_html
+
+#+name: select-most
+#+begin_src lisp
+  (defun select-most (lst &key
+                            (key #'identity)
+                            (compare #'<))
+    "Select the most element in LST."
+    (let ((most NIL)
+          (most-elem NIL)
+          (rest '()))
+      (loop for elem in lst do
+        (let ((value (funcall key elem)))
+          (if (not most)
+              (setq most value
+                    most-elem elem)
+              (if (funcall compare value most)
+                  (progn (push most-elem rest)
+                         (setq most value
+                               most-elem elem))
+                  (push elem rest)))))
+      (values most-elem (reverse rest))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** 快速排序
+将列表分割成大小两块, 分别进行排序.
+
+#+name: quick-sort
+#+begin_src lisp
+  (defun quick-sort (lst &key
+                           (pivot 'random)
+                           (key #'identity)
+                           (compare #'<))
+    "Quick sort."
+    (if (or (<= (length lst) 1)
+            (eq (first lst) (car (last lst))))
+        lst
+        (let ((pivot-value (pick-elem-of lst pivot)))
+          (multiple-value-bind (less greater)
+              (filter (lambda (elem)
+                        (funcall compare (funcall key elem) pivot-value))
+                      lst)
+            (append
+             (quick-sort less :pivot pivot :key key :compare compare)
+             (quick-sort greater :pivot pivot :key key :compare compare))))))
+#+end_src
+
+*** 桶排序和基数排序
+桶排序和基数排序基本差不多 (我觉得倒是很像是 Hash 表), 可以一起理解:
++ 令映射函数 \(f\) 使得 \(a_i \mapsto f(a_i)_{\mathrm{inorder}}\), 将 \(f(a_i)\) 作为索引进行重排
++ 对于整数, 显然用 \(\mathrm{id}: a_i \mapsto a_i\) 即可满足需求, 但是因为利用率不高,
+  可以将其变成 \(p\) 进制的第 \(i\) 位, 然后按位排序
++ 对于非整数, 也可以差不多这么干
+
+#+name: bucket-sort
+#+begin_src lisp
+  (defun bucket-sort (lst &key
+                            (key #'identity)
+                            (compare #'<))
+    "Bucket Sort."
+    (let ((bucket '()))
+      (labels ((add-to-bucket (elem)
+                 (let ((value (funcall key elem)))
+                   (if (assoc value bucket)
+                       (push elem (cdr (assoc value bucket)))
+                       (push (cons value (list elem)) bucket)))))
+        (loop for elem in lst do (add-to-bucket elem))
+        (apply #'append (mapcar #'rest (sort bucket compare :key #'first))))))
+#+end_src
+
+(注: 实际上应该将结果映射到一个有序紧凑的链表上的, 但是懒得写, 所以就这样吧.)
+*** 堆排序
+堆是一种完全二叉树 +记概念什么的真是麻烦+.
+
+#+begin_html
+<details><summary>关于堆的一些代码</summary>
+#+end_html
+
+假设在一个数组 (=idx= 从 0 开始) 上的堆结构, 那么应该有相对关系:
+
+#+name: heap-idx-func
+#+begin_src lisp
+  (defun heap-parent-idx (idx)
+    "Get parent idex relavent to IDX."
+    (floor (/ (1- idx) 2)))
+
+  (defun heap-left-child-idx (idx)
+    "Get left child relavent to IDX."
+    (+ (* 2 idx) 1))
+
+  (defun heap-right-child-idx (idx)
+    "Get right child relavent to IDX."
+    (+ (* 2 idx) 2))
+#+end_src
+
+于是可以有建堆过程: 
+
+#+name: make-heap
+#+begin_src lisp
+  (defmacro swap (a b)
+    "Swap A and B."
+    `(let ((temp ,a))
+       (setf ,a ,b
+             ,b temp)))
+
+  (defun make-heap-from (lst &key (compare #'<))
+    "Make heap from LST."
+    (let ((heap (copy-list lst))
+          (change-p T))
+      (loop while change-p do
+        (progn
+          (setq change-p NIL)
+          (loop for idx from 1 upto (1- (length lst)) do
+            (when (funcall compare (nth (heap-parent-idx idx) heap) (nth idx heap))
+              (setq change-p T)
+              (swap (nth idx heap) (nth (heap-parent-idx idx) heap))))))
+      heap))
+#+end_src
+
+以及输出一个好看的堆的形式:
+
+#+name: draw-heap
+#+begin_src lisp
+  (defun draw-heap (heap &key
+                           (headers '("node [shape=\"circle\"];")))
+    (format t "~A~%" (join headers))
+    (loop for idx from 0 to (1- (length heap)) do
+        (let ((node (nth idx heap))
+              (lchild (nth (heap-left-child-idx idx) heap))
+              (rchild (nth (heap-right-child-idx idx) heap)))
+          (format t "node_~A [label=\"~A\"];~%" node node)
+          (when lchild
+            (format t "node_~A -> node_~A;~%" node lchild))
+          (when rchild
+            (format t "node_~A -> node_~A;~%" node rchild)))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: heap-example
+#+headers: :tangle no
+#+begin_src lisp
+  (defvar *heap-example*
+    (make-heap-from '(6 5 3 1 8 7 2 4)))
+#+end_src
+
+#+name: heap-example-draw
+#+headers: :tangle no :results output
+#+begin_src lisp
+  (draw-heap *heap-example*)
+#+end_src
+
+#+name: heap-example-draw-dot
+#+headers: :tangle no :var data = heap-example-draw
+#+headers: :file ../_img/pieces/data-struct/heap-example.svg
+#+begin_src dot
+  digraph {
+    $data
+  }
+#+end_src
+
+#+RESULTS: heap-example-draw-dot
+[[file:../_img/pieces/data-struct/heap-example.svg]]
+
+对于一个输入:
++ 建堆 =make-heap-from=
++ 删除并输出第一个元素并将最后一个元素放到第一位, 
+  对剩下的元素进行重新建堆, 循环直到剩下的为空.
+
+#+name: heap-sort
+#+begin_src lisp
+  (defun heap-sort (lst &key (compare #'<))
+    (let ((heap (make-heap-from lst :compare compare)))
+      (if (<= (length heap) 1)
+          heap
+          (let* ((last (car (last heap)))
+                 (new-heap (cons last (subseq heap 1 (1- (length heap))))))
+            (cons (first heap) (heap-sort new-heap))))))
+#+end_src
+
+*** 归并排序
+将链表分裂成 \(n\) 个子链表, 分别排序后合并. 分别排序的方法可以是任意的排序方法.
+对于多路归并的方式, 可以使用胜者树和败者树. 
+** 外部排序
+实际上就像是归并排序. 原因是内存无法一次读取过多数据, 只能一点一点地读取
+(相当于每次只能够读取一部分的子链表). 
+
+*** \(k\) 路归并
+实际上就是核心部分了. 可以参考 [[https://en.wikipedia.org/wiki/K-way_merge_algorithm][Wikipedia]]. 对 \(k\) 路归并来说,
+败者树是一个深度 \(d = \lceil \log k \rceil + 1\) 的堆. 堆的底部连接待归并的链表.
+
+* End
+就这样吧...
