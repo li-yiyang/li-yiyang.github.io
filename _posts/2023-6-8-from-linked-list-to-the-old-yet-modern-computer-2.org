@@ -1,0 +1,547 @@
+#+layout: post
+#+title: From Linked List to the Old Yet Modern Computer [S2]
+#+date: 2023-06-22
+#+options: _:nil ^:nil
+#+math: true
+#+categories: lisp
+* About
+[[{{ site.github.url }}/_img/lisp/from-linked-list/from-linked-list-to-the-old-yet-modern-computer.png]]
+
+本文为 From Linked List to the Old Yet Modern Computer 的第二篇.
+前一篇 [[{{ site.github.url }}/lisp/from-linked-list-to-the-old-yet-modern-computer/][From Linked List to the Old Yet Modern Computer [S1]​]] 主要介绍的是链表结构,
+以及链表结构的解析.
+
+* Chapter 2: All the Laws -- Eval & Apply
+一个比较有意思的词叫做 *bootstrap*. 不过和那个火爆的 CSS 框架 [[https://getbootstrap.com][Bootstrap]] 不同,
+不妨抄一抄 Oxford 字典 (来自 macOS 自带的词典) 里面的定义:
+
+#+begin_quote
+/bootstrap/ /| ˈbuːtstrap |/
+
+*verb* [with object]
+1. get (oneself or something) into or out of a situation using existing resources:
+   the company is bootstrapping itself out of a marred financial past.
+   + start up (an internet-based business or other enterprise) with minimal
+     financial resources.
+2. Computing fuller form of boot1 (sense 2 of the verb).
+
+*PHRASES*
+
+*pull oneself up by one's bootstraps* (also drag oneself up by one's bootstraps)
+improve one's position by one's own efforts.
+#+end_quote
+
+其中的这个短语 (phrases) 就非常形象地表示了这个词: 拉着自己的脚飞上天 (云梯纵).
+尽管这个听起来可能非常反直觉, 但是事实上, 这样的操作未尝不是一种可能的事情.
+
+#+begin_html
+<details><summary>是否可能? 一个简单的解释</summary>
+#+end_html
+
+不过首先, 我要说的是, 我并不了解这部分的知识.
+
+但是这为何不可以呢? 比如一个常见的问题就是: 编译器是从哪里来的?
+或者说, 编译器是用什么语言来写的. 然而答案大多数时候都比较微妙,
+(如果你不曾知道这个问题的答案的话).
+
+大部分的编译器是用自己的语言来写的. 比如 [[http://www.sbcl.org][SBCL]] (Common Lisp)
+的编译器就是 Common Lisp 来写的 (于是如果你要 build-from-source 的话,
+你至少需要一个 Common Lisp 发行版). 尽管听起来挺奇怪,
+但是事实确实就是这样的. 那么最早的 Lisp 需要用什么来写呢?
+答案是可以用别的语言 (甚至是直接汇编) 来写一个最小的简化版本的编译器,
+然后在这个简化版本的基础上, 构建一个新的用 Lisp 写的编译器,
+然后用这个新的编译器来编译自己. 于是就左脚踩右脚, 上天了.
+
+那么解释型语言总不能是这样了吧. 比如 Python, 但是, 坏, 有一个叫做 [[https://www.pypy.org][pypy]] 的该死的东西.
+(并且实际上, 尽管 Lisp 也是个解释型的语言, 但是它在很早的时候就引入了即时编译,
+然后执行的一个思路. ([[https://en.wikipedia.org/wiki/Just-in-time_compilation][JIT]] Just-In-Time Compilation), 一个比较有意思的例子:
+[[https://clasp-developers.github.io][Clasp]], 一个建立在 LLVM 基础上的 Common Lisp 的实现). 
+
+那么带虚拟机的解释型语言总不会是这样了吧? 就算你编译, 也是编译到 [[https://en.wikipedia.org/wiki/Java_virtual_machine][JVM]] 的字节码上,
+那么 JVM 的运行时 (比如 [[https://github.com/openjdk/jdk][OpenJDK]]) 总不能是 Java 写的了吧? 还, 真, 不是.
+
+理论上来说, 任何图灵完备的系统都应该有能力表示一个与之等价的一个图灵完备的系统.
+(只是这样是否合理罢了.)
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+<details><summary>一个无关又挺有关的注释</summary>
+#+end_html
+
+不过一个尴尬的事情就是这个词感觉基本上完全被 "滥用" 了,
+因为确实这个概念挺好的. 但是各种地方, 各种问题面对和应用的 "bootstrap",
+实际上会有一些微妙的 (甚至是完全) 不同的东西.
+
+这就让我查资料的时候就比较难受了, 毕竟我作为一个小白, 查资料的时候,
+只能输入一些非常模糊的关键词, 然后面对一堆花里胡哨的结果, 头大...
+
+比如在高能物理里面 (参考 [[https://www-conf.slac.stanford.edu/statisticalissues2012/talks%5Cluc.demortier.pdf][The Parametric Bootstrap and Particle Physics]])
+为了处理数据 (因为需要考虑的参数过多没法猜出来,
+所以需要用一些手段来剔除那些不感兴趣的无关参数).
+但是可能这样可能不容易用一种方法来实现, 所以 bootstrap 的方法就被引入了.
+目标是为了提供一种可追踪的数值方法来逼近一个精确的解:
+
+#+begin_quote
+An important point is that, subject to mild conditions, [a parameter of interest]
+can be the output of an algorithm of almost arbitrary complexity, shattering the
+naive notion that a parameter is a Greek letter appearing in a probability
+distribution and showing the possibilities for uncertainty analysis for the complex
+procedures now in daily use, but at the frontiers of the imagination a quarter of
+a century ago.
+
+[Davison, A.C., Hinkley, D.V., and Young, G.A. (2003)]
+#+end_quote
+
+但是还有另外一种 "bootstrap", 虽然应该叫做 [[https://www.sciencedirect.com/science/article/abs/pii/0168900284900044][two-beam accelerator]].
+通过两个粒子束团来相互加速 (这个一开始在原子物理课上介绍的时候确实很震惊).
+(不过具体的原理还没怎么仔细看就是了)
+
+那么还有什么呢? 还有就是在计算分析的时候用一个初始值去试探,
+然后多次自迭代得到更加精确的解. 
+
+那么还有什么呢? 比如在电路里面的通过弱电流自激发产生一个强信号...
+
+那么还有什么呢? 比如接下来要介绍的一种我建立在我的基础上的一个巧妙的故事.
+
+#+begin_html
+</details>
+#+end_html
+
+没错, 接下来的故事就是一个对这种 "云梯纵" 行为的一个解释.
+
+** Minimum Laws
+假如你还记得在 [[{{ site.github.url }}/lisp/from-linked-list-to-the-old-yet-modern-computer/][前一部分]] 里面介绍的几个基本函数的话:
++ \(\mathrm{cons}[a, b] = (a . b)\)
++ \(\mathrm{car}[(a . b)] = a\)
++ \(\mathrm{cdr}[(a . b)] = b\)
++ \(\mathrm{atom}[e]\) 是否为 ATOM 元素
++ \(\mathrm{eq}[x, y]\) 两个 ATOM 是否相等
++ \(\mathrm{cond}[p_1 \rightarrow e_1, \cdots, p_n \rightarrow e_n]\)
+
+以及如果还记得在前一部分里面介绍的链表和链表的形式记号的话:
+
+#+begin_src ebnf
+  EXPR = LIST | ATOM;
+  LIST = '(' EXPR+ ')'; # Also, LIST in CONS: ( EXPR . ( EXPR . NIL ) );
+#+end_src
+
+那么显然, 你应该还记得 \(\mathrm{equal}\), \(\mathrm{subst}\) 这两个通过基本函数构造的函数.
+以及能够理解逻辑运算是如何和前面的函数进行对应的吧. 
+
+所以为了偷懒起见, 我就不抄了. 
+
+** Simple Data Structure Under the Law
+使用最基本的函数, 我们已经可以构建一些除了最基本链表以外的数据结构了.
+比如可以构建一个 [[https://en.wikipedia.org/wiki/Associative_entity][Association Table]] 了:
+
+比如一个简单的表如下:
+
+#+begin_src lisp
+  ;;; This is a IO_LOC association table.
+  ((clk . 52)
+   (led . (10 11 13 14 15 16)))
+#+end_src
+
+于是我们如果想要去查询一个叫做 =clk= 字段的一个数据,
+于是即可构建一个查表函数:
+
+\[\mathrm{assoc}[x, y] = \mathrm{cond} \left[ \begin{matrix} \mathrm{null}[y] & \rightarrow & NIL \\\\\mathrm{eq}[x, \mathrm{caar}[y]] & \rightarrow & \mathrm{cdar}[y]\\\\ T & \rightarrow & \mathrm{assoc}[x, \mathrm{cdr}[y]] \end{matrix} \right]\]
+
+其中 \(\mathrm{caar}[y] = \mathrm{car}[\mathrm{car}[y]]\), \(\mathrm{cdar}[y] = \mathrm{cdr}[\mathrm{car}[y]]\), 是一种缩写.
+\(\mathrm{null}[y] = \mathrm{atom}[y] \wedge \mathrm{eq}[y, NIL]\) 是一种简单的记号. 
+
+#+begin_html
+<details><summary>一些小注记</summary>
+#+end_html
+
+和 "[[http://jmc.stanford.edu/articles/recursive/recursive.pdf][那篇论文]]" 中不同的是, 这里加入了一个查不到的检查.
+并且下面的大部分的内容都不一定和原文是一致的. 
+
+当然, 数据结构的实现肯定不只有这样一种, 使用链表能够实现的数据结构非常的多,
+这我也不必多说了吧... (比如可以看看 [[{{ site.github.url }}/notes/data-structure-end/][数据结构 [期末]​]])
+
+#+begin_html
+</details>
+#+end_html
+
+显然, 查表, 写表都是比较重要的事情是吧. (CRUD Create, Read, Update, Delete).
+比如替换表 \(z\) 中 \(x\) 键对应的值为 \(y\). 
+
+\[\mathrm{setq}[x, y, z] = \mathrm{cond}\left[ \begin{matrix} \mathrm{null}[z] & \rightarrow & \mathrm{list}[\mathrm{cons}[x, y]]\\\\ \mathrm{eq}[x, \mathrm{caar}[y]] & \rightarrow & \mathrm{cons}[\mathrm{cons}[x, y], \mathrm{cdr}[z]]\\\\ T & \rightarrow & \mathrm{cons}[\mathrm{car}[z], \mathrm{sublis}[x, y, \mathrm{cdr}[z]]] \end{matrix}\right]\]
+
+其中 \(\mathrm{list}[a_1, a_2, \dots, a_n \leftrightarrow a] = a\). 
+不过这里有一个小小的记号上的说明, 这里的 \(\mathrm{list}\) 是一个可以接受任意数量的一个函数,
+并且会将接收到的任意的数量的参数都用一个参数 \(a\) 来进行表示.
+(当然, 这里可能会看起来不太能够用原本的那几个函数来表示,
+不过在之后会用一个更加妙的方式来进行一个说明, 这里就不妨看作是一种我为了偷懒,
+所以引入的一种记号吧: \(\mathrm{list}[a_1] = \mathrm{cons}[a_1, NIL]\). )
+
+#+begin_html
+<details><summary>一些小小注记</summary>
+#+end_html
+
+显然, 会发现这些操作有一些非常类似的一个框架:
+iteration-until-found (历遍直到条件满足).
+
+于是可以将上面的操作看作是一种特殊函数:
+
+\[\mathrm{map}[f, x] = \mathrm{cond} \left[ \begin{matrix} \mathrm{null}[x] & \rightarrow & NIL \\\\ T & \rightarrow & \mathrm{cons}[f[\mathrm{car}[x]], \mathrm{map}[f, \mathrm{cdr}[x]]] \end{matrix} \right]\]
+
+其中 \(f\) 为一个函数. 没错, 这个 [[https://en.wikipedia.org/wiki/Map_(higher-order_function)][map]] 函数就是一个函数式编程里面会经常看到的东西.
+(不过遗憾的是, 我并没有找到一个准确的 map 函数的来源的说明. )
+
+比如说, 接下来介绍的 [[https://en.wikipedia.org/wiki/Fold_(higher-order_function)][reduce]] 函数, 就可能来自 [[https://en.wikipedia.org/wiki/APL_(programming_language)][APL]] 语言的 reduce 的函数.
+
+\[\mathrm{reduce}[f, x] = \mathrm{reduce2}[f, \mathrm{cdr}[x], \mathrm{car}[x]]\]
+
+其中:
+
+\[\mathrm{reduce2}[f, x, z] = \mathrm{cond} \left[ \begin{matrix} \mathrm{null}[x] & \rightarrow & z \\\\ T & \rightarrow & f[ \mathrm{car}[x], \mathrm{reduce2}[f, \mathrm{cdr}[x], z]] \end{matrix} \right]\]
+
+#+begin_html
+<details><summary>关于一个匿名函数的一个小小说明</summary>
+#+end_html
+
+那么这里可能还是有一个问题, 这个 \(\mathrm{reduce2}\) 函数, 很可能只是一个临时函数,
+这个函数除了在 \(\mathrm{reduce}\) 函数中会用到, 其他任何地方我们可能都不太希望它出现,
+所以我们会希望增加一种功能, 使得其能够仅仅在某个空间 (scope, namespace) 里面生效. 
+
+这样的局部函数, 往往在程序里面会有一种叫做匿名函数的方式来进行实现,
+而往往, 这样的函数会被叫做 lambda 函数. (尽管这样的并不是啥靠谱的 lambda).
+
+比如说这里来一个例子, 在上面的 \(\mathrm{map}[f, x]\) 函数里面. 如果想要一些自定义的 \(f\) 规则,
+比如说现在的 \(x\) 为一个 association table, 现在想要得到所有的键 (key),
+并且将键施加一个新的函数 \(g\):
+
+\[\mathrm{map}[\mathrm{lambda}[(\mathrm{pair}), g[\mathrm{car}[\mathrm{pair}]]], x]\]
+
+其中的 \(\mathrm{lambda}[(args), expr]\) 为一个匿名函数 (lambda 表达式) 的形式.
+但是如果想要写出可以递归的匿名函数呢? 那么该如何是好? 在数学里面,
+\(\lambda\) 表达式中有一个叫做 Y-combiner 的操作, 表示可以用其进行递归其本身.
+
+比如在 MIT 的 [[https://en.wikipedia.org/wiki/Knights_of_the_Lambda_Calculus][Knight of the Lambda Calculus]] 标志中, 就有一个类似的标记:
+
+[[{{ site.github.url }}/_img/lisp/from-linked-list/knight-of-lambda-calculus.png]]
+
+其中的 Y 就是一个 Y-combiner 的递归操作. (一个梗就是在 [[https://www.nbcuni.co.jp/rondorobe/anime/lain/][Lain]] 里面的骑士团,
+就是致敬了 Knight of the Lambda Calculus.)
+
+然而在实际编程里面, 这么搞还挺麻烦的.
+所以一个 tricky 的方式就是在定义 lambda 表达式的时候,
+给它附加一个名字, 使得其能够通过名字来找到自己.
+然而这个名字又仅仅只是一个局部的名字, 所以这仍然是一个局部的函数.
+
+这就是 \(\mathrm{label}\) 的作用. 比如上面的 \(\mathrm{reduce}\) 函数可以被重新写成:
+
+\[\mathrm{reduce}[f, x] = \mathrm{label}\left[\mathrm{reduce2}, \mathrm{cond} \left[ \begin{matrix} \mathrm{null}[x] & \rightarrow & z \\\\ T & \rightarrow & f[ \mathrm{car}[x], \mathrm{reduce2}[f, \mathrm{cdr}[x], z]] \end{matrix} \right] \right][f, \mathrm{cdr}[x], \mathrm{car}[x]]\]
+
+如果想要跟进一步了解 \(\mathrm{label}\) 的原理和局部的一个概念,
+那么就需要了解所谓的命名空间了. 这样的话, 可以在之后进行介绍. 
+
+#+begin_html
+</details>
+#+end_html
+
+这个函数有什么作用呢? 我的想法是, 这样的话可以用这种方式来构建一个 \(\mathrm{list}\) 函数:
+
+\[\mathrm{list}[a_1, a_2, \dots, a_n \leftrightarrow a] = \mathrm{reduce2}[\mathrm{cons}, a, NIL]\]
+
+(那么该如何做到这个 \(\leftrightarrow\) 的操作呢? 之后再说.)
+
+#+begin_html
+</details>
+#+end_html
+
+实际上我觉得到了这里之后就应该差不多了, 再写下去就会有一种垃圾编程教材的感觉了.
+
+** Expression of Function
+那么这里做一个无聊的小操作, 如果将函数的形式从 \(\mathrm{f}[(args)]\)
+表示为 =(f . args)= 这样的形式.
+
+为什么会有这样的想法? 这里我觉得是一个非常妙的一个思路:
+过程也是数据, 数据也是过程. 
+
++什么色既是空, 空既是色+
+
+既然计算的过程现在变成了数据, 那么我们就不难用操作数据的方式来去操作过程 (代码).
+比如此刻我们读到了一个表达式:
+
+#+begin_src lisp
+  (assoc key table)                       ; Find KEY in TABLE
+#+end_src
+
+那么我们可能会将其当作一个 \(\mathrm{assoc}[\mathrm{key}, \mathrm{table}]\) 这样的一个形式.
+那么是否会有一个形式化的方式来将数据和代码进行一个对应呢?
+答案是, 可以的:
+
+\[\mathrm{eval}[e, a] = \mathrm{cond} \left[ \begin{matrix}\mathrm{atom}[e] & \rightarrow & \mathrm{assoc}[e, a] \\\\\mathrm{atom}[\mathrm{car}[e]] & \rightarrow & \mathrm{cond} \left[ \begin{matrix}                          \mathrm{eq}[\mathrm{car}, \mathrm{QUOTE}] & \rightarrow & \mathrm{cadr}[e] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{ATOM}] & \rightarrow & \mathrm{atom}[\mathrm{eval}[\mathrm{cadr}[e], a]] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{EQ}] & \rightarrow & \mathrm{eq}[\mathrm{eval}[\mathrm{cadr}[e], a], \mathrm{eval}[\mathrm{caddr}[e], a]] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{COND}] & \rightarrow & \mathrm{evcon}[\mathrm{cdr}[e], a] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{CDR}] & \rightarrow & \mathrm{cdr}[\mathrm{eval}[\mathrm{cadr}[e], a]] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{CAR}] & \rightarrow & \mathrm{car}[\mathrm{eval}[\mathrm{cadr}[e], a]] \\\\                          \mathrm{eq}[\mathrm{car}, \mathrm{CONS}] & \rightarrow & \mathrm{cons}[\mathrm{eval}[\mathrm{cadr}[e], a], \mathrm{eval}[\mathrm{caddr}[e], a]] \\\\                          T & \rightarrow & \mathrm{eval}[\mathrm{cons}[\mathrm{eval}[\mathrm{car}[e], a], \mathrm{evlis}[\mathrm{cdr}[e], a]], a]                          \end{matrix} \right]\\\\\mathrm{eq}[\mathrm{caar}[e], \mathrm{LABEL}] & \rightarrow & \mathrm{eval}[\mathrm{cons}[\mathrm{caddr}[e], \mathrm{cdr}[e]], \mathrm{cons}[\mathrm{list}[\mathrm{cadar}[e], \mathrm{car}[e]], a]]\\\\\mathrm{eq}[\mathrm{caar}[e], \mathrm{LAMBDA}] & \rightarrow & \mathrm{eval}[\mathrm{caddar}[e], \mathrm{append}[\mathrm{pair}[\mathrm{cadar}[e], \mathrm{evlis}[\mathrm{cdr}[e], a], a]]]\end{matrix} \right]\]
+
+反正应该是不太能一下子 get 到点的吧, 那么请听我分解:
++ 其中 \(\mathrm{eval}[e, a]\) 中, \(e\) 表示 expression (表达式), 也就是我们的代码,
+  而 \(a\) 表示 around (环境, 命名空间之类的, 英文是我瞎掰的), 也就是一些信息储存的空间.
+
+  比如说, 在各种计算机编程里面, 往往会有一个赋值的过程,
+  那么这些赋值的过程就像是往信息储存的空间里面添加 (修改) 名字和对应的值.
+
+  其中对于需要进行添加扩展命名空间的操作, 这里使用的是 \(\mathrm{cons}\) 的操作,
+  尽管可能看起来这样的计算好像是每一次计算都要进行一次链表传参,
+  好像会导致空间的浪费, 实际上只要传入一个指向链表的指针即可.
+  (并且在抛弃的时候也可以有比较好的抛弃策略, 甚至之后的垃圾回收都是建立在链表的基础上的,
+  不过这里仍然是抽象地介绍, 所以就不细化介绍了.)
++ \(\mathrm{atom}[e] \rightarrow \mathrm{assoc}[e, a]\) 对于表达式是一个符号的情况时,
+  那么就会在 association 表 (命名空间) 中去查找符号对应的值.
++ \(\mathrm{atom}[\mathrm{car}[e]] \rightarrow\), 这个时候, 对应的是 =(SYM . ARGS)= 这样的类型 (下用 =SYM= 表示 \(\mathrm{car}[e]\)):
+  + 若 =SYM= 为 =QUOTE= 符号, 这个符号表示接下来的所有的内容都会被作为字面量 (literal value),
+    即会将 =(QUOTE A)= 作为原原本本的符号来进行使用, 而不会将其作为一个查值表的形式.
+
+    同理, =(QUOTE (A B))= 最终会得到 =(A B)=, 所以不难看出, 规则就是将表达式映射为 =(cadr e)=.
+  + 若 =SYM= 为 =ATOM= 符号, 则会将结果变成对 =ARG= 的一个 =(atom ARG)= 的判断,
+    其中的 =ARG= 是 =atom= 函数根据其所需要的参数从 =ARGS= 中取得的元素,
+    并且还需要进行一次求值: 比如说 =(atom (cons (quote A) (quote B)))= 就相当于是
+    =(atom '(A . B))= 这样的一个表达式 (这里用了 Lisp 的记号了). 
+    同理 =EQ=, =COND=, =CDR=, =CAR=, =CONS= 都是同理的.
+  + 若 =SYM= 并非上面的所有的符号, 那么认为其应当是一个在 association 表中的符号,
+    其功能应当由其在表中的值所定义.
++ \(\mathrm{eq}[\mathrm{caar}[e], \mathrm{LAMBDA}]\), 这个时候, 对应的是 =((lambda ARGS BODY) . ARGS)= 的形式,
+  比如 =((lambda (x) (+ x 1)) 2)= 这样的形式. 于是在计算的时候,
+  相当于是将实参和形参进行一一绑定然后添加到符号表中, 然后去计算 =BODY= 部分.
++ \(\mathrm{eq}[\mathrm{caar}[e], \mathrm{LABEL}]\), 这个时候, 对应的是 =((label SYM ARGS BODY) . ARGS)= 的形式.
+  比如 =((label fib (x) (...)) 2)= 这样的形式. 于是其就会将 =SYM= 添加到符号表中,
+  然后去执行 =BODY= 的内容.
++ 当然, 这里的东西可能看起来好像并没法计算很多的东西, 比如加法, 减法, 各种数值操作,
+  等等的东西都看起来是无法实现的. 但是在之后 (S3), 我想应该会介绍关于 \(\lambda\) 的故事,
+  来说明实际上建立在 \(\lambda\) 演算基础上的计算系统, 实际上是可以实现我们的 "任何" 愿望的.
+
+  不过 \(\lambda\) 演算可能听起来太过学术化了, 实际上在当时 IBM 704 机上面,
+  也基本不会想要使用 \(\lambda\) 计算来表示数这样的奢侈操作... (不过作为玩具,
+  之后的仍然会以 \(\lambda\) 为主要的计算模型.) 为了能够支持一些比较底层的计算,
+  实际上可以在 \(\mathrm{atom}[\mathrm{car}[e]]\) 的条件判断模型中进行一个拓展.
+  比如在 IBM 704 机上就实现了 =PRINT=, 数值运算等的操作. 
+
+当然, 如果您是一位严格主义者, 您也许断然无法接受一个粗陋的解释器作为 bootstrap 的实现.
+毕竟这样的解释器不还是建立在一些 \(\mathrm{atom}[e]\) 这样的函数之上吗? 确实如此, 但是还请再给我一些时间,
+在之后会慢慢介绍 +实际上是还没学到那一步+
+
+当然, 如果仅仅是一个玩具模型的话, 实际上非常的容易实现的...
+诸君大可前去嘲讽我在之前实现的 [[{{ site.github.url }}/ruby/ri-lang/][玩具编译器]].
+其中没有垃圾回收也没有编译优化, 完全就是一个无聊的小程序.
+显然这样的东西是不可行的, 所以我会在之后先介绍一个玩具,
+再介绍一个实际一些的. +坑都挖好了, 之后再慢慢填吧...+
+
+#+begin_html
+<details><summary>一个小小的历史故事</summary>
+#+end_html
+
+正如 bootstrap 这个概念一开始听起来就很离谱 (大家都认为自己拉自己上天,
+就像是印度的神棍口中会说出来的鬼话). 一开始 McCarthy
+认为自己论文里面的 \(\mathrm{eval}\) 仍然会是一个 M-expression (即 \(\mathrm{eval}[e]\) 的东西),
+并且认为这是不可能通过 Lisp 本身来进行构造的.
+
+然后?
+
+然后就被打脸了.
+
+#+begin_quote
+Steve Russell said, look, why don't I program this eval ... and I said to him,
+ho, ho, you're confusing theory with practice, this eval is intended for reading,
+not for computing. But he went ahead and did it. That is, he compiled the eval in
+my paper into IBM 704 machine code, fixing bugs, and then advertised this as a
+Lisp interpreter, which it certainly was. So at that point Lisp had essentially the
+form that it has today ...
+
+[[https://en.wikipedia.org/wiki/Lisp_(programming_language)][from Wikipedia]]
+#+end_quote
+
+(更多小历史, 请看 [[https://dl.acm.org/doi/10.1145/800055.802047][Early LISP history (1956 - 1959)]])
+
+#+begin_html
+</details>
+#+end_html
+
+** Some Codes for Explanation
+:PROPERTIES:
+:header-args: :tangle ../_img/lisp/from-linked-list/simple-eval.lisp
+:END:
+#+begin_html
+<details><summary>倘若你觉得只有理论没有代码有些难受...</summary>
+#+end_html
+
+注: 实际上并没有按照论文里面的做法就是了. 
+
+#+name: defpackage
+#+begin_src lisp
+  (defpackage :simple-eval
+    (:use :cl))
+
+  (in-package :simple-eval)
+#+end_src
+
+以下是一个简单的 =eval= 实现:
+
+#+name: simple-eval
+#+begin_src lisp
+  (defun simple-eval (expr binding)
+    "Simple EVAL function."
+    (cond ((atom expr)              (if (numberp expr)
+                                        expr
+                                        (cdr (assoc expr  binding))))
+          ((atom (car expr))        (eval-rule   (car expr)
+                                                 (cdr expr)
+                                                 binding))
+          ((eq (caar expr) 'lambda) (eval-lambda (car expr)
+                                                 (mapcar (simple-eval-at binding)
+                                                         (cdr expr))
+                                                 binding))
+          ((eq (caar expr) 'label)  (eval-label   (car expr)
+                                                  (mapcar (simple-eval-at binding)
+                                                          (cdr expr))
+                                                  binding))))
+#+end_src
+
+显然, 就是根据不同的类型来进行一个不同的操作. 注意到这里 =(atom expr)= 这里,
+我加了一个数字的判断来方便一些简单的数字计算, 请理解这一可能看起来有些超过 "标准模型" 的操作,
+这不过是为了方便之后能够用一些简单的记号来进行验证而已.
+
+(在 \(\lambda\) 计算的部分中, 会证明只用 \(\lambda\) 演算也可以替换实际的数字. 不过那估计要好多好麻烦的操作了,
+这里为了快速完结这部分, 所以我就会快速地跳过了. )
+
+其中的 =simple-eval-at= 函数是一个为了帮助我快速写 lambda 函数的一个帮助函数,
+并没有多少特别的意思.
+
+#+name: simple-eval-at
+#+begin_src lisp
+  (defun simple-eval-at (binding)
+    "Helper function for making SIMPLE-EVAL function."
+    (lambda (expr) (simple-eval expr binding)))
+#+end_src
+
+其中 =eval-rule= 即对应 \(\mathrm{atom}[\mathrm{car}[e]]\) 的情况:
+
+#+name: eval-rule
+#+begin_src lisp
+  (defun eval-rule (sym args binding)
+    (cond ((eq sym 'quote) (first args))
+          ((eq sym 'atom)  (atom (simple-eval (first args) binding)))
+          ((eq sym 'eq)    (eq (simple-eval (first args)  binding)
+                               (simple-eval (second args) binding)))
+          ((eq sym 'cond)  (eval-cond args binding))
+          ((eq sym 'cdr)   (cdr (simple-eval (first args) binding)))
+          ((eq sym 'cons)  (cons (simple-eval (first args)  binding)
+                                 (simple-eval (second args) binding)))
+          ;; Additional Functions, these are just for easy valiation.
+          ((eq sym 'add)   (reduce (lambda (sum inc) (+ sum (simple-eval inc binding)))
+                                   args :initial-value 0))
+          ((eq sym 'sub)   (reduce (lambda (sum inc) (- sum (simple-eval inc binding)))
+                                   (rest args)
+                                   :initial-value (simple-eval (first args) binding)))
+          ((eq sym 'mul)   (reduce (lambda (sum inc) (* sum (simple-eval inc binding)))
+                                   args :initial-value 1))
+          ((eq sym 'div)   (reduce (lambda (sum inc) (/ sum (simple-eval inc binding)))
+                                   (rest args)
+                                   :initial-value (simple-eval (first args) binding)))
+          ((eq sym 'less)  (< (simple-eval (first  args) binding)
+                              (simple-eval (second args) binding)))
+          ;; For those not in matched rules, they shall be found in the binding.
+          (T (simple-eval (cons (simple-eval sym binding) args) binding))))
+#+end_src
+
+(当然, 这里的这个程序是非常简陋的, 没有检查, 没有报错之类的.
+并且也会出现命名域冲突的一些小问题 +不过如果当作特性的话就不算是小问题了+)
+
+#+begin_html
+<details><summary>命名域冲突? </summary>
+#+end_html
+
+这个举一个例子, 在 Python 里面, 你可以令一个变量为一个函数:
+
+#+begin_src python :tangle no
+  p = print
+  p("Hello")                      # shall print Hello
+#+end_src
+
+但是你也可以给 =print= 赋值, 如 =print = 233=,
+然后这个时候你就没法调用 =print(...)= 了.
+
+在 Ruby 里面这个问题通过一个语法的筛选进行了处理,
+认为在函数调用的时候, 如 =print("Hello")= 的 =print= 是方法,
+而 =print * 2= 的 =print= 是变量.
+
+#+begin_src ruby :tangle no
+  print = "2"
+  print * 2                       # => "22"
+  print("222")                    # print 222 => nil
+#+end_src
+
+但是一个坑爹的地方在于, Ruby 引入了一个虽然很棒但是容易产生歧异的语法糖:
+即在没有歧异的情况下, 可以省略函数调用的括号. =print "222"=,
+或者是像 =exit= 这样的甚至是无参数调用的函数. 嗯, 这个就比较坑爹了.
+
+不过我也不是啥专业人员, 谈不上好坏. 就不多发表言论了. (逃)
+
+在 Scheme 和 Common Lisp 里面也是这样的, 经常会在写 Common Lisp 的时候,
+会把 =#'method= 和直接传入引用的 lambda 函数搞混. 并且也没法像 Scheme
+那样直接写 =((lambda (x) ...) ...)= 这样简单 +粗暴+ 优雅的代码. 
+
+#+begin_html
+</details>
+#+end_html
+
+其中 =eval-cond= 的逻辑定义: (和 =assoc= 函数的定义实际上非常的像, 都是递归查找的方式).
+
+#+name: eval-cond
+#+begin_src lisp
+  (defun eval-cond (conditions binding)
+    "Eval condition test for ((p1 e1) (p2 e2) ...) with BINDING."
+    (if (null conditions)
+        NIL
+        (let ((pairs (first conditions)))
+          (if (simple-eval (first pairs) binding)
+              (simple-eval (second pairs) binding)
+              (eval-cond (rest conditions) binding)))))  
+#+end_src
+
+以及 =eval-lambda= 和 =eval-label=:
+
+Lambda 表达式在这里其实非常的简单: 替换表达式中的形参为实参, 得到最终的结果.
+
+#+name: eval-lambda
+#+begin_src lisp
+  (defun eval-lambda (lambda-expr args binding)
+    (let ((formal-args (second lambda-expr))
+          (body        (third  lambda-expr)))
+      (simple-eval body (append (mapcar #'cons formal-args args) binding))))
+#+end_src
+
+label 的操作也同理, 只不过在命名域中添加了一个符号来指向自己而已.
+
+#+name: eval-label
+#+begin_src lisp
+  (defun eval-label (label-expr args binding)
+    (let ((sym         (second label-expr))
+          (formal-args (third  label-expr))
+          (body        (fourth label-expr)))
+      (simple-eval body
+                   (append (mapcar #'cons formal-args args)
+                           (list (cons sym `(lambda ,formal-args ,body)))
+                           binding))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+最终的代码可以在 [[{{ site.github.url }}/_img/lisp/from-linked-list/simple-eval.lisp][这里]] 下载到.
+
+* End
+实际上这个部分我觉得写得还是比较水的. 因为我写完之后发现自己忘了写一些测试,
+以及一些更加具体的代码, 实际上最终的代码就是一个花里胡哨的一个没啥鸟用的东西,
+离成品距离很远.
+
+并且这里还少了很多好玩的东西 (比如前面的一些历史和小故事), 只能说做得水了点.
+之后的会尽量保证历史和一些拓展性的... 
+
+* COMMENT LocalWords
+#  LocalWords:  Eval JVM eval
