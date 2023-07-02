@@ -1,0 +1,758 @@
+#+layout: post
+#+title: 电动力学 [期末]
+#+date: 2023-07-02
+#+options: _:nil ^:nil
+#+math: true
+#+categories: notes
+* About
+** 要背的公式
++ 矢量分析公式
++ Maxwell 方程
+
+  \[\left\{\begin{matrix} \nabla \times \boldsymbol{E} & = & - \frac{\partial \boldsymbol{B}}{\partial t}\\\\\nabla \times \boldsymbol{H} & = & \frac{\partial \boldsymbol{D}}{\partial t} + \boldsymbol{J}\\\\ \nabla \cdot \boldsymbol{D} & = & \rho\\\\\nabla \cdot \boldsymbol{B} & = & 0\end{matrix}\right.\]
+
+  边值关系
+
+  \[\left\{\begin{matrix} \boldsymbol{e}_n \times (\boldsymbol{E}_2 - \boldsymbol{E}_1) & = & 0 \\\\ \boldsymbol{e}_n \times (\boldsymbol{H}_2 - \boldsymbol{H}_1) & = & \alpha \\\\ \boldsymbol{e}_n \cdot (\boldsymbol{D}_2 - \boldsymbol{D}_1) & = & \sigma \\\\ \boldsymbol{e}_n \cdot (\boldsymbol{B}_2 - \boldsymbol{B}_1) & = & 0 \end{matrix}\right.\]
++ d'Alembert 方程
+
+  \[\begin{matrix} \nabla^2 \boldsymbol{A} - \frac{1}{c^2} \partial_t^2 \boldsymbol{A} & = & - \mu_0 \boldsymbol{J} \\\\ \nabla^2 \varphi - \frac{1}{c^2} \partial_t^2 \varphi & = & 0 \end{matrix} \qquad \nabla \cdot \boldsymbol{A} + \frac{1}{c^2} \partial_t \varphi = 0\]
++ 散射折射系数
+  + \(\boldsymbol{E}_{\bot}\) 垂直分量
+
+    \[R = \frac{E'}{E} = \frac{\sqrt{\varepsilon_1} \cos \theta - \sqrt{\varepsilon_2} \cos \theta''}{\sqrt{\varepsilon_1} \cos \theta + \sqrt{\varepsilon_2} \cos \theta''} = - \frac{\sin (\theta - \theta'')}{\sin (\theta + \theta'')}\]
+    
+    \[T = \frac{E''}{E} = \frac{2 \sqrt{\varepsilon_1} \cos \theta}{\sqrt{\varepsilon_1} \cos \theta + \sqrt{\varepsilon_2} \cos \theta''} = \frac{2 \cos \theta \sin \theta''}{\sin(\theta + \theta'')}\]
+
+  + \(\boldsymbol{E}_{\parallel}\) 平行分量
+
+    \[R = \frac{E'}{E} = \frac{\tan(\theta - \theta'')}{\tan(\theta + \theta'')}\]
+    
+    \[T = \frac{E''}{E} = \frac{2 \cos \theta \sin \theta''}{\sin(\theta + \theta'') \cos(\theta - \theta'')}\]
+  + 全反射 \(\sin \theta > n_{21}\)
+
+    透入深度 \(\kappa^{-1} = \frac{1}{k \sqrt{\sin^2 \theta - n_{21}^2}}\)
+
+    导体的透入深度 \(\delta = \frac{1}{\alpha} = \sqrt{\frac{2}{\omega \mu \sigma}}\)
++ 谐振腔 \(\frac{n \pi}{L}\)
+  
+  波导, 波模截止频率 \(\omega = \frac{\pi}{\sqrt{\mu \varepsilon}} \sqrt{(\frac{m}{a})^2 + (\frac{n}{b})^2}\)
++ 电偶极辐射
+  + 电偶极子 \(\boldsymbol{p} = q \boldsymbol{l}\), 磁偶极子 \(\boldsymbol{m} = \frac{1}{2} \boldsymbol{r} \times \boldsymbol{p}\) (或者 \(\boldsymbol{m} = i \boldsymbol{s}\))
+  + 电偶极辐射: \(\boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}}\)
+  + 磁偶极辐射: \(\boldsymbol{A} = \frac{i k \mu_0 e^{i k r}}{4 \pi r} \boldsymbol{e}_r \times \boldsymbol{m}\)
+  + 计算的技巧: \(\nabla = i k \boldsymbol{e}_r, \partial_t = - i \omega\) (近似结果)
+
+    \(\boldsymbol{E} = \frac{i c}{k} \nabla \times \boldsymbol{B}, \boldsymbol{B} = \nabla \times \boldsymbol{A}, \boldsymbol{S} = \frac{1}{2} \mathrm{Re}(\boldsymbol{E}^{*} \times \boldsymbol{H})\)
++ 四维量
+  + \(\boldsymbol{r} = (c t, \boldsymbol{r}_3)\), \(\boldsymbol{v} = \frac{\mathrm{d} \boldsymbol{r}}{\mathrm{d} \tau} = \gamma (c, \boldsymbol{v}_3)\)
+
+    速度变换: \(u_x' = \frac{u_x - v}{1 - \frac{v u_x}{c^2}}, u_y' = \frac{u_y}{\gamma(1 - \frac{v u_y}{c^2})}\).
+  + \(\boldsymbol{p} = \gamma (\frac{W}{c}, \boldsymbol{p}_3)\), \(\boldsymbol{F} = m_0 \gamma (\frac{\mathrm{d} \gamma}{\mathrm{d} t} c, (\frac{\mathrm{d} \gamma}{\mathrm{d} t} \boldsymbol{u}_3 + \gamma \boldsymbol{a}_3))\)
+  + \(\boldsymbol{j} = (\rho c, \boldsymbol{j}_3)\), \(\boldsymbol{A} = (\frac{\phi}{c}, \boldsymbol{A}_3)\),
+    \(F^{\mu\nu} = \partial^{\mu} A^{\nu} - \partial^{\nu} A^{\mu} = \left( \begin{matrix} 0 & - \frac{E_1}{c} & - \frac{E_2}{c} & - \frac{E_3}{c} \\\\ \frac{E_1}{c} & 0 & - B_3 & B_2 \\\\ \frac{E_2}{c} & B_3 & 0 & - B_1 \\\\ \frac{E_3}{c} & - B_2 & B_1 & 0 \end{matrix} \right)\).
+  + Lorentz 变换矩阵
+    \(\Lambda = \left( \begin{matrix} \gamma & - \gamma \beta & 0 & 0 \\\\ - \beta \gamma & \gamma & 0 & 0 \\\\ 0 & 0 & 1 & 0 \\\\ 0 & 0 & 0 & 1 \end{matrix} \right)\)
+  
+* 电磁波的传播
+** 电磁波方程
++ (真空) 电磁波方程的 *导出*
+  
+  \[\left\{\begin{matrix} \nabla \times \boldsymbol{E} & = & - \frac{\partial \boldsymbol{B}}{\partial t}\\\\\nabla \times \boldsymbol{H} & = & \frac{\partial \boldsymbol{D}}{\partial t} + \boldsymbol{J}\\\\ \nabla \cdot \boldsymbol{D} & = & \rho\\\\\nabla \cdot \boldsymbol{B} & = & 0\end{matrix}\right.\]
+
+  核心的一个变换就是 \(\nabla \times (\nabla \times \boldsymbol{E}) = - \frac{\partial}{\partial t} \nabla \times \boldsymbol{B}\).
+  最终的一个结果:
+
+  \[\begin{matrix} \nabla^2 \boldsymbol{E} - \frac{1}{c^2} \frac{\partial^2}{\partial t^2} \boldsymbol{E} & = & 0\\\\ \nabla^2 \boldsymbol{B} - \frac{1}{c^2} \frac{\partial^2}{\partial t^2} \boldsymbol{B} & = & 0\end{matrix}\]
+
+  有介质的情况: \(\boldsymbol{D}(\omega) = \varepsilon(\omega) \boldsymbol{E}(\omega), \boldsymbol{B}(\omega) = \mu(\omega) \boldsymbol{H}(\omega)\). 
++ 平面电磁波
+
+  \[\boldsymbol{E} = \boldsymbol{E}_0 e^{i (\boldsymbol{k} \cdot \boldsymbol{x} - \omega t)}, \boldsymbol{B} = \sqrt{\mu \varepsilon} \boldsymbol{e}_k \times \boldsymbol{E}\]
++ 能量密度 \(w = \frac{1}{2} (\boldsymbol{E} \cdot \boldsymbol{D} + \boldsymbol{H} \cdot \boldsymbol{B})\),
+  
+  线性介质中: \(w = \frac{1}{2}(\varepsilon \boldsymbol{E}^2 + \frac{1}{\mu} \boldsymbol{B}^2)\),
+  平面电磁波中: \(w = \varepsilon E^2 = \frac{1}{\mu} B^2\).
+
+  #+begin_html
+  <details><summary> 一些别的说明 </summary>
+  #+end_html
+
+  若 \(\left(\begin{matrix} \boldsymbol{E} \\\\ \boldsymbol{D} \\\\ \boldsymbol{B} \\\\ \boldsymbol{H} \end{matrix}\right) = \left(\begin{matrix} \boldsymbol{E}_0 \\\\ \boldsymbol{D}_0 \\\\ \boldsymbol{B}_0 \\\\ \boldsymbol{H}_0 \end{matrix}\right) e^{i (\boldsymbol{k} \cdot \boldsymbol{x} - \omega t)}\), 那么有结论:
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  平均值 \(\bar{w} = \frac{1}{2} \varepsilon E_0^2 = \frac{1}{2 \mu} B_0^2\)
++ 能流密度 \(\boldsymbol{S} = \boldsymbol{E} \times \boldsymbol{H}\)
+
+  平面电磁波中 \(\boldsymbol{S} = \sqrt{\frac{\varepsilon}{\mu}} E^2 \boldsymbol{e}_k = \frac{1}{\sqrt{\mu \varepsilon}} w \boldsymbol{e}_k = v w \boldsymbol{e}_k\).
+
+  平均值 \(\bar{\boldsymbol{S}} = \frac{1}{2} \mathrm{Re} (\boldsymbol{E}^{*} \times \boldsymbol{H}) = \frac{1}{2} \sqrt{\frac{\varepsilon}{\mu}} E_0^2 \boldsymbol{e}_k\)
+
+#+begin_html
+<details><summary>习题</summary>
+#+end_html
+
++ 平面波合成 \(\boldsymbol{E} = \boldsymbol{E}_1 e^{\varphi_1} + \boldsymbol{E}_2 e^{\varphi_2}\)
+  
+  必要的时候可以考虑用 \(e^{i \varphi} = \cos \varphi + i \sin \varphi\) 以及三角函数进行展开化简.
++ 波的相关知识
+  + 波的相位传播速度 (波速) \(v_p = \frac{\omega}{k} = \frac{\partial x}{\partial t} = \frac{\mathrm{d} E / \mathrm{d}t}{\mathrm{d} E / \mathrm{d}x}\)
+  + 波的群速度 \(v_g = \frac{\mathrm{d} \omega}{\mathrm{d} k}\)
+
+#+begin_html
+</details>
+#+end_html
+
+** 介质面
+[[{{ site.github.url }}/_img/pieces/fresnel.png]]
+
++ 反射波矢 \(\theta' = \theta\)
++ 折射波矢 \(\frac{\sin \theta}{\sin \theta''} = \frac{\sqrt{\mu_2 \varepsilon_2}}{\sqrt{\mu_1 \varepsilon_1}} = n_{21}\)
++ 偏振
+  + \(\boldsymbol{E} \bot\) 入射面
+    + 反射 \(R = \frac{E'}{E} = \frac{\sqrt{\varepsilon_1} \cos \theta - \sqrt{\varepsilon_2} \cos \theta''}{\sqrt{\varepsilon_1} \cos \theta + \sqrt{\varepsilon_2} \cos \theta''} = - \frac{\sin (\theta - \theta'')}{\sin (\theta + \theta'')}\)
+    + 折射 \(T = \frac{E''}{E} = \frac{2 \sqrt{\varepsilon_1} \cos \theta}{\sqrt{\varepsilon_1} \cos \theta + \sqrt{\varepsilon_2} \cos \theta''} = \frac{2 \cos \theta \sin \theta''}{\sin(\theta + \theta'')}\)
+  + \(\boldsymbol{E} \parallel\) 入射面
+    + 反射 \(R = \frac{E'}{E} = \frac{\tan(\theta - \theta'')}{\tan(\theta + \theta'')}\)
+    + 折射 \(T = \frac{E''}{E} = \frac{2 \cos \theta \sin \theta''}{\sin(\theta + \theta'') \cos(\theta - \theta'')}\)
++ 全反射 \(\sin \theta > n_{21}\)
+
+  此时 \(k_x'' = i k \sqrt{\sin^2 \theta - n_{21}^2} = i \kappa\),
+  折射波电场为 \(\boldsymbol{E}'' = \boldsymbol{E}_0'' e^{- \kappa x} e^{i (k x - \omega t)}\) (隐失波).
+
+#+begin_html
+<details><summary>习题</summary>
+#+end_html
+
++ 计算折射和反射系数
+  1. 分解电场强度为 \(\bot\) 和 \(\parallel\) 分量
+  2. 分别计算 \(R_{\bot}\), \(R_{\parallel}\) 等的值
+  3. 合并计算 \(E'\) 得到 \(R\) 和 \(T\)
++ 全反射
+  + 全反射条件 \(\sin \theta > n_{21}\)
+  + 透入深度 \(\kappa^{-1} = \frac{1}{k \sqrt{\sin^2 \theta - n_{21}^2}}\)
+
+#+begin_html
+</details>
+#+end_html
+
+** 导体
+导体中的平面波解 \(\boldsymbol{E}(\boldsymbol{r}) = \boldsymbol{E}_0 e^{i \boldsymbol{k} \cdot \boldsymbol{x}}, \boldsymbol{k} = \boldsymbol{\beta} + i \boldsymbol{\alpha}\),
+其中 \(\beta^2 - \alpha^2 = \omega^2 \mu \varepsilon, \boldsymbol{\alpha} \cdot \boldsymbol{\beta} = \frac{1}{2} \omega \mu \sigma\).
+
+#+name: wave-in-conductor
+#+begin_html
+<details><summary>推导证明</summary>
+#+end_html
+
++ 在导体中, \(\boldsymbol{J} = \sigma \boldsymbol{E}\), 于是 \(\nabla \times \boldsymbol{H} = - \frac{\partial}{\partial t} \boldsymbol{D} + \sigma \boldsymbol{E}\).
++ 假设有 \(\boldsymbol{D} = \varepsilon \boldsymbol{E} = \varepsilon \boldsymbol{E}_0 e^{i \omega t}\), 于是代入上面的结果应当可以得到有复电容率:
+  \(\varepsilon' = \varepsilon + i \frac{\sigma}{\omega}\), \(\nabla \times \boldsymbol{H} = - i \omega \varepsilon' \boldsymbol{E}\), 于是和正常平面波类似推导.
++ 在一定频率下有 Helmholtz 方程: \(\nabla^2 \boldsymbol{E} + \omega^2 \mu \varepsilon' \boldsymbol{E} = 0\).
+
+#+begin_html
+</details>
+#+end_html
+
+在垂直入射的情况下: \(\boldsymbol{\alpha} \cdot \boldsymbol{\beta} = \alpha \beta\), 那么这个时候可以解得 \(\alpha, \beta\).
++ 良导体的 _趋肤深度_
+
+  在良导体中: \(k^2 \approx i \omega \mu \sigma\), 于是得到 \(\alpha \approx \beta \approx \sqrt{\frac{\omega \mu \sigma}{2}}\).
+  穿透深度 \(\delta = \frac{1}{\alpha} = \sqrt{\frac{2}{\omega \mu \sigma}}\) (\(\alpha\) 为衰减项). 
+
+  并且主要其作用的是磁场 \(\sqrt{\frac{\mu}{\varepsilon}} \frac{H}{E} = \sqrt{\frac{\sigma}{\omega \varepsilon}} \gg 1\).
++ 反射
+
+  \[R = \frac{(1 - \sqrt{\frac{2 \omega \varepsilon_0}{\sigma}})^2 + 1}{(1 + \sqrt{\frac{2 \omega \varepsilon_0}{\sigma}})^2 + 1} \approx 1 - 2 \sqrt{\frac{2 \omega \varepsilon_0}{\sigma}}\]
+
+  在理想导体情况或者是 \(\omega\) 较小 (波长较长), 可以近似认为反射系数接近 1 (全反射).
+
+#+name: conductor-exercise
+#+begin_html
+<details><summary>习题</summary>
+#+end_html
+
++ 表面电阻计算
+
+#+begin_html
+</details>
+#+end_html
+
+** 谐振腔和波导
++ 理想边界条件
+
+  对于理想的导体问题, 应有 \(\boldsymbol{E}_1 = \boldsymbol{H}_1 = 0\) (导体内部没有场)
+
+  \[\begin{matrix} \boldsymbol{e}_n \times \boldsymbol{E} & = & 0 \\\\ \boldsymbol{e}_n \times \boldsymbol{H} & = & \boldsymbol{\alpha} \\\\ \boldsymbol{e}_n \cdot \boldsymbol{D} & = & \sigma \\\\ \boldsymbol{e}_n \cdot \boldsymbol{B} & = & 0 \end{matrix}\]
+
+  其中 \(\boldsymbol{E}, \boldsymbol{H}, \boldsymbol{D}, \boldsymbol{B}\) 为介质侧的场, 即导体表面上,
+  电场线和界面垂直, 磁感应线和界面向切.
+  
+  (该性质可以导出无穷大导体间只能传播一种偏振平面波)
++ 谐振腔
+
+  \[\nabla^2 u + k^2 u = 0\]
+
+  在有限立方体 \(L_1 \times L_2 \times L_3\) 内有驻波解
+  (边界条件 \(E_x = 0, \frac{\partial E_x}{\partial x} = 0, (x = 0, L_1)\) 的自然结果).
+
+  结果 \(k_x^2 + k_y^2 + k_z^2 = \omega^2 \mu \varepsilon\), \(k_x = \frac{m \pi}{L_1}, k_y = \frac{n \pi}{L_2}, k_z = \frac{p \pi}{L_3}\).
+  (并且 \(\nabla \cdot \boldsymbol{E} = 0 \Rightarrow k_x A_1 + k_y A_2 + k_z A_3 = 0\) 非独立)
++ 波导
+
+  在 \(L_3\) 方向上不做限制, 仅在 \(L_1, L_2\) 方向上有边界条件.
+
+  #+begin_html
+  <details><summary> 推导证明 </summary>
+  #+end_html
+
+  + 边界条件
+    \(E_x = E_y = 0, \frac{\partial E_x}{\partial x} = 0, (x = 0, a)\), 
+    \(E_x = E_z = 0, \frac{\partial E_y}{\partial y} = 0, (y = 0, b)\).
+  + 最终结果
+
+    \[\left\{\begin{matrix} E_x & = & A_1 \cos k_x x \sin k_y y e^{i k_z z} \\\\ E_y & = & A_2 \sin k_x x \cos k_y y e^{i k_z z} \\\\ E_z & = & A_3 \sin k_x x \sin k_y y e^{i k_z z} \end{matrix}\right.\]
+
+    其中在 \(x, y\) 方向上有驻波条件 \(k_x = \frac{m \pi}{a}, k_y = \frac{n \pi}{b} (m, n = 0, 1, 2, \dots)\).
+
+  #+begin_html
+  </details>
+  #+end_html
+
+  + 波模
+
+    波进行一个分解为两个 \(E_z = 0\) TE 波 (横电波), \(H_z = 0\) TM 波 (横磁波)
+    于是分别可以通过 \((m, n)\) 来确定, 称为波模.
+  + 截止频率
+
+    能够在波导内传播的波的最低频率 \(\omega_c\) 称为波模的截止频率:
+    
+    \[\omega_{c, m, n} = \frac{\pi}{\sqrt{\mu \varepsilon}} \sqrt{(\frac{m}{a})^2 + (\frac{n}{b})^2}\]
+
+    #+begin_html
+    <details><summary> 更多的解释 </summary>
+    #+end_html
+
+    + 截止频率的一个来源: 因为 \(k^2 = k_x^2 + k_y^2 + k_z^2\), 
+      若使得 \(k_z\) 成为虚数, 则波为衰减波, 即无法在波导内传播.
+    + 对于 \(TE_{10}\) 波, 最低截止频率 \(\frac{1}{2 \pi} \omega_{c,1,0} = \frac{1}{2 a \sqrt{\mu \varepsilon}}\), 截止波长 \(\lambda_{c,1,0} = 2 a\).
+
+      (限制了波导的应用波段为厘米波段)
+    + \(TE_{10}\) 电流分布
+      
+    #+begin_html
+    </details>
+    #+end_html
+
+#+begin_html
+<details><summary> 习题 </summary>
+#+end_html
+
+
+
+#+begin_html
+</details>
+#+end_html
+* 电磁波的辐射
+** 矢势和标势
+在电磁场中使用 \(\varphi, \boldsymbol{A}\) 来描述电磁场的势: \(\boldsymbol{B} = \nabla \times \boldsymbol{A}, \boldsymbol{E} = - \nabla \varphi - \frac{\partial \boldsymbol{A}}{\partial t}\).
+
+#+begin_html
+<details><summary> 一些小说明 </summary>
+#+end_html
+
+可以将场分解为无旋场和无散场, 于是电场的无旋部分会和库仑场对应.
+
+#+begin_html
+</details>
+#+end_html
+
+\(\varphi, \boldsymbol{A}\) 满足规范变换不变性:
+
+\[\begin{matrix} \boldsymbol{A} & \rightarrow & \boldsymbol{A}' & = & \boldsymbol{A} + \nabla \psi \\\\ \varphi & \rightarrow & \varphi' & = & \varphi - \frac{\partial \psi}{\partial t} \end{matrix}\]
+
+其中 \(\psi\) 为任意 (时空) 函数. 一般希望将最终的结果变换为:
++ 库仑规范
+
+  \[\begin{matrix} \nabla^2 \boldsymbol{A} - \frac{1}{c^2} \frac{\partial^2 \boldsymbol{A}}{\partial t^2} - \frac{1}{c^2} \frac{\partial}{\partial t} \nabla \varphi = - \mu_0 \boldsymbol{J} \\\\ \nabla^2 \varphi = - \frac{\rho}{\varepsilon_0} \end{matrix} \qquad (\nabla \cdot \boldsymbol{A} = 0)\]
++ 洛仑兹规范 \(\nabla \cdot \boldsymbol{A} + \frac{1}{c^2} \frac{\partial \varphi}{\partial t} = 0\)
+
+  \[\begin{matrix} \nabla^2 \boldsymbol{A} - \frac{1}{c^2} \frac{\partial^2 \boldsymbol{A}}{\partial t^2} = - \mu_0 \boldsymbol{J}\\\\ \nabla^2 \varphi - \frac{1}{c^2} \frac{\partial^2 \varphi}{\partial t^2} = - \frac{\rho}{\varepsilon_0} \end{matrix} \qquad (\nabla \cdot \boldsymbol{A} + \frac{1}{c^2} \frac{\partial \varphi}{\partial t} = 0)\]
+
+#+begin_html
+<details><summary> 习题 </summary>
+#+end_html
+
++ 平面电磁波的势
+
+  \[\boldsymbol{A} = \boldsymbol{A}_0 e^{i (\boldsymbol{k} \cdot \boldsymbol{x} - \omega t)}, \varphi = \varphi_0 e^{i (\boldsymbol{k} \cdot \boldsymbol{x} - \omega t)}\]
+
+  于是可以用来表示磁场和电场:
+
+  \[\boldsymbol{B} = \nabla \times \boldsymbol{A} = i \boldsymbol{k} \times \boldsymbol{A}, \boldsymbol{E} = - \nabla \varphi - \frac{\partial \boldsymbol{A}}{\partial t} = - \nabla \varphi - i \omega \boldsymbol{A}\]
+
+  并且还可以将矢势复数展开 \(\boldsymbol{A} = \sum a_j e^{i \boldsymbol{k}_j \cdot \boldsymbol{x}} + a^{*}_j e^{i \boldsymbol{k}_j \cdot \boldsymbol{x}}\).
+
+#+begin_html
+</details>
+#+end_html
+** 推迟势
+\[\begin{matrix} \varphi(\boldsymbol{r}, t) = \int_V \frac{\rho(\boldsymbol{r}', t - \frac{| \boldsymbol{r} - \boldsymbol{r}' |}{c})}{4 \pi \varepsilon_0 | \boldsymbol{r} - \boldsymbol{r}' |} \mathrm{d}V' \\\\ \boldsymbol{A}(\boldsymbol{r}, t) = \frac{\mu_0}{4 \pi} \int_V \frac{\boldsymbol{J}(\boldsymbol{r}', t - \frac{| \boldsymbol{r} - \boldsymbol{r}' |}{c})}{| \boldsymbol{r} - \boldsymbol{r}' |} \mathrm{d}V' \end{matrix}\]
+
+#+name: proof-of-delay-potential
+#+begin_html
+<details><summary> 证明推导和习题 </summary>
+#+end_html
+
+上解为达朗贝尔方程 (洛仑兹规范得到) 的自然结果:
+
+\[\nabla^2 \varphi - \frac{1}{c^2} \frac{\partial^2 \varphi}{\partial t^2} = - \frac{\rho}{\varepsilon_0}\]
+
+使用冲量定理来拆解方程, 然后代入达朗贝尔公式去求解.
+
+推迟势满足洛仑兹条件.
+
+#+begin_html
+</details>
+#+end_html
+
+** 电偶极辐射, 磁偶极辐射, 电四极辐射
+对于 \(\boldsymbol{J}(\boldsymbol{r}', t - \frac{| \boldsymbol{r} - \boldsymbol{r}' |}{| \boldsymbol{r} - \boldsymbol{r}' |}) = \boldsymbol{J} e^{i (\boldsymbol{k} \cdot \boldsymbol{r} - \omega t)}\) 进行矢势展开
+
+\[\boldsymbol{A}(\boldsymbol{r}) = \frac{\mu_0 e^{i \boldsymbol{k} \boldsymbol{r}}}{4 \pi r} \int_V \boldsymbol{J}(\boldsymbol{r}') (1 - i \boldsymbol{k} \boldsymbol{e}_r \cdot \boldsymbol{x}' + \dots) \mathrm{d}V'\]
+
+#+begin_html
+<details><summary> 展开区域的一个说明 </summary>
+#+end_html
+
++ 近区 \(r \ll \lambda\)
++ 感应区 \(r \sim \lambda\)
++ 远区 (辐射区) \(r \gg \lambda\)
+
+#+begin_html
+</details>
+#+end_html
+
++ 电偶极辐射 \(\frac{\mu_0 e^{i \boldsymbol{k} \boldsymbol{r}}}{4 \pi r} \int_V \boldsymbol{J}(\boldsymbol{r}') \mathrm{d}V'\)
+
+  \[\begin{matrix} \boldsymbol{A}(\boldsymbol{r}) = \frac{\mu_0 e^{i \boldsymbol{k} \cdot \boldsymbol{r}}}{4 \pi r} \dot{\boldsymbol{p}} \\\\ \boldsymbol{B} = \frac{1}{4 \pi \varepsilon_0 c^3 r} e^{i \boldsymbol{k} \cdot \boldsymbol{r}} \ddot{\boldsymbol{p}} \times \boldsymbol{e}_r \\\\ \boldsymbol{E} = \frac{e^{i \boldsymbol{k} \cdot \boldsymbol{r}}}{4 \pi \varepsilon_0 c^2 r} (\ddot{\boldsymbol{p}} \times \boldsymbol{e}_r) \times \boldsymbol{e}_r \end{matrix}\]
+
+  #+begin_html
+  <details><summary> 更加详细的解释 </summary>
+  #+end_html
+
+  方程的一个证明:
+  + \(\int_V \boldsymbol{J}(\boldsymbol{r}') \mathrm{d}V' = \sum q \boldsymbol{v} = \sum q \dot{\boldsymbol{x}} = \dot{\boldsymbol{p}}\), 也就是为什么说是电偶极辐射,
+    于是得到 \(\boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}}\).
+  + 计算 \(\boldsymbol{B} = \nabla \times \boldsymbol{A}, \boldsymbol{E} = \frac{i c}{k} \nabla \times \boldsymbol{B}\) 的时候, 对算子 \(\nabla\) 做一个近似:
+    保留 \(\frac{1}{r}\) (因为是远场近似), 于是 \(\nabla \rightarrow i k \boldsymbol{e}_r, \frac{\partial}{\partial t} \rightarrow - i \omega\).
+  + \(\boldsymbol{B} = \nabla \times \boldsymbol{A}, \boldsymbol{E} = \frac{i c}{k} \nabla \times \boldsymbol{B}\)
+
+  辐射的能量关系:
+  + \(\boldsymbol{S} = \frac{1}{2} \mathrm{Re}(\boldsymbol{E}^{*} \times \boldsymbol{H}) = \frac{|\ddot{\boldsymbol{p}}|^2}{32 \pi^2 \varepsilon_0 c^3 r^2} \sin^2 \theta \boldsymbol{e}_r\)
+  + \(P = \oint | \boldsymbol{S} | r^2 \mathrm{d}\Omega = \frac{1}{4 \pi \varepsilon_0} \frac{| \ddot{\boldsymbol{p}} |^2}{3 c^3}\)
+
+  #+begin_html
+  </details>
+  #+end_html
++ 四极子辐射 \(\frac{- k \mu_0 e^{i k r}}{4 \pi r} \int_V \boldsymbol{J}(\boldsymbol{r}') (\boldsymbol{e}_r \cdot \boldsymbol{r}') \mathrm{d}V'\)
+
+#+begin_html
+<details><summary> 习题和结论 </summary>
+#+end_html
+
++ *电荷质量相同的粒子相向运动不会* 产生电偶极辐射和磁偶极辐射
+
+  电偶极辐射因为相向运动在质心系下没有电偶极子 (速度为零) 所以不产生:
+  
+  \[\dot{\boldsymbol{p}} = q \dot{x}_1 + q \dot{x}_2 = 0 \Rightarrow \boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}} = 0\]
+
+  磁偶极子辐射因为径向运动没有磁矩所以不产生:
+
+  \[\boldsymbol{m} = \frac{1}{2} (\boldsymbol{x}_1 \times q \dot{\boldsymbol{x}}_2 + \boldsymbol{x}_2 \times q \dot{\boldsymbol{x}}_2) = 0 \Rightarrow \boldsymbol{A} = \frac{i k \mu e^{i k r}}{4 \pi r} \boldsymbol{e}_r \times \boldsymbol{m} = 0\]
+
+  可以利用结论来快速判断是否产生电偶极辐射,
+  比如球对称电荷分布径向运动就不会有辐射.
+
+  (又: 稳恒的条件是绝对不会有辐射的就是了.)
++ 计算偶极辐射和四极子辐射, 以及场和能流
+  1. 计算 \(\boldsymbol{p}\) 或者 \(\boldsymbol{m}\)
+  2. 代入公式 \(\boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}}\) 或者 \(\boldsymbol{A} = \frac{i k \mu_0 e^{i k r}}{4 \pi r} \boldsymbol{e}_r \times \boldsymbol{m}\).
+
+     一般会换成球坐标系会比较方便计算, 变换关系如下:
+
+     \[\left( \begin{matrix} \boldsymbol{e}_x \\\\ \boldsymbol{e}_y \\\\ \boldsymbol{e}_z \end{matrix} \right) = \left( \begin{matrix} \sin \theta \cos \phi & \cos \theta \cos \phi & - \sin \phi \\\\ \sin \theta \sin \phi & \cos \theta \sin \phi & \cos \phi \\\\ \cos \theta & - \sin \theta & 0 \end{matrix} \right) \left( \begin{matrix} e_r \\\\ e_{\theta} \\\\ e_{\phi} \end{matrix} \right)\]
+
+     以及球坐标里面的一些计算结果:
+
+     \[e_i \times e_j = \varepsilon_{ijk} e_k,\quad \varepsilon_{ijk} = 1\ \mathrm{iff}\ (i, j, k) = (\rho, \theta, \phi)\]
+  3. 计算磁场和电场 \(\boldsymbol{B} = \nabla \times \boldsymbol{A} = i k \boldsymbol{e}_r \times \boldsymbol{A}\),
+     \(\boldsymbol{E} = \frac{i c}{k} \nabla \times \boldsymbol{B} = c \boldsymbol{B} \times \boldsymbol{e}_r\), \(\boldsymbol{S} = \frac{c}{2 \mu_0} (\boldsymbol{B}^{*} \cdot \boldsymbol{B}) \boldsymbol{e}_r\).
+
+     常用结论:
+
+     + 电偶极辐射场:
+
+       \[\begin{matrix} \boldsymbol{A} & = & \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}} \\\\ \boldsymbol{B} & = & i k \boldsymbol{e}_r \times \boldsymbol{A} = \frac{e^{i k r}}{4 \pi \varepsilon_0 c^3 r} \ddot{\boldsymbol{p}} \times \boldsymbol{e}_r \\\\ \boldsymbol{E} & = & c \boldsymbol{B} \times \boldsymbol{e}_r = \frac{e^{i k r}}{4 \pi \varepsilon_0 c^2 r} (\ddot{\boldsymbol{p}} \times \boldsymbol{e}_r) \times \boldsymbol{e}_r \end{matrix}\]
+     + 磁偶极辐射场:
+
+       \[\begin{matrix} \boldsymbol{A} & = & \frac{i k \mu_0 e^{i k r}}{4 \pi r} \boldsymbol{e}_r \times \boldsymbol{m} \\\\ \boldsymbol{B} & = & i k \boldsymbol{e}_r \times \boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi c^2 r} (\ddot{\boldsymbol{m}} \times \boldsymbol{e}_r) \times \boldsymbol{e}_r \\\\ \boldsymbol{E} & = & c \boldsymbol{B} \times \boldsymbol{e}_r = \frac{\mu_0 e^{i k r}}{4 \pi c r} \ddot{\boldsymbol{m}} \times \boldsymbol{e}_r \end{matrix}\]
+  
+#+begin_html
+</details>
+#+end_html
+
+** 电磁波衍射
+Kirchhoff 公式:
+
+\[\begin{matrix} \psi(\boldsymbol{r}) & = & - \frac{1}{4 \pi} \oint_s [\psi(\boldsymbol{r}') \nabla' \frac{e^{i k r}}{r} - \frac{e^{i k r}}{r} \nabla' \psi(\boldsymbol{r}')] \cdot \mathrm{d}\boldsymbol{S}' \\\\ & = & - \frac{1}{4 \pi} \oint_S \frac{e^{i k r}}{r} \boldsymbol{e}_n \cdot [\nabla' \psi + (i k - \frac{1}{r}) \frac{\boldsymbol{r}}{r} \psi] \mathrm{d}S'\end{matrix}\]
+
+#+begin_html
+<details><summary> 证明推导 </summary>
+#+end_html
+
+#+begin_html
+</details>
+#+end_html
+
+** 电磁场动量
++ 动量密度:
+
+  \[g = \varepsilon_0 \boldsymbol{E} \times \boldsymbol{B} = \mu_0 \varepsilon_0 \boldsymbol{E} \times \boldsymbol{H} = \frac{1}{c^2} \boldsymbol{S}\]
++ 动量流密度
+
+  \[\mathcal{J} = - \varepsilon_0 \boldsymbol{E} \boldsymbol{E} - \frac{1}{\mu_0} \boldsymbol{B} \boldsymbol{B} + \frac{1}{2} \mathcal{J} (\varepsilon_0 E^2 + \frac{1}{\mu_0} B^2)\]
+  
+#+begin_html
+<details><summary> 详细说明 </summary>
+#+end_html
+
++ 电磁场力 \(\boldsymbol{f} = \rho \boldsymbol{E} + \boldsymbol{J} \times \boldsymbol{B}\)
++ 换掉 \(\rho = \varepsilon_0 \nabla \cdot \boldsymbol{E}, \boldsymbol{J} = \frac{1}{\mu_0} \nabla \times \boldsymbol{B} - \varepsilon_0 \frac{\partial \boldsymbol{E}}{\partial t}\),
+  得到 \(\boldsymbol{f} = [\varepsilon_0 (\nabla \cdot \boldsymbol{E}) \boldsymbol{E} + \frac{1}{\mu_0} (\nabla \cdot \boldsymbol{B}) \boldsymbol{B} + \frac{1}{\mu_0} (\nabla \times \boldsymbol{B}) \times \boldsymbol{B} + \varepsilon_0 (\nabla \times \boldsymbol{E}) \times \boldsymbol{E}] - \varepsilon_0 \frac{\partial}{\partial t} (\boldsymbol{E} \times \boldsymbol{B})\).
++ 其中通过变形可以得到 \(\boldsymbol{f} + \frac{\partial \boldsymbol{g}}{\partial t} = - \nabla \cdot \mathcal{J}\).
++ 对于动量流密度张量, 其含义如下: 单位面积通过的动量密度.
+
+#+begin_html
+</details>
+#+end_html
+
++ 辐射压力 \(P = \boldsymbol{e}_n \cdot \mathcal{J} = 2 \omega_i \cos^2 \theta \boldsymbol{e}_n\)
+
+* 狭义相对论
+** 洛仑兹变换, 四维形式
+#+begin_html
+<details><summary> 实验基础 (Michelson 实验) </summary>
+#+end_html
+
+在 Michelson 实验里面检测条纹移动个数 \(\frac{\Delta l}{\lambda}\) 来判断是否有速度差.
+
+并且在 Galileo 变换下, 尽管牛顿定律势协变的, 但是麦克斯韦方程并不是:
+
+Galileo 变换下, \(\boldsymbol{v} = \boldsymbol{v}_1 + \boldsymbol{v}_2\), 理应对于波有波速的变化,
+而电磁波波动方程 \(\nabla^2 \varphi - \frac{1}{c^2} \partial_t^2 \varphi = - \rho / \varepsilon_0\) 中的 \(\varphi, \rho, \varepsilon_0, c\) 无变化,
+所以并不是协变的.
+
+#+begin_html
+</details>
+#+end_html
+
+相对论基本假设:
+1. 相对性原理: 所有惯性参考系等价
+2. 光速不变原理: 真空中的光速相对与任何惯性系沿任意方向恒为 \(c\), 与光源运动无关.
+
+   (或者说等光程: \(\Delta s^2 = c^2 \Delta t^2 - \Delta x^2 - \Delta y^2 - \Delta z^2\))
+
+洛仑兹变换:
+
+\[\begin{matrix} x' & = & \frac{x - v t}{\sqrt{1 - \frac{v^2}{c^2}}} \\\\ t' & = & \frac{t - \frac{v}{c^2} x}{\sqrt{1 - \frac{v^2}{c^2}}} \end{matrix} \quad \leftrightarrow \quad \begin{matrix} x & = & \frac{x' + v t'}{\sqrt{1 - \frac{v^2}{c^2}}} \\\\ t & = & \frac{t' + \frac{v}{c^2} x}{\sqrt{1 - \frac{v^2}{c^2}}} \end{matrix}\]
+
+#+begin_html
+<details><summary> 洛仑兹变换的一些结论 </summary>
+#+end_html
+
++ 时空结构
+  + 光锥 (类光间隔) \(s^2 = 0\)
+  + 类时间隔 \(s^2 > 0\)
+  + 类空间隔 \(s^2 < 0\)
++ 尺缩 \(\Delta l = l_0 \sqrt{1 - \frac{v^2}{c^2}}\) (同时测量)
+
+  证明: \(\Delta l = \frac{(x_1 - x_2)_{\Delta l_0}}{\sqrt{1 - \frac{v^2}{c^2}}} = \gamma \Delta l_0\)
++ 时慢 \(\Delta t = \frac{\Delta t_0}{\sqrt{1 - \frac{v^2}{c^2}}}\) (同点测量)
+  
+#+begin_html
+<details><summary> 一些相关的习题 </summary>
+#+end_html
+
++ 在计算长度 \(\Delta l\) 或者 \(\Delta t\) 的时候, 需要考虑是否同时或者同点测量,
+  如果不是的话, 就要从最原始的公式: \(x' = \gamma (x - \beta c t), t' = \gamma (t - \beta x / c)\).
++ 在 \(\Sigma\) 系中两个物体 \((u t, 0, 0)\), \((u t + l, 0, 0)\). 
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+</details>
+#+end_html
+
+速度变换公式:
+
+\[\begin{matrix} u_x' & = & \frac{u_x - v}{1 - \frac{v u_x}{c^2}} \\\\ u_y' & = & \frac{u_y \sqrt{1 - \frac{v^2}{c^2}}}{1 - \frac{v u_x}{c^2}} \end{matrix} \quad \leftrightarrow \quad \begin{matrix} u_x & = & \frac{u_x' + v}{1 + \frac{v u_x'}{c^2}} \\\\ u_y & = & \frac{u_y' \sqrt{1 - \frac{v^2}{c^2}}}{1 + \frac{v u_x'}{c^2}} \end{matrix}\]
+
+四维形式:
+
+#+begin_html
+<details><summary> 表示的说明 </summary>
+#+end_html
+
+在书中的四维矢量写作 \(\boldsymbol{r} = (r_x, r_y, r_z, i c t)\),
+但是这种表示方法并不是很好用, 所以会选择一个常用的.
+
+不过之间的差别应该不是太大, 把书中的 \(A_4\) 去掉 \(i\) 然后提到 \(A_0\) 就好.
+
+#+begin_html
+</details>
+#+end_html
+
++ 四维位置矢量
+  
+  \[\boldsymbol{r} = (c t, r_x, r_y, r_z) = (c t, \boldsymbol{r}_3)\]
+
+  #+begin_html
+  <details><summary> 一些说明 </summary>
+  #+end_html
+
+  + 矢量的记号 \(A = (A_0, A_1, A_2, A_3) = [A^0, A^1, A^2, A^3]\)
+  + 内积
+
+    \[A \cdot B = A^{\mu} \eta_{\mu \nu} B^{\nu} = A_{\mu} \eta^{\mu\nu} B_{\nu}\]
+
+    对于四维位置矢量的 Minkowski 空间, 应当有 \(\eta_{\mu\nu} = \left( \begin{matrix} 1 & 0 & 0 & 0 \\\\ 0 & -1 & 0 & 0 \\\\ 0 & 0 & -1 & 0 \\\\ 0 & 0 & 0 & -1 \end{matrix} \right)\),
+    于是 \(\Delta s^2 = c^2 t^2 - r_x^2 - r_y^2 - r_z^2 = A^{\mu} \eta_{\mu\nu} B^{\nu}\).
+  + 导数 \(\mathrm{d} A = \frac{\mathrm{d} A}{\mathrm{d} \lambda} \mathrm{d} \lambda\), \(\partial = (\frac{1}{c} \partial_t, - \nabla)\)
+
+    于是可以计算速度
+
+    \[\boldsymbol{v} = \frac{\mathrm{d} \boldsymbol{r}}{\mathrm{d} \tau} = \frac{\mathrm{d} \boldsymbol{r}}{\mathrm{d} t} \frac{\mathrm{d} t}{\mathrm{d} \tau} = \gamma \cdot (c, \boldsymbol{v}_3)\]
+
+    其中 \(\tau\) 为固有时 \(\frac{1}{c} {\mathrm{d} s}\), \(\boldsymbol{u}\) 为三维的运动速度, \(\gamma\) 为洛仑兹因子 \(\gamma = \frac{1}{\sqrt{1 - \frac{u^2}{c^2}}}\).
+
+    以及加速度
+
+    \[\boldsymbol{a} = \frac{\mathrm{d} \boldsymbol{v}}{\mathrm{d} \tau} = \gamma (\frac{\mathrm{d} \gamma}{\mathrm{d} t} c, \frac{\mathrm{d} \gamma}{\mathrm{d} t} \boldsymbol{u} + \gamma \boldsymbol{a}_3)\]
+  + 洛仑兹变换:
+
+    \[A'^{\mu} = \Lambda^{\mu}_{\nu} A^{\nu}, A'_{\mu} = \Lambda_{\mu}^{\nu} A_{\nu}\]
+
+    其中上面的记号为张量运算的符号,
+    而变换矩阵 \(\Lambda = \left( \begin{matrix} \gamma & - \gamma \beta & 0 & 0 \\\\ - \beta \gamma & \gamma & 0 & 0 \\\\ 0 & 0 & 1 & 0 \\\\ 0 & 0 & 0 & 1 \end{matrix} \right)\),
+    假设沿 \(x\) 轴进行变换的矩阵.
+
+    逆变换矩阵: \(\Lambda^{-1} = \left( \begin{matrix} \gamma & \beta \gamma & 0 & 0 \\\\ \beta \gamma & \gamma & 0 & 0 \\\\ 0 & 0 & 1 & 0 \\\\ 0 & 0 & 0 & 1 \end{matrix} \right)\).
+
+    #+begin_html
+    <details><summary> 验证和例子 </summary>
+    #+end_html
+
+    变换矩阵如此简单, 那么肯定很容易验证吧...
+
+    #+name: lorentz-transformation
+    #+begin_src maxima :exports none
+      Lambda : matrix(
+        [gamma,          - beta * gamma, 0, 0],
+        [- beta * gamma, gamma,          0, 0],
+        [0,              0,              1, 0],
+        [0,              0,              0, 1]);
+    #+end_src
+
+    #+RESULTS: lorentz-transformation
+
+    (注: 变换矩阵还可以看成是一种绕着坐标轴进行旋转的操作:
+    \(\Lambda = \left( \begin{matrix} \cosh \phi & - \sinh \phi & 0 & 0 \\\\ - \sinh \phi & \cosh \phi & 0 & 0 \\\\ 0 & 0 & 1 & 0 \\\\ 0 & 0 & 0 & 1 \end{matrix} \right)\), 其中 \(\gamma = \cosh \phi\)).
+
+    然后变换矩阵作用在位置矢量上的结果:
+
+    \[r'_{\mu} = \Lambda^{\mu\nu} r_{\nu} = (\gamma (c t - \beta x), \gamma(x - \beta c t), y, z)\]
+
+    对于速度变换:
+
+    \[v'_{\mu} = \Lambda^{\mu\nu} v_{\nu}\]
+
+    emm... 感觉怪怪的, 各种材料里面都没有太介绍的介绍. 
+
+    #+begin_html
+    </details>
+    #+end_html
+    
+  #+begin_html
+  </details>
+  #+end_html
++ 四维动量
+
+  \[\boldsymbol{p} = \gamma (\frac{W}{c}, \boldsymbol{p}_3) = \gamma (\frac{p}{c}, \boldsymbol{f}_3)\]
+
+  其中 \(\boldsymbol{f}_3\) 为三维的力.
+
+  四维力
+
+  \[\boldsymbol{F} = m_0 \boldsymbol{a} = m_0 \gamma \cdot (\frac{\mathrm{d} \gamma}{\mathrm{d} t} c, (\frac{\mathrm{d} \gamma}{\mathrm{d} t} \boldsymbol{u} + \gamma \boldsymbol{a}))\]
+  
+  能量
+
+  \[W = T + m_0 c^2\]
+
+  有不变量:
+
+  \[p_{\mu} p_{\mu} = \frac{W^2}{c^2} - \boldsymbol{p}_3^2\]
++ 电磁场
+  + 电流 \(\boldsymbol{j} = (\rho c, \boldsymbol{j}_3)\)
+  + 四维势 \(\boldsymbol{A} = (\frac{\phi}{c}, \boldsymbol{A}_3)\)
+
+    电磁场张量
+
+    \[F_{\mu\nu} = \partial_{\mu} A_{\nu} - \partial_{\nu} A_{\mu} = \left( \begin{matrix} 0 & - \frac{E_1}{c} & - \frac{E_2}{c} & - \frac{E_3}{c} \\\\ \frac{E_1}{c} & 0 & - B_3 & B_2 \\\\ \frac{E_2}{c} & B_3 & 0 & - B_1 \\\\ \frac{E_3}{c} & - B_2 & B_1 & 0 \end{matrix} \right)\]
+
+    #+begin_html
+    <details><summary> 电磁场的变换关系 </summary>
+    #+end_html
+
+    张量的变换关系 \(F'_{\mu\nu} = \Lambda_{\mu\lambda}\Lambda_{\nu\tau} F_{\lambda\tau}\):
+
+    \[\begin{matrix} E'_1 & = & E_1 & B'_1 & = & B_1 \\\\ E'_2 & = & \gamma (E_2 - v B_3) & B'_2 & = & \gamma (B_2 + \frac{\beta E_3}{c}) \\\\ E'_3 & = & \gamma(E_3 + v B_2) & B'_3 & = & \gamma (B_3 - \frac{\beta E_2}{c}) \end{matrix}\]
+
+    或者更加简洁的形式:
+
+    \[\begin{matrix} \boldsymbol{E}'_{\parallel} & = & \boldsymbol{E}_{\parallel} & \boldsymbol{B}'_{\parallel} & = & \boldsymbol{B}_{\parallel} \\\\ \boldsymbol{E}'_{\bot} & = & \gamma (\boldsymbol{E} + \boldsymbol{v} \times \boldsymbol{B})_{\bot} & \boldsymbol{B}'_{\bot} & = & \gamma (\boldsymbol{B} - \frac{\boldsymbol{v}}{c^2} \times \boldsymbol{E})_{\bot} \end{matrix}\]
+
+    其中的平行和垂直是相对于运动方向的.
+
+    #+begin_html
+    </details>
+    #+end_html
+  + 波矢 \(\boldsymbol{k} = (\frac{\omega}{c}, \boldsymbol{k}_3) \Rightarrow \boldsymbol{p} = \hbar \boldsymbol{k} = \hbar (\frac{\omega}{c}, \boldsymbol{k}_3)\) 波动量
+
+    #+begin_html
+    <details><summary> 相对论 Doppler 效应 </summary>
+    #+end_html
+
+    对波矢做 Lorentz 变换:
+
+    \[k'_{\mu} = \Lambda^{\mu\nu} (\frac{\omega}{c}, \boldsymbol{k}_3) = (\frac{\gamma (\omega - \beta k_1 c)}{c}, \gamma (k_1 - \frac{\beta \omega}{c}), k_2, k_3)\]
+
+    于是可以得到 \(\omega' = \gamma (\omega - \beta k \cos \theta c)\), 其中 \(k_1 = k \cos \theta\).
+
+    于是得到静止系上看到的频率 \(\omega = \frac{\omega'}{\gamma (1 - \beta \cos \theta)}\).
+
+    #+begin_html
+    </details>
+    #+end_html
+  + 电磁场不变量
+    
+    \[\frac{1}{2} F_{\mu\nu} F_{\mu\nu} = B^2 - \frac{1}{c^2} E^2\]
+  + 电磁力
+
+    \[f_{\mu} = F_{\mu\nu} J_{\nu}\]
+    
+#+begin_html
+<details><summary> 计算考虑相对论的电磁辐射 </summary>
+#+end_html
+
++ 电偶极子 \(\boldsymbol{p}\) 做 \(v\) 匀速运动:
+  + 在 \(\Sigma'\) 系中的 \(\varphi' = \frac{\boldsymbol{p} \cdot \boldsymbol{r}'}{4 \pi \varepsilon_0 r'^3}\), \(\boldsymbol{A}' = 0\),
+    四维势矢量 \((\varphi / c, \boldsymbol{A}')\) 做变换得到: \((\gamma \varphi / c, \beta \gamma \varphi / c, 0, 0)\).
+  + 在 \(\Sigma'\) 系中的电场 \(\boldsymbol{E}' = \nabla \times \varphi = \frac{\gamma}{4 \pi \varepsilon_0 r'^3} (3 \frac{(\boldsymbol{p} \cdot \boldsymbol{r}') \boldsymbol{r}'}{r'^2} - \boldsymbol{p})\), \(\boldsymbol{B}' = 0\).
+  + 需要做 \(\boldsymbol{r}' \rightarrow \boldsymbol{r}\) 的一个操作.
++ 无限长均匀带电 \(\lambda\) 直线以 \(v = \beta c\) 匀速运动, 计算点电荷 \(q\) 在 \(d\) 处受力: 
+  1. \(\Sigma'\) 系中: 
+  
+#+begin_html
+</details>
+#+end_html
+** 注
+整完了之后发现上面的上下标都乱用了... 懒得改了, 差不多得了.
+
+#+begin_html
+<details><summary> 指标的一个说明 </summary>
+#+end_html
+
+应该类似于 \(\boldsymbol{A} = A^i \boldsymbol{e}_i\) 这么个感觉, 其中 \(\boldsymbol{e}_i\) 为基底,
+\(A^i\) 为投影在基底上的分量的大小这样的感觉.
+
+虽然确实应该怪我线性代数没有学好, 但是这东西讲得也确实很乱啊...
+
+#+begin_html
+</details>
+#+end_html
+
+* 电磁相互作用
+** 运动势和辐射场, 反作用
+计算运动带电粒子的势:
+
+\[\begin{matrix} \varphi(\boldsymbol{r}, t) & = & \int_V \frac{\rho(\boldsymbol{r}', t - \frac{r}{c})}{4 \pi \varepsilon_0 r} \mathrm{d}V' \\\\ \boldsymbol{A}(\boldsymbol{r}, t) & = & \int_V \frac{\mu_0 \boldsymbol{J}(\boldsymbol{r}', t - \frac{r}{c})}{4 \pi r} \mathrm{d}V' \end{matrix}\]
+
+对于低速运动的粒子, 可以近似认为是偶极辐射.
+
+#+begin_html
+<details><summary> 习题 </summary>
+#+end_html
+
++ \(z = z_0 e^{- i \omega t}\) 的辐射场 (低速振动)
+
+  \(\boldsymbol{p} = - i z_0 \omega q e^{- i \omega t} \Rightarrow \boldsymbol{A} = \frac{\mu_0 e^{i k r}}{4 \pi r} \dot{\boldsymbol{p}} = - \frac{\mu_0 e^{i k r}}{4 \pi r} z_0 \omega^2 q e^{- i \omega t}\),
+  磁场 \(\boldsymbol{B} = \nabla \times \boldsymbol{A} = - i k \frac{\mu_0 z_0 q \omega^2}{4 \pi r} e^{i (k r - \omega t)} \boldsymbol{e}_r \times \boldsymbol{e}_z\).
+
+  (注: 上面的这个计算还要考虑推迟效应, 但是如果是自场的话, 可以忽略.)
+
+  自场: 带电粒子周围的场, 可以忽略推迟效应.
++ 辐射偏振
+
+#+begin_html
+</details>
+#+end_html
+
+带电粒子辐射的反作用
+
++ 辐射阻尼
+
+  \[\boldsymbol{F}_s = \frac{q^2}{6 \pi \varepsilon_0 c^3} \ddot{\boldsymbol{v}}\]
++ 谱线自然宽度
+
+  \[\Delta \lambda = \frac{2 \pi c}{\omega^2} \gamma\]
+
+#+begin_html
+<details><summary> 习题 </summary>
+#+end_html
+
++ 考虑阻尼力的运动轨道
+
+  \[m \ddot{\boldsymbol{r}} = q (\boldsymbol{E} + \dot{\boldsymbol{r}} \times \boldsymbol{B}) + \frac{e^2}{6 \pi \varepsilon_0} \dddot{\boldsymbol{r}}\]
+
+  一般求解的话, 若只有磁场的二维运动, 可以考虑 \(u = x + i y\) 的解法.
+  
+  以及电磁辐射: 因为变速运动, 所以 \(\dot{\boldsymbol{p}} = q \ddot{\boldsymbol{r}}\), 可以用偶极子辐射公式.
+  
+#+begin_html
+</details>
+#+end_html
+
+** 切伦科夫辐射
++ 介质中带电粒子运动速度比介质中光速要快时, 便会产生切伦科夫辐射.
+
+  [[{{ site.github.url }}/_img/pieces/cherenkov-radiation.png]]
++ 辐射方向 \(\cos \theta_c = \frac{c}{n v}\)
++ 辐射能量角分布
+  
+  \[\begin{matrix} \frac{\mathrm{d}^2 W_{\omega}}{\mathrm{d} \Omega \mathrm{d}L} & = & \frac{q^2 \omega^2 n}{8 \pi^2 \varepsilon_0 c^3} \sin^2 \theta \delta(\frac{\omega}{v} - \frac{\omega n}{c} \cos \theta) \\\\ & = &  \frac{q^2 \omega^2 n}{8 \pi^2 \varepsilon_0 c^3} (1 - \frac{c^2}{n^2 v^2}) \delta(\frac{\omega}{v} - \frac{\omega n}{c} \cos \theta) \end{matrix}\]
+
+  辐射的总能量
+
+  \[\frac{\mathrm{d} W_{\omega}}{\mathrm{d} L} = \frac{q^2}{4 \pi \varepsilon_0 c^2} [1 - \frac{c^2}{v^2 \varepsilon(\omega)}] \omega\]
+  
+** 色散
+
+* COMMENT LocalWords
+#  LocalWords:  TEM Minkowski d'Alembert
