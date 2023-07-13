@@ -1,0 +1,731 @@
+#+title: 苹果, 梨, 橘子以及翻车
+#+date: 2023-07-13
+#+layout: post
+#+options: _:nil ^:nil
+#+math: true
+#+categories: lisp
+* 故事的开始
+某朋友问了一个小学生问题:
+
+#+begin_quote
+苹果, 梨, 橘子三种水果都有许多, 混在一起合成一大堆, 最少要分成多少堆
+(每堆都有苹果, 梨和橘子), 才能保证找得到这样的两堆,
+把这两堆合并后这三种水果的个数都是偶数?
+#+end_quote
+
+#+begin_html
+<details><summary>
+当然, 单单求解这一个问题应该不是啥难事.
+</summary>
+#+end_html
+
+在我愚蠢的想法下, 一开始我认为这个问题可以被轻松地拓展到被 \(p\) 整除的问题:
+1. 求解该问题的反问题会更加简单:
+   即计算能够让两两合并的结果不能被整除的最大堆数 \(N_{\mathrm{max}}\),
+   然后问题的答案即为 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\).
+2. 苹果, 梨, 橘子是完全独立的, 所以 \(N_{\mathrm{max}} = \prod_i (N_{\mathrm{max}})_i\),
+   即只需要计算单个的最大堆数即可.
+3. 显然这个问题放到 \(\mathbb{Z}_p\) 环上会比较好做,
+   于是问题变成了在 \(\mathbb{Z}_p\) 环下, \((N_{\mathrm{max}})_i\) 为使得
+   \(x_i + x_j \neq 0, \forall x_i, x_j \in X \subset \mathbb{Z}_p\) 的最大的 \(\mathrm{card}(X)\) 的值.
+   
++ 对于 \(p = 2\) 的情况, \(a + b \neq 0 \Rightarrow (a, b) = (1, 0), (0, 1)\),
+  这个时候只有两种, 所以很容易就可以知道 \(X = \{0, 1\}\).
+  故 \((N_{\mathrm{max}})_i = 2\), \(N_{\mathrm{min}} = 1 + 2^3 = 9\). 
++ 对于 \(p = 3\) 的情况, \(a + b \neq 0 \Rightarrow (a, b) = (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)\)
+  这个时候想要找到最大的 \(X\) 的话, 应该也不是啥难事:
+  \(X = \{0, 1_1, 1_2\}, \{0, 2_1, 2_2\}\). 于是 \(N_{\mathrm{min}} = 1 + 3^3 = 28\)?
+
+  并不是, 因为其中会有重复, 于是在合并的时候 \((1_1, 1_1, 1_1), (1_2, 1_1, 1_1)\)
+  这样虽然是单个不同, 但是还是不可区分的一个结果.
+  所以在排完之后还要调出这些重复的东西.
++ 对于任意的 \(p\), 也只要找到这样的一个方法即可.
+  但是这个应该不会太轻松吧...
+
+注: 昨天我没有太仔细想, 把 \(N_{\mathrm{min}} = 1 + (p(p - 1))^2\) 错误地当成了答案.
+现在仔细一想, 发现可能还是需要用到我的求最大两两相连图的一个做法.
+
+#+begin_html
+</details>
+#+end_html
+
+不过要真的就这么无聊我也不会写这么个问题了. 按照我一如既往的奇葩脑回路,
+肯定不会那么简单地解决这个问题的. 请听我瞎说一通...
+
+* 农民的奇葩思路
+:PROPERTIES:
+:header-args: :results silent :tangle ../_img/lisp/misc/apple-pear-orange/apple-pear-orange.lisp
+:END:
+
+整体的一个思路就是:
+1. 暴力枚举得到两两组合
+2. 选择得到不能满足条件的两两组合对
+3. 根据找到的不能满足条件的两两组合对,
+   计算包含数量最多的组合, 得到不能满足条件的堆的 \(N_{\mathrm{max}}\),
+   最终得到 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\).
+
+代码可以在 [[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/apple-pear-orange.lisp][这里]] 找到... 
+
+** 在 \(\mathbb{Z}_p\) 上的加法
+显然在奇葩的脑子里面, 立刻想到的就是 \(\mathbb{Z}_p\) 上的一个小计算:
+
+#+name: z-mod-ring-add
+#+begin_src lisp
+  (defun z-mod-ring-add (m)
+    "得到一个简单的 Z mod m 环上的加法函数."
+    (lambda (&rest lst)
+      (reduce (lambda (r1 r2) (mod (+ r1 r2) m))
+              lst)))
+#+end_src
+
+** 农民就只会枚举...
+没错, 我就是农民, 拿到问题之后我的第一个想法就是枚举一下不就完事了?
+
+#+name: z-mod-m-ring-patterns
+#+begin_src lisp
+  (defun z-mod-m-ring-patterns (m)
+    "苹果, 梨, 橘子按照 Z mod m 结果组合为 m^3 种.
+
+  返回的结果为一个元素为 (苹果个数 梨个数 橘子个数) 的列表."
+    (let ((upper (1- m))
+          (res   '()))
+      (loop for apple from 0 upto upper do
+            (loop for pear from 0 upto upper do
+                  (loop for orange from 0 upto upper do
+                        (push (list apple pear orange) res))))
+      res))
+#+end_src
+
+#+begin_html
+<details><summary> 一个重写的想法 </summary>
+#+end_html
+
+可以用后面构造的 =combine-by-patterns= 函数来重写. 不过我觉得没啥鸟用. 
+
+#+begin_src lisp :tangle no
+  (defun z-mod-m-ring-patterns-at (n m)
+    "N 个元素按照能被 M 整除进行组合的总的情况."
+    (apply #'combine-by-patterns
+           (make-list n :initial-element (loop for i below m collect i))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+基本的思路就是找一个判定函数, 然后把两两组合的结果过一遍判定函数,
+来选择出那些不能整除的组合:
+
++ 判定函数
+
+  #+name: pick-odd-patterns-mod
+  #+begin_src lisp
+    (defun modp (number divider)
+      "测试 NUMBER 是否能够被 DIVIDER 整除."
+      (eq 0 (mod number divider)))
+
+    (defun pick-odd-patterns-mod (m)
+      "得到一个测试 PATTERN 是否不能够被 M 整除. 
+    若不能被整除的, 则返回 T 的函数.
+
+    如果 M 为一个 list, 则将会按照规则一一对 PATTERN 整除, 
+    比如说 PATTERN 为 (p1 p2 p3), M 为 (m1 m2 m3) 则会变成 pj mod mj."
+      (lambda (pattern)
+        (let ((mlst (if (atom m)
+                        (make-list (length pattern)
+                                   :initial-element m)
+                        m)))
+          (not (reduce (lambda (a b) (and a b))
+                       (mapcar #'modp pattern mlst))))))
+  #+end_src
+
+  #+begin_html
+  <details><summary> 判定并选择满足条件的模式 </summary>
+  #+end_html
+
+  #+begin_src lisp
+    (defun pick-matched-pattern-mod (m)
+      "得到一个测试 PATTERN 是否都能够被 M 整除, 若都能整除则返回 T 的函数."
+      (lambda (pattern)
+        (let ((mlst (if (atom m)
+                        (make-list (length pattern)
+                                   :initial-element m)
+                        m)))
+          (reduce (lambda (a b) (and a b))
+                  (mapcar #'modp pattern mlst)))))
+  #+end_src
+
+  #+begin_html
+  </details>
+  #+end_html
++ 计算两两组合不满足判定函数 (实际上是判定函数返回 =T= 的结果) 的两两组合:
+
+  #+name: pick-odd-merge-pattern
+  #+begin_src lisp
+    (defun pick-odd-merge-pattern (m)
+      "选择两两合并后, 是不能被 M 整除的合并函数."
+      (lambda (patterns)
+        (let ((upper  (1- (length patterns)))
+              (adder  (z-mod-ring-add m))
+              (picker (pick-odd-patterns-mod m))
+              (res    '()))
+          (loop for g1 from 0 upto upper do
+                (loop for g2 from g1 upto upper do
+                      (let* ((group1 (nth g1 patterns))
+                             (group2 (nth g2 patterns))
+                             (merged (mapcar adder group1 group2)))
+                        (when (funcall picker merged)
+                          (push (list g1 g2) res)))))
+          res)))
+  #+end_src
++ 历遍所有的组合, 查找两两组合不能满足判定函数的两个组合
+
+  #+begin_src lisp
+    (defun pick-out-patterns (m patterns &key (odd T))
+      "选择 PATTERNS 中两两相加后, 满足条件的两两序号对. 
+    其中:
+    + PATTERNS 为元素为 (a1 a2 ...) 形式的模式列表
+    + 若 ODD 为 T, 则选择不能都满足的对, 若 NIL 选择能都满足的对."
+      (let ((adder  (lambda (pat1 pat2)
+                      (mapcar (z-mod-ring-add m) pat1 pat2)))
+            (picker (if odd
+                        (pick-odd-patterns-mod m)
+                        (pick-matched-pattern-mod m)))
+            (size   (length patterns))
+            (pairs  '()))
+        (loop for i below size do
+          (loop for j from i below size
+                if (funcall picker (funcall adder (nth i patterns)
+                                            (nth j patterns)))
+                  do (push (list i j) pairs)))
+        pairs))
+  #+end_src
+
+于是对于 =*p*= 等于 =2= 的情况下, 可能的组合为:
+
+#+name: defparameter-*p*
+#+begin_src lisp :tangle no
+  (defparameter *p* 2
+    "苹果, 梨, 橘子的合并要能够被 *P* 整除.")
+
+  (defparameter *patterns* (z-mod-m-ring-patterns *p*)
+    "苹果, 梨, 橘子按照在 Z mod 3 结果下的可能组合为 3^3 = 27 种.")
+
+  (defparameter *odd-patterns*
+    (pick-out-patterns *p* *patterns*)
+    "对 *patterns* 两两组合, 存在问题的两个组放到问题组合中.
+  得到的结果为一个元素为 (ID-1 ID-2) 的列表, 其中 ID 为 *PATTERN* 中元素的序号.")
+#+end_src
+
+** 最大两两连接
+思路是这样的: 如果把上文得到的 =*odd-patterns*= 的结果看作是一个无向图,
+那么可以发现, 无向图的边表示了一个关系: 两个组合之间是否不能满足条件.
+
+#+begin_html
+<details><summary> 一些花里胡哨的绘制代码 </summary>
+#+end_html
+
+首先将 =*odd-patterns*= 绘制成图:
+
+#+name: arc-to-graph
+#+begin_src lisp
+  (defparameter *default-headers*
+    '("layout = fdp;"
+      "node [shape=\"circle\"];")
+    "默认的 Graphiz 的设置.")
+
+  (defun arc-to-graph (arcs &key (headers *default-headers*)
+                              (stream *standard-output*))
+    "将无向图 ARCS 输出为 Graphviz 的代码并打印. 默认输出到标准输出."
+    (format stream "graph {~%")
+    (loop for header in headers do
+          (format stream "  ~A~%" header))
+    (loop for arc in arcs do
+          (format stream "  ~A -- ~A;~%" (first arc) (second arc)))
+    (format stream "}"))
+#+end_src
+
+如果是绘制矩阵的话:
+
+#+name: matrix-to-graph
+#+begin_src lisp
+  (defun matrix-to-graph (matrix &key (headers *default-headers*)
+                                   (stream *standard-output*))
+    "将 MATRIX 输出为 Graphviz 的代码并打印. 默认输出到标准输出."
+    (format stream "graph {~%")
+    (loop for header in headers do
+          (format stream "  ~A~%" header))
+    (loop for line in matrix
+          for line-num from 0
+          do (loop for arc-p in (nthcdr line-num line)
+                   for row-num from line-num
+                   if (eq 1 arc-p)
+                     do (format stream "  ~A -- ~A;~%"
+                                line-num row-num)))
+    (format stream "}"))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+对于 =p = 2= 的情况, 绘制得到的图如下:
+
+#+name: arc-to-graph-p
+#+headers: :tangle no :results output
+#+headers: :var p = 2
+#+begin_src lisp :exports none
+  (let* ((patterns     (z-mod-m-ring-patterns p))
+         (odd-patterns (pick-out-patterns p patterns)))
+    (arc-to-graph odd-patterns))
+#+end_src
+
+#+name: p-eq-2-dot
+#+headers: :tangle no :var data = arc-to-graph-p(p = 2)
+#+headers: :file ../_img/lisp/misc/apple-pear-orange/p-eq-2.svg
+#+begin_src dot :exports none
+  $data
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/p-eq-2.svg]]
+
+对于这样的 (p = 2) 的结果, 看起来还是很容易的 (多么对称啊... ).
+甚至你可以一眼看出, 这些节点之间都是两两相互连接的. 也就是说,
+对于 p = 2 的情况, 其最大两两连接图的节点数量为 8 (也就是图的节点数量).
+
+但是对于 p = 3 的情况:
+
+#+name: p-eq-3-dot
+#+headers: :tangle no :var data = arc-to-graph-p(p = 3)
+#+headers: :file ../_img/lisp/misc/apple-pear-orange/p-eq-3.svg
+#+begin_src dot :exports none
+  $data
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/p-eq-3.svg]]
+
+这个就比较夸张了, 自然不用说对于 p = 4 的情况...
+
+#+name: p-eq-4-dot
+#+headers: :tangle no :var data = arc-to-graph-p(p = 4)
+#+headers: :file ../_img/lisp/misc/apple-pear-orange/p-eq-4.svg
+#+begin_src dot :exports none
+  $data
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/p-eq-4.svg]]
+
+显然, 这样的鸟东西肯定是不可能人眼判断的.
+对于用手算的同学肯定会觉得我是傻逼, 没错, 我真的是傻逼,
+因为我还真地就这么继续折腾了下去, 而不是去想一个更加美妙的解析解.
+
+** 艺术就是爆炸...
+问题的思路就是要找到一个最大两两连接图.
+一个比较朴素的解决思路是这样的:
+
++ 用一个 =to-search-nodes= 作为待搜索节点的列表,
+  用一个 =searched-nodes= 作为已经找过的节点列表
++ 假如 =to-search-nodes= 不为空, 则取其中的一个节点 =node=
+  + 假如该节点和已经找过的节点都相连接 =test-connection=,
+    则将该节点添加到 =searched-nodes=, 然后以在 =to-search-nodes= 中,
+    =node= 后的节点作为新的 =to-search-nodes= 继续搜索.
+  + 假如不相连, 那么直接就搜索下一个 =node=
++ 假如 =to-search-nodes= 为空, 则更新最大长度的信息
++ 在搜索完毕后, 返回最大长度信息
+
+当然, 为了实现上面的算法, 将图转换为邻接矩阵的形式可能会比较好:
+
+#+name: arc-to-matrix
+#+begin_src lisp
+  (defun arc-to-matrix (size arcs)
+    "将边组 ARCS 变换为邻接矩阵形式. 
+
+  其中 ARCS 的形式为 ((点1 点2) ...), 是无向图.
+  得到的 MATRIX 的形式为 ((a11 a12 ...) (a21 a22 ...) ...)."
+    (let ((matrix (loop for i from 0 below size
+                        collect (make-list size :initial-element 0))))
+      (loop for arc in arcs do
+            (let ((p1 (first  arc))
+                  (p2 (second arc)))
+              (setf (at matrix p1 p2) 1
+                    (at matrix p2 p1) 1)))
+      matrix))
+#+end_src
+
+然后在邻接矩阵的基础上去查找一个最大两两连接图:
+
+#+begin_html
+<details><summary> 其中的一些帮助函数 </summary>
+#+end_html
+
++ 最大值记录帮助函数
+
+  #+name: max-helper-function
+  #+begin_src lisp
+    ;;; 最大值记录帮助函数
+    (let ((max-value   0)
+          (max-pattern NIL))
+      (defun max-reset (&optional (max 0))
+        "重置 MAX-VALUE 的值为 MAX, 默认为 0."
+        (setf max-value   max
+              max-pattern NIL))
+
+      (defun re-max (&optional pattern)
+        "比较 PATTERN 长度和 MAX-VALUE 的大小并更新 MAX-VALUE 的值. 
+    返回 MAX-VALUE 和 MAX-PATTERN."
+        (let ((value (length pattern)))
+          (when (and value (> value max-value))
+            (setf max-value value
+                  max-pattern pattern)))
+        (values max-value max-pattern)))
+  #+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: max-connection-matrix
+#+begin_src lisp
+  (defun max-connection-matrix (matrix)
+    "在邻接矩阵的基础上查找最大的两两连接图."
+    (labels ((test-connection (node others)
+               "判断 NODE 与 OTHERS 之间是否相连."
+               (loop for other in others
+                     if (not (eq 1 (at matrix node other)))
+                       do (return NIL)
+                     finally (return T)))
+             (search-max (to-search searched-nodes)
+               "查找最大两两连接图的递归函数."
+               (if (null to-search)
+                   (re-max searched-nodes)
+                   (let ((node  (first to-search)))
+                     (search-max (rest to-search)
+                                 (if (test-connection node searched-nodes)
+                                     (cons node searched-nodes)
+                                     searched-nodes))))))
+
+      (max-reset)                         ; 重置最大值
+      (let* ((size  (length matrix))
+             (nodes (loop for idx below size collect idx)))
+        (loop for start in nodes do       ; 选择不同的起点
+              (search-max nodes (list start))))
+      (re-max)))
+#+end_src
+
+#+begin_html
+<details><summary> 一些掉书袋的东西 </summary>
+#+end_html
+
+其实也不是掉书袋, 分析一下算法的复杂度而已: 对于一个 \(M_{n \times n}\) 的方阵,
+分析的时候将其节点序号编号为 \(1, 2, \dots, i, \dots, n\),
+当取 =node= 为第 \(i\) 号节点时, =searched-nodes= 的大小 \(\leq i\),
+那么计算中的消耗:
++ =test-connection= 最多需要比较 =(length searched-nodes)= 次,
+  于是可以近似为 \(O(i)\) 次.
++ 一次 =search-max= 需要计算第 \(1, \dots, n\) 个 =node=,
+  那么对应需要 \(\sum i = \frac{n(n + 1)}{2}\) 次计算, 近似为 \(O(n^2)\) 次.
++ 而需要从 \(n\) 个起点开始, 所以复杂度为 \(O(n^3)\).
+
+(注: 我也不是啥正经计算机系人, 大概就是这样的一个复杂度?
+算错了我也可以负责一下, 不过没人来扣我分就是了.)
+
+#+begin_html
+</details>
+#+end_html
+
+不过在看结果的时候, 突然想到如果有这样的一个图:
+其中的节点到任意节点 (包括自身) 都存在边, 那么这个时候,
+是不是就不存在可以分解为堆的情况呢?
+
+但是, 理论上应该是不可能的, 在环 \(\mathbb{Z}_p\) 上, 总是存在逆元.
+所以 \(x\) 的逆元和 \(x\) 之间一定不存在边. 于是在上面的问题里面,
+既然已经得到了最大两两相连图的节点组 \(X\), 那么任意取 \(x \in X\),
+往其中添加一个 \(x^{-1}\) 形成的新的组 \(X' = X \cup \{x^{-1}\}\) 就是最小的满足条件的组了.
+
+于是对于不同的 \(p\), 就应该也许大概可以计算咯:
+
+#+begin_src lisp
+  (defun test (p)
+    "简单的测试函数, 测试对于整除 P 的组合的可能的结果数量."
+    (let* ((patterns     (z-mod-m-ring-patterns p))
+           (odd-patterns (pick-out-patterns p patterns))
+           (matrix       (arc-to-matrix (expt p 3) odd-patterns)))
+      (multiple-value-bind (size pattern-idx)
+          (max-connection-matrix matrix)
+        (values size
+                pattern-idx
+                patterns))))
+#+end_src
+
+#+begin_html
+<details><summary> 更加详细的一些测试 </summary>
+#+end_html
+
+那么一个想法就是测试上面 =test= 函数得到的结果是否满足一开始的要求:
++ 两两之间总会有连线:
+
+  #+begin_src lisp
+    (defun test-connection (nodes matrix)
+      "测试 NODES 在 MATRIX 中是否是两两相连的. 
+    返回 T 如果是两两相连的, 否则返回 NIL.
+
+    示例代码:
+        (let* ((p 3)
+               (patterns     (z-mod-m-ring-patterns p))
+               (odd-patterns (pick-out-patterns p patterns))
+               (matrix       (arc-to-matrix (expt p 3) odd-patterns)))
+          (multiple-value-bind (- pattern-idx)
+              (max-connection-matrix matrix)
+            (test-connection pattern-idx matrix)))
+    返回的结果应当为 T."
+      (let ((upper (length nodes)))
+        (loop for i below upper
+              if (loop for j from (1+ i) below upper
+                       if (eq 0 (at matrix (nth i nodes) (nth j nodes)))
+                         do (return T)
+                       finally (return NIL))
+                do (return NIL)
+              finally (return T))))
+  #+end_src
++ 确认没有其他的节点 (最大): 添加任意一个新节点, 则不满足两两相连的条件.
+
+  #+begin_src lisp
+    (defun test-max-connection (nodes matrix)
+      "测试是否为最大的连接.
+
+    示例代码:
+         (let* ((p 3)
+               (patterns     (z-mod-m-ring-patterns p))
+               (odd-patterns (pick-out-patterns p patterns))
+               (matrix       (arc-to-matrix (expt p 3) odd-patterns)))
+          (multiple-value-bind (- pattern-idx)
+              (max-connection-matrix matrix)
+            (test-max-connection pattern-idx matrix)))
+    结果应当为 T."
+      (loop for idx below (length matrix)
+            if (and (not (find idx nodes))
+                    (test-connection (cons idx nodes) matrix))
+              do (return NIL)
+            finally (return T)))
+  #+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+那么对于 p = 3 的情况, 应该得到的结论为:
+
+#+name: test-p-3
+#+headers: :tangle no :results replace
+#+begin_src lisp :exports both
+  (test 3)
+#+end_src
+
+#+RESULTS: test-p-3
+: 15
+
+** 换一个思路
+当前的算法对于 \(p\) 的复杂度约为 \(O((p^3)^3)\). 但是如果先进行分组进行划分,
+然后在组合进行合并, 是否可以将问题的复杂度降低下来呢?
+
+#+begin_html
+<details><summary> 这个复杂度是怎么算的 </summary>
+#+end_html
+
+前面计算了对于一个 \(M_{n \times n}\) 的方阵, 找到最大两两连接图的复杂度为 \(O(n^3)\),
+而对于 \(\mathbb{Z}_p\) 的环, 其对应的方阵大小 \(n = p^3\) (三个: 苹果, 梨, 橘子). 
+
+#+begin_html
+</details>
+#+end_html
+
+而分组的基本思路就是一开始的那种方式:
+1. 因为苹果, 梨, 橘子是独立的, 所以单独考虑一个的复杂度:
+   + 在 \(p\) 的情况下, 计算 \(P = \{(x_i, x_j) | x_i + x_j \neq 0, x_i, x_j \in \mathbb{Z}_p\}\)
+
+     #+begin_src lisp
+       (defun make-matrix-of (p)
+         "计算 P 下的组合图, 并将其以矩阵的形式输出."
+         (let ((arcs '()))
+           (loop for a from 0 below p do
+                 (loop for b from a below p
+                       if (not (modp (+ a b) p))
+                         do (push (list a b) arcs)))
+           (arc-to-matrix p arcs)))
+     #+end_src
+   + 将 \(P\) 变成图然后计算最大两两相连图.
+
+     #+begin_html
+     <details><summary> 比如对于不同的 \(p\) </summary>
+     #+end_html
+
+     #+name: matrix-to-graph-of-p
+     #+headers: :tangle no :results output :var p = 2
+     #+begin_src lisp :exports none
+       (matrix-to-graph (make-matrix-of p))
+     #+end_src
+
+     #+name: matrix-to-graph-of-3
+     #+headers: :tangle no :var data = matrix-to-graph-of-p(p=3)
+     #+headers: :file ../_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-3.svg
+     #+begin_src dot :exports none
+       $data
+     #+end_src
+
+     \(p = 3\):
+
+     [[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-3.svg]]
+     
+     #+name: matrix-to-graph-of-4
+     #+headers: :tangle no :var data = matrix-to-graph-of-p(p=4)
+     #+headers: :file ../_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-4.svg
+     #+begin_src dot :exports none
+       $data
+     #+end_src
+     
+     \(p = 4\):
+     
+     [[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-4.svg]]
+
+     #+name: matrix-to-graph-of-5
+     #+headers: :tangle no :var data = matrix-to-graph-of-p(p=5)
+     #+headers: :file ../_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-5.svg
+     #+begin_src dot :exports none
+       $data
+     #+end_src
+     
+     \(p = 5\):
+     
+     [[{{ site.github.url }}/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-5.svg]]     
+
+     好消息是这个图非常的简单, 甚至可以说对于大佬来说估计可以一眼望穿...
+     
+     #+begin_html
+     </details>
+     #+end_html
+     
+     于是可以计算一个最小满足条件的组合 \(C: \forall x \in C, \exists x' \in C, x + x' = 0\).
+
+     #+begin_src lisp
+       (defun min-combination-pattern (matrix)
+         "计算通过邻接矩阵 MATRIX 得到的最小长度和所有对应最小的组合."
+         (multiple-value-bind (size patterns)
+             (max-connection-matrix matrix)
+           (values (1+ size)
+                   (loop for node below (length matrix)
+                         if (loop for pattern in patterns
+                                  if (eq 0 (at matrix node pattern))
+                                    do (return T)
+                                  finally (return NIL))
+                           collect (cons node patterns)))))
+     #+end_src
+
+     #+begin_html
+     <details><summary> 代码注记 </summary>
+     #+end_html
+
+     + 首先找到最大两两相连矩阵 =(max-connection-matrix matrix)=
+     + 有前面的逆元的论证, 最小的非两两相连的图的大小为最大两两相连图的大小加一.
+       对应的节点集合为往最大两两相连图中添加一个新的不满足的节点即可.
+
+       但是这个添加的点不同, 最终得到的节点组也不同, 所以需要历遍所有可能的点.
+
+     #+begin_html
+     </details>
+     #+end_html
+2. 计算苹果, 梨, 橘子按照 \(C\) 中元素进行组合的排布, 并剔除重复项.
+
+   注: 剔除重复项的时候, 我觉得可以用二叉树来实现,
+   这样估计可以降低复杂度 (\(O(\ln n)\)), 不过我比较懒,
+   所以就用一个 \(O(n)\) 的历遍来做先.
+
+   #+begin_html
+   <details><summary> 一个无聊的代码 </summary>
+   #+end_html
+
+   我的想法是, 如果可以整一个组合函数就好了:
+   对于第 \(i\) 位元素的可能取值组合 \(\mathrm{pattern}_i\),
+   能够得到所有可能组合的 \(\{(x_i)\}\) 就好了. 
+
+   #+begin_src lisp
+     (defun combine-by-patterns (&rest patterns)
+       "PATTERNS 为可能的模式组合的列表以及长度, 如:
+     (combine-by-patterns '(1 0) '(1 0)) 将得到 (1 1) (1 0) (0 1) (0 0) 
+     并且在组合中会剔除重复的模式."
+       (labels ((combine-two-pattern (pat1 pat2)
+                  (let ((res '()))
+                    (loop for elem1 in pat1 do
+                          (loop for elem2 in pat2 do
+                                (setf res (union res (list (cons elem2 elem1))
+                                                 :test #'equal))))
+                    res)))
+         (let ((patterns (reduce #'combine-two-pattern patterns
+                                 :initial-value '(NIL))))
+           (values patterns (length patterns)))))
+   #+end_src
+
+   利用这个函数, 就可以比较轻松地计算 =n= 个相同 =patterns= 的情况的组合了:
+
+   #+begin_src lisp
+     (defun combine-by-n-pattern (n pattern)
+       "N 个 PATTERN 的组合的不重复的组合以及组合的长度."
+       (apply #'combine-by-patterns
+              (make-list n :initial-element pattern)))
+   #+end_src
+
+   #+begin_html
+   </details>
+   #+end_html
+   
+   #+begin_src lisp
+     (defun combine-patterns-count (n p)
+       "对于 N 个元素在模 P 组合下进行计数."
+       (multiple-value-bind (- patterns)
+           (min-combination-pattern (make-matrix-of p))
+         (let* ((combinations
+                  (mapcar (lambda (pattern)
+                            (multiple-value-bind (pat size)
+                                (combine-by-n-pattern n pattern)
+                              (list size pat)))
+                          patterns))
+                (combination
+                  (sort combinations #'< :key #'first)))
+           (values (length (second (first combination)))
+                   combination))))
+   #+end_src
+
+细心的或者运行了代码的估计已经发现问题了,
+运行代码的可以直接看出来两种方法答案不同,
+细心的估计直接发现了这样的解法得到的是苹果或者梨或者橘子至少有一个能被整除.
+
+欸... 
+
+#+begin_html
+<details><summary> 做一些测试 </summary>
+#+end_html
+
+#+begin_src lisp :tangle no
+  (combine-patterns-count 3 2)            ; => 8
+  (combine-patterns-count 3 3)            ; => 8
+  (combine-patterns-count 3 4)            ; => 27
+#+end_src
+
+会发现稍微比前一种方法需要的少一些, 毕竟条件更加宽松一些...
+
+#+begin_html
+</details>
+#+end_html
+
+* +废话集+
+感觉这样的小代码还是挺有意思的.
+估计以后闲了时候可以像这样做一些小代码来练练手.
+
+但是可能以后还是要写一些大一点的代码.
+
+不过感觉可能这样的做法还是不太合理, 估计不一定是最优解法,
+甚至不一定是正确的解法就是了.
+
+欸, 做到最后有点不想做了, 做研究写论文大概就会是这种感觉吧...
+
+啊, 最后, 为啥要叫翻车呢? 大概是因为这个玩意我写了太久,
+中间还出错了太多了吧... 并且最终的结果估计也不一定对...
