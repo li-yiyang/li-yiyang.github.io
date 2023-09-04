@@ -1,0 +1,660 @@
+#+title: Turing Complete and Verilog
+#+date: 2023-09-04
+#+options: _:nil ^:nil
+#+math: true
+#+categories: misc
+* About
+** About the FPGA Board I'm using
+#+begin_html
+<details><summary>为了看起来不像是广告, 隐藏了. </summary>
+#+end_html
+
+板子 (Tang Nano 9K) 是从网上按照大小和价格以及是否包邮进行筛选随便卖的,
+大概是因为深夜购物的原因, 脑子没带完整...
+于是卖完之后才发现商家给的文档也并不是那么完整...
+最后在网上搜索了之后看到了相应的文档:
+
+[[https://learn.lushaylabs.com/os-toolchain-manual-installation/][OS Toolchain Manual Installation]]
+
+(不过基本上就是对应的环境配置而已... )
+
+#+begin_html
+<details><summary>这里做一个简单的记录, 方便之后复现.</summary>
+#+end_html
+
+还是以 MacOS 为主 (反正目前没钱卖新电脑... )
+1. 基础设置搭建
+   + [[https://brew.sh][homebrew]]
+   + [[https://www.python.org][python]]
+2. 安装一些相关的工具链
+   + [[https://github.com/YosysHQ/apicula][apicula | Documentation and open source tools for the Gowin FPGA bitstream format]] 
+
+     因为使用的是芯片是 Gowin GW1NR-9 FPGA, 所以需要对应 Gowin 的工具链.
+
+     #+begin_src shell
+       pip install apycula
+     #+end_src
+   + [[https://github.com/YosysHQ/yosys][yosys | Yosys Open SYnthesis Suite]]
+   + [[https://cmake.org][cmake | Cross-platform make]] 编译链工具
+   + [[https://eigen.tuxfamily.org/index.php][eigen | C++ template library for linear algebra]]
+   + [[https://github.com/trabucayre/openFPGALoader][openFPGALoader | Universal utility for programming FPGA]]
+     
+     #+begin_src shell
+       brew install yosys cmake eigen openfpgaloader
+     #+end_src
+   + [[https://github.com/YosysHQ/nextpnr][nextpnr | a portable FPGA place and route tool]]
+
+     #+begin_src shell
+       git clone https://github.com/YosysHQ/nextpnr.git nextpnr && cd nextpnr
+
+       cmake . \
+             -DARCH=gowin -DGOWIN_BBA_EXECUTABLE=`which gowin_bba` \
+             -DPYTHON_INCLUDE_DIR=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
+             -DPYTHON_LIBRARY=$(python3 -c "import distutils.sysconfig as sysconfig;import os;  print(os.path.join(sysconfig.get_config_var('LIBDIR'), [f for f in os.listdir(sysconfig.get_config_var('LIBDIR')) if f.endswith('.dylib') or f.endswith('.a')][0]))")
+
+       make
+       sudo make install
+     #+end_src
+   + Other Tools (I thought it useful)
+     + [[http://iverilog.icarus.com/][iverilog | Verilog simulation and synthesis tool]]
+     + [[https://gtkwave.sourceforge.io/][GtkWave | GTK+ based wave viewer]]
+
+       #+begin_src shell
+         brew install iverilog gtkwave
+       #+end_src
+   + Emacs (if you'd like suffer like me): [[https://github.com/veripool/verilog-mode][verilog-mode]] (comes with Emacs after 21)
+3. 项目搭建, 组织和常用命令
+   + *项目结构*:
+     (这里因为我没有写过啥大项目, 所以并不知道该怎么组织项目文件,
+     所以这里只能做一些简单的记录, 之后如果有更多的经验的话再说.)
+
+     使用 =<module-name>.v= 来保存模块的功能.
+     使用 =<board>.cst= 来声明引脚关系.
+   + *常用命令*
+     1. yosys
+        + =read_verilog <module>.v=
+
+          读取名为 =<module>.v= 的模块声明.
+        + =synth_gowin -top <top-module-name> -json <output>.json=
+          
+          将模块以 =<top-module-name>= 作为主模块进行 synthesize (综合生成? ),
+          并以 =<output>.json= 为文件名导出.
+        + =exit= 退出, 嗯...
+     2. nextpnr (其中频率应为 =27= (Mhz))
+
+        #+begin_src shell
+          nextpnr-gowin --json   <output>.json       \
+                        --freq   <frequency-in-Mhz>  \
+                        --write  <pnr-output>.json   \
+                        --device GW1NR-LV9QN88PC6/I5 \
+                        --family GW1N-9C             \
+                        --cst    <board>.cst
+        #+end_src
+     3. apicula
+
+        #+begin_src shell
+          gowin_pack -d GW1N-9C -o <output>.fs <pnr-output>.json
+        #+end_src
+     4. openFPGALoader (烧写)
+
+        #+begin_src shell
+          openFPGALoader -b tangnano9k -f <output>.fs
+        #+end_src      
+
+     等我把这套流程过得差不多之后再想想自动化的方法吧.
+     
+(注: 环境不一定配得够全, 也不一定最省力, 如果有更加方便的, 以后再更新算了.
+并且如果以后可以的话, 看看能不能整一个 brew 安装脚本来自动安装... )
+
+#+begin_html
+</details></details>
+#+end_html
+
+* NAND Gate
++大概应该不叫做 "难的" 门...+
+
+(该部分对应基础逻辑电路部分)
+
+我觉得吧, 任何知道点逻辑运算的应该都会吧...
+(虽然可能不是最简单的逻辑门, 但是这部分基本就是德摩根定律乱杀.)
+
+#+begin_quote
+德摩根定律: \(\overline{A \wedge B} = \overline{A} \vee \overline{B}, \overline{A \vee B} = \overline{A} \wedge \overline{B}\)
+#+end_quote
+
+* 算不来和记不住
+(该部分对应的是算数运算和寄存器)
+
+** 算数
++ 二进制速算: 这个感觉挺难的 (尤其是对于我这种两位数以上运算就捉急的呆逼)
++ 成对的麻烦: 这个用与门两两配对后用或门合并结果即可
++ 奇数个信号: 这个可以换一个想法来看, 变成一个不考虑进位的加法器就可以理解了,
+  因为奇数(1) + 奇数(1) = 偶数(0), 偶数(0) + 奇数(1) = 奇数(1),
+  偶数(0) + 偶数(0) = 偶数(0). 那么加法器对应的门是 XOR 门, OK, 问题解决.
++ 半加器: XOR 和 AND 门分别代表 SUM 和 CAR, 和前面奇数个信号的思路一样.
++ 全加器: 考虑进位的计算, SUM 还是一样, CAR 变成 \((A \wedge B) \vee (A \wedge C) \vee (B \wedge C)\).
++ 信号计数: 可以参考: [[{{ site.github.url }}/misc/simplify-logic/][Simplify Logic (Q-M Methods)]],
+  之前写了一个简单程序来实现了 Q-M 方法来话讲逻辑电路 (虽然不一定对就是).)
++ 加倍: 其实就是 =shift= 操作... 毕竟二进制里面的乘二就是左移.
++ 8 位加法器: 实际上就是全加器的连接
++ 负数: 见下
++ 相反数: 这个可能可以有一个更加无聊的做法, (除了直接使用结论).
+  比如说反过来想, 相反数就是 \(x + \overline{x} = 0\) 这样的东西吧:
+  1. 按照最后位 \(x_n\) 进行一个判断, 若 \(x_n = 0\), 则 \(\overline{x}_n = 0\); 反之 \(\overline{x}_n = 1\),
+     但是会有一个进位 \(c_{n - 1} = 1\) (显然, 前者 \(c_{n - 1} = 0\)). 
+  2. 那对于 \(x_{n - 1}\), 若 \(c_{n - 1} = 0\), 则判断条件和 1 一样;
+     反之, \(c_{n - 1} = 1\), 则 \(x_{n - 1} = 1\) 时, \(\overline{x}_{n - 1} = 0\), \(c_{n - 2} = 1\);
+     而 \(x_{n - 1} = 0\) 时, \(\overline{x}_{n - 1} = 1, c_{n - 2} = 1\).
+
+     写成真值表就是:
+
+     | C | X | NEG X | NEXT C |
+     |---+---+-------+--------|
+     | 1 | 0 |     1 |      1 |
+     | 1 | 1 |     0 |      1 |
+     | 0 | 0 |     0 |      0 |
+     | 0 | 1 |     1 |      1 |
+  3. 其他的依次类推.
+
+  你看, 这样是否就变成了一个比较有意思的算法了呢?
+  并且从真值表也可以看出, NEG X 相对于 C 和 X 就是一个 XOR 门,
+  而 NEXT C 相对于 C 和 X 就是一个 OR 门.
+
+  这样不仅递归可以实现, 还方便用电路来实现了呢...
+
+  #+begin_html
+  <details><summary>注: 递归的实现</summary>
+  #+end_html
+
+  #+begin_src lisp
+    (defun binary-inverse-number (&rest bins)
+      "Return - x and carry, x is binary expression of bins."
+      (if (<= (length bins) 1)
+          (values bins (first bins))
+          (multiple-value-bind (inv carray)
+              (apply #'binary-inverse-number (rest bins))
+            (let ((bin (first bins)))
+              (values (cons (if (or (and (eq carray 0) (eq bin 1))
+                                    (and (eq carray 1) (eq bin 0)))
+                                1 0)
+                            inv)
+                      (if (or (eq carray 1) (eq bin 0)) 1 0))))))
+
+    (defun neg (bins)
+      "Negitive number of bins."
+      (apply #'binary-inverse-number bins))
+  #+end_src
+
+  代码上应该没有问题, 唯一的缺点就是写得不是很好看, 之后估计可以修改一下?
+  
+  不过这个时候我就想到了一个问题, 是不是这种可以通过有限次递归构造的算法,
+  都能够被描述成硬件呢? 不过虽然很好奇, 但是我是不会去构造啥算法去实现的.
+  就当作是电脑硬盘太小, 写不下我这个丑陋的代码吧.
+
+  #+begin_html
+  </details>
+  #+end_html
++ 逻辑引擎: 实际上就是 3 位解码器加上逻辑运算,
+  复用逻辑门可以减少使用门的数量, 以及让电路图不会太爆炸.
++ 计数器: 感觉我的实现有点不太正规... 让寄存器无时无刻不在读写,
+  然后用一个二路选择作为写的是给的数还是加一的数.
+  
+** 储存
++ 循环依赖: 有点类似 RS 锁存器, 但是在这个游戏里面是禁止出现的
++ 延迟线: 延时一个信号周期
++ 奇变偶不变: 通过延迟线构造的振荡器, 其实感觉就有点锁存器的感觉了,
+  毕竟 \(Q(t) = \overline{Q}(t - \tau)\).
++ 1 位取反器: 其实利用 =reg ^ reg= 异或即可
++ 1 位开关: 等价于 AND 门, 但是可以把输出连在一起 (等价于 OR 门)
++ 数据选通器: 这个个人感觉做得不是很好, 难道 8 位的 OR 门也就是这样胡乱连线吗?
+  不过这里感觉可以理解为什么引入开关这个元件的作用了.
+  (个人理解开关的作用: 防止串线.)
++ 总线: 实际上就是两个数据选通器的组合而已.
++ 优雅储存: 实际上感觉就是 RS 锁存器的感觉, 通过将两个延迟线连在一起即可,
+  \(Q(t) = Q(t - \tau)\), 但是这样的话会造成短路, 也没有可以触发的来源,
+  所以用控制信号和开关做一个判断: \(Q(t) = \mathrm{if\ } W, S \mathrm{\ else\ } Q(t - \tau)\).
++ 储存 1 字节: 把一位拓展到八位?
++ 解码器: 1 位和 3 位的思路都是一样的吧, 我感觉就是用开关进行选择的感觉.
++ 小盒子: 这个大小限制感觉非常没有意义, 毕竟这个可以自动布线,
+  线都糊在一起了... 实际上就实现了一个两路选通和利用了 1 字节储存.
+  
+* 计算器, 启动
+(该章节对应处理器架构)
+
++ 算数引擎: 这不就是之前的逻辑引擎多加了两个门嘛...
+  (实际上还能通过门复用来减少, 比如用一个二路选择和取反来实现
+  ADD 和 SUB 共用一个 ADD 门).
++ 条件判断: 这里还看到了开关的隔离功能呢...
+  这里的实现方法就是通过多路判选和开关将逻辑电路部分进行合并.
+  逻辑部分只要实现一个负数判断 (符号位) 和一个非零判断 (OR 门),
+  其他的就不过是一些逻辑组合而已.
++ 寄存器之间: 这个就是一个多条件的选通而已, 诶, 就是连线连起来太麻烦.
+  这个时候就很好奇 Verilog 是怎样生成连线的了. 不过有意思的是,
+  这个电路实现的就是一个 MOV 指令 (大概). 而亲 (该) 爱 (死) 的 [[https://github.com/xoreaxeaxeax/movfuscator][movfuscator]]
+  已经证明了只用 MOV 一个指令也可以构造程序 (图灵完备?)
++ 指令解码器: 这更加简单了, 简直就是一个打表操作嘛.
++ 可运行的计算机: (直接到这里了, 前面的忽略), 不是很难,
+  就是不容易排线. 不过目前这几个寄存器都是有作用的,
+  真正用来储存的只有一个寄存器, 所以应该谈不上是真正的计算机.
+
+#+begin_html
+<details><summary>指令集</summary>
+#+end_html
+
+指令集的组成结构:
+
+#+begin_src bnf
+  INSTRUCT ::= INSTANT   NUMBER
+             | COMPUTE   0 0 0 METHOD
+             | CONDITION 0 0 0 COND
+             | COPY      FROM  TO
+#+end_src
+
+#+begin_src lisp
+  (defun to-bin (num &optional (bin NIL))
+    "Trun `num' to binary list."
+    (if (zerop num) bin (to-bin (floor num 2) (cons (mod num 2) bin))))
+
+  (defun num-to-bin (num &optional (len -1))
+    "Turn `num' into binary list with max length of `len'."
+    (let* ((res  (to-bin num))
+           (size (length res)))
+      (when (> len 0)
+        (if (< size len)
+            (dotimes (_ (- len size)) (setq res (cons 0 res)))
+            (setq res (subseq res (- size len)))))
+      res))
+
+  (defun instant-number (number)
+    "Return instruct that write `number' into REG0."
+    (append '(0 0) (num-to-bin number 6)))
+
+  (defparameter *compute-method-table*
+    '((OR   . (0 0 0)) (NAND . (0 0 1))
+      (NOR  . (0 1 0)) (AND  . (0 1 1))
+      (ADD  . (1 0 0)) (SUB  . (1 0 1)))
+    "Table for method and their code.")
+
+  (defun compute (method)
+    "Return instruct that compute REG1 and REG2 by `method',
+  which writes results into REG3. 
+  See `*compute-method-table*' for method and their code."
+    (let ((code (assoc method *compute-method-table*)))
+      (when code (append '(0 1 0 0 0) (cdr code)))))
+
+  (defun copy (from to)
+    "Return instruct that copy data from `from' to `to'.
+  The `from' (or `to') can be `input' (or `output') or number of reg."
+    (let ((from-code (num-to-bin (if (eq from 'INPUT)  6 from) 3))
+          (to-code   (num-to-bin (if (eq to   'OUTPUT) 6 to)   3)))
+      (append '(1 0) from-code to-code)))
+
+  (defparameter *condition-type-table*
+    '((NEVER  . (0 0 0)) (=0  . (0 0 1)) (ZERO . (0 0 1))
+      (<0     . (0 1 0)) (<=0 . (0 1 1)) (LESQ . (0 1 0)) (LEQZ . (0 1 1))
+      (ALWAYS . (1 0 0)) (!=0 . (1 0 1)) (NEQZ . (1 0 1))
+      (>=0    . (1 1 0)) (>0  . (1 1 1)) (GEQZ . (1 1 0)) (GRTZ . (1 1 1)))
+    "Condition type table mapping condition with their code.
+  Also, I add some alias to make it more easy to type.")
+
+  (defun condition-by (type)
+    "Return instruct that set Program Counter to REG0 by `type'.
+  See `*condition-type-table*' for more."
+    (let ((code (assoc type *condition-type-table*)))
+      (when code (append '(1 1 0 0 0) (cdr code)))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+  
+* 手搓二进制?
+(该章节对应编程)
+
++ 加 5 等于几: 相当于就是一个加常数
+
+  #+begin_html
+  <details><summary>LISP</summary>
+  #+end_html
+
+  #+name: add-five-eqs
+  #+begin_src lisp
+    (list                                   ; OUTPUT = INPUT
+     (instant-number 5)                     ; REG0 = 5
+     (copy 0 1)                             ; REG1 = REG0
+     (copy 'input 2)                        ; REG2 = INPUT
+     (compute 'add)                         ; REG3 = REG1 + REG2
+     (copy 3 'output)                       ; OUTPUT = REG3
+     )
+  #+end_src
+
+  #+RESULTS: add-five-eqs
+  | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 1 |
+  | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 |
+  | 1 | 0 | 1 | 1 | 0 | 0 | 1 | 0 |
+  | 0 | 1 | 0 | 0 | 0 | 1 | 0 | 0 |
+  | 1 | 0 | 0 | 1 | 1 | 1 | 1 | 0 |
+
+  这样还是太麻烦了, 不如...
+
+  #+begin_html
+  </details>
+  #+end_html
++ 激光炮直瞄: 相当于是正整数乘法, 最朴素的一个做法就是
+  \(\lambda a b . (\mathrm{if\ } a = 0, 0 \mathrm{\ else\ } b + Y(a - 1) b)\).
+
+  #+begin_html
+  <details><summary>对应代码</summary>
+  #+end_html
+  #+begin_example
+    # λab.(a = 0 -> 0; T -> b + Y(a - 1)b)
+    6            # 0:
+    reg0_to_reg5 # 1: reg5 <= sum count
+    in_to_reg4   # 2: reg4 <= sum result
+    reg5_to_reg1 # 3:
+    1            # 4: sum count step
+    reg0_to_reg2 # 5: 
+    sub          # 6: sum count -= 1
+    16           # 7: return sum result
+    less_eq_0    # 8: if sum count <= 0
+    reg3_to_reg5 # 9: sum count -= 1
+    reg4_to_reg1 # 10:
+    in_to_reg2   # 11:
+    add          # 12:
+    reg3_to_reg4 # 13: sum result += r
+    3            # 14:
+    jmp          # 15:
+    reg4_to_out  # 16: output sum result
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
+  
+  稍微复杂一点的做法会是
+  \(\lambda a b . (\mathrm{cond\ } a = 0, 0; even(a), Y(a / 2)(b + b); b + Y(a - 1)b)\).
+  当然, 也可以选择不那么漂亮的做法, 因为是正整数常数数乘,
+  所以直接把代码变成: \(\lambda r . (\overbrace{r + r + \cdots + r}^6)\) 也不是不行.
+  这样的话就一个普通寄存器都不需要用到了:
+
+  #+begin_html
+  <details><summary>对应代码</summary>
+  #+end_html
+  #+begin_example
+    in_to_reg1
+    in_to_reg2
+    add # r + r => 2r
+    reg3_to_reg2
+    add # 2r + r => 3r
+    reg3_to_reg2
+    reg3_to_reg1
+    add # 3r + 3r => 6r
+    reg3_to_out
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
+
+  (并且这个还快一点呢, 毕竟有折半操作).
++ 太空入侵者: 我现在做的这个代码完全没有一点智能,
+  完全就是提前写好动作, 所以没啥意思.
++ 密码锁: 这个自然可以直接枚举历遍 (就是慢了点).
+
+  #+begin_html
+  <details><summary>对应代码</summary>
+  #+end_html
+  #+begin_example
+    0            # 0: 
+    reg0_to_reg1 # 1: reg1 <= guess number
+    label output_guess
+    reg1_to_out  # 2: output guess number
+    1            # 3: 
+    reg0_to_reg2 # 4: 
+    add          # 5: guess number += 1
+    reg3_to_reg1 # 6:
+    output_guess # 7: label at 2
+    jmp          # 8:
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
+
+  #+begin_html
+  <details><summary>你一定想说二分法是吧</summary>
+  #+end_html
+  但是如果可以二分法搜索呢? 但是这里没有除法也没有位运算.
+  我也想不到可以怎样不在修改电路的基础上实现左移运算.
+  但是虽然这个除法没法实现, 但是可以历遍这个二进制啊:
+
+  #+begin_example
+    Algorithm: bin-search
+      guess = 0;
+      mask = 128;
+      if (mask + guess < real)
+        guess += mask;
+      mask /= 2;
+  #+end_example
+
+  道理是这个道理, 但是一开始我是想这样做的:
+
+  #+begin_example
+    # init mask => reg4
+    mask_128
+    jmp
+
+    label init
+    0
+    reg0_to_reg3 # reg3 <= guess
+
+    label output_guess
+    reg3_to_reg1 # reg1 <= reg3 = guess
+    reg4_to_reg2 # 
+    add
+    reg3_to_out  # out = mask + guess
+    in_to_reg3
+    next_mask
+    neq_0
+    reg3_to_reg1 # mask + guess => reg1
+    sub          # reg3 = guess, guess not change
+
+    label next_mask
+    reg5_to_reg0 # move to next mask
+    jmp          # next mask place stored in reg5
+
+    label mask_128
+    128
+    reg0_to_reg4
+    mask_64
+    reg0_to_reg5 # next mask = 64
+    output_guess
+    jmp
+
+    # ...
+  #+end_example
+
+  然后我就意识到一个致命的问题, 就是这个立即数最多只能写 6 位,
+  也就是最大 63. 这样就不能够打表了... 菜狗就不想办法优化了.
+
+  充分说明硬件支持软件, 只靠软件是有局限的 (bushi).
+  #+begin_html
+  </details>
+  #+end_html
++ 时间掩码: 模 4, 不就是取最后两位嘛... AND 一下不就好了.
++ 迷宫: 贴墙靠右 (左也行) 走, 虽然应该就是这么简单,
+  但是实际实现还需要一些操作...
+
+  #+begin_html
+  <details><summary>具体实现</summary>
+  #+end_html
+  简单来说应该是:
+
+  #+begin_example
+    Algorithm: Maze-Walk-Left
+      if (right-road?)
+        walk-to-right;
+      else if (front-road?)
+        walk-to-front;
+      else if (left-road?)
+        walk-to-left;
+      else
+        walk-back;
+  #+end_example
+
+  变成代码就是:
+
+  #+begin_example
+    label exit
+    4
+    reg0_to_out
+
+    label loop
+    # test_right_road
+    2
+    reg0_to_out  # turn to right
+    test_front_road
+    reg0_to_reg4
+    test
+    jmp          # call test
+
+    label test_front_road
+    0
+    reg0_to_out  # turn to front
+    test_left_road
+    reg0_to_reg4
+    test
+    jmp          # call test
+
+    label test_left_road
+    0
+    reg0_to_out  # turn to left
+    walk_back
+    reg0_to_reg4
+    test
+    jmp          # call test
+
+    label walk_back
+    0
+    reg0_to_out  # turn to back
+
+    label walk   # walk
+    1
+    reg0_to_out
+    loop
+    jmp
+
+    label test
+    in_to_reg1   # read input
+    3
+    reg0_to_reg2
+    sub
+    exit
+    eq_0         # input = 3 => exit
+    1
+    reg0_to_reg2
+    sub
+    reg4_to_reg0 # reg4 <= next condition
+    eq_0         # input = 1 => wall => next condition
+    walk         # if not 3 or 1, just walk
+    jmp
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
+
+* 计算机, 再启动
+(对应处理器架构2)
+
++ 异或: 感觉这个不难啊.
+
+  #+begin_html
+  <details><summary>代码</summary>
+  #+end_html
+  #+begin_example
+    in_to_reg4    # reg4 <= A
+    in_to_reg5    # reg5 <= B
+    reg5_to_reg1
+    reg5_to_reg2
+    nand          # reg3 = reg5 nand reg5 = not B
+    reg3_to_reg1
+    reg4_to_reg2
+    and           # reg3 = A and (not B)
+    reg3_to_reg0
+    reg4_to_reg1
+    reg4_to_reg2
+    nand          # reg3 = reg4 nand reg4 = not A
+    reg3_to_reg1
+    reg5_to_reg2
+    and           # reg3 = (not A) and B
+    reg0_to_reg1
+    reg3_to_reg2
+    or            # reg3 = (A and (not B)) or ((not A) and B)
+    reg3_to_out
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
++ 8 位常数: 这个不是更加简单了吗?
++ 相等: 按位相比, NOT(NOR) 门
++ 8 位异或: 拆开, 操作, 合并
++ 无符号小于: 我承认, 虽然不难, 但是把我绕进去了.
+
+  #+begin_html
+  <details><summary>实际上还是用递归的想法来思考会比较好一些</summary>
+  #+end_html
+  #+begin_src lisp
+    (defun unsigned-less (bin1 bin2)
+      "Compare less of unsigned binary list `bin1' and `bin2'.
+    Return `T' if `bin1' is less than `bin2', `NIL' otherwise."
+      (if (or (null bin1) (null bin2))
+          NIL
+          (let ((b1 (car bin1))
+                (b2 (car bin2)))
+            (cond ((eq b1 b2) (unsigned-less (cdr bin1) (cdr bin2)))
+                  ((eq b1 1)  NIL)
+                  ((eq b2 1)  T)))))
+  #+end_src
+
+  对应的电路: =(eq b1 b2)= \(\rightarrow\) NOT (b1 XOR b2), 通过一个开关去打开后面的通路.
+  #+begin_html
+  </details>
+  #+end_html
++ 有符号小于: 想不出来怎么用更少的门来实现这个功能.
+  有符号比较那么就先比较符号位, 再比较其他位:
+
+  #+begin_html
+  <details><summary>大概是这个样子</summary>
+  #+end_html
+  #+begin_src lisp
+    (defun signed-less (bin1 bin2)
+      (let ((sign1 (car bin1))
+            (sign2 (car bin2)))
+        (cond ((and (eq sign1 0) (eq sign2 1)) NIL)
+              ((and (eq sign1 1) (eq sign2 0)) T)
+              ((and (eq sign1 1) (eq sign2 1))
+               (unsigned-less (neg bin2) (neg bin1)))
+              ((and (eq sign1 0) (eq sign2 0))
+               (unsigned-less (cdr bin1) (cdr bin2))))))
+  #+end_src
+
+  虽然程序是这么写的, 但是电路实现的话就会有很多的问题,
+  要怎么样把这个简化呢...
+
+  啊, 最后直接复制了无符号小于的电路, 主打的就是一个懒于思考...
+  #+begin_html
+  </details>
+  #+end_html
++ 宽指令: 这个有点妙, 虽然实现很简单,
+  只要一个寄存器和一个对计数器奇偶判断的门电路即可.
+  但是这样就可以拓展指令能够支持的宽度了. (更多更好的指令集)
++ 一把线, 像挂面: 并不觉得和之前的架构有什么太大的区别,
+  控制好读写, 然后折腾一下计算单元就好了.
+
+  [2023-09-04] 出了些事情, 暂时到这里, 之后更新.
+  
+* Verilog
+** ENV and SIMULATION
+虽然 [[https://hdlbits.01xz.net/wiki/Main_Page][HDLBits]] 上面有模拟和仿真结果的测试,
+但是总归还是在本地跑一边 (仿真和上机) 让人更加安心.
+
+* COMMENT LocalWords
+#  LocalWords:  Nano Gowin yosys nextpnr Mhz apicula openFPGALoader
+#  LocalWords:  Elisp NAND
