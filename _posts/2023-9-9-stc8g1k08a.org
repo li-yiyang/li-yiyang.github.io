@@ -1,0 +1,280 @@
+#+title: STC8G1K08A
+#+date: 2023-09-13
+#+layout: post
+#+options: _:nil ^:nil
+#+categories: igem
+* About
+之前学单片机的时候用的是 [[{{ site.github.url }}/igem/STC89C52RC/][STC89C52RC]], 并且还是那种非常完善的开发板套件.
+手里一堆奇奇怪怪的教程, 所以用起来还算是无脑过, 并且因为写得少,
+没有啥大坑.
+
+现在做项目为了省钱和小型化要换一块芯片: STC8G1K08A,
+在这里记录一下使用中遇到的一些小问题和解决方案.
+
++ [[https://datasheet.lcsc.com/lcsc/2304140030_STC-Micro-STC8G1K08A-36I-SOP8_C915663.pdf][技术参考手册]]
+
+* 选型
+本来应该为了好测试, 应该买 DIP 直插的, 但是卖完了(?) 并且贵一半,
+所以最后选择用转接板和 SOP8 型号的.
+  
+* 简单的准备工作
+** 第一次尝试
+*** 最小电路
+#+name: minimum-system
+#+caption: 最小电路图
+[[{{ site.github.url }}/_img/STC8G1K08A/minimum-system.png]]
+
+按照手册上的说明确实可以这样做. 其中电容用于稳定电压输入,
+理论上换成任意一个稳压结构应该都可以吧. 
+TX 和 RX 为下载器上对应的引脚 (即芯片的 TX 对应下载器的 RX). 
+
+*** 下载器 CH340C
+虽然一个 CH340C 芯片只要不到 1 元钱, 但是成品的下载器至少 9 元起步...
+欸, 一个省钱小窍门: 不买立省 100%. 只要从旧的开发板上拆下来,
+甚至连拆都不用拆, 直接看原理图, 把对应的引脚引出来就好了.
+
+#+name: downloader
+#+caption: 混乱的下载器
+[[{{ site.github.url }}/_img/STC8G1K08A/downloader.jpeg]]
+
+(请忽略这个混乱的连线)
+
+*** STC8PROG
+之前使用的 stcgal 貌似没法识别芯片?
+
+#+begin_src shell
+  > stcgal -P /dev/tty.usbserial-1111 -P stc8
+  Waiting for MCU, please cycle power: done
+  WARNING: Unknown model F794!
+  Target model:
+    Name: UNKNOWN
+    Magic: F794
+    Code flash: 62.0 KB
+    EEPROM flash: 0.0 KB
+  ...
+#+end_src
+
+所以使用的是 [[https://github.com/IOsetting/stc8prog][stc8prog]] 进行程序烧写.
+
+#+begin_src shell
+  > stc8prog -p /dev/tty.usbserial-1110
+  Opening port /dev/tty.usbserial-1110: done
+  Waiting for MCU, please cycle power: detected
+  MCU type: STC8G1K08A-8PIN
+  Protocol: STC8G/8H
+  F/W version: 7.3.13U
+  IRC frequency(Hz): unadjusted
+  Switching to 115200 baud, chip: set, host: set, ping: succ
+#+end_src
+
+烧写方法:
+
+#+begin_src shell
+  > stc8prog -p /dev/tty.usbserial-1110 -e -f prog.ihx
+#+end_src
+
+*** 开发环境
++ 哇, 妙极. 发现 STC8PROG 作者 [[https://github.com/IOsetting][Github]] 上还有一个仓库: [[https://github.com/IOsetting/FwLib_STC8/tree/master][FwLib_STC8]],
+  那么为了快速解决问题, 直接引用仓库. (等以后有时间了再满满琢磨官方文档里面的说明).
++ 实际上也可以到 [[https://www.stcai.com/khs][stcai.com]] 上去下载库函数, 但是是对 Keil 的语法,
+  没法直接用到 sdcc 上面.
++ 尝试过 PlatformIO, 但是貌似并不是很行, 并且感觉不是很会用,
+  所以最终决定使用 Makefile 的方式来进行编译和下载.
+
++Makefile 看得我头昏眼花, 这真是一点也不注重可读性和可维护性啊...+
+
+核心的一个部分如下:
+
+#+begin_example
+  $(BDIR)/%.rel: $(TOP)/%.c
+          @printf "  CC $<\n"
+          @mkdir -p $(dir $@)
+          $(Q)$(CC) $< -c $(CC_CFLAGS) $(USER_INCFLAGS) $(LIB_INCFLAGS) -o $@
+#+end_example
+
+把最后一行展开来可能就是:
+
+#+begin_example
+  sdcc source.c -c ... -o source.rel
+#+end_example
+
+该部分的作用就是在对多个文件编译前先解决依赖文件的编译,
+然后对于最后一个文件的编译就变成了:
+
+#+begin_example
+  sdcc source.rel requirement1.rel requirement2.rel ... 
+#+end_example
+
+编译中使用了一个 =AR=, 对应的是 =sdar= 指令来构建一个库.
+
++这个时候就很后悔没有去听类似的课 (不过话说真的存在这样的课程吗?)+
+
+emmm, 不如用 Rakefile 重写一遍...
+
+重写完了. 至少比原来的好读一些. 并且也可以烧写了.
+等以后闲下来再好好修改一下, 这里放出核心的代码:
+
+#+begin_html
+<details><summary>Rakefile 的一个简单代码</summary>
+#+end_html
+#+begin_src ruby
+  require 'fileutils'
+
+  RAKE_DBG = false
+
+  PROJECT_NAME = 'stc8'
+  MCU_IRAM = 256
+  MCU_XRAM = 1024
+  MCU_CODE_SIZE = 8192
+
+  USER_CSOURCES = 'src'
+  USER_INCLUDES = 'include'
+  USER_INCFLAGS = ["-I#{USER_INCLUDES}"]
+
+  LIB_DIR  = 'lib'
+  LIB_LIST = Dir.children(LIB_DIR).select { |dir| File.directory? "#{LIB_DIR}/#{dir}" }
+  LIB_INCFLAGS = LIB_LIST.map { |lib| "-I#{LIB_DIR}/#{lib}/include" }
+
+  LIB_FLAGS = ["__CONF_FOSC=11059200UL",
+               "__CONF_MCU_MODEL=MCU_MODEL_STC8G1K08",
+               "__CONF_CLKDIV=0x00",
+               "__CONF_IRCBAND=0x01",
+               "__CONF_VRTRIM=0x1F",
+               "__CONF_IRTRIM=0xB5",
+               "__CONF_LIRTRIM=0x00"]
+
+  BUILD_PATH = 'build'
+
+  CC = 'sdcc'
+  AR = 'sdar'
+  SDRANLIB   = 'sdranlib'
+  PACKIHX    = 'packihx'
+  ARCH_FLAGS = "-mmcs51"
+  OPT        = "--opt-code-size"
+  CSTD       = "--std-sdcc99"
+  CC_CFLAGS  = [ARCH_FLAGS, OPT, CSTD] + LIB_FLAGS.map { |flag| "-D#{flag}" }
+  LD_CFLAGS  = [ARCH_FLAGS, OPT,
+                "--iram-size #{MCU_IRAM}",
+                "--xram-size #{MCU_XRAM}",
+                "--code-size #{MCU_CODE_SIZE}",
+                "--out-fmt-ihx"]
+  TGT_FLAGS = ["-rcs"]
+
+  def shell(*cmd)
+    print cmd.join(" "), "\n" if RAKE_DBG
+    system *cmd
+  end
+
+  def dir?(path, &block)
+    yield path if File.directory? path
+  end
+
+  def file?(dir, ext, &block)
+    Dir.each_child(dir) { |f| yield f if File.extname(f) == ext } if File.exist? dir
+  end
+
+  def extr(f, ext)
+    f.gsub(File.extname(f), ext)
+  end
+
+  def build_file(source, target, custom=[])
+    puts "Compile #{source}"
+    shell CC, "-c", source, *CC_CFLAGS, *custom, *LIB_INCFLAGS, "-o", target
+  end
+
+  def build_lib(name, path)
+    lib_file = []
+    lib_path = "#{BUILD_PATH}/#{name}"
+
+    FileUtils.mkdir_p(lib_path)
+
+    file?("#{path}/src", ".c") { |f|
+      build_file("#{path}/src/#{f}", "#{lib_path}/#{extr f, '.rel'}")
+      lib_file << "#{lib_path}/#{extr f, '.rel'}"
+    }
+
+    lib_file_path = "#{BUILD_PATH}/lib/#{name}.lib"
+    FileUtils.mkdir_p("#{BUILD_PATH}/lib")
+
+    puts "Creating static lib #{name}"
+    shell AR, *TGT_FLAGS, lib_file_path, *lib_file
+    shell SDRANLIB, lib_file_path
+  end
+
+  desc "Libraries should be stored at lib dir."
+  task :build_lib do
+    Dir.each_child(LIB_DIR) do |dir|
+      dir?("#{LIB_DIR}/#{dir}") { |path| build_lib(dir, path) }
+    end
+  end
+
+  desc "User source file should be stored in project root or src dir."
+  task :build_user do
+    puts "Build User Files:"
+    file?('.', '.c') { |f| build_file(f, "#{BUILD_PATH}/#{extr f, '.rel'}", USER_INCFLAGS) }
+    file?('src', '.c') { |f| build_file("src/#{f}", "#{BUILD_PATH}/#{extr f, '.rel'}", USER_INCFLAGS) }
+  end
+
+  desc "Build all the project and output PROJECT_NAME.hex under BUILD_PATH."
+  task :build_project => [:build_lib, :build_user] do
+    lib_files = []; file?("#{BUILD_PATH}/lib", '.lib') { |f| lib_files << "#{BUILD_PATH}/lib/#{f}" }
+    usr_files = []; file?("#{BUILD_PATH}", '.rel') { |f| usr_files << "#{BUILD_PATH}/#{f}" }
+    target    = "#{BUILD_PATH}/#{PROJECT_NAME}.hex"
+    shell CC, *LD_CFLAGS, *usr_files, *lib_files, "-o", target
+  end
+#+end_src
+#+begin_html
+</details>
+#+end_html
+
+注: 实际上最后发现了一个坑爹的事实, 就是 =stc8prog= 虽然能识别,
+但是并不能修改芯片运行的频率, 就会导致没法串口波特率没法设置.
+
+这貌似就会导致串口读写有问题... 诶, 所以最后还是选择安装一个 Windows 虚拟机,
+然后使用 STC-ISP 程序来进行下载.
+
+哦, 问题解决了, =stcgal= 在更新之后虽然也能识别了,
+只要在写入的时候刷入运行的 IRC 参数即可:
+
+#+begin_src shell
+  > stcgal -P stc8g -p /dev/tty.usbserial-1110 build/stc8.hex -t 11059
+#+end_src
+
+不过另外一个比较奇怪的问题就是需要设置工作模式为 Timer1,
+使用 Timer2 的时候没法在我的电脑上收到数据, 但是 STC-ISP 程序却可以,
+总之就是怪极了. 
+
+不管了, 能跑就好.
+
+#+begin_html
+<details><summary>一些总结和总体思路的简单介绍</summary>
+#+end_html
+(之所以折叠是因为可能并不是很正确)
+
+使用 sdcc 处理这些的一个简单流程图如下:
+
+#+name: sdcc-process
+#+caption: sdcc 处理流程图
+#+headers: :file ../_img/STC8G1K08A/sdcc-process.svg
+#+begin_src dot
+  digraph {
+    bgcolor=transparent;
+    node [shape=rect];
+    "Compile\nLibaries" -> "Compile\nUser Scripts"
+    -> "Pack\nihx to hex" -> "Flash";
+  }
+#+end_src
+
+#+RESULTS: sdcc-process
+[[file:../_img/STC8G1K08A/sdcc-process.svg]]
+
+#+begin_html
+</details>
+#+end_html
+
+* 大概就这样先吧
+正如这篇文章被归类的一样, 我将其归为 iGEM 一类,
+这是因为这块芯片是我为了给 iGEM 硬件组做传感器单元做的一个尝试.
+最终的效果也还行吧.
+
+之后有空了就更新一下这个方面的东西.
