@@ -1,0 +1,598 @@
+#+title: Metropolis Hastings Algorithm
+#+date: 2023-09-14
+#+layout: post
+#+options: _:nil ^:nil
+#+math: true
+#+categories: learning
+* About
+软物质物理课里面讲到的一个 Monte Caro 模拟算法, 感觉比较有意思.
+
+免责声明: 这玩意我写的不一定对, 估计里面有一堆的 bug.
+
+* Metropolis Hastings Algorithm
+** 解决的问题
+物理量计算困难
+
+对于物理量的平均:
+
+\[\left\langle A \right\rangle = \frac{1}{Z} \int A(\boldsymbol{R}^N) e^{- \beta U(\boldsymbol{R}^N)} \mathrm{d}\boldsymbol{R}^N\]
+
+发现积分不是很好积分, 于是将问题变换为随机采样:
+找一个描述分布的概率函数 \(\left\{ \boldsymbol{R}^N_i \right\} \rightarrow \rho(\boldsymbol{R}^N)\),
+于是可以有:
+
+\[\left\langle A \right\rangle \approx \frac{1}{M} \sum_i A(\boldsymbol{R}^N_i) \frac{e^{- \beta U(\boldsymbol{R}^N_i)}}{Z \rho(\boldsymbol{R}^N_i)}\]
+
+#+begin_html
+<details><summary>数学的说法</summary>
+#+end_html
+可以去找找看 [[https://en.wikipedia.org/wiki/Monte_Carlo_integration][Monte Carlo Integratoin]]:
++ 对于 \(\Omega \subset \boldsymbol{R}^m\) 上的积分 \(I = \int_{\Omega} f(\boldsymbol{x}) \mathrm{d} \boldsymbol{x}\)
++ 在 \(\Omega\) 上取随机采样点: \(\left\{ \boldsymbol{x}_1, \cdots, \boldsymbol{x}_N \right\} \in \Omega\)
++ 用求和代替积分: \(I \overset{N \rightarrow \infty}{\approx} Q_N = \frac{V}{N} \sum_{i=1}^N f(\boldsymbol{x}_i) = V \left\langle f \right\rangle\).
+  其中 \(V = \int_{\Omega} \mathrm{d} \boldsymbol{x}\) 为 \(\Omega\) 的体积.
+#+begin_html
+</details>
+#+end_html
+
+** 算法
+通过 Markov 链进行采样: \(X^1 \rightarrow \cdots \rightarrow X^m \rightarrow X^{m+1} \rightarrow \cdots \rightarrow X^{m + M}\).
+具体的做法如下:
+1. 选择一个初始状态
+2. 计算一个随机游走, 得到下一个可能的状态:
+   + 计算下一个状态可能存在的概率
+   + 若存在, 则将该状态记录, 并重复 2 步骤
+   + 若不存在, 则重新生成
+
+#+name: importance-sampling     
+#+begin_src lisp
+  (defun importance-sampling (state gen acc samples &optional (burn-in 0))
+    "使用 Markov 链进行采样: 初始状态 `state', 下一个状态函数 `gen', 判断函数 `acc', 采样数 `samples', 初始抛弃 `burn-in' 个样本. 
+  返回状态列表."
+    (when (not (zerop samples))           ; 若仍然需要进行采样
+      (let ((candidate (funcall gen state)))
+        ;; 若不接受, 则重新生成
+        (loop while (not (funcall acc candidate state)) do
+          (setf candidate (funcall gen state)))
+        ;; 抛弃前 burn-in 个状态, 记录 samples 个状态
+        (if (zerop burn-in)
+            (cons state (importance-sampling candidate gen acc (1- samples)))
+            (importance-sampling candidate gen acc samples (1- burn-in))))))
+#+end_src
+
+#+begin_html
+<details><summary>循环版本的代码</summary>
+#+end_html
+#+name: sampling
+#+begin_src lisp
+  (defun sampling (init gen acc samples &optional (burn-in 0))
+    "使用 Markov 链进行采样: 初始状态 `state', 下一个状态函数 `gen', 判断函数 `acc', 采样数 `samples', 初始抛弃 `burn-in' 个样本. 
+  返回状态列表."
+    (let ((state init)
+          (candidate (funcall gen init)))
+      (labels ((update ()                 ; 采样
+                 (loop do (setf candidate (funcall gen state))
+                       while (not (funcall acc candidate state)))
+                 (setf state candidate)))
+        ;; 抛弃前 burn-in 个状态
+        (loop for - below burn-in do (update))
+        ;; 收集后 samples 个状态
+        (loop for - below samples do (update)
+              collect candidate))))
+#+end_src
+#+begin_html
+</details>
+#+end_html
+
+注: 这里建议还是使用循环版本的代码.
+
+** 一些例子
+*** 一维势场中游走
++ 随机往正/负方向行走一定的距离:
+
+  #+name: 1-d-gen
+  #+begin_src lisp
+    (defun 1-d-gen (state)
+      "随机往正方向或者负方向行走 [0,1) 的距离."
+      (let ((sign (- 1 (* 2 (random 2))))
+            (len  (random 1.0)))
+        (+ state (* sign len))))
+  #+end_src
++ 认为势场 \(U = (x - 3)^2 (x + 10)^2\):
+
+  #+name: 1-d-u-plot
+  #+headers: :file ../_img/lisp/misc/metropolis/metropolis-1-d-U.svg
+  #+begin_src gnuplot :exports none
+    set samples 500
+    plot [-15:8] (x - 3)**2 * (x + 10)**2 title "U"
+  #+end_src
+
+  #+RESULTS:
+  [[file:../_img/lisp/misc/metropolis/metropolis-1-d-U.svg]]
+  
+  [[{{ site.github.url }}/_img/lisp/misc/metropolis/metropolis-1-d-U.svg]]
+
+  #+name: 1-d-u
+  #+begin_src lisp
+    (defun 1-d-U (state)
+      "U(x) = (x - 3)^2 (x + 10)^2"
+      (* (expt (- state 3) 2) (expt (+ state 10) 2)))
+  #+end_src
++ 判断函数如下:
+  + \(\mathrm{d}E = U(s') - U(s)\)
+  + 若 \(\mathrm{d}E < 0\), 则允许
+  + 若 \(\mathrm{d}E > 0\), 则以概率 \(\min \left\{ 1, e^{- \frac{\mathrm{d}E}{k T}} \right\}\) 进行判断
+
+  #+name: 1-d-acc 
+  #+begin_src lisp
+    (defun 1-d-acc (state2 state1)
+      "从 state1 变成 state2 是否接受."
+      (let ((dE (- (1-d-U state2) (1-d-U state1)))
+            (kT 300))          ; 瞎取的数
+        (or (< dE 0)
+            (< (random 1.0) (exp (- (/ dE kT)))))))
+  #+end_src
++ 于是一个可能的模拟如下:
+
+  #+begin_src lisp
+    (importance-sampling 0 #'1-d-gen #'1-d-acc 10000 50)
+  #+end_src
+
+注: 大概感觉是这样, 实际上代码还要一些修改 (手动写成循环形式).
+为了方便, 我将其转写成 Mathematica 的代码:
+
+#+begin_src mathematica
+  Sampling[init_, genF_, accF_, samples_, burnIn_] :=
+    Module[{state = init, candidate = genF[init]},
+     (*去掉前面 burnIn 个采样点*)
+     Do[Until[accF[candidate, state], candidate = genF[state]], burnIn]; state = candidate;
+     (*记录 samples 个采样点*)
+     Table[Until[accF[candidate, state], candidate = genF[state]]; state = candidate, samples]];
+
+  oneDU[state_] := (state - 3)^2*(state + 10)^2;
+  oneDGen[state_] := RandomReal[{-1, 1}] + state;
+  oneDAcc[state2_, state1_] :=
+    With[{dE = oneDU[state2] - oneDU[state1], kT = 300},
+     Or[dE < 0, RandomReal[] < Exp[-dE/kT]]];
+#+end_src
+
+最终的效果如下:
+
+[[{{ site.github.url }}/_img/lisp/misc/metropolis/oneDSim.gif]]
+
+(使用 Mathematica 导出).
+
+#+begin_html
+<details><summary>关于速度和优雅的问题</summary>
+#+end_html
+我承认我的代码写得很狗屎. 所以请不要用速度和优雅程度来评判我.
+
+更早一版的代码更加烂:
+
+#+begin_src mathematica
+  ImportanceSampling[init_, genF_, accF_, samples_, burnIn_] :=
+    Module[{
+      samplesC = samples,
+      burnInC = burnIn,
+      states = {},
+      state = init,
+      candidate},
+     While[samplesC > 0,
+      candidate = genF[state];
+      While[Not[accF[candidate, state]], candidate = genF[state]];
+      AppendTo[states, candidate];
+      state = candidate;
+      If[burnInC > 0, burnInC--, samplesC--]];
+     states];
+#+end_src
+
+对于两个规模在 =10000= 的代码:
+
+#+begin_src mathematica
+  Timing[Sampling[0, oneDGen, oneDAcc, 100000, 100];]           (* {0.888991, Null} *)
+  Timing[ImportanceSampling[0, oneDGen, oneDAcc, 100000, 100];] (* {9.30457,  Null} *)
+#+end_src
+
+注: 不过怎么说呢, Mathematica 的性能和其他的比起来可能还是差了一些吧...
+
+#+begin_example
+  METROPOLIS> (time (sampling 0 #'1-d-gen #'1-d-acc 1000000 50))
+  Evaluation took:
+    0.156 seconds of real time
+    0.156800 seconds of total run time (0.151595 user, 0.005205 system)
+    [ Real times consist of 0.007 seconds GC time, and 0.149 seconds non-GC time. ]
+    [ Run times consist of 0.007 seconds GC time, and 0.150 seconds non-GC time. ]
+    100.64% CPU
+    15,986,880 bytes consed
+#+end_example
+
+并且这个 Lisp 代码还是没有优化的那种呢...
+
+当然, 估计和 C 还有 C++ 比起来的话, 肯定还是有点距离的.
+但是至少和 C 比起来, 我稍微更加熟练这类型的写码风格吧.
+#+begin_html
+</details>
+#+end_html
+
+*** 对程序进行一些修改
+在写程序的时候发现了一个问题, 貌似我并不关心中间采样的东西究竟长什么样,
+因为我只关心最终的分布是什么样的. 所以稍微修改一下程序:
+
+#+name: sampling-hist
+#+begin_src lisp
+  (defun sampling-hist (init gen acc samples burn-in yield)
+    "使用 Markov 链进行采样: 
+    + 初始状态 `state'
+    + 下一个状态函数 `gen'
+    + 判断函数 `acc'
+    + 直方图函数 `hist'. 
+    + 采样数 `samples'
+    + 初始抛弃 `burn-in' 个样本
+    + 取样判断函数 `collect'"
+    (let ((state init)
+          (candidate (funcall gen init)))
+      (labels ((update ()                 ; 采样
+                 (loop do (setf candidate (funcall gen state))
+                       while (not (funcall acc candidate state)))
+                 (setf state candidate)))
+        ;; 抛弃前 burn-in 个状态
+        (loop for - below burn-in do (update))
+        ;; 收集后 samples 个状态
+        (loop for - below samples do (update)
+              do (funcall yield candidate)))))
+#+end_src
+
+#+begin_html
+<details><summary>一些 "作弊" 内容</summary>
+#+end_html
+为了简单处理问题, 以及我不会写直方图统计代码, 所以我决定直接调用库: [[https://gsll.common-lisp.dev][GSLL]].
+
+虽然原则上使用 [[https://cffi.common-lisp.dev][CFFI]] 来直接调用 [[https://www.gnu.org/software/gsl/][GSL]],
+但是对于已经写好了的东西我觉得还是直接拿来最好. :)
+
+#+name: 1-d-hist
+#+begin_src lisp
+  (let ((hist    (make-histogram 100))
+        (min     0)
+        (bin     100)
+        (binsize 1))
+    (defun 1-d-read-hist ()
+      (loop for i below bin
+            collect (grid:aref hist i)))
+
+    (defun 1-d-integrate (func)
+      (/ (loop for i below bin
+               for n from min by binsize
+               collect (* (funcall func n)
+                          (grid:aref hist i))
+                 into f
+               finally (return (apply #'+ f)))
+         (sum hist)))
+
+    (defun 1-d-hist-set-range (x-min x-max)
+      (set-ranges-uniform hist
+                          (coerce x-min 'double-float)
+                          (coerce x-max 'double-float)))
+
+    (defun 1-d-renew-hist (bin-num x-min x-max)
+      (setf hist    (make-histogram bin-num)
+            min     x-min
+            bin     bin-num
+            binsize (/ (* 1.0 (- x-max x-min)) bin-num))
+      (1-d-hist-set-range x-min x-max))
+
+    (defun 1-d-hist (sample)
+      (increment hist (coerce sample 'double-float)))
+
+    (defun draw-hist (output)
+      (eazy-gnuplot:with-plots (s :debug NIL)
+        (eazy-gnuplot:gp-setup :output output
+                               :terminal :png)
+        (eazy-gnuplot:plot
+         (lambda ()
+           (loop for i below bin
+                 for n from min by binsize do
+             (let ((value (grid:aref hist i)))
+               (format s "~&~a ~a" n value))))
+         :with '(:boxes)
+         :notitle NIL))
+      output))
+#+end_src
+
+以及一些简单的绘图程序, 使用的是 [[https://github.com/guicho271828/eazy-gnuplot][eazy-gnuplot]].
+
+那么修改后的一维势场游走模型如下:
+
+#+name: 1-d-sim
+#+begin_src lisp
+  (defun 1-d-sim (output &key (x-min -20) (x-max 20) (bin 50)
+                           (sample 10000) (burn-in 100))
+    (1-d-renew-hist bin x-min x-max)
+    (sampling-hist 0 #'1-d-gen #'1-d-acc sample burn-in #'1-d-hist)
+    (draw-hist output)
+    output)
+#+end_src
+
+绘制得到的结果如下:
+
+#+name: 1-d-sim-code
+#+headers: :var output=(expand-file-name "../_img/lisp/misc/metropolis/oneDSimHist.png")
+#+headers: :results none
+#+begin_src lisp
+  (1-d-sim output)
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/metropolis/oneDSimHist.png]]
+
+注: 之所以隐藏, 除了是因为引用了库, 还有的原因是因为我觉得写得并不是很好.
+
+#+begin_html
+</details>
+#+end_html
+
+*** 1D Ising Model
+注: 这个我不好说我到底有没有学过, 既然对这个名字完全没啥感觉,
+那么就当作没有学过吧. 只是这个处理感觉非常熟悉. 怪.
+
++ Ising 模型状态的描述: =(1 -1 -1 ...)= 使用这样一个列表来进行描述.
++ Ising 模型的能量:
+
+  \[E = - J \sum_{\left\langle i, j \right\rangle} S_i S_j - \mu\sum h_j S_j\]
+
+  #+begin_html
+  <details><summary>以防你和我一样热统没学得太好</summary>
+  #+end_html
+  我对 Ising 模型的理解是:
+  + Ising 模型描述的是一堆磁矩在外场中随着不同温度变化的一个分布
+  + \(- \mu \sum h_j S_j\): 磁矩在外磁场中的能量, 其中 \(h_j\) 为第 \(j\) 个粒子受到的磁场
+  + \(- J \sum_{\left\langle i, j \right\rangle} S_i S_j\): 磁矩相互之间的作用, 这里仅考虑最临近的相互作用,
+    对于一维模型来说, 就是左右粒子, 对于二维模型来说, 就是上下左右.
+  + 边界条件
+  #+begin_html
+  </details>
+  #+end_html
+
+  在这里仅从物理的描述上对能量进行计算,
+  并不涉及为了之后的仿真做计算量上的优化:
+
+  + 相互作用项:
+    
+   #+begin_src lisp
+     (let ((J-ij (lambda (i j)                  ; 默认只有上下
+                   (declare (ignore i j))
+                   1)))
+       (defun 1-d-ising-set-J (func)
+         (setf J-ij func))
+
+       (defun 1-d-ising-interaction-e (state)
+         "E_interaction = - ∑ J_ij S_i S_j; i, j = nearest neighors"
+         (let ((sum 0))
+           (loop for sj in (rest state) for j from 2
+                 for si in state        for i from 1
+                 do (setf sum (+ sum (* (funcall J-ij i j) si sj))))
+           (* -1 sum))))
+   #+end_src
+  + 外场项:
+
+   #+begin_src lisp
+     (let ((field (lambda (n)              ; 默认为和外场无关的恒磁场
+                    (declare (ignore n))
+                    1))
+           (μ 1))
+       (defun 1-d-ising-set-μ (μ-value)
+         (setf μ μ-value))
+
+       (defun 1-d-ising-set-field (func)
+         (setf field func))
+
+       (defun 1-d-ising-field-e (state)
+         "E_field = - μ ∑ hj sj"
+         (let ((sum 0))
+           (loop for sj in state
+                 for j from 1                ; 从 1 开始对 j 进行标号
+                 do (setf sum (+ sum (* (funcall field j) sj))))
+           (* -1 μ sum))))
+   #+end_src
+  + 总场
+    #+begin_src lisp
+      (defun 1-d-ising-e (state)
+        (+ (1-d-ising-interaction-e state)
+           (1-d-ising-field-e state)))
+    #+end_src
++ 状态转移的生成: 随机翻转一个磁矩.
+
+  #+begin_src lisp
+    (defun 1-d-ising-gen (state)
+      (let ((i (random (length state)))
+            (new (copy-list state)))
+        (setf (nth i new) (* -1 (nth i state)))
+        new))
+  #+end_src
++ 判断函数
+
+  #+begin_src lisp
+    (let ((kT 300))
+      (defun 1-d-ising-set-kT (kT-value)
+        (setf kT kT-value))
+
+      (defun 1-d-ising-acc (state2 state1)
+        (let ((dE (- (1-d-ising-e state2) (1-d-ising-e state1))))
+          (or (< dE 0)
+              (< (random 1.0) (exp (- (/ dE kT))))))))
+  #+end_src
++ 采样后的后处理
+
+  (注: 使用的问题来自 [[https://web.northeastern.edu/afeiguin/phys5870/phys5870/node85.html][Exercise: One-dimensional Ising model]],
+  但是不建议把那个网站当作学习参考, 当大纲估计挺好.)
+  1. \(N = 20, T = 1.0\), 计算每一步的能量并估计稳定所需要的步数
+     (也就是之后仿真用的 =burn-in= 参数).
+
+     没时间优化代码了, 就这么看吧:
+
+     #+headers: :var output=(expand-file-name "../_img/lisp/misc/metropolis/1-d-ising-n-20-t-1.png")
+     #+headers: :var kT-list=(list 10 1.5 1) :var samples=200
+     #+headers: :results none
+     #+begin_src lisp
+       (let ((res-list '()))
+         (loop for kT in kT-list do
+           (progn
+             (1-d-ising-set-kt kT)
+             (let ((energy-hist '()))
+               (sampling-hist (make-list 20 :initial-element -1)
+                              #'1-d-ising-gen #'1-d-ising-acc
+                              samples 0
+                              (lambda (state)
+                                (setf energy-hist
+                                      (cons (1-d-ising-e state) energy-hist))))
+               (push (list (format NIL "kT = ~a" kT)
+                           (reverse energy-hist))
+                     res-list))))
+         (lists-plot output res-list))
+     #+end_src
+
+     能量 (纵坐标) 随仿真步数 (横坐标) 的变化:
+     
+     [[{{ site.github.url }}/_img/lisp/misc/metropolis/1-d-ising-n-20-t-1.png]]
+
+     基本可以看到, 基本只要大约 50 步左右就稳定了.
+     但是随着温度的升高, 热运动占主导, 就变得比较不稳定.
+     而当温度进一步提高, 则会导致场的影响变弱.
+     
+     #+begin_html
+     <details><summary>绘图代码</summary>
+     #+end_html
+     #+begin_src lisp
+       (defun list-points-plot (output lst &key (title ""))
+         "图片输出路径: `output', 输入点列表: `lst', 元素为 `(x . y)'."
+         (eazy-gnuplot:with-plots (s :debug NIL)
+           (eazy-gnuplot:gp-setup :terminal :png :output output)
+           (eazy-gnuplot:plot (lambda ()
+                                (loop for point in lst do
+                                  (format s "~&~a ~a" (car point) (cdr point))))
+                              :with '(line) :title title))
+         output)
+
+       (defun lists-plot (output lists)
+         "输出路径: `output', 绘制元素列表: `lists', 元素为: `(标题 (y 值))'"
+         (eazy-gnuplot:with-plots (s :debug NIL)
+           (eazy-gnuplot:gp-setup :terminal :png :output output)
+           (loop for lst-desc in lists do
+             (eazy-gnuplot:plot (lambda ()
+                                  (loop for elem in (second lst-desc)
+                                        for i from 1
+                                        do (format s "~&~a ~a" i elem)))
+                                :with '(:lines) :title (first lst-desc))))
+         output)
+     #+end_src
+     #+begin_html
+     </details>
+     #+end_html
+  2. 不同温度下的平均能量和平均磁矩
+
+     (同上, 没时间写代码)
+
+     #+headers: :results none
+     #+headers: :var output=(expand-file-name "../_img/lisp/misc/metropolis/1-d-ising-average-e-by-kT.png")
+     #+begin_src lisp
+       (let ((average-e '()))
+         (loop for kt from 1 below 10 by 0.1 do
+           (progn
+             (1-d-ising-set-kt kt)
+             (let ((energy-hist (make-histogram 500))) ; 500 bins
+               (set-ranges-uniform energy-hist -50d0 50d0) ; hist from -50 to 50
+               (sampling-hist (make-list 20 :initial-element -1)
+                              #'1-d-ising-gen #'1-d-ising-acc
+                              1000 50
+                              (lambda (state)
+                                (increment energy-hist
+                                           (coerce (1-d-ising-e state) 'double-float))))
+               (let ((sum 0))
+                 (loop for i below 500
+                       for e from -50 below 50 by (/ 100 500)
+                       do (setf sum (+ sum (* e (grid:aref energy-hist i)))))
+                 (push (cons kT (/ sum 500)) average-e)))))
+         (list-points-plot output average-e :title "<E>"))
+     #+end_src
+
+     [[{{ site.github.url }}/_img/lisp/misc/metropolis/1-d-ising-average-e-by-kT.png]]
+
+     平均磁矩: 
+
+     (真没时间写代码)
+
+     #+headers: :results none
+     #+headers: :var output=(expand-file-name "../_img/lisp/misc/metropolis/1-d-ising-average-m-by-kT.png")
+     #+begin_src lisp
+       (let ((average-m '()))
+         (loop for kt from 1 below 10 by 0.1 do
+           (progn
+             (1-d-ising-set-kt kt)
+             (let ((m-hist (make-histogram 500))) ; 500 bins
+               (set-ranges-uniform m-hist -25d0 25d0) ; hist from -50 to 50
+               (sampling-hist (make-list 20 :initial-element -1)
+                              #'1-d-ising-gen #'1-d-ising-acc
+                              1000 50
+                              (lambda (state)
+                                (increment m-hist
+                                           (coerce (apply #'+ state) 'double-float))))
+               (let ((sum 0))
+                 (loop for i below 500
+                       for m from -25 below 25 by (/ 50 500)
+                       do (setf sum (+ sum (* m (grid:aref m-hist i)))))
+                 (push (cons kT (/ sum 500)) average-m)))))
+         (list-points-plot output average-m :title "<M>"))
+     #+end_src
+     
+     [[{{ site.github.url }}/_img/lisp/misc/metropolis/1-d-ising-average-m-by-kT.png]]
+
++代码实在是太丑了+
+
+** 2D Ising Model
+饶了我吧, 我还是先去赶报告了.
+
+** 如何更强一些?
++ 随机数算法: 如何让随机数产生得更加合理?
++ 代码的更进一步的优化.
+  + 比如使用 vector (array) 来代替 list 作为向量表示,
+    进一步提高计算速度 (虽然不清楚会快多少).
+  + 计算能量的代码通过 Hash 对代码计算值进行缓存处理, 提高计算速度.
+    (这个我在 On Lisp 里面看到过, 但是具体怎么做已经忘光了).
+  + 使用多线程计算, 不过该怎样把这个一条 Markov 链的计算变成多线程,
+    我觉得可能可以把长度减少, 然后同时并行运行多个计算链.
++ 物理, 我要学更多的物理!
+  
+* Others
+那么就让这篇文章成为一个简单的小笔记吧.
+
+** 一些问题的无聊解答
++ 这 TMD 什么编程语言?
+
+  Lisp, Common Lisp, Common Lisp via SBCL distribution.
++ 为什么用 Lisp 而不用 XXX?
+  
+  因为好玩? 且 C 不太会用, Python 很少用, Ruby 太慢, 其他语言不熟.
++ 那么如何学 Lisp 呢?
+
+  实际上我觉得计算逻辑部分的代码非常好懂, 如果知道要算法算的是啥,
+  那么这个 Lisp 代码我觉得就是没学过的人随便看看也能看懂吧.
++ 等一下, 这个和退火算法有什么关系?
+
+  好问题, 虽然不一定是好问题, 但是我觉得是个好问题.
+
+  退火算法 (具体大概就是一个加上一个随时间逐渐确定的随机游走的贪心算法来找最大值),
+  在这里用物理的角度就是: 外场一开始的影响在温度的影响下比较小,
+  所以在 Markov 链游走的时候, 会尽可能地去历遍更多可能的状态;
+  而随着温度的降低, 外场开始起主导作用, 这个时候就会去势场最低,
+  也就是极值点.
+
+  之所以不简单使用梯度下降, 是因为梯度下降是局域贪心算法,
+  不一定找到的就是全局极值. 而退火算法因为引入了随机游走,
+  有一定概率能够漂移出局部极值的坑.
+
+  所以可以将这样的算法应用到极值问题中,
+  从而可以对多维极值优化进行求解.
+
+  欸, 那么这是否就是一个当代显学人工智能需要操心的问题了呢?
+
+  看, 这就是学统计物理常用的话术: 学会统计物理, 你就会机器学习了.
+  +然而并没有+.
