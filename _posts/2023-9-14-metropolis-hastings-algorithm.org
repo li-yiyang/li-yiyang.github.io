@@ -222,13 +222,13 @@
 #+begin_src lisp
   (defun sampling-hist (init gen acc samples burn-in yield)
     "使用 Markov 链进行采样: 
-    + 初始状态 `state'
+    + 初始状态 `init
     + 下一个状态函数 `gen'
     + 判断函数 `acc'
     + 直方图函数 `hist'. 
     + 采样数 `samples'
     + 初始抛弃 `burn-in' 个样本
-    + 取样判断函数 `collect'"
+    + 取样判断函数 `yield"
     (let ((state init)
           (candidate (funcall gen init)))
       (labels ((update ()                 ; 采样
@@ -547,9 +547,396 @@
 
 +代码实在是太丑了+
 
-** 2D Ising Model
-饶了我吧, 我还是先去赶报告了.
+** COMMENT 2D Ising Model
++饶了我吧, 我还是先去赶报告了.+
 
+报告进入第二次复活赛, 刚好有个空的晚上来写写代码.
+
+还是一样, 目前专注的还是程序上的可读性而不是效率.
+
++ Ising Model 状态表示: 用 =((1 1 -1 -1 1 ...) (1 -1 1 -1 ...) ...)= 来表示状态.
+
+  #+name: 2-d-ising-model-initial
+  #+begin_src lisp
+    (defun make-2-d-ising-state-map (n &optional (m n))
+      "Return a NxM size map for 2d ising model."
+      (loop for i below m
+            collect (loop for j below n
+                          collect (- (* 2 (random 2)) 1))))
+  #+end_src
++ Ising Model 的能量:
+
+  #+name: 2-d-ising-e
+  #+begin_src lisp
+    (defmacro at (mat &rest pos)
+      (if (null pos) mat `(nth ,(first pos) (at . (,mat . ,(rest pos))))))
+
+    (defun 2-d-ising-e (state &optional (n (length state)) (m (length (first state)))
+                                (field (lambda (i j) (declare (ignore i j)) 0)))
+      (let ((e 0))
+        (loop for j below n do
+          (loop for i below m do
+            (setf e (+ (* (funcall field i j) (at state i j))
+                       (* (at state i j)
+                          (+ (at state (mod (1+ i) n) (mod j      m))
+                             (at state (mod i      n) (mod (1+ j) m))))
+                       e))))
+        e))
+  #+end_src
++ Ising Model 的磁矩:
+
+  #+name: 2-d-ising-m
+  #+begin_src lisp
+    (defun 2-d-ising-m (state)
+      (let ((m 0))
+        (loop for line in state do (setf m (+ m (apply #'+ line))))
+        m))
+  #+end_src
++ 为了方便计算, 引入对象管理临时变量:
+
+  #+begin_src lisp
+    (defclass 2-d-ising ()
+      ((m    :initarg :m :accessor size-m)
+       (n    :initarg :n :accessor size-n)
+       (hist :initarg :hist :accessor hist)
+       (e    :accessor energy)
+       (mag  :accessor magnetic-moment)
+       (temp :initarg :temperature :accessor temp)
+       (map  :accessor state-map))
+      (:documentation "2D Ising model state object."))
+
+    (defmethod initialize-instance :after ((ising 2-d-ising) &rest args)
+      (declare (ignorable args))
+      (when (not (size-n ising))
+        (setf (size-n ising) (size-m ising)))
+      (setf (state-map       ising) (make-2-d-ising-state-map (size-n ising) (size-m ising))
+            (magnetic-moment ising) (2-d-ising-m (state-map ising))
+            (energy          ising) (2-d-ising-e (state-map ising))))
+
+    (defun make-2-d-ising-state (temperature n &optional (m n) hist)
+      "Init a 2D ising model of NxM at `temperature'."
+      (make-instance '2-d-ising :n n :m m :hist hist :temperature temperature))
+  #+end_src
++ 没错, 这个时候我想要对计算函数进行稍微进一步的修改:
+
+  #+begin_html
+  <details><summary>其实就是改了前面的函数参数名称而已, 折叠了</summary>
+  #+end_html
+  #+begin_src lisp
+    (defun sampling (init gen acc samples burn-in
+                     &optional (yield (lambda (&rest args) (declare (ignorable args)))))
+      "使用 Markov 链进行采样:
+    + 每次计算过程中使用的参数 `init'
+    + 更新参数列表的函数 `gen'
+    + 判断函数 `acc' 
+    + 采样数 `samples' 
+    + 初始抛弃 `burn-in' 样本
+    + 每次采样时调用函数 `yield'."
+      (let ((state init)
+            (candidate (funcall gen init)))
+        (labels ((update ()                 ; 采样
+                   (loop do (setf candidate (funcall gen state))
+                         while (not (funcall acc candidate state)))
+                   (setf state candidate)))
+          ;; 抛弃前 burn-in 个状态
+          (loop for - below burn-in do (update))
+          ;; 收集后 samples 个状态
+          (loop for - below samples do (update)
+                do (funcall yield candidate)))))
+  #+end_src
+  #+begin_html
+  </details>
+  #+end_html
++ 懒得写了, 直接摆了 (代码有点长, 本来应该可以压缩一下的,
+  并且我觉得这个传值方式仍然还是不是很让人满意):
+
+  #+begin_src lisp
+    (defun 2-d-ising-sim (kT n m samples
+                          &key (sample-step 1) (burn-in 0) (debug NIL))
+      (let* ((2-d (make-2-d-ising-state kT n m))
+             (counter     0)
+             (ΔE     0)
+             (m-hist '())
+             (e-hist '()))
+        (sampling
+         ;; 初始状态是啥不重要
+         '(0 . 0)
+
+         ;; gen: 返回一个随机翻转的 pos 
+         (lambda (pos) (declare (ignore pos))
+           (cons (random n) (random m)))
+
+         ;; acc: 判断翻转前后的能量差和概率判断
+         (lambda (pos p)
+           (declare (ignore p))
+           (let* ((state (state-map 2-d))
+                  (i (car pos)) (j (cdr pos))
+                  (dE (* 2 (+ (at state (mod (1+ i) n) (mod j m))
+                              (at state (mod (1- i) n) (mod j m))
+                              (at state (mod i n) (mod (1+ j) m))
+                              (at state (mod i n) (mod (1- j) m))))))
+             (setf ΔE dE)
+             (or (< dE 0) (< (random 1.0) (exp (- (/ dE kT)))))))
+
+         ;; 采样数和初始抛弃采样数
+         samples burn-in
+
+         ;; yield: 更新能量和绘制图像之类的东西
+         (lambda (pos)
+           (setf (energy 2-d)          (+ (energy 2-d) ΔE)
+                 (magnetic-moment 2-d) (+ (magnetic-moment 2-d)
+                                          (* 2 (at (state-map 2-d) (car pos) (cdr pos)))))
+           (setf counter (mod (1+ counter) sample-step))
+           (when (eq counter 0)
+             (print pos)
+             (push (energy 2-d) e-hist)
+             (push (magnetic-moment 2-d) m-hist))))
+        (when debug (2-d-ising-vaild-p 2-d))
+        (values (reverse e-hist) (reverse m-hist))))
+  #+end_src
+
+  #+begin_src lisp
+    (defun 2-d-ising-gen (state-map)
+      (let ((map (copy-tree state-map))
+            (i   (random (length (first state-map))))
+            (j   (random (length state-map))))
+        (setf (at map i j) (* -1 (at map i j)))
+        map))
+
+    (defun memorize (fn)
+      (let ((cache (make-hash-table :test #'equal)))
+        (values #'(lambda (&rest args)
+                    (multiple-value-bind (val win) (gethash args cache)
+                      (if win
+                          val
+                          (setf (gethash args cache) (apply fn args)))))
+                #'(lambda () (clrhash cache)))))
+
+    (defvar 2-d-ising-e-cached)
+    (defvar 2-d-ising-e-cached-clear-cache)
+
+    (multiple-value-bind (cached clr-cached) (memorize #'2-d-ising-e)
+      (setf 2-d-ising-e-cached cached
+            2-d-ising-e-cached-clear-cache clr-cached))
+
+    (let ((kT 1))
+      (defun 2-d-ising-set-kT (kT-value)
+        (setf kT kT-value))
+  
+      (defun 2-d-ising-acc (map1 map2)
+        (let ( (dE (- (funcall 2-d-ising-e-cached map2)
+                      (funcall 2-d-ising-e-cached map1))))
+          (or (< dE 0) (< (random 1.0) (exp (- (/ dE kT))))))))
+
+    (defun 2-d-ising-sim-slow (kT n m samples
+                               &key (sample-step 1) (burn-in 0))
+      (funcall 2-d-ising-e-cached-clear-cache)
+      (2-d-ising-set-kT kT)
+      (let ((e-hist '())
+            (m-hist '())
+            (counter 0))
+        (sampling (make-2-d-ising-state-map n m)
+                  #'2-d-ising-gen
+                  #'2-d-ising-acc
+                  samples burn-in
+                  (lambda (state)
+                    (setf counter (mod (1+ counter) sample-step))
+                    (when (eq counter 0)
+                      (push (2-d-ising-e state) e-hist)
+                      (push (2-d-ising-m state) m-hist))))
+        (values e-hist m-hist)))
+  #+end_src
+
+  #+begin_html
+  <details><summary>仿真正确性检验</summary>
+  #+end_html
+  #+begin_src lisp
+    (defun 2-d-ising-vaild-p (model)
+      (when (not (eq (2-d-ising-e (state-map model) (size-m model) (size-n model))
+                     (energy model)))
+        (print "Energy is not vaild."))
+      (when (not (eq (2-d-ising-m (state-map model))
+                     (magnetic-moment model)))
+        (print "Magnetic Moment is not vaild")))
+  #+end_src
+  #+begin_html
+  </details>
+  #+end_html
++ 一些绘图的尝试 (现在的绘图代码写得稍微优雅了一些)
+
+  #+begin_src lisp
+    (defun plot-lists (output data-lists)
+      "输入的 `data-lists' 应当为 `((title . data))' 的形式."
+      (plt:with-plots (s :debug NIL)
+        (plt:gp-setup :terminal :png :output output)
+        (loop for (title . lst) in data-lists do
+          (plt:plot (lambda ()
+                      (loop for i from 0 for elem in lst do
+                        (format s "~&~a ~a" i elem)))
+                    :with '(lines) :title title)))
+      output)
+  #+end_src
+
+  #+headers: :var output=(expand-file-name "../_img/lisp/misc/metropolis/2-d-ising-sim-20x20-10000-step.png")
+  #+headers: :var samples=10000 :var kT=10000
+  #+headers: :results file
+  #+begin_src lisp
+    (multiple-value-bind (e m)
+        (2-d-ising-sim kT 100 100 samples :sample-step 10)
+      (plot-lists output `(("Energy" . ,e)
+                           ("Magnetic Moment" . ,m))))
+  #+end_src
+
+  #+RESULTS:
+  [[file:/Users/liyiyang/Documents/Codes/Blog/_img/lisp/misc/metropolis/2-d-ising-sim-20x20-10000-step.png]]
+  
+  [[{{ site.github.url }}/_img/lisp/misc/metropolis/2-d-ising-sim-20x20-10000-step.png]]
++ 
+
+** 2D Ising Model
+现在开始写了一点, 出来的结果狗屁不通. 决定重新开始写. 欸.
+
+目标: =(2-d-ising-sim (n m) kt samples :sample-step 100 :init 1 :plot (e m))=.
+
++ 初始化 2D Ising 模型:
+
+  #+name: init-2d-ising
+  #+begin_src lisp
+    ;;; (at mat x y) -> (nth x (nth y mat))
+    (defmacro at (mat &rest pos)
+      (if (null pos) mat `(nth ,(first pos) (at . (,mat . ,(rest pos))))))
+
+    (defun init-2-d-ising (n &optional (m n) (init 1))
+      "2D Ising model: nxm matrix, n is x size, m is y size.
+    `init' can be fixed constant or symbol `random' or specific function. "
+      (cond ((functionp init) (loop for j below m
+                                    collect (loop for i below n
+                                                  collect (funcall init i j))))
+            ((numberp init) (loop for j below m
+                                  collect (loop for i below n collect init)))
+            (T (loop for j below m
+                     collect (loop for i below n
+                                   collect (1- (* 2 (random 2))))))))
+  #+end_src
+
++ 每次记录一个翻转位置 =(i . j)= 而不是记录翻转后的整个模型.
+  (其实 Lisp 应该传的是指针, 所以应该并不会减少传值开销,
+  只是为了之后计算能量的时候可以减少一些计算量而已).
++ 每次更新的时候, 需要根据模型刷新一个新的位置.
+
+  #+begin_src lisp
+    (defun make-2-d-ising-gen (model)
+      "生成一个 gen 函数."
+      (let ((m (length (first model)))
+            (n (length model)))
+        (lambda (pos) (declare (ignore pos))
+          (cons (random n) (random m)))))
+  #+end_src
+
++ 对于已有的系统, 在翻转了一个元素之后计算能量改变的时候,
+  只需要计算临近前后的能量变化而不需要计算整个系统.
+  (这样可以把计算速度大大提高)
++ 每次判断的时候判断能量改变:
+
+  #+begin_src lisp
+    (defun make-2-d-ising-acc (model kT)
+      "生成一个 acc 函数."
+      (let ((n (length (first model)))
+            (m (length model)))
+        (lambda (pos2 pos1) (declare (ignore pos1))
+          (let* ((i (car pos2))
+                 (j (cdr pos2))
+                 (spin (at model i j))
+                 (near (+ (at model (mod (1+ i) n) j) (at model i (mod (1+ j) m))
+                          (at model (mod (1- i) n) j) (at model i (mod (1- j) m))))
+                 (dE   (* 2 spin near)))
+            (or (< dE 0) (< (random 1.0) (exp (- (/ dE kT)))))))))
+  #+end_src
+
++ 每次模拟后进行一个数据记录:
+
+  #+begin_src lisp
+    (defun make-store-function ()
+      "返回一个添加函数和读取函数."
+      (let ((stored '()))
+        (values (lambda (elem) (push elem stored))
+                (lambda () (reverse stored)))))
+
+    (defun make-2-d-ising-yield (step store-fn store-place-fn)
+      (let ((counter 0))
+        (lambda (pos)
+          (setf counter (mod (1+ counter) step))
+          (if (eq counter 0)
+              (funcall store-place-fn (mapcar (lambda (fn) (funcall fn pos)) store-fn))
+              (mapcar (lambda (fn) (funcall fn pos)) store-fn)))))
+  #+end_src
+
+  其中数据记录函数可以有:
+  + 能量
+
+    #+begin_src lisp
+      (defun 2-d-ising-e (model &optional (n (length (first model))) (m (length model)))
+        (let ((energy 0.0))
+          (loop for j below m do
+            (loop for i below n do
+              (let ((spin (at model i j))
+                    (near (+ (at model (mod (1+ i) n) j) (at model i (mod (1+ j) m))
+                             (at model (mod (1- i) n) j) (at model i (mod (1- j) m)))))
+                (setf energy (- energy (* spin near))))))
+          (/ energy 4)))
+
+      (defun make-2-d-ising-energy-rec (model)
+        "生成一个根据 dE 来计算模型能量的函数"
+        (let ((n (length (first model)))
+              (m (length model))
+              (energy (2-d-ising-e model)))
+          (lambda (pos)
+            (let* ((i (car pos))
+                   (j (cdr pos))
+                   (spin (at model i j))
+                   (near (+ (at model (mod (1+ i) n) j) (at model i (mod (1+ j) m))
+                            (at model (mod (1- i) n) j) (at model i (mod (1- j) m)))))
+              (setf energy (* 2 spin near))))))
+    #+end_src
+
+  + 磁矩
+
+    #+begin_src lisp
+      (defun 2-d-ising-m (model)
+        "计算系统的磁矩."
+        (let ((m 0))
+          (loop for line in model do (setf m (+ m (apply #'+ line))))
+          m))
+
+      (defun make-2-d-ising-m-rec (model)
+        (let ((mag-m (2-d-ising-m model)))
+          (lambda (pos)
+            (let ((spin (at model (car pos) (cdr pos))))
+              (setf mag-m (+ mag-m (* 2 spin)))))))
+
+    #+end_src
+
++ 于是一个模拟过程如下:
+
+  #+begin_src lisp
+    (defun 2-d-ising-sim (size kT samples &key (sample-step 1) (burn-in 0) (init 1))
+      (let ((model (init-2-d-ising (car size) (cdr size) init)))
+        (multiple-value-bind (write-rec read-rec) (make-store-function)
+          (sampling-hist '(0 . 0)
+                         (make-2-d-ising-gen model)
+                         (make-2-d-ising-acc model kT)
+                         samples burn-in
+                         (make-2-d-ising-yield sample-step
+                                               (list (make-2-d-ising-energy-rec model)
+                                                     (make-2-d-ising-m-rec model))
+                                               write-rec))
+          (funcall read-rec))))
+  #+end_src
+
++ 一次可能的模拟:
+
+  #+begin_src lisp
+  #+end_src
 ** 如何更强一些?
 + 随机数算法: 如何让随机数产生得更加合理?
 + 代码的更进一步的优化.
@@ -560,6 +947,7 @@
   + 使用多线程计算, 不过该怎样把这个一条 Markov 链的计算变成多线程,
     我觉得可能可以把长度减少, 然后同时并行运行多个计算链.
 + 物理, 我要学更多的物理!
++ 自动判断是否在稳定状态: 通过接受率和拒取率来判断, 具体怎么做还没看.
   
 * Others
 那么就让这篇文章成为一个简单的小笔记吧.
