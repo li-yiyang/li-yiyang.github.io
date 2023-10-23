@@ -1,0 +1,235 @@
+#+title: Guix Installation
+#+date: 2023-10-19
+#+layout: post
+#+options: _:nil ^:nil
+#+math: true
+#+categories: misc
+* About
+尽管我是挺反感那种安装电脑系统的教程的, 现在的电脑系统不都做成了傻瓜机了么?
+还有啥好看安装教程的... 但是现在要接触 Linux 的电脑, 想要多学一些稍微底层一些的知识,
+所以留一个小笔记.
+
+目前先在自己的电脑上用虚拟机试试, 至少跑通先吧.
+参考的教程见 [[https://guix.gnu.org/manual/en/html_node/Manual-Installation.html][Mannual Installation (Guix)]]. 
+
+(先叠个甲: 我没学过啥操作系统, 这些词或者概念完全不了解,
+这安装完全就是图一乐)
+
+* Load the Installation Image
+插入安装镜像启动后选择从 shell 开始安装: =Ctrl-Alt-F3= 可以为你打开 TTY3.
+顺带一提, =Ctrl-Alt-F4=, =Ctrl-Alt-F5= 对应 TTY4, TTY5.
+但是 =Ctrl-Alt-F2= 对应帮助文档.
+
+#+begin_html
+<details><summary>TTY 的历史</summary>
+#+end_html
+很多时候感觉学习的一些东西就只是知识, 或者说知道即可的水平.
+但是知道这些东西为啥来, 虽然看起来没啥鸟用, 但是至少会让我有一种安心的感觉.
+虽然我也不能保证这玩意能是啥正确的历史就是了.
+
+我觉得有一个写得还算比较通俗易懂的博客:
+[[https://program-think.blogspot.com/2019/11/POSIX-TUI-from-TTY-to-Shell-Programming.html][扫盲 Linux & UNIX 命令行 -- 从 “电传打字机” 聊到 “shell 脚本编程”]].
+(叠甲: 俺只管里面的技术历史部分, 其他的不做评价).
+对于懒得看, 也不想看的同学, 可以看看下面我的一些简单介绍:
+
++ TTY, 全称为 Teletype Printer, 也就是电传打印机,
+  实际上是和物理的硬件对应的一个概念:
+  这玩意大概类似于一个带了根数据线 (UART) 的打字机.
++ 终端缓冲模式: 字符模式, 行模式, 屏模式
+
+  在我写过单片机后, 我对几个的概念倒是可以比较好理解了,
+  比如说字符模式可以对应于一个数据被按下后立刻发送给单片机,
+  行模式类似于编辑一行后再发送. emmm... 感觉用 readline 来类比可能会更加好.
++ 回显: 例子就是在输入密码的时候的不显示 (回显关闭), 来自于暂停发送和恢复发送.
++ 控制台: 从早期的物理控制台, 到现在的虚拟控制台 (vitrual console).
+  因为虚拟控制台是为了模拟物理控制台, 所以是一种 terminal emulator (终端模拟器).
++ 伪终端: PTY (pseudotty), 通过图形界面的软件来模拟文本终端
++ shell 和 terminal: terminal 类似于一个和机器进行输入输出的信息交流通道,
+  而 shell 类似于一个机器根据得到的信息进行命令解释和执行的东西.
++ 进程
+  + 进程树: 父进程为根, 子进程为叶子
+  + 进程的死法: 自然死亡, 自杀 (信号, 中断, =Ctrl-C= 中断信号是终端发的), 他杀 (信号)
+  + 孤儿进程: 父进程死亡, 子进程被初始进程领养 (直接调整到进程树根节点下级)
+  + 进程的杀死: =kill=, =killall=
+
+    比如: =kill -9 pid=
+    
+    | 信号名称 | 编号 | 能否屏蔽 | 默认动作                 |
+    |----------+------+----------+--------------------------|
+    | SIGINT   |    2 | YES      | 进程自己退出             |
+    | SIGTERM  |   15 | YES      | 进程自己退出             |
+    | SIGQUIT  |    3 | YES      | 执行 core dump, 自己退出 |
+    | SIGKILL  |    9 | NO       | 进程被内核干掉           |
+  + 进程的 +遗言+ 退出码: 0 或者非 0
+  + 进程的暂停: =TSTP= 温柔暂停, =STOP= 强制暂停, =CONT= 恢复进程.
+
+    比如 =kill -STOP pid=.
+  + job 的前台, 后台, 前后台切换: =fg= 命令后台到前台 (栈顺序), =jobs= 列出作业.
+    =cmd &= 挂起到后台.
++ 环境变量: 一种简单的进程通讯机制
++ 标准流: =stdin=, =stdout=, =stderr=
+  + 重定向: =<= stdin, =>= stdout 但是覆写, =>>= stdout, 但是增添
+  + anonymous pipe: =|=, 通过管道符链接的是同属于一个 job
++ 批处理: =;= then, =&&= and, =||= or
+  
+#+begin_html
+</details>
+#+end_html
+
+* Keyboard Layout, Networking, and Partitioning
+和外设相关的东西...
+
+** 键盘布局
+默认是 qwerty 布局, 结束.
+
+#+begin_src shell
+  loadkeys --default
+#+end_src
+
+** 网络
+(我一直觉得网络这部分非常神奇和难懂)
+
+这里有两个命令 =ifconfig= 和 =ip=, 后者类似于是前者的更加新的一个替代,
+本着死要一起作的精神, 我决定两个都了解一点点: ([[https://access.redhat.com/sites/default/files/attachments/rh_ip_command_cheatsheet_1214_jcs_print.pdf][Cheat Sheet]])
+
++ 列出本台电脑上有的一些网络设备: =ipconfig -a= (=ip a=)
+
+  列出的东西大概如下:
+
+  #+begin_example
+    enpOs1 Link encap:Ethernet    Hwaddr XX:XX:XX:XX:XX:XX
+           inet addr: XX.XX.XX.XX Bcast: XX.XX.XX.XX Mask:XX.XX.XX.XX
+           UP BROADCAST RUNNING MULTICAST DYNAMIC MTU: 1500 Metric:1
+           ...
+  #+end_example
+
+  解释一下: 名字 =enp0s1= 里面的 =en= 表示 Ethernet (以太网),
+  =p0= 表示 bus number, =s1= 表示 slot number. ([[https://unix.stackexchange.com/questions/134483/why-is-my-ethernet-interface-called-enp0s10-instead-of-eth0][参考]])
+
+  #+begin_html
+  <details><summary>更加详细的说明</summary>
+  #+end_html
+  #+begin_example
+    <interface> ::= <type> <name>
+    <type>      ::= en          ;; Ethernet
+                  | sl          ;; serial line IP (slip)
+                  | wl          ;; wlan
+                  | ww          ;; wwan
+    <name>      ::= b<number>   ;; BCMA bus core bumber
+                  | c<bus_id>   ;; CCW bus group name, without leading zeros
+                  | o<index>[d<dev_port>]
+                                ;; on-board device index number
+                  | s<slot>[f<function>][d<dev_port>]
+                                ;; hotplug slot index number
+                  | x<MAC>      ;; MAC address
+                  | [P<domain>]p<bus>s<slot>[f<function>][d<dev_port>]
+                                ;; PCI geographical location
+                  | [P<domain>]p<bus>s<slot>[f<function>][u<port>][..][c<config>][i<interface>]
+                                ;; USB port number chain
+  #+end_example
+  #+begin_html
+  </details>
+  #+end_html
+
+  #+begin_html
+  <details><summary>macOS 上的小小区别</summary>
+  #+end_html
+  在 mac 上运行 =ipconfig -a= 会得到一堆的东西, 可以参考 [[https://qiita.com/fastso/items/db46e03fbacac9b38793][这里 (日语)]].
+  下面是一个简单的翻译 (部分):
+
+  | Internet Interface | 说明                                 |
+  |--------------------+--------------------------------------|
+  | lo0                | loopback interface, localhost        |
+  | en0                | 以前是以太网 (Ethernet), 现在是 Wifi |
+  | en1, en2           | Thunderbolt                          |
+  | fw0                | FireWire                             |
+  | ...                | ...                                  |
+  #+begin_html
+  </details>
+  #+end_html
++ 设置网络连接
+  + 有线网络连接: =ifconfig enp0s1 up= (=ip link set enp0s1 up=)
+
+    实际上做的事情是使某一个设备可工作 (=up=), 换成 =down= 就关闭工作.
+  + 无线网络连接: =wpa_supplicant -c <config.conf> -i <interface> -B=
+
+    #+begin_html
+    <details><summary>其中 config.conf 文件中包含网络信息</summary>
+    #+end_html
+    #+begin_example
+      network={
+        ssid="my-ssid"
+        key_mgmt=WPA-PSK
+        psk="the network's secret passphrase"
+      }
+    #+end_example
+    #+begin_html
+    </details>
+    #+end_html
++ 获取 IP 地址: =dhclient -v <interface>=
++ 确认连接到了互联网: =ping -c 3 gnu.org=
++ Proxy (呵) =herd set-http-proxy guix-daemon URL=
++ SSH =herd start ssh-daemon=
+
+  先设置一个 =passwd= 方便连接进去, 再使用 IP 连接到电脑上
+
+** 磁盘分区
++ Linux 的分区和 Windows 还有 mac 的感觉稍微有点不太一样,
+  分区的作用更多是用于映射. (可以参考: [[https://github.com/Sunxz007/Linux-note-follow-Hanshunping/blob/master/课程笔记/3.8Linux磁盘分区、挂载度.md][Linux磁盘分区、挂载度 (github 笔记)]],
+  [[https://access.redhat.com/documentation/zh-cn/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86][推荐的分区方案 (redhat)]], [[https://zhuanlan.zhihu.com/p/408467806][Linux 硬盘分区指南 (zhihu)]])
+
+  首先是 Linux 的文件结构, 类似于一个树状的结构:
+  
+  #+begin_example
+    /                      ;; root
+    /home                  ;; user files
+    /boot                  ;; boot loader files
+    ;; ...
+  #+end_example
+
+  对于每个目录, 可以选择映射到一个磁盘分区上. 或者说,
+  把磁盘分区挂载到对应的目录上面.
++ 使用 =cdfdisk= 可以比较轻松地分区, 总之磁盘 =label type= 选 GPT,
+  然后就分区就好了吧. 每一步操作完使用 =Write= 写入自己的操作.
++ 一般应该是推荐给 =boot= 分一个区 (300MB 左右, 分区的时候改成 UEFI 类型),
+  然后给 =root= 分一个区吧.
++ 对分完区的磁盘使用 =lsblk= 可以查看分区和挂载情况,
+  使用 =mkfs.ext4 -L root /dev/sda2= 可以进行文件系统初始化.
+  (这里用的是 =ext4= 类型的文件系统)
++ 分好了区之后就可以把它们挂载到对应目录下去了:
+  =mount LABEL=root /mnt=.
+
+  那么为什么不直接挂载到对应的分区上面呢?
+  我认为是现在是安装镜像挂载在对应的目录上.
+
+* Guix Configuration
+那么让我来介绍一下最让我对 Guix 系统感到非常满意的一个地方吧:
+那就是 Guix 是一个支持系统级的配置文件的一个东西.
+就比如说 Emacs, Vim 这些软件的配置, 都只是一个软件上的配置;
+像 homebrew 这样的包管理器, 也不是很方便导出. 移植到其他的配置文件里面去.
+
+懒得配置的可以直接使用 =/etc/configuration/= 下面的配置文件.
+
+1. =herd start cow-store /mnt=: 保证接下来的操作是写入 =/mnt= 而不是写在内存中
+
+   (这一步不是很理解具体对应的操作, 总之现在不是很懂, 做了再说)
+2. 编辑配置文件到 =/mnt/etc/config.scm= 里面
+3. 只要一句话, 让 Guix 为我在挂载在 =/mnt= 上的磁盘里面初始化一个系统:
+
+   #+begin_src shell
+     guix system init /mnt/etc/config.scm /mnt
+   #+end_src
+   
+   让 Guix 用 =/mnt/etc/config.scm= 的配置文件在 =/mnt= 下初始化一个系统.
+   
+   (注: 受限于网络问题, 可能得重试几次, 我再找找看国内镜像解决方案.)
+4. 然后 =reboot= 重启或者 =shutdown= 跑路, 大概应该就可以了.
+
+* After Installation
+** System Update
+#+begin_src shell
+  guix pull
+  sudo guix system reconfigure /etc/config.scm
+#+end_src
+
+** 先这么多
