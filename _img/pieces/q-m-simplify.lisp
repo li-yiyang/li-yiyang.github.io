@@ -1,3 +1,10 @@
+(defpackage q-m-simplify
+  (:use :cl)
+  (:export :simplify-logic :reduce-logic)
+  (:documentation "Use Q-M method to reduce the logic expression into AND/OR gate."))
+
+(in-package q-m-simplify)
+
 (defun ∧ (&rest in-s)
   "Logic AND for IN-S."
   (labels ((iter (in)
@@ -409,3 +416,17 @@ Note: the FORMATTED could be:
                 ((eq op '¬)
                  (concatenate 'string
                               "\\bar{" (exp-latex-format (nth 1 exp)) "}")))))))
+
+(defun reduce-logic (exp)
+  "A Simple Logic Exp Reduce function."
+  (cond ((atom exp) exp)
+        ((= 2 (length exp))
+         (case (car exp)
+           (∧ (reduce-logic (second exp)))
+           (∨ (reduce-logic (second exp)))
+           (otherwise exp)))
+        (T (cons (car exp) (mapcar #'reduce-logic (cdr exp))))))
+
+(defmacro simplify-logic ((&rest var) exp)
+  "Simplify the Logic Expression."
+  `(simplify-formatted (strip-zero-and-format (truth-table ',exp ',var))))
