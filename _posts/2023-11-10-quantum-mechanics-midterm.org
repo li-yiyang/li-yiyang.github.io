@@ -1,0 +1,600 @@
+#+title: Quantum Mechanics Midterm
+#+date: 2023-11-12
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* 薛定谔方程
+\[- \frac{\hbar^2}{2 m} \nabla^2 \psi + U \psi = i \hbar \frac{\partial \psi}{\partial t}\]
+
++ 线性 \(\Rightarrow\) 满足叠加原理
++ 时间一阶, 空间二阶
++ 复解 \(\psi = e^{i S / \hbar}\) 
+
+#+begin_html
+<details><summary>一些例题</summary>
+#+end_html
++ 常数势对波函数的影响:
+
+  \[E \rightarrow E_0 + V, \Psi \rightarrow e^{i (p x - (E_0 + V) t / \hbar)} \Rightarrow \Delta \phi = \frac{V}{\hbar}\]
++ 从薛定谔方程和波函数计算势函数
+
+  代入
+
+  \[\hat{H} \psi = i \hbar \frac{\partial}{\partial t} \psi\]
+
+  其中 \(\hat{H}\) 为 \(- \frac{\hbar^2}{2m} \nabla^2 + V\). 
++ 知道 \(t = 0\) 时刻波函数 \(\Psi\) 描述
+  + 归一化 \(\Psi\) 来计算系数
+    1. 计算积分 \(\int \Psi^{*} \Psi \mathrm{d} x\)
+       
+       #+begin_html
+       <details><summary>一些积分</summary>
+       #+end_html
+       + 高斯积分
+         
+         \[\int_{- \infty}^{+ \infty} e^{- a x^2} \mathrm{d} x = \sqrt{\frac{\pi}{a}}\]
+
+         其他的一些结果:
+
+         \[\int_{- \infty}^{+ \infty} x^{2n} e^{- x^2 / a^2} \mathrm{d} x = \sqrt{\pi} \frac{a^{2n + 1}}{2^{n + 1}} (2 n - 1)!!\]
+         \[\int_{- \infty}^{+ \infty} x^{2n + 1} e^{- x^2 / a^2} \mathrm{d} x = \frac{n!}{2} a^{2n + 2}\]
+
+         (分布积分)
+       + 三角函数
+
+         \[\int x \sin c x = \frac{\sin c x}{c^2} - \frac{x \cos c x}{c}\]
+         \[\int x^n \sin c x = - \frac{x^n \cos c x}{c} + \frac{n}{c} \int x^{n-1} \cos c x\]
+
+         (利用分布积分来实现)
+       #+begin_html
+       </details>
+       #+end_html
+    2. 求解方程 \(\int \Psi^{*} \Psi \mathrm{d} x = 1\)
+  + 计算概率
+    + \(x\) 有范围限制: \(P(x \in \Omega) = \int_{\Omega} |\Psi|^2 \mathrm{d} x\)
+  + 计算统计量
+    + \(\left\langle x \right\rangle, \left\langle x^2 \right\rangle\) 通过积分来得到
+    + \(\left\langle p \right\rangle\) 通过积分 \(\int \psi^{*} i \hbar \frac{\partial}{\partial x} \psi\) 得到
+      
+      也可以通过 \(m \frac{\mathrm{d} \left\langle x \right\rangle}{\mathrm{d} t}\) 来得到, 前提是 \(\int x \frac{\partial}{\partial t} |\Psi|^2 = \int \frac{\partial}{\partial t} (x |\Psi|^2)\) 
+    + \(\sigma_x\) 通过 \(\sqrt{\left\langle x^2 \right\rangle - \left\langle x \right\rangle^2}\) 来得到
+    + \(\frac{\mathrm{d} \left\langle p \right\rangle}{\mathrm{d} t} = \left\langle - \frac{\partial V}{\partial x} \right\rangle\)
+
+      证明方法:
+      + \(\frac{\mathrm{d}}{\mathrm{d} t} \left\langle p \right\rangle = \frac{\mathrm{d}}{\mathrm{d} t} \left\langle \Psi \right| \hat{p} \left| \Psi \right\rangle = \frac{1}{i \hbar} \left\langle \Psi \right| \hat{p} \hat{H} - \hat{H} \hat{p} \left| \Psi \right\rangle\) 
+      + \(\frac{1}{i \hbar} \left\langle \Psi \right| \hat{p} V - P \hat{p} \left| \Psi \right\rangle = \frac{1}{i \hbar} \left\langle \Psi \right| - i \hbar \frac{\partial V}{\partial x} \left| \Psi \right\rangle = \left\langle - \frac{\partial V}{\partial x} \right\rangle\)  
++ 计算体系是否适用量子力学
+  + 首先计算物质波波长: \(\lambda = \frac{\hbar}{p}\)
+
+    其中 \(p\) 可以通过热运动来计算:
+
+    \[\frac{p^2}{2 m} = \frac{3}{2} k_B T\]
+  + 然后判断体系的特征长度, 如晶格长度和粒子距离 (气体)
++ 概率计算的时候的先后测量
+  + 如果一次测量有一个结果, 比如测量得到了一个态 \(P(\psi_a)\),
+    则其他态 \(\psi_{\neq a} = 0\), \(\psi_a = 1\).
+  + 第二次测量的时候则为条件概率 \(P(\phi_i | \psi_a)\)
+  + 注: 计算概率的时候需要考虑正交性
+#+begin_html
+</details>
+#+end_html
+
+* 波函数
+\[\psi = A e^{i (p x - E t) / \hbar}\]
+  
++ 相速度 \(v_{\mathrm{ph}} = \frac{E}{p}\)
++ 群速度 \(v_{\mathrm{g}} = \frac{\partial \nu}{\partial k}\)
++ 统计解释:
+  + 玻恩: \(\rho(x) \mathrm{d}x \sim \psi^{*} \psi \mathrm{d} x\)
+    + 单值性
+    + 可积性
+    + 归一性 \(\int_{\Omega} \psi^{*} \psi = 1\) 
+
+      使用归一性可以用于确定参数系数
+  + 概率守恒: \(\frac{\partial \rho}{\partial t} + \frac{\partial \boldsymbol{J}}{\partial \boldsymbol{r}} = 0\), \(\boldsymbol{J}\) 为概率流密度
+  + 物质波: \(p = \frac{\hbar}{\lambda}\)
+  + 概率量计算
+    + 物理值平均: \(\left\langle A \right\rangle = \int \psi^{*} A \psi\)
+
+      #+begin_html
+      <details><summary>一些例子</summary>
+      #+end_html
+      + \(\left\langle x \right\rangle = \int x |\psi(x, t)|^2 \mathrm{d}x\)
+      + \(\left\langle v \right\rangle = \frac{\mathrm{d} \left\langle x \right\rangle}{\mathrm{d} t}\)
+      + \(\left\langle p \right\rangle = m \left\langle v \right\rangle\)
+      + \(\left\langle T \right\rangle = - \frac{\hbar^2}{2m} \int \psi^{*} \frac{\partial^2 \psi}{\partial x^2} \mathrm{d} x\)
+      + \(\left\langle H \right\rangle = E\)
+      + \(\left\langle H^2 \right\rangle = E^2\)
+      #+begin_html
+      </details>
+      #+end_html
+    + 物理值方差: \(\sigma_A^2 = \left\langle A^2 \right\rangle - \left\langle A \right\rangle^2\)
+
+      #+begin_html
+      <details><summary>不确定性关系</summary>
+      #+end_html
+      + \(\sigma_x \sigma_p \geq \frac{\hbar}{2}\)
+      #+begin_html
+      </details>
+      #+end_html
++ 边界条件
+  + \(\psi\) 的连续性: 总是连续的 \(\psi(x_0^+) = \psi(x_0^-)\) 
+  + \(\frac{\mathrm{d} \psi}{\mathrm{d} x}\) 的连续性: 除了势无穷大点外连续
+    
+** 一维定态薛定谔方程解
+\[- \frac{\hbar}{2 m} \frac{\mathrm{d}^2 \psi}{\mathrm{d} x^2} + V \psi = E \psi \Rightarrow H \psi = E \psi\]
+
++ 波函数的解 \(\Psi(x, t) = \psi e^{- i E t / \hbar}\)
++ \(\Psi(x, t) = \sum c_n \psi_n e^{-i E_n t / \hbar}\)
+  
+*** 无限深势阱
+\[U = \left\{\begin{array}{ll} 0 & 0 \leq x \leq L \\\\ \infty & \mathrm{else} \end{array}\right.\]
+
++ 阱外: \(\psi = 0\)
++ 阱内: \(- \frac{\hbar^2}{2 m} \frac{\mathrm{d}^2 \psi}{\mathrm{d} x^2} = E \psi\)
+  + \(\psi = c_n \sin k x, k = \frac{\sqrt{2 m E}}{\hbar}\)
+  + \(f(x) = \sum c_n \psi_n, c_n = \int \psi_n^{*} f\)
+  + 解: \(\psi(x) = \sqrt{\frac{2}{L}} \sum C_n \sin \frac{n \pi}{L} x\), \(C_{2k - 1} = \frac{8 \sqrt{15}}{((2k - 1) \pi)^2}\)
+    
+#+begin_html
+<details><summary>一些统计量</summary>
+#+end_html
++ \(\sum |c_n|^2 = 1\)
++ \(\left\langle E \right\rangle = \sum |c_n|^2 E_n\)
+#+begin_html
+</details>
+#+end_html
+
+*** 谐振子
+\[H \psi = E \psi, H = \frac{p^2}{2m} + \frac{1}{2} m \omega_0^2 x^2\]
+
+#+begin_quote
+可以通过去量纲 \(m = \hbar = \omega_0 = 1\), 简化方程, \(p \rightarrow \frac{\mathrm{d}}{\mathrm{d} x}, x \rightarrow x\).
+#+end_quote
+
+\[(\frac{p^2}{2} + \frac{x^2}{2}) \psi = E \psi \Rightarrow \psi'' + (2 E - x^2) \psi = 0\]
+
+1. 解析解
+   + 代入通解 \(\psi = u e^{- x^2 / 2}\) 计算得到厄米微分方程:
+
+     \[u'' - 2 u' x + (2 E - 1) u = 0\]
+   + 用解析法构造展开解: \(u = \sum a_n x^n\), 代入得到 \(\frac{a_{j+2}}{a_j} = \frac{2 j - (2 E - 1)}{(j + 2) (j + 1)} \sim \frac{2}{j}\).
+2. 代数解
+   + 升降算符: \(a_{\pm} = \frac{1}{\sqrt{2 m \hbar \omega}} (m \omega x \mp i p)\), 用于分解哈密顿算符 \(H\)
+
+     #+begin_html
+     <details><summary>升降算符的作用</summary>
+     #+end_html
+     + \(\psi_0 = (\frac{m \omega}{\pi \hbar})^{1/4} e^{- \frac{m \omega}{2 \hbar} x^2}\)
+     + \(\psi_n = A_n (a_+)^n \psi_0(x) = \frac{1}{\sqrt{n !}} a_+^n \psi_0\) (一目了然的 *升降*)
+     + \(\sqrt{n} \psi_n = a_+ \psi_{n - 1}, \sqrt{n} \psi_{n - 1} = a_- \psi_n\)
+     + \(a_- \psi_0 = 0\)
+     + \(E_n = (n + \frac{1}{2}) \hbar \omega\) (每步能量上升 \(\hbar \omega\))
+     + \(\left\langle V \right\rangle = \frac{\hbar \omega}{2} \int \psi^{*} (a_+^2 + a_+ a_- + a_- a_+ + a_-^2) \psi = \frac{1}{2} \hbar \omega (n + \frac{1}{2})\)
+     + \(x = \sqrt{\frac{\hbar}{2 m \omega}} (a_+ + a_-)\)
+     + \(p = i \sqrt{\frac{2 m \omega}{\hbar}} (a_+ - a_-)\)
+     #+begin_html
+     </details>
+     #+end_html
+   + 泊松括号: \([A, B] = A B - B A, \left\{ A, B \right\}_{q, p} = \frac{\partial A}{\partial q} \frac{\partial B}{\partial p} - \frac{\partial A}{\partial p} \frac{\partial B}{\partial q}\)
+
+     #+begin_html
+     <details><summary>泊松括号的公式</summary>
+     #+end_html
+     + \([a_-, a_+] = 1\)
+     + \([x, p] = i \hbar\)
+     #+begin_html
+     </details>
+     #+end_html
+
+*** 自由粒子
+\[\psi(x, t) = \frac{1}{\sqrt{2 \pi}} \int \phi(k) e^{i (k x - \frac{\hbar k^2}{2 m} t)} \mathrm{d}k\]
+
+#+begin_quote
+利用傅立叶变换进行方程求解的方法:
++ 已经知道了 \(\Psi(x, 0) = \frac{1}{\sqrt{2 \pi}} \int \phi(k) e^{i k x} \mathrm{d}k\)
++ 利用傅立叶变换得到: \(\phi(k) = \frac{1}{\sqrt{2 \pi}} \int \Psi(x, 0) e^{- i k x} \mathrm{d}x\)
++ 傅立叶变换公式: \(f(x) = \frac{1}{\sqrt{2 \pi}} \int F(k) e^{i k x} \mathrm{d} k \Leftrightarrow F(k) \frac{1}{\sqrt{2 \pi}} \int f(x) e^{- i k x} \mathrm{d} x\)
+#+end_quote
+
+#+begin_html
+<details><summary>一维势的一般讨论</summary>
+#+end_html
++ 根据势场和能量进行划分:
+
+  | 势场      | 经典 | 束缚/散射 |
+  |-----------+------+-----------|
+  | \(E > U\) | 允许 | 散射态    |
+  | \(E < U\) | 禁止 | 束缚态       |
++ 跃变的一般结果
+
+  记一般的通解形式为:
+
+  \[\psi = \left\{\begin{matrix} A e^{- i k x} + B e^{i k x} & (\psi) \\\\ C e^{- i k' x} + D e^{i k' x} & (\psi') \end{matrix}\right.\]
+
+  根据状态的不同可以有不同的结论:
+
+  | 状态             | \(k\)      | \(k'\)             | \(\psi_-\)                         | \(\psi_+\)                 |
+  |------------------+------------+--------------------+---------------------------------+-------------------------|
+  | 束缚态 \(E < U\) | \(\sqrt{2 E}\) | \(\sqrt{2 (E - U)}\)   | \(A e^{- i k x} + B e^{i k x}\) | \(C e^{- i k x}\)       |
+  | 散射态 \(E > U\) | \(\sqrt{2 E}\) | \(i \sqrt{2 (U - E)}\) | \(A e^{- i k x} + B e^{i k x}\) | \(C e^{\kappa x}, \kappa = i k'\) |
+  + 代入边界条件解出特解, 边界条件有:
+    + \(\psi(x_0^-) = \psi(x_0^+)\)
+    + \(\psi'(x_0^-) = \psi'(x_0^+)\)
+    + 一般求解方式是通过计算方程的比得到 \(\frac{B}{A}, \frac{C}{A}\) 的比例,
+      从而计算得到 \(J = \mathcal{J}(\psi^{*}\psi') = \left\{\begin{matrix} k (|A|^2 - |B|^2) & [J_+] \\\\ k' |C|^2 & [J_-]\end{matrix}\right.\),
+      从而计算反射系数和散射系数 \(R = \frac{J_B}{J_A}, S = \frac{J_C}{J_A}\).
+  + 物理意义
+    + \(A\) 入射波, \(B\) 反射波, \(C\) 透射波
++ 透射系数和反射系数
+
+  \[T = \frac{J_{\mathrm{out}}}{J_{\mathrm{in}}}, R = \frac{J_{\mathrm{back}}}{J_{\mathrm{in}}}\]
+
+  有概率流密度守恒: \(T^2 + R^2 = 1\)
++ 透射矩阵和转移矩阵
+
+  \[\left(\begin{matrix} B \\\\ F \end{matrix}\right) = \boldsymbol{S} \left(\begin{matrix} A \\\\ G \end{matrix}\right), \left(\begin{matrix} F \\\\ G \end{matrix}\right) = \boldsymbol{M} \left(\begin{matrix} A \\\\ B \end{matrix}\right), \boldsymbol{S} = \frac{1}{M_{22}} \left(\begin{matrix} -M_{21} & 1 \\\\ |M| & M_{12} \end{matrix}\right)\]
+
+#+begin_html
+</details>
+#+end_html
+
+**** \(\delta\) 函数势阱
+势函数:
+
+\[V(x) = - \alpha \delta(x), \delta(x) = \left\{\begin{matrix} 0 & x \neq 0 \\\\ -\infty & x = 0 \end{matrix}\right.\]
+
+其中 \(\alpha\) 为 \(\delta\) 势强度. 
+
++ 散射态 \(E > 0\)
+
+  \[\psi(x) = \frac{\sqrt{m \alpha}}{\hbar} e^{- m \alpha |x| / \hbar^2}, E = - \frac{m \alpha^2}{2 \hbar^2}, \kappa = \frac{m \alpha}{\hbar^2}\]
+
+  #+begin_html
+  <details><summary>证明方法</summary>
+  #+end_html
+  + 通解: \(\psi(x) = \left\{\begin{matrix} A e^{\kappa x} & (x \leq 0) \\\\ B e^{- \kappa x} & (x \geq 0) \end{matrix}\right.\)
+  + 连续性条件:
+    + \(\psi(x_+) = \psi(x_-)\)
+    + \(\psi'(x_+) - \psi(x_-) = - \frac{2 m \alpha}{\hbar^2} \psi(0)\)
+  + 代入边界条件 (连续性条件) 得到解
+  #+begin_html
+  </details>
+  #+end_html
++ 束缚态 \(E < 0\) 
+
+  \[\frac{\mathrm{d}^2 \psi}{\mathrm{d} x^2} = - \frac{2 m E}{\hbar^2} \psi = - k^2 \psi\]
+
+  \[R = \frac{\beta^2}{1 + \beta^2}, T = \frac{1}{1 + \beta^2}, \beta = \frac{m \alpha}{\hbar^2 k}\]
+
+  #+begin_html
+  <details><summary>证明方法</summary>
+  #+end_html
+  + 一般解: \(\psi(x) = \left\{\begin{matrix} A e^{i k x} + B e^{- i k x} & x < 0 \\\\ C e^{i k x} + D e^{- i k x} & x > 0 \end{matrix}\right.\)
+  + 利用边界条件 (连续性条件) 得到系数:
+    + \(\psi(0_-) = \psi(0_+)\)
+    + \(\Delta \left( \frac{\mathrm{d} \psi}{\mathrm{d} x} \right) = - \frac{2 m \alpha}{\hbar} \psi(0)\)
+  #+begin_html
+  </details>
+  #+end_html
+**** 方势阱散射
+势函数:
+
+\[V(x) = \left\{\begin{matrix} - V_0 & - a \leq x \leq a \\\\ 0 & \mathrm{else} \end{matrix}\right.\]
+
+一般解:
+
+\[\psi(x) = \left\{\begin{matrix} F e^{- \kappa x} & x > a \\\\ D \cos (l x) & 0 < x < a \\\\ \psi(-x) x < 0 \end{matrix}\right.\]
+
+
+#+begin_html
+<details><summary>一些习题 & 结论</summary>
+#+end_html
++ 波函数的相因子作用
+  + \(\Psi \rightarrow \psi_1 + e^{i \phi} \psi_2\)
+  + \(\left\langle Q \right\rangle \rightarrow \left\langle Q \right\rangle(\xi + \phi)\)
++ 无限深方势阱的解
+  + \(\psi_n = \sqrt{\frac{2}{a}} \sin \frac{n \pi}{a} x\)
+  + \(E_n = \frac{\hbar^2}{2 m} k^2, k = \frac{n \pi}{a}\)
+  + 无限深方势阱在初始条件下的解
+    + 首先用初始条件 \(\Psi(x, 0)\) 归一化求出系数 (如果有的话)
+    + 利用初始条件傅立叶展开计算系数 \(\Psi = \sum c_n \psi_n e^{- i E_n t}\):
+
+      \[c_n = \int \sin (\frac{n \pi}{a} x) \Psi(x, 0)\]
+  + 量子恢复周期
++ \(\delta(x)\)
+  + 傅立叶变换 \(\delta(x) = \frac{1}{2 \pi} \int e^{i k x} \mathrm{d} k\)
+
+    即: \(\delta(x) \overset{\mathcal{F}}{\rightarrow} 1\)
+  + 双 \(\delta(x)\) 函数势
++ 透射系数和反射系数
+      
+#+begin_html
+</details>
+#+end_html
+* 形式理论
++ 波函数存在于希尔伯特空间中
+  + 使用左矢 \(\left\langle \alpha \right|\) 和右矢 \(\left| \alpha \right\rangle\) 表示矢量
+  + 相互的关系是转置共轭 \(\left\langle f | g \right\rangle = \left\langle g | f \right\rangle^{*}\) 
+  + 正交归一基底 \(\left\langle f_{n} | f_{m} \right\rangle = \delta_{nm}\)
++ 可观测量 \(Q\) 的期望值 \(\left\langle Q \right\rangle = \left\langle \Psi | \hat{Q} \Psi \right\rangle\)
+  
+  厄米算符 \(\hat{Q}\):
+  + \(\left\langle Q \right\rangle = \left\langle Q \right\rangle^{*}\)
+  + \(\left\langle \Psi | \hat{Q} \Psi \right\rangle = \left\langle \hat{Q} \Psi | \Psi \right\rangle\)
+  + 性质:
+    + 厄米算符的本征值是实数
+    + 本征函数正交 (对于 \(q_i = q_j, i \neq j\) 的情况, 可以通过 Gram-Schmidt 正交化)
++ 确定值态
+  + 定义: \(\sigma^2 = 0\) 的态为确定值态
+
+    #+begin_html
+    <details><summary>证明</summary>
+    #+end_html
+    \[\sigma^2 = \left\langle (\hat{Q} - \left\langle Q \right\rangle)^2 \right\rangle = \left\langle \Psi | (\hat{Q} - q)^{2} \Psi \right\rangle = \left\langle (\hat{Q} - q) \Psi | (\hat{Q} - q) \Psi \right\rangle \Rightarrow \hat{Q} \Psi = q \Psi\]
+    #+begin_html
+    </details>
+    #+end_html
+  + 性质: 确定值态为 \(\hat{Q}\) 的本征函数 \(\hat{Q} \Psi = q \Psi\).
+  + 计算:
++ 广义统计解释
+  + 动量空间波函数 \(\Phi(x, t)\)
+
+    #+begin_html
+    <details><summary>计算动量空间波函数</summary>
+    #+end_html
+    + 使用傅立叶变换
+      
+      \[\Phi(p, t) = \frac{1}{\sqrt{2 \pi \hbar}} \int e^{- i p x / \hbar} \Psi(x, t) \mathrm{d}x\]
+    + 同样可以反过来得到:
+
+      \[\Psi(x, t) = \frac{1}{\sqrt{2 \pi \hbar}} \int e^{i p x / \hbar} \Phi(p, t) \mathrm{d}p\]
+      
+    #+begin_html
+    </details>
+    #+end_html
++ 不确定性原理
+
+  \[\sigma_A^2 \sigma_B^2 = \left( \frac{1}{2i} \left\langle [\hat{A}, \hat{B}] \right\rangle \right)^2\]
+
+  #+begin_html
+  <details><summary>证明和结论</summary>
+  #+end_html
+  + 证明
+
+    施瓦茨不等式 \(\left\langle f | f \right\rangle \left\langle g | g \right\rangle \geq | \left\langle f | g \right\rangle |^2\) 
+    
+    \[\Rightarrow \sigma_A^2 \sigma_B^2 = \left\langle f | f \right\rangle \left\langle g | g \right\rangle \geq | \left\langle f | g \right\rangle |^2\]
+
+    复数: \(|z|^2 = (\frac{1}{2 i} (z - z^{*})^2)^2\)
+  + \(\sigma_x^2 \sigma_p^2 \geq \left( \frac{1}{2 i} i \hbar \right)^2 = (\frac{\hbar}{2})^2 \Rightarrow \sigma_x \sigma_p \geq \frac{\hbar}{2}\)
+  + \(\sigma_t \sigma_E \geq \frac{\hbar}{2}\)
+  + \(\frac{\mathrm{d}}{\mathrm{d} t} \left\langle Q \right\rangle = \frac{i}{\hbar} \left\langle [\hat{H}, \hat{Q}] \right\rangle + \left\langle \frac{\partial \hat{Q}}{\partial t} \right\rangle\)
+    
+  #+begin_html
+  </details>
+  #+end_html
+
+#+begin_html
+<details><summary>一些习题</summary>
+#+end_html
++ 对偶基
+  + 左矢为行矢量, 右矢为列矢量
+  + \(\left\langle \alpha \right| = (\left| \alpha \right\rangle)^{*}\)
+  + 计算对偶基: 基底直接左右互换, 系数对偶
+  + 计算算符对应的矩阵 \(\hat{A} = \left| \alpha \right\rangle \left\langle \beta \right| = \alpha_i \beta_j\) 
++ \(\left\langle x \right\rangle = \int \Phi (i \hbar \frac{\partial}{\partial p}) \Phi \mathrm{d}p\)
+  + 利用 \(\Psi = \frac{1}{\sqrt{2 \pi}} \int e^{i p x / \hbar} \Phi \mathrm{d}p\) 替换 \(\left\langle x \right\rangle = \int \Psi^{*} x \Psi \mathrm{d} x\)
+  + 利用傅立叶变换和积分顺序交换消去 \(\int e^{- i (p_1 - p_2) x / \hbar}\)
+  + 导数来自 \(x\) 和指数积分的消去
++ 计算本征矢量和本征值
+  + 久期方程 \(\mathrm{det} |A - \lambda I| = 0\) 计算 \(A\) 的本征值
+    + 对于重根, 使用施密特正交归一
+  + 格拉姆-施密特方法正交归一
+
+    #+begin_src lisp
+      (reduce (lambda (bases e)
+                (unify (- e (sum (dot e bases)))))
+              un-cross-unified-bases)
+    #+end_src
++ 谱分解
+
+  \[\hat{Q} = \sum q_{ij} \left| e_{i} \right\rangle \left\langle e_{j} \right|\]
+
+  + 证明 \(\hat{Q} \left| e_{n} \right\rangle = q_n \left| e_{n} \right\rangle \Rightarrow \hat{Q} = \sum q_n \left| e_{n} \right\rangle \left\langle e_{n} \right|\)
+
+    即证明: \(\forall \left\langle \alpha \right|: \hat{Q} = \left\{ \sum q_n \left| e_{n} \right\rangle \left\langle e_{n} \right|  \right\} \left\langle \alpha \right|\)
+
+    \[\forall \left| \alpha \right\rangle = \sum c_n \left| e_{n} \right\rangle: \hat{Q} \left| \alpha \right\rangle = \sum q_n \left| e_{n} \right\rangle c_n = \sum q_n \left| e_{n} \right\rangle \left\langle e_{n} \right| \left| \alpha \right\rangle\]
++ 柏松括号
+  + \([r_i, r_j] = 0\)
+  + \([p_i, p_j] = 0\)
+  + \([r_i, p_j] = i \hbar \delta_{ij}\)
+  + \([H, r_i] = [\frac{p^2}{2 m} + V, r_i] = \frac{1}{2m} [p^2, r_i] + [V, r_i]\)
+    + \([p^2, r_i] = p_j [p_j, r_i] + [p_i, r_i] p_j = - i \frac{\hbar}{m} p_i\)
+  + \(\frac{\mathrm{d}}{\mathrm{d} t} \left\langle Q \right\rangle = \frac{i}{\hbar} \left\langle [\hat{H}, \hat{Q}] \right\rangle + \left\langle \frac{\partial \hat{Q}}{\partial t} \right\rangle\)
+    + \(\frac{\mathrm{d}}{\mathrm{d} t} \left\langle r_i \right\rangle = \frac{i}{\hbar} \left\langle [\hat{H}, r_i] \right\rangle = \frac{1}{m} \left\langle p_i \right\rangle\)
+    + \(\frac{\mathrm{d}}{\mathrm{d} t} \left\langle p_i \right\rangle = \left\langle - \frac{\partial V}{\partial r_i} \right\rangle\)
+  + \(\sigma_{r_i}^2 \sigma_{p_j}^2 \geq (\frac{1}{2 i} \left\langle [\hat{A}, \hat{B}] \right\rangle)^2 = (\frac{\hbar}{2} \delta_{ij})^2\)
+    
+#+begin_html
+</details>
+#+end_html  
+
+* 球坐标系
+\[i \hbar \frac{\partial \Psi}{\partial t} = H \Psi\]
+
++ \(p \rightarrow - i \hbar \nabla\)
+
+  \[\left[ \frac{\hbar^2}{2 m} \nabla^2 + (E - V) \right] \psi = 0\]
+
+  + 对于球坐标系 \(\nabla^2 = \frac{1}{r^2} \frac{\partial}{\partial r} (r \frac{\partial}{\partial r}) + \frac{1}{r^2} \frac{1}{\sin \theta} \frac{\partial}{\partial \theta} (\sin \theta \frac{\partial}{\partial \theta}) + \frac{1}{r^2} \frac{1}{\sin^2 \theta} \frac{\partial^2}{\partial \phi^2}\) 
++ 分离变量 \(\Psi = R(r) Y(\theta, \phi)\) 
+
+  + 分离变量的结果:
+    
+    \[\frac{1}{Y} \left\{ \frac{1}{\sin \theta} \frac{\partial}{\partial \theta} (\sin \theta \frac{\partial Y}{\partial \theta}) + \frac{1}{\sin^2 \theta} \frac{\partial^2 Y}{\partial \phi^2} = - l (l + 1) \right\}\]
+
+    \[\frac{1}{R} \frac{\mathrm{d}}{\mathrm{d} r}(r^2 \frac{\mathrm{d} R}{\mathrm{d} r}) - \frac{2 m r^2}{\hbar^2} (V - E) = l (l + 1) \Rightarrow R(r) = A j_l(k r)\]
+    
+  #+begin_html
+  <details><summary>直角坐标系下的分离变量</summary>
+  #+end_html
+  \[\Psi(x, y, z) = X(x) Y(y) Z(z) \Rightarrow \left[ \frac{\hbar^2}{2 m} \frac{\partial^2}{\partial q_i^2} + (E - V) \right] Q_i(x) = 0\]
+
+  + 如果能量还能够分开的话, 估计还能变成一维问题.
+  #+begin_html
+  </details>
+  #+end_html
+  + 对方向角方程继续进行变量分离
+
+    \[\frac{1}{\Phi} \frac{\mathrm{d}^2 \Phi}{\mathrm{d} \phi^2} = - m^2 \Rightarrow \Phi = e^{i m \phi}, m = 0, \pm 1, \pm 2, \cdots\]
+    
+    \[\frac{1}{\Theta} \left[ \sin \theta \frac{\mathrm{d}}{\mathrm{d} \theta} (\sin \theta \frac{\mathrm{d} \Theta}{\mathrm{d} \theta}) \right] + l (l + 1) \sin^2 \theta = m^2, \Rightarrow \Theta = A P_l^m (\cos \theta)\]
++ 角动量叠加
+
+#+begin_html
+<details><summary>一些习题</summary>
+#+end_html
++ 分离变量
+  + 直角坐标系的分离变量
+
+    \[V = \left\{\begin{matrix} 0 & 0 < x, y, z < a \\\\ \infty & \mathrm{else} \end{matrix}\right.\]
+    + 分离变量 \(\psi(x, y, z) = X(x) Y(y) Z(z)\) 的结果
+
+      \[- \frac{\hbar}{2m} \left( Y Z \frac{\mathrm{d}^2 X}{\mathrm{d} x^2} + X Z \frac{\mathrm{d}^2 Y}{\mathrm{d} y^2} + X Y \frac{\mathrm{d}^2 Z}{\mathrm{d} z^2} \right) = E X Y Z\]
+    + 得到
+
+      \[\frac{1}{X} \frac{\mathrm{d}^2 X}{\mathrm{d} x^2} + \frac{1}{Y} \frac{\mathrm{d}^2 Y}{\mathrm{d} y^2} + \frac{\mathrm{d}^2 Z}{\mathrm{d} z^2} = - \frac{2m}{\hbar} E\]
+    + 利用
+
+      \[\frac{1}{X} \frac{\mathrm{d}^2 X}{\mathrm{d} x^2} = - k_x^2, \frac{1}{Y} \frac{\mathrm{d}^2 Y}{\mathrm{d} y^2} = - k_y^2, \frac{1}{Z} \frac{\mathrm{d}^2 Z}{\mathrm{d} z^2} = - k_z^2\]
+    + 最终解得
+
+      \[X(x) = A_x \sin k_x x + B_x \cos k_x x\]
+      \[Y(x) = A_y \sin k_y y + B_y \cos k_y y\]
+      \[Z(x) = A_z \sin k_z z + B_z \cos k_z z\]
+    + 利用边界条件可以确定 \(k_x, k_y, k_z\)
+    + 最终结果
+
+      \[\psi_{n_x n_y n_z} = \left( \frac{2}{a} \right)^{3/2} \sin \frac{n_x \pi}{a} x \sin \frac{n_y \pi}{a} y \sin \frac{n_z \pi}{a} z\]
+      \[E = \frac{\pi^2 \hbar^2}{2 m a^2} (n_x^2 + n_y^2 + n_z^2)\]
+    + 简并度分析:
+      + \((1, 1, 1) \Rightarrow d = 1\)
+      + \((1, 1, 2) \Rightarrow d = C_3^1 = 3\)
+      + \((1, 2, 2) \Rightarrow d = C_3^1 = 3\)
+      + \((1, 1, 3) \Rightarrow d = C_3^1 = 3\)
+      + \((2, 2, 2) \Rightarrow d = 1\)
+      + ...
+  + 球坐标系
++ 无限深球势阱
+  
++ 有限深势阱
+
+  \[V(r) = \left\{\begin{matrix} - V_0 & r \leq a \\\\ 0 & r \geq a \end{matrix}\right.\]
+  + \(l = 0\) 的基态方程
+    + 势阱内 \(r \leq a\):
+      
+      \[u = A \sin k_1 + B \cos k_1 r, k_1 = \sqrt{2 m (E + V_0)} / \hbar\]
+    + 势阱外 \(r \geq a\):
+
+      \[u = C e^{k_2 r} + D e^{k_2 r}\]
+    + 利用边界条件
+      + \(C = 0, (r \rightarrow \infty)\)
+      + \(- \cot k_1 a = \frac{k_2}{k_1}, (r = a)\)
+#+begin_html
+</details>
+#+end_html
+
+* 氢原子
++ 径向波函数
+  + 基态波函数
+
+    \[\psi = \frac{1}{\sqrt{\pi a^3}} e^{- r / a}\]
+
+    #+begin_html
+    <details><summary>一些结论</summary>
+    #+end_html
+    + \(\left\langle r^n \right\rangle = \frac{1}{\pi a^3} \int r^n e^{- 2 r / a} r^2 \sin \theta \mathrm{d} r \mathrm{d} \theta \mathrm{d} \phi = \frac{4 \pi}{\pi a^3} \int_0^{+ \infty} r^{n + 2} e^{- 2 r / a} \mathrm{d} r\)
+      + \(\left\langle r \right\rangle = \frac{3}{2} a\)
+      + \(\left\langle r^2 \right\rangle = 3 a^2\)
+    + \(\left\langle x \right\rangle = 0, \left\langle x^2 \right\rangle = \frac{1}{3} \left\langle r^2 \right\rangle = a^2\)
+    #+begin_html
+    </details>
+    #+end_html
++ 角动量
+
+  \[[L_x, L_y] = i \hbar L_z, [L_y, L_z] = i \hbar L_x, [L_z, L_x] = i \hbar L_y\]
+  + 不确定性
+
+    \[\sigma_{L_x}^2 \sigma_{L_y}^2 \geq \frac{\hbar^2}{4} \left\langle L_x \right\rangle\]
+  + 总角动量
+
+    \[L^2 = L_x^2 + L_y^2 + L_z^2\]
+
+    #+begin_html
+    <details><summary>结论</summary>
+    #+end_html
+    + \([L^2, L_i] = 0\)
+    #+begin_html
+    </details>
+    #+end_html
+  + 升降算符
+
+    \[L_{\pm} = L_x \pm i L_y\]
+
+    #+begin_html
+    <details><summary>结论</summary>
+    #+end_html
+    + \([L_z, L_{\pm}] = \pm \hbar L_{\pm}\)
+    + \([L^2, L_{\pm}] = 0\)
+    + \(L^2 f_l^m = \hbar^2 l (l + 1) f_l^m, L_z f_l^m = \hbar m f_l^m\)
+    + \(L_z = \frac{\hbar}{i} \frac{\partial}{\partial \phi}\)
+    + \(L^2 = - \hbar^2 \left[ \frac{1}{\sin \theta} \frac{\partial}{\partial \theta} (\sin \theta \frac{\partial}{\partial \theta}) + \frac{1}{\sin^2 \theta} \frac{\partial^2}{\partial \phi^2} \right]\)
+    #+begin_html
+    </details>
+    #+end_html
+    
+#+begin_html
+<details><summary>一些例题</summary>
+#+end_html
++ \([L_z, x] = [x p_y - y p_x, x] = [x p_y, x] - [y p_x, x] = - y [p_x, x] = i \hbar y\)
++ \([L_z, p_x] = [x p_y, p_x] - [y p_x, p_x] = i \hbar p_y\)
++ \([L_z, L_x] = [L_z, y p_z - z p_y] = [L_z, y p_z] - [L_z, z p_y] = [L_z, y] p_z - z [L_z, p_y] = i \hbar L_y\)
+#+begin_html
+</details>
+#+end_html
+* 自旋
++ 电子自旋
+
+  \[[\boldsymbol{S}_x, \boldsymbol{S}_y] = i \hbar \boldsymbol{S}_z, [\boldsymbol{S}_y, \boldsymbol{S}_z] = i \hbar \boldsymbol{S}_x, [\boldsymbol{S}_z, \boldsymbol{S}_x] = i \hbar \boldsymbol{S}_y, \boldsymbol{S} \times \boldsymbol{S} = i \hbar \boldsymbol{S}\]
++ 电子自旋的矩阵表示
+
+  \[\boldsymbol{S}_x = \frac{\hbar}{2} \left(\begin{matrix} 0 & 1 \\\\ 1 & 0 \end{matrix}\right), \boldsymbol{S}_y = \frac{\hbar}{2} \left(\begin{matrix} 0 & - i \\\\ i & 0 \end{matrix}\right), \boldsymbol{S}_z = \frac{\hbar}{2} \left(\begin{matrix} 1 & 0 \\\\ 0 & - 1 \end{matrix}\right)\]
++ \(\boldsymbol{S}_z\) 本征矢
+
+  \[\chi_+ = \left(\begin{matrix} 1 \\\\ 0 \end{matrix}\right), \chi_- = \left(\begin{matrix} 0 \\\\ 1 \end{matrix}\right)\]
+
+#+begin_html
+<details><summary>一些习题</summary>
+#+end_html
++ \(\chi = A \left(\begin{matrix} 3 i \\\\ 4 \end{matrix}\right)\)
+  + \(A\) 可以通过归一化 \(\chi^{\dagger} \chi = 1\) 计算得到
+  + \(\left\langle S_i \right\rangle = \chi^{\dagger} S_i \chi\) 计算期望值
+  + \(\left\langle S_i \right\rangle^2 = \frac{\hbar^2}{4}\) 由此可计算标准差
+  + \(\left\langle S^2 \right\rangle = s (s + 1) \hbar^2 = \frac{3}{4} \hbar^2\)
++ \(S_y\) 
+  + 本征值 \(\lambda = \pm \frac{\hbar}{2}\)
+  + 本征态
+    + \(\chi_+ = \frac{1}{\sqrt{2}} \left(\begin{matrix} 1 \\\\ i \end{matrix}\right)\)
+    + \(x_- = \frac{1}{\sqrt{2}} \left(\begin{matrix} 1 \\\\ - i \end{matrix}\right)\)
+      
+#+begin_html
+</details>
+#+end_html
+
+* The End
+失算, 本来以为是 Shut up and calculate. 结果是概念题考试...
+
+寄.
