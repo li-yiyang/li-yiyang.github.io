@@ -93,7 +93,7 @@
     (progn (draw-seq (cdr code) code-node out-node))
     ;; normal code
     (otherwise
-     (if (not (or (symbolp (car code)) (macro-function (car code))))
+     (if (not (and (symbolp (car code)) (macro-function (car code))))
          (draw-normal-function code code-node out-node)))))
 
 (defun static-args (code-form)
@@ -128,9 +128,6 @@
                :shape :rect)
          (loop for (dummy code) in pre-code-pair
                for index below (length pre-code-pair)
-               do (arc dummy func-node
-                       :label (format nil "~a" dummy)
-                       :color :white)
                do (draw-code (cons (format nil "~a ← ~a" dummy (car code))
                                    (cdr code))
                              dummy func-node))))
