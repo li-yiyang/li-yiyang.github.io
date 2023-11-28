@@ -1,0 +1,647 @@
+#+title: Useless Program Graph Drawer
+#+date: 2023-11-28
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+数电要画 ASM, 但是 Graphviz 的编写有点点麻烦,
+于是选择尝试写一个没啥用的绘图程序.
+
+* 主要的思路
+** 目标
+希望能够像这样来把一个程序来进行绘图.
+
+** 绘图方案
+:PROPERTIES:
+:header-args:lisp: :tangle ../_img/lisp/misc/prog-to-graph/eazy-graphviz.lisp :results silent
+:END:
+最终的后端使用 [[https://graphviz.org][Graphviz]] 来进行绘制, 这里定义一个简单的封装 (记作 =eazy-graphviz=,
+参考 [[https://github.com/guicho271828/eazy-gnuplot][eazy-gnuplot]]).
+
+#+name: defpackage-eazy-graphviz
+#+begin_src lisp :exports none
+  (defpackage eazy-graphviz
+    (:use :cl)
+    (:export #:with-dot
+             #:defdot
+             #:declare-dot-function
+             #:delete-dot-function
+             #:test-dot-function
+             #:*dot-namespace*)
+    (:import-from :alexandria :with-gensyms)
+    (:documentation "This is a wrapper for simple Graphviz usage."))
+
+  (in-package eazy-graphviz)
+#+end_src
+
+具体代码就折叠掉了, 毕竟不是重点 (虽然花了很久来写就是了...)
+
+#+begin_html
+<details><summary>具体的代码</summary>
+#+end_html
+
+*** 调用方案
+使用 =uiop:run-program= 来实现对 graphviz 的程序 =dot= 的调用.
+(UIOP 文档: [[https://asdf.common-lisp.dev/uiop.html#UIOP_002fRUN_002dPROGRAM][13 UIOP/RUN-PROGRAM]], Graphviz 的 [[https://graphviz.org/doc/info/command.html][Command Line 文档]])
+
+接下来进行一个绑定, 目标是基础功能, 而不是完全的命令行绑定:
+
+#+name: run-dot
+#+begin_src lisp
+  (defun run-dot (input output &key (type :svg) &allow-other-keys)
+    "Run dot program.
+
+  The `input' and `output' should follow `uiop:run-program' flavor.
+  The `type' could be `:svg', `:png', and so on, it would be overwritten
+  if the output is a path name indicating its file type."
+    (let ((graph-type (format nil "-T~A" (if (or (pathnamep output)
+                                                 (stringp output))
+                                             (pathname-type output)
+                                             type))))
+      (uiop:run-program `("dot" ,graph-type)
+                        :input input
+                        :output (if (stringp output) (pathname output) output))))
+#+end_src
+
+*** 帮助函数
+因为如果要进行展开的话, 为了让代码更加简洁, 所以做一些帮助函数来简化代码.
+(虽然说不上能不能真的简化代码就是了). 因为这些函数部分是用于宏展开的,
+所以需要在编译期进行执行.
+
+#+name: helper-functions
+#+headers: :noweb yes
+#+begin_src lisp
+  (eval-when (:compile-toplevel :load-toplevel :execute)
+    ;; `plist-remove-key' is used to avoid naming conflicts in keys
+    <<plist-remove-key>>
+  
+    ;; `dot-args' is used to transform common lisp plist into dot args
+    <<dot-args>>
+
+    ;; `escape-dot-expr' is used to add the missing output dot stream
+    ;; mainly for `with-dot' and `defdot' two macros.
+    <<escape-dot-expr>>
+    )
+#+end_src
+
+具体的帮助函数这里暂时不展开, 在这里仅仅做其功能的简单描述:
++ =(plist-remove-key plist &rest keys)=:
+  从 =plist= 中根据 =keys= 移除所有对应的键值对.
++ =(dot-args args)=:
+  根据 =args= (plist) 生成一个 dot 中的 =[key=value]= 形式的参数
++ =(escape-dot-expr stream expr)=:
+  如果 =expr= 是基本 dot 函数或者是 =defdot= 得到的函数,
+  那么向其第一个参数位置插入 =stream=.
+
+#+begin_html
+<details><summary>具体的详细定义</summary>
+#+end_html
+
+#+name: plist-remove-key
+#+headers: :tangle no
+#+begin_src lisp
+  (defun plist-remove-key (plist &rest keys)
+    "Remove `keys' in `plist'."
+    (loop for (k v) on plist by #'cddr
+          if (not (member k keys))
+            collect k and collect v))
+#+end_src
+
+#+name: dot-args
+#+headers: :tangle no
+#+begin_src lisp
+  (defun dot-args (args)
+    "Generate graphviz arg brackets."
+    (if (null args) "" (format nil " [~{~a=\"~a\"~^, ~}]" args)))
+#+end_src
+
+对于 =dot-args= 这个函数, 目前是强制把所有的参数都用字符串的形式进行输出.
+实际上可能是有点问题的, 尽管目前还没有遇到, 但是应该对于不同的输入值类型,
+进行一个处理才对... 之后再说.
+
+#+name: escape-dot-expr
+#+headers: :tangle no
+#+begin_src lisp
+  (defparameter *dot-namespace* '()
+    "All the dot methods name should be within `*dot-namespace*'.")
+
+  (defparameter *dot-alias*
+    '((node . %dot-node)
+      (arc  . %dot-arc)
+      (set  . %dot-set)
+      (subgraph . %dot-subgraph))
+    "Alias of dot commands")
+
+  (defun ->dot-sym (symbol)
+    "Make `symbol' under `eazy-graphviz' namespace."
+    (intern (symbol-name symbol) :eazy-graphviz))
+
+  (defun escape-dot-expr (stream diredp expr)
+    "The `expr' should be escaped if the method is within `*dot-namespace*'.
+
+    For example:
+
+      (method name &rest keys) --> (method stream name &rest keys)
+    "
+    (if (listp expr)
+        (let ((method (car expr))
+              (args   (cdr expr)))
+          (if (atom method)
+              (if (assoc method *dot-namespace*)
+                  ;; Expand dot functions
+                  `(funcall (cdr (assoc ',method *dot-namespace*))
+                            ,stream ,diredp ,@args)
+                  (if (assoc (->dot-sym method) *dot-alias*)
+                      ;; Replace dot alias and expand the function
+                      `(,(cdr (assoc (->dot-sym method) *dot-alias*))
+                        ,stream ,diredp ,@args)
+                      (cons method (mapcar (lambda (expr)
+                                             (escape-dot-expr stream diredp expr))
+                                           args))))
+              (cons (escape-dot-expr stream diredp method)
+                    (mapcar (lambda (expr) (escape-dot-expr stream diredp expr))
+                            args))))
+        expr))
+#+end_src
+
+这里的缺陷是可能需要把符号全部放到 =*dot-namespace*= 里面, 可能会有点点问题,
+但是应该不会太多, 就先这么使用算了.
+
+#+begin_html
+</details>
+#+end_html
+
+*** 基本函数和组合函数
+首先是一些最基本的绘图函数 (类似于 Lisp 的 7 个基本函数):
+
+#+name: dot-basic-plot-function
+#+begin_src lisp
+  (defun %dot-node (stream diredp name &rest args &key &allow-other-keys)
+    "Make a node with `name'."
+    (declare (ignore diredp))
+    (format stream "~&\"~a\"~a;" name (dot-args args)))
+
+  (defun %dot-arc (stream diredp from to &rest args &key &allow-other-keys)
+    "Make a arc `from' and `to', digraph arc if `diredp' otherwise graph arc."
+    (format stream "~&\"~a\" ~a \"~a\"~a;"
+            from (if diredp "->" "--") to (dot-args args)))
+
+  (defun %dot-set (stream diredp slot &rest args &key &allow-other-keys)
+    "Set graphviz `slot' properties by `args'."
+    (declare (ignore diredp))
+    (format stream "~&~a~a;" slot (dot-args args)))
+
+  (defmacro %dot-subgraph (stream diredp (name &rest args &key &allow-other-keys)
+                           &body body)
+    "Expand graphviz subgraph."
+    `(progn
+       (format ,stream "~&subgraph \"~a\" {" ,name)
+       (format ,stream "~{~&~a=~a;~}" (list ,@args))
+       (progn ,@(mapcar (lambda (expr) (escape-dot-expr stream diredp expr)) body))
+       (format ,stream "~&}")))
+#+end_src
+
+认为这四个函数 (宏) 是标准不可重定义的函数.
+在这四个函数的基础上, 对其的组合的函数就可以如下得到:
+
+#+name: defdot
+#+headers: :noweb yes
+#+begin_src lisp
+  <<defdot-helper>>
+
+  (defmacro defdot (dot-name lambda-list &body body)
+    "Define a graphviz function."
+    (with-gensyms (stream diredp)
+      (let ((name dot-name))
+        (if (assoc name *dot-alias*)
+            ;; Avoid user to define function conflicts with `*dot-alias*'.
+            `(warn (format nil "~a conflicts with *dot-alias*." ,name))
+            `(progn
+               ;; Warn user of redefining dot function
+               ;; make sure user won't overwrite the preserved function
+               ,(if (member name '(%dot-node %dot-arc %dot-subgraph %dot-set))
+                    `(warn ,(format nil "~a is preserved" name))
+                    `(progn
+                       (declare-dot-function ,name)
+                       (setf (cdr (assoc ',name *dot-namespace*))
+                             (lambda (,stream ,diredp ,@lambda-list)
+                               (declare (ignorable ,stream ,diredp))
+                               ,@ (mapcar (lambda (expr)
+                                            (escape-dot-expr stream diredp expr))
+                                          body)))))
+               ',dot-name)))))
+#+end_src
+
+即: 一个标准的 dot 函数应有如下约定: 第一个参数为 =stream=, 第二个参数为 =diredp=,
+其他的参数为正常的参数, 可以被用来作为图形绘制的参数.
+
+#+begin_html
+<details><summary>更加详细的一个说明和一些辅助的函数</summary>
+#+end_html
+
+实际上在这里我实现了两个命名空间, 一个是 =*dot-namespace*=, 即 dot function
+的命名空间; 另一个这是 =*dot-alias*=, 即别名空间. 前者用于函数的运行与展开,
+后者用于函数名称的替换和展开.
+
+其实真正重要的一个命名空间还是 =*dot-namespace*=, 但是这就有一个小小的问题,
+那就是如果想要定义那些相互引用的函数的话, 那么可能就不是很容易实现,
+一个简单的做法就是类似 C 语言的 function prototype, 提前进行一个函数声明.
+
+接下来就是一些简单的 =defdot= 的帮助函数:
+
+#+name: defdot-helper
+#+headers: :tangle no :noweb yes
+#+begin_src lisp :exports none
+  ;;; declare names of dot function before defining it
+  <<declare-dot-function>>
+
+  ;;; delete names/all-names in dot namespace
+  <<delete-dot-function>>
+
+  ;;; test function output
+  <<test-dot-function>>
+#+end_src
+
+比如可以定义一个叫做 =declare-dot-function= 的宏来进行这个操作:
+
+#+name: declare-dot-function
+#+headers: :tangle no
+#+begin_src lisp
+  (defmacro declare-dot-function (&rest names)
+    "Declare `names' are dot function."
+    `(progn
+       ,@ (mapcar (lambda (name)
+                    (if (assoc name *dot-namespace*)
+                        ;; warn user of redefining dot function
+                        `(unless (null (cdr (assoc ',name *dot-namespace*)))
+                           (warn ,(format nil "~a is already a dot function." name)))
+                        `(push (cons ',name nil) *dot-namespace*)))
+                  names)))
+#+end_src
+
+当然, 可能还会有一个大胆的想法就是删除某些/全部的 dot 函数:
+
+#+name: delete-dot-function
+#+headers: :tangle no
+#+begin_src lisp
+  (defun delete-dot-function (&rest names)
+    "Delete `names' of dot function, if `names' is nil, delete all dot functions."
+    (if (null names)
+        (setf *dot-namespace* '())
+        (delete-if (lambda (pair) (member (car pair) names)) *dot-namespace*)))
+#+end_src
+
+#+name: test-dot-function
+#+headers: :tangle no
+#+begin_src lisp
+  (defmacro test-dot-function ((&key (stream *standard-output*) (diredp t)
+                                &allow-other-keys)
+                               &body body)
+    "Test dot function within `body', default output `stream' is `*standard-output*'."
+    `(progn ,@ (mapcar (lambda (expr) (escape-dot-expr stream diredp expr)) body)))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** 绘图过程
+#+begin_src lisp
+  (defmacro with-dot ((output &rest keys &key (diredp t) debug &allow-other-keys)
+                      &body body)
+    "Expand with `run-dot' to draw a graph.
+
+  To define a graph, the following command could be used:
+
+    (set property &rest definations)
+    (node name &rest definations)
+    (arc from to &rest definations)
+    (subgraph (name &rest definations)
+      ...)
+
+  For example:
+
+    (with-dot (output-path :type :svg)
+      (set node :shape :rect)
+      (node :a :label \"start\"))
+  "
+    (with-gensyms (stream in)
+      `(let ((,stream (make-string-output-stream)))
+         (format ,stream ,(if diredp "digraph {" "graph {"))
+         (format ,stream "~&~{~a=~a;~}"
+                 ',(plist-remove-key keys :diredp :debug))
+         (progn ,@(mapcar (lambda (expr)
+                            (escape-dot-expr stream diredp expr))
+                          body))
+         (format ,stream "~&}")
+         (with-input-from-string
+             (,in ,(if debug
+                       `(print (get-output-stream-string ,stream) *error-output*)
+                       `(get-output-stream-string ,stream)))
+           (run-dot ,in ,output ,@keys)))))
+#+end_src
+
+注: 我对于现在这个实现结果并不是很满意, 因为实际上还是有很多的不足之处.
+但是不论怎么说, 至少是能用的水平, 就先这样将就着用吧... 到时候整理一下,
+之后作为一个单独的库来用估计也不是不行.
+
+最终的效果可能如下:
+
+#+name: eazy-graphviz-example
+#+headers: :tangle no
+#+begin_src lisp
+  (with-dot (output :rankdir "LR" :diredp nil :debug t)
+    (loop for i to 10
+          do (node i :label (format nil "node ~a" i))
+          if (< i 10)
+            do (arc i (1+ i) :label (format nil "~a -> ~a" i (1+ i)))))
+#+end_src
+
+输出的结果如下:
+
+[[{{ site.github.url }}/_img/lisp/misc/prog-to-graph/eazy-graphviz-example.png]]
+
+或者是更加有趣一些的自定义函数:
+
+#+name: eazy-graphviz-example-defdot
+#+headers: :tangle no
+#+begin_src lisp
+  (defdot plain-arcs (&rest node-chain)
+    "Make a plain chain."
+    (loop for i below (1- (length node-chain)) do
+      (arc (nth i node-chain) (nth (1+ i) node-chain))))
+
+  (with-dot (output :debug t)
+    (plain-arcs :a :b :c))
+#+end_src
+
+输出的结果如下:
+
+[[{{ site.github.url }}/_img/lisp/misc/prog-to-graph/eazy-graphviz-example-defdot.png]]
+
+先这么样吧...
+
+#+begin_html
+</details>
+#+end_html
+
+* 可能的实现
+:PROPERTIES:
+:header-args:lisp: :tangle ../_img/lisp/misc/prog-to-graph/prog-to-graph.lisp :results silent
+:END:
+
+首先是定义一个 package, 记作 =prog-to-graph=:
+
+#+name: defpackage-prog-to-graph
+#+begin_src lisp
+  (defpackage prog-to-graph
+    (:use :cl :eazy-graphviz)
+    (:import-from :alexandria
+                  :with-gensyms)
+    (:export :prog->graph)
+    (:documentation "Make graph of a program."))
+
+  (in-package prog-to-graph)
+#+end_src
+
+** DONE 绘制入口和出口
+绘制 ASM 的思路如下:
+1. 将程序包裹在 RESET -> 程序 -> RESET 这样的一个形式里面.
+2. 对于不同的程序 (AST), 主要分为顺序 =draw-seq=, 分支 =draw-cond=,
+   执行语句 =draw-func=; 临时环境 =draw-env=, 赋值 =draw-assign= 这几种类型:
+
+   #+name: declare-dot-function
+   #+begin_src lisp
+     (declare-dot-function draw-assign draw-if draw-env draw-seq draw-code
+                           draw-normal-function)
+   #+end_src
+3. 约定: 绘制除了有意义的参数外, 为当前节点和下一个节点,
+   从前一节点到当前节点的边由函数调用者绘制,
+   从节点到下一个节点的边由被调用者绘制.
+
+   (没准可以用宏来实现, 不过可能有点费脑, 还是算了)
+
+对于这些不同的逻辑:
++ =(draw-assign key-value-plist assign out-node)=
+  绘制成 =key ← value= 这样的形式:
+
+  #+name: draw-assign
+  #+begin_src lisp
+    ;;; render into the following form:
+    ;;;
+    ;;;     (in-node)
+    ;;;  .______|______(assign)
+    ;;;  |  key ← value |
+    ;;;  |  key ← value |
+    ;;;  +------+-------+
+    ;;;         |
+    ;;;     (out-node)
+    (defdot draw-assign (key-value-plist assign out-node)
+      (node assign
+            :label (format nil "~{~a ← ~a~^\\n~}" key-value-plist)
+            :shape :rect)
+      (arc assign out-node :label ""))
+  #+end_src
++ =(draw-if condition true-branch false-branch in-node out-node)=
+  绘制一个分支的形式:
+
+  #+name: draw-if
+  #+begin_src lisp
+    ;;; render into the following form:
+    ;;;
+    ;;;     (in-node)
+    ;;;        |
+    ;;;   < condition >
+    ;;;     T/    \F     (if-node)
+    ;;;  (true)  (false)
+    ;;;      \    /
+    ;;;    (out-node)
+    (defdot draw-if (condition true false if-node out-node)
+      (with-gensyms (t-node f-node)
+        ;; TODO: in the future sould support more complex condition graph expand
+        (node if-node :label (format nil "~a" condition) :shape :diamond)
+        ;; arcs to branch
+        (arc if-node t-node :label "T")
+        (arc if-node f-node :label "F")
+        ;; true / false prog
+        (draw-seq (list true)  t-node out-node)
+        (draw-seq (list false) f-node out-node)))
+  #+end_src
++ =(draw-env key-value-alist body in-node out-node)=
+  绘制成 subgraph 的形式:
+
+  #+name: draw-env
+  #+begin_src lisp
+    ;;; render into subgraph
+    ;;;  draw-assign -> draw-seq
+    (defdot draw-env (key-value-alist body env-node out-node)
+      (with-gensyms (env-name body-in-node)
+        (subgraph
+         (env-name :cluster :true :style :dashed)
+         ;; 
+         (draw-assign (loop for (key value) in key-value-alist
+                            collect key collect value)
+                      env-node body-in-node)
+         ;; subenv prog
+         (draw-seq body body-in-node out-node))))
+  #+end_src
++ =(draw-seq program in-node out-node)=
+  根据每个的内容不同进行绘制:
+
+  #+name: draw-seq
+  #+begin_src lisp
+    (defdot draw-seq (program seq-node out-node)
+      (if (null program)
+          (progn
+            ;; in-node -- seq-node -- out-node
+            ;;   [ ]   --     *    --   [ ]
+            (node seq-node :label "" :shape :point)
+            ;; finish arc
+            (arc seq-node out-node :label ""))
+          (let* ((code (car program))
+                 (endp (= 1 (length program)))
+                 (out  (if endp out-node (gensym "OUT"))))
+            (if (atom code)
+                (draw-assign (list "" code) seq-node out)
+                ;; (method . args)
+                (draw-code code seq-node out))
+            (unless endp
+              (draw-seq (cdr program) out out-node)))))
+  #+end_src
++ =(draw-code code code-node out-node)=
+
+  #+begin_src lisp
+    (defdot draw-code (code code-node out-node)
+      (case (car code)
+        ;; (values ... ... ...)
+        (values
+         (draw-assign (list "" (format nil "~{~a~^ ~}" (cdr code))) code-node out-node))
+        ;; (return-from name value)
+        (return-from (draw-assign (cdr code) code-node out-node))
+        ;; (setf/setq [key value])
+        ((setf setq) (draw-assign (cdr code) code-node out-node))
+        ;; (if condition true false)
+        (if (draw-if (second code) (third code) (fourth code) code-node out-node))
+        ;; (let [binding] body)
+        ((let let*) (draw-env (second code) (cddr code) code-node out-node))
+        ;; (progn body)
+        (progn (draw-seq (cdr code) code-node out-node))
+        ;; normal code
+        (otherwise
+         (if (not (and (symbolp (car code)) (macro-function (car code))))
+             (draw-normal-function code code-node out-node)))))
+  #+end_src
+
+#+begin_html
+<details><summary>一些肮脏的摸索</summary>
+#+end_html
+
+对于函数调用: =(func arg1 arg2 arg3 ...)=, 假设计算顺序是从左到右约化求值 =arg=.
+那么在表达式中理应对其进行一个表达. 所以这里需要进行一个顺序展开:
+
+#+name: draw-normal-function
+#+begin_src lisp
+  (defun static-args (code-form)
+    "Return precalculated code and dummy static args in `code-form'."
+    (loop for arg in (cdr code-form)
+          for dummy = (if (and (listp arg) (not (null arg))) (gensym "ARG") arg)
+          if (and (listp arg) (not (null arg)))
+            collect (list dummy arg) into pre-code-pair
+          collect dummy into dummy-args
+          finally (return (values pre-code-pair dummy-args))))
+
+  ;;; The normal function (func arg) shall be draw like
+  ;;;
+  ;;;         (in-node)  [dummy-arg <- pre-code]
+  ;;;             |      /
+  ;;;    +--------+---------+
+  ;;;    | func(dummy-args) |
+  ;;;    +--------+---------+
+  ;;;             |
+  ;;;         (out-node)
+  (defdot draw-normal-function (func-code func-node out-node)
+    (multiple-value-bind (pre-code-pair dummy-args)
+        (static-args func-code)
+      (if (null pre-code-pair)
+          (node func-node
+                :label (format nil "~a(~{~a~^, ~})" (car func-code) dummy-args)
+                :shape :rect)
+          (subgraph
+           ((gensym "SUBGRAPH") :style :dashed :cluster :true)
+           (node func-node
+                 :label (format nil "~a(~{~a~^, ~})" (car func-code) dummy-args)
+                 :shape :rect)
+           (loop for (dummy code) in pre-code-pair
+                 for index below (length pre-code-pair)
+                 do (draw-code (cons (format nil "~a ← ~a" dummy (car code))
+                                     (cdr code))
+                               dummy func-node))))
+
+      (arc func-node out-node :label "")))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+  
+** 最后
+于是只需要:
+
+#+name: prog->graph
+#+begin_src lisp
+  (defmacro prog->graph ((output &key (type :svg) (debug nil)) &body body)
+    "Trun a program into digraph and plot it out."
+    (with-gensyms (reset in out seq-node)
+      `(with-dot (,output :debug ,debug :type ,type :diredp t :splines :ortho
+                          :nodesep 1.0 :fontname :Arial :forcelabels :true)
+         (with-gensyms (,reset ,in ,out ,seq-node)
+           (set :node :fontname :Arial :fontcolor :black)
+           (set :edge :fontname :monospace :fontcolor :black)
+           (node ,reset :label "RESET" :shape :plain)
+           (node ,in  :label "" :shape :point)
+           (node ,out :label "" :shape :point)
+           (arc ,reset ,in :label "")
+           (arc ,in ,seq-node :label "")
+           (draw-seq ',body ,seq-node ,out)
+           (arc ,out ,in :label "" :constraint :false)))))
+#+end_src
+
+*** 简单的测试
+:PROPERTIES:
+:header-args:lisp: :tangle no
+:END:
+这里的测试不一定完善, 可能还需要很多的异常处理, 不过至少 =eazy-graphviz= 完事了.
+
+简单的赋值:
+
+#+name: prog-to-graph-test
+#+begin_src lisp
+  (prog->graph (output)
+    (setf money 1)
+    (if (> money 0.5) :fun :not-fun))
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/prog-to-graph/prog-to-graph-test.png]]
+
+简单的函数调用:
+
+#+name: prog-to-graph-test-2
+#+begin_src lisp
+  (prog->graph ("~/Buff/test.png")
+    (let ((graph-type (format nil "-T~A" (if (or (pathnamep output)
+                                                 (stringp output))
+                                             (pathname-type output)
+                                             type))))
+      (uiop:run-program (list "dot" graph-type)
+                        :input input
+                        :output (if (stringp output) (pathname output) output))))
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/misc/prog-to-graph/prog-to-graph-test-2.png]]
+
+有点点丑. 还是先去写作业先.
+
+目前还是不能自举, 希望之后有时间可以把这个问题给解决.
+
+(不过现在写程序速度稍微快一些了, 这两个部分分别各花了一天的忙里偷忙的时间)
