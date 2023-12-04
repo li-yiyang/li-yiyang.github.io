@@ -1,0 +1,216 @@
+#+title: CLIM, the galaxy's most advanced graphics toolkit
+#+date: 2023-12-4
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* Preface
+这是我对 [[https://mcclim.common-lisp.dev/posts/CLIM-the-galaxys-most-advanced-graphics-toolkit.html][CLIM, the galaxy's most advanced graphics toolkit]] 的一个不完全翻译,
+因为要用到 McCLIM 来做 GUI.
+
+并且既然是不完全翻译, 所以不一定按照原始的文字和代码,
+是按照我在自己电脑上进行测试的结果和过程进行一个翻译. 可能会有出入.
+
+* Setting up the basic environment
+假设已经拥有了一个配置好的 Common Lisp 环境 (包含 Quicklisp).
+假设其他加载 =mcclim= 和 =clim-listener= 的必要组件 (system) 都已经具备,
+其实可以直接通过 [[https://www.quicklisp.org/beta/][Quicklisp]] 来进行加载:
+
+#+begin_src lisp
+  (ql:quickload '(mcclim clim-listener))
+#+end_src
+
+在另外一个线程中启用 =clim-listner=:
+
+#+begin_src lisp
+  (clim-listener:run-listener :new-process t)
+#+end_src
+
+注: 在这里相当于是将 =clim-listener= 当作是一个好用的快速 GUI 测试工具.
+
+(2023/12/4) 注: Quicklisp 上的版本貌似有点问题, 还是建议直接源码来用. 
+
+* Finding Your way around CLIM
+CLIM 是一个精简的抽象图形工具库 (graphics toolkits).
+
+切换到 =CLIM-INTERNALS= 包来开始, 在 REPL 中输入:
+
+#+begin_src lisp
+  (in-package climi)
+#+end_src
+
+** Animations
+运行如下的命令:
+
+#+begin_src lisp
+  (defparameter *scale-multiplier* 150
+    "请尝试在运行时修改我! ")
+
+  (defparameter *sleep-time* 0.0001
+    "修改我来加速或者减速动画的速度, 设为 `nil' 来停止动画.")
+
+  (defun cos-animation ()
+    (let* ((range (loop for k from 0 to (* 2 pi) by 0.1 collect k)) ; 长度: 62
+           (idx 0)
+           (record
+             (updating-output (*standard-output*)
+               (loop for x from (nth idx range) to (+ (nth idx range) (* 2 pi)) by 0.01
+                     with y-offset = 150
+                     for x-offset = (- 10 (* *scale-multiplier* (nth idx range)))
+                     for x-value = (+ y-offset (* *scale-multiplier* (cos x)))
+                     for y-value = (+ x-offset (* *scale-multiplier* x))
+                     do (draw-point* *standard-output*
+                                     x-value
+                                     y-value
+                                     :ink +green+
+                                     :line-thickness 3)))))
+      (loop while *sleep-time*
+            do (progn (sleep *sleep-time*)
+                      (if (= 61 idx) (setq idx 0) (incf idx))
+                      (redisplay record *standard-output*)))))
+#+end_src
+
+其效果大概如下图所示:
+
+[[{{ site.github.url }}/_img/lisp/mcclim/quick-tutorial/cos-animation.gif]]
+
+你可以通过在 SLY/SLIME 中设置 =*sleep-time*= 为 =nil= 来停止动画:
+
+#+begin_src lisp
+  (setf *sleep-time* nil)
+#+end_src
+
+如果这有点 low, 不如试试看 (在 listener 中, 因为是直接返回一个待渲染元素):
+
+#+begin_src lisp
+  (clim-listener::draw-function-filled-graph
+   #'sin :min-x (- 0 pi pi) :max-x pi :min-y -1.1 :max-y 1.5 :ink +pink+)
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/mcclim/quick-tutorial/draw-function-filled-graph.png]]
+
+(在 listener 中输入 =,clear output history= 可以清空屏幕, 单一个 =,clear= 也行.
+可以使用 =C-/= 来激活补全, =C-c C-c= 来忽略补全, 但是在我这里的按键绑定坏了,
+之后再修)
+
+** Draw class hierarchy
+可以通过 =(clim-listener::com-show-class-subclass 'sheet)= 来绘制 =CLIMI::SHEET=
+的类的继承关系:
+
+[[{{ site.github.url }}/_img/lisp/mcclim/quick-tutorial/class-hierarchy.png]]
+
+** Commands and presentations
+就如同你在使用 SLIME 或者 SLY 的时候按下 =,= 的命令输入一样,
+CLIM 的命令也是以一个 =,= 开始的. 你可以在 SLIME 或者 SLY 中定义这些命令.
+这些命令需要以 =COM-= 开头.
+
+#+begin_src lisp
+  ;;; 首先进入到 clim-listener 包
+  (in-package clim-listener)
+
+  ;;; 往 /tmp 文件夹下放一些简单的示例图片, 不过貌似
+  (dolist (image-name '("face-paji.jpg"
+                        "i-do-said-so.jpg"
+                        "korewa-unmei.jpg"
+                        "overload.jpg"
+                        "sodayou.jpg"))
+    (uiop:run-program
+     (list
+      "curl" "-L" (format nil "https://li-yiyang.github.io/_img/meme/~a" image-name)
+      "--output" (format nil "/tmp/~a" image-name))))
+
+  ;;; 定义一个 listener 命令
+  (define-listener-command (com-ls :name t)
+      ((path 'string))
+    (clim-listener::com-show-directory path))
+#+end_src
+
+然后在 listener 中输入: =,ls /tmp/= 然后 =,display image= 可以通过点击前一步
+=ls= 得到的结果来输入 =display image= 的参数.
+
+因为 CLIM 的核心是 Presentation 记号 (the notion of a presentation).
+每个对象可以拥有其 presentation 的方法 (method), 比如一些特殊声明的渲染几何逻辑.
+然后当对象被 PRESENT 到屏幕上时, CLIM 根据其类型进行渲染.
+而被渲染到屏幕上的对象又可以通过点击的方式以参数的形式重新进入 REPL 的命令输入.
+
+可以阅读 [[http://bauhh.dyndns.org:8000/clim-spec/27-1.html#_1380][CLIMI::DEFINE-COMMAND]] 来了解更多.
+
+下面是一个稍微具体的例子:
+
+** Intermixing S-expressions with the presentation types
+在 SLIME / SLY 中定义:
+
+#+begin_src lisp
+  (in-package climi)
+
+  (defparameter nijigen '("face paji" "korewa unmei" "sodayou"))
+
+  (defclass meme ()
+    ((name :accessor name :initarg :name :initform nil)
+     (avatar :accessor avatar :initarg :avatar :initform nil)))
+
+  (defmethod nijigen? ((meme meme))
+    (member (name meme) nijigen :test #'string=))
+
+  (define-presentation-type meme ())
+
+  (defun make-meme (name avatar)
+    (make-instance 'meme
+                   :name name
+                   :avatar avatar))
+
+  (defparameter *memes*
+    (mapcar (lambda (info) (apply #'make-meme info))
+            '(("face paji"    #P "/tmp/face-paji.jpg")
+              ("i do said so" #P "/tmp/i-do-said-so.jpg")
+              ("korewa unmei" #P "/tmp/korewa-unmei.jpg")
+              ("overload"     #P "/tmp/overload.jpg"))))
+
+  (define-presentation-method present (object (type meme)
+                                              stream
+                                              (view textual-view)
+                                              &key acceptably)
+    (declare (ignorable acceptably))
+    (multiple-value-bind (x y)
+        (stream-cursor-position stream)
+      (with-slots (name avatar) object
+        (draw-pattern* stream
+                       (make-pattern-from-bitmap-file avatar)
+                       (+ 150 x)
+                       (+ 30  y))
+        (draw-text* stream name (+ 153 x) (+ 167 y)
+                    :ink +black+
+                    :text-size 20)
+        (draw-text* stream name (+ 152 x) (+ 166 y)
+                    :ink (if (nijigen? object)
+                             +gold+
+                             +blue+)
+                    :text-size 20))
+      (setf (stream-cursor-position stream)
+            (values x (+ 200 y)))
+      object))
+#+end_src
+
+在 listener 中执行如下的命令:
+
+#+begin_src lisp
+  (dolist (i *memes*) (present i))
+#+end_src
+
+即可得到:
+
+[[{{ site.github.url }}/_img/lisp/mcclim/quick-tutorial/present-example.png]]
+
+并且通过点击还可进行更加有意思的事情, 输入 =(nijigen?= 后点击上面的图片:
+
+[[{{ site.github.url }}/_img/lisp/mcclim/quick-tutorial/present-input-example.png]]
+
+就可以将这种图形化的参数像正常的参数一样输出诶... 这难道不是一个非常吸引人的点吗?
+
+* Notes
+#+begin_quote
+Unripe fruits. The future isn't what it used to be - some assembly required.
++ =(CLIM-DEMO::DEMODEMO)= (available with system =clim-examples=)
++ The essential machinery of a 'live' [[http://paste.lisp.org/display/320742#1][GUI builder]]
++ [[https://github.com/robert-strandh/McCLIM/issues/55#issuecomment-234805226][Navigator]] (essentially an extended `apropos')
+#+end_quote
