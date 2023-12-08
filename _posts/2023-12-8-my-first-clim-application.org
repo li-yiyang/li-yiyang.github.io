@@ -1,0 +1,191 @@
+#+title: My First CLIM Application
+#+date: 2023-12-08
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp clim
+* About
+This as my first CLIM (via McCLIM) application.
+The logic of the application should be like my 2-D-Ising code,
+while the main object of the application should focus on CLIM.
+
+This test code is inspired by [[https://turtleware.eu/posts/Tixel-Viewer.html][Tixel Viewer]], where animation
+part and other reference code are learnt from the blog post.
+
+* CLIM-2-D-Ising
+:PROPERTIES:
+:header-args:lisp: :results silent
+:END:
+Note: This code should only focus on how to draw by CLIM,
+rather than how to write a good 2-D-Ising code.
+
+** Simple Ising Code
+#+begin_html
+<details><summary>I think it should be folded</summary>
+#+end_html
+#+begin_src lisp
+  (defpackage 2-d-ising-clim
+    (:use :clim-user :clim :cl))
+
+  (in-package 2-d-ising-clim)
+#+end_src
+
+#+begin_src lisp
+  (defclass ising-model ()
+    ((row :initarg :row :reader row :initform 0)
+     (col :initarg :col :reader col :initform 0)
+     (spins :initarg :spins :accessor spins :initform #())
+     (energy :initarg :energy :accessor energy :initform 0)
+     (mag-m  :initarg :mag-m  :accessor mag-m  :initform 0)
+     (mag-f  :initarg :mag-f  :accessor mag-f  :initform 0))
+    (:documentation "2 dimension Ising model."))
+
+  (defmethod at ((ising ising-model) row col)
+    (grid:aref (spins ising) (mod row (row ising)) (mod col (col ising))))
+
+  (defmethod near ((ising ising-model) row col)
+    (list (at ising (1- row) col) (at ising (1+ row) col)
+          (at ising row (1- col)) (at ising row (1+ col))))
+
+  (defmethod flip-spin ((ising ising-model) row col)
+    (let ((i (mod row (row ising)))
+          (j (mod col (col ising))))
+      (setf (grid:aref (spins ising) i j) (- (grid:aref (spins ising) i j)))))
+
+  (defmethod update-energy ((ising ising-model))
+    (let ((energy 0))
+      (loop for row below (row ising) do
+        (loop for col below (col ising) do
+          (decf energy (+ (/ (* (at ising row col) (apply #'+ (near ising row col))) 4)
+                          (* (at ising row col) (mag-f ising))))))
+      (setf (energy ising) energy)))
+
+  (defmethod update-mag-m ((ising ising-model))
+    (let ((mag-m 0))
+      (loop for row below (row ising) do
+        (loop for col below (col ising) do
+          (incf mag-m (at ising row col))))
+      (setf (mag-m ising) mag-m)))
+
+  (defmethod init-ising-spin-grid ((ising ising-model) &optional (init-state 1))
+    (setf (spins ising)
+          (make-array (list (row ising) (col ising))
+                      :initial-element (if (eq init-state 'random) 1 init-state)))
+    (when (eq init-state 'random)
+      (loop for row below (row ising) do
+        (loop for col below (col ising)
+              if (< (random 1.0) 0.5)
+                do (flip-spin ising row col)))))
+
+  (defun init-ising-model (row &key (col row) (mag-f 0) (init-state 1))
+    (let ((ising (make-instance 'ising-model :mag-f mag-f :col col :row row)))
+      (init-ising-spin-grid ising init-state)
+      (update-mag-m  ising)
+      (update-energy ising)
+      ising))
+#+end_src
+
+=metropolis-step= function as below:
+
+#+begin_src lisp
+  (defmethod metropolis-step ((ising ising-model) kT)
+    (loop for row below (row ising) do
+      (loop for col below (col ising) do
+        (let* ((dE (* 2 (at ising row col)
+                      (+ (apply #'+ (near ising row col))
+                         (mag-f ising))))
+               (rand (random 1.0))
+               (p (exp (- (/ dE kT)))))
+          (when (or (< dE 0) (< rand p))
+            (flip-spin ising row col)
+            (incf (energy ising) dE)
+            (decf (mag-m ising) (* 2 (at ising row col))))))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_src lisp
+  (defparameter *ising* (init-ising-model 100 :init-state 'random)
+    "The 2d ising model.")
+#+end_src
+
+** Some Scaffoldings
+#+begin_src lisp
+  (defmacro with-playground ((stream &key (width 600) (height 800)
+                                       (scroll-bars nil))
+                             &body body)
+    "A playground environment to play CLIM test."
+    (declare (symbol stream))
+    `(clim-backend:with-output-to-drawing-stream
+         (,stream nil nil :borders nil :width ,width :height ,height
+                          :scroll-bars ,scroll-bars)
+       (sleep .1)                         ; wait for window to create
+       ,@body))
+
+  (defmacro with-scene ((stream) &body body)
+    (declare (symbol stream))
+    (alexandria:with-gensyms (pixmap width height)
+      `(let* ((,pixmap (with-output-to-pixmap (,stream ,stream)
+                         ,@body))
+              (,width (pixmap-width ,pixmap))
+              (,height (pixmap-height ,pixmap)))
+         (medium-copy-area ,pixmap 0 0 ,width ,height ,stream 0 0)
+         (deallocate-pixmap ,pixmap)
+         (finish-output ,stream))))
+
+  (defmacro with-animated ((stream &key (fps 1) (continuep t)) &body body)
+    (declare (symbol stream))
+    (alexandria:with-gensyms (err)
+      `(progn
+         (handler-case
+             (loop while (and (sheet-grafted-p ,stream) ,continuep)
+                   do (with-scene (,stream) ,@body)
+                   do (sleep (/ 1 ,fps)))
+           (error (,err)
+             (princ ,err *debug-io*)))
+         (close ,stream))))
+#+end_src
+
+** Barebone Animation
+#+begin_src lisp
+  (defun draw (stream ising &key (thickness 5))
+    (loop for row below (row ising) do
+      (loop for col below (col ising)
+            for x = (* row thickness)
+            for y = (* col thickness)
+            for color = (if (= 1 (at ising row col)) +black+ +white+)
+            do (draw-point* stream x y
+                            :ink color :line-thickness thickness))))
+
+  (defparameter *ising-fps* 24
+    "FPS of draw ising model.")
+
+  (defparameter *kT* 3.0
+    "The temperature of ising simulation.")
+
+  (defparameter *simulated* t
+    "If continue simulation.")
+
+  (with-playground (stream)
+    (with-animated (stream :fps *ising-fps* :continuep *simulated*)
+      (draw stream *ising*)))
+
+  (loop while *simulated*
+        do (metropolis-step *ising* *kT*))
+#+end_src
+
+意料之外的好:
+
+[[{{ site.github.url }}/_img/lisp/mcclim/animated-2-d-ising-model.gif]]
+
+* 对 CLIM 的感觉
+就不知道大家有没有用过 [[http://shoesrb.com][Shoes]] (_why 写的一个 Ruby 的 GUI 库),
+简单使用 CLIM 给我的感觉就是有点像. (虽然可能并不像, 因为我已经很久没用过了).
+
+虽然一开始的学习资料确实少了一些, 并且 CLIM 的说明还很冗长,
+McCLIM 乍一看挺破旧的 (mac 上的 XQuartz 效果一般).
+但是不论怎么说, 用上了之后就还挺香的, 之后再想办法试试看能不能进一步应用.
+
+如果有时间的话, 我希望能够摸一个简单的入门教程来.
