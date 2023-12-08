@@ -1,0 +1,590 @@
+#+title: The Core of CLIM
+#+date: 2023-12-08
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp mcclim
+* Preface
+这是对 [[https://www.lispworks.com/documentation/lww42/CLIM-W/html/climguide-9.htm][The Core of CLIM]] 的一个简单翻译, 旨在大概糊弄性质地了解 CLIM.
+
+不一定完全按照原文翻译, 主打的就是一个差不多就好的意会.
+并且也不一定正确, 总之就是一个主打娱乐自己的翻译.
+
+翻译的过程中也会参考 [[https://kantz.com/clim-primer/index.htm][Common Lisp Interface Manager (CLIM)]] 进行一个补充翻译.
+因为原本文章里面写得确实有点精简了. 
+
+* The Core of CLIM
+#+name: core-of-clim-structure
+#+headers: :file ../_img/lisp/mcclim/core-of-clim/core-of-clim-structure.svg
+#+begin_src dot :exports none
+  graph {
+    rankdir=BT;
+    node [fontname="Arial"]; edge [fontname="Arial"];
+    node [shape=plain] "SYSTEM";
+    node [shape=rect];
+    "SYSTEM" -- "APPLICATION" [label="  Frame Managers"];
+
+    subgraph cluster_application {
+      style=dashed;
+      "APPLICATION" -- { "FRAME 01", "FRAME ..", "FRAME" };
+      subgraph cluster_frame {
+        style=solid;
+        "FRAME" -- { "PANE 01", "PANE ..", "PANE" };
+      }
+    }
+  }
+#+end_src
+
+#+RESULTS: core-of-clim-structure
+[[file:../_img/lisp/mcclim/core-of-clim/core-of-clim-structure.svg]]
+
+[[{{ site.github.url }}/_img/lisp/mcclim/core-of-clim/core-of-clim-structure.svg]]
+
+** Application Frames
+Application Frame 或者称为 frame (窗口) 是绘制的位置, 是一个框,
+里面有更小的, 独立的功能性的部分: panes 组成. Frame 保有其内部 panes
+的布局结构和信息, 跟踪 Lisp 内与应用相关联的状态变量,
+以及和窗口管理器进行交互.
+
+举一个例子, 如果想要构建一个类似于在线电话簿一样的简单应用,
+可以将 frame 分割成几个不同的单元来分别完成不同的功能.
+一个 pane 可以用来接受命令, 另一个 pane 可以用来显示特定的地址信息,
+用来显示名字索引之类的. 并且也可以选择一个通用的菜单栏和一些简单的滚动条.
+这些组成 frame 中元素的都是 pane.
+
+注: 果然是上古程序文档... 现在看来的一些非常显而易见的东西都是 feature 了.
+
+*** Questions
++ Application frames 的特点和组成是什么?
++ 如何定义和组建 frame?
++ 应用的 frame 是如何显示的?
+
+*** Reading
++ [[https://www.lispworks.com/documentation/lw44/CLIM/html/climguide-138.htm#marker-406333][define-application-frame (Macro)​]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-138.htm#marker-406334][make-application-frame (Function)​]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-154.htm#marker-406376][run-frame-top-level (Generic Function)​]]
+
+#+begin_html
+<details><summary>简单的笔记</summary>
+#+end_html
+如何定义一个 frame:
+
+#+begin_src lisp
+  (define-application-frame name (&rest superclasses) (&rest slots)
+    (:panes  &rest pane-specifications)
+    (:layout &rest layout-specifications))
+#+end_src
+
+在 frame 声明中如何定义一个 pane:
+
+#+begin_src lisp
+  (pane-name
+   pane-type                            ; element of pane-specifications
+   &rest key-pairs-of-pane-options)
+#+end_src
+
+如何在 frame 中声明布局:
+
+#+begin_src lisp
+  (vertically (&rest options)             ; element of layout-specifications
+    (ratio pane-name) (ratio pane-name) ...)
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** Frames
++ 为一个应用的主要抽象
++ 作为顶层窗体显示 (top-level window)
++ 同时也可以嵌入其他应用的部分区域进行显示
++ 控制由应用进行管理的屏幕变量 (screen real estate)
++ 包含一组 pane 的元素 (可以是标准 pane 类的元素, 也可以是自定义的 pane)
++ 通过 frame manager 进行管理
++ 跟踪 Lisp 中控制应用程序的状态变量
++ 用于访问 command-loop (REPL?), 小组件 (gadgets), look-and-feel-independence
+  (独立的样式表?)
+
+*** Panes
++ 可交互的对象
++ 类似于其他 GUI 工具链中的窗口 (window), gadgets, 或者是 widgets 的概念
++ layout pane 对空间进行管理
++ extended stream panes 表示了和应用相关的特殊信息
++ gadget pane 显示及保存用户的输入
+
+*** Frame Managers
++ 控制 frame 的形状样式的具体实现
++ 和不同的窗口显示系统底层进行交互
+
+  #+begin_quote
+  interpret the specification of the application frame in the context of
+  the available window system facilities
+  #+end_quote
++ 管理 frame 中的 pane 在窗口上被什么组建进行绘制
+
+  #+begin_quote
+  take care of attaching the pane hierarchy of an application frame to
+  an appropriate place in a window hierarchy
+  #+end_quote
+
+*** Kinds of Frame Managers
++ 桌面/窗口管理器
+  + 允许用户同时操作多个程序
+  + 通常并不是一个 Lisp 承诺工序
+  + 类似于一个 Lisp 程序和宿主机窗体管理程序的桥梁
+  + 应用以 frame manager 的形式运行
+  + 允许和其他应用程序同时显示在桌面上
+
+*** Constructing Application Frames
+通过:
+
+#+begin_src lisp
+  (define-application-frame name superclasses slots &rest options)
+#+end_src
+
+来定义一个 =standard-application-frame= 的子类作为窗体类.
+在 =&rest= 中的选项允许用户定义命令表 (command tables),
+显示用的 panes, 以及 panes 的布局.
+
+比如:
+
+#+begin_src lisp
+  (define-application-frame word          ; name
+      ()                                  ; superclasses
+    ()                                    ; slots (类参数)
+    ;; options
+    (:panes                               ; panes 选项
+     (title                               ; pane 名字 (此处定义了一个叫 title 的 pane)
+      :application)                       ; pane 类型 (此处 title 为 application 类)
+     (document
+      :application))
+    (:layouts                             ; 布局选项
+     (default                             ; 布局名称
+      (vertically ()                      ; 布局 macros
+        (1/8 title)
+        (7/8 document)))))
+#+end_src
+
+于是可以运行:
+
+#+begin_src lisp
+  (run-frame-top-level (make-application-frame 'word :height 300 :width 300))
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/mcclim/core-of-clim/define-frame-example.png]]
+
+*** Exercises
+1. 载入 CLIM 并切换到 CLIM-USER 包
+
+   #+begin_src lisp
+     ;;; If quicklisp is installed
+     (ql:quickload :mcclim)
+
+     (in-package :mcclim)
+   #+end_src
+2. 定义并运行一个简单的 CLIM frame
+3. 使用 SLY (或者 =inspect=) =make-application-frame= 的结果
+4. 展开 =define-application-frame= 并查看 =defclass= 的内容
+5. 定义一个 =make-and-run-frame= 函数
+
+** Panes
+pane 为组成应用 frame 的元素, 其布局由 layout 定义的 protocol function 指定.
+
+此处有不同的 pane 类型:
++ gadget pane 包含类似于按钮, 滚动条等元素
++ stream pane 特别用于显示文本
++ abstract pane 仅通过其功能进行定义, 而可以无视其具体的样式与实现.
+  这些 abstract pane 是通过直接调用与系统相关的原生组件进行使用.
+
+  #+begin_quote
+  Some panes are defined only in terms of their functionality,
+  without regard to their specific appearance or implementation.
+  The abstract definition allows various instances of the pane class
+  to take on a platform-dependent look and feel.
+  #+end_quote
++ pane 亦可通过继承进行分类
++ composite pane 可以通过其他的 pane 进行组合来得到,
+  这些组成其他 pane 的最小 pane 被称为 leaf pane (类比树)
++ layout pane 是包含布局信息的 composite pane
+
+pane 的父类为 sheet, 相比 sheet, pane 知道其所需要绘制的空间和相互间组织关系.
+比如 manu pane 拥有固定的竖直高度, 不会随着窗体大小的变化而变化;
+scoller pane 之类的会根据窗体大小而自动改变其大小.
+
+*** Questions
++ panes 是什么?
++ panes 有哪些种类?
++ panes 如何创建?
++ 如何在应用 frame 中定义 pane 的布局?
+
+*** Reading
+[[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-141.htm#70089][Using the :panes and :layouts Options]]
+
+*** panes
++ 矩形元素
++ panes 对 frame 的空间进行了划分
++ 与其他工具链中的 gadgets 或者 widgets 类似
++ 可以用于组成应用的 UI 的顶层元素
++ 可以用于组成类似于菜单和日志一样的功能性的组件
++ 可以以其位置和继承关系进行区分
++ 被作为特殊的 sheet 类的派生所执行
+
+*** Kinds of Panes
++ composite pane
+  + 提供了对其他 pane 进行布局的组合 pane
++ leaf pane
+  + 可以用于实现像是或交互的 gadgets
+  + 可以用于拓展 stream pane
+    + 提供了在屏幕上的一块可以用于绘制文本或图像的区域
++ abstract pane
+  + 仅定义了行为和程序接口
+  + 程序接口 (protocol) 类似于初始化选项, 参数访问方法,
+    调用函数等仅与行为有关, 而与形状和样式无关
+  + 其外形与样式允许多种实现分别定义
+  + adaptive pane
+    + 可在各 CLIM 平台通用
+
+*** Constructing Panes
++ =make-pane= 方法
+  + 代码更加移植
+  + 包含了样式等实现的过程
+  + 包含了一个 abstract pane 类的派生类的名字,
+    根据约定, 其名字一般不会包含 =-pane= 的后缀
+  + 实际上可以传入任意的类名称到 =make-pane= 函数中
++ =make-instance= 方法
+  + 需要保证编程者了解对应 pane 的类名, 某种程度上有一些不方便移植
+  + 根据约定, 其类名字后缀 =-pane=.
+
+*** 在 =define-application-frame= 中使用 =:panes= 和 =:layouts= 选项
+#+begin_src lisp
+  (defun press (button)
+    (declare (ignore button))
+    (accepting-values (*query-io* :own-window t)
+      (accept 'string :stream *query-io*)))
+
+  (defun squeeze (button)
+    (declare (ignore button))
+    (accepting-values (*query-io* :own-window t)
+      (accept 'string :stream *query-io*)))
+
+  (define-application-frame buttons       ; name
+    ()                                    ; superclassname
+    ()                                    ; slots
+    ;; options
+    (:panes
+     (button
+      (horizontally ()
+        (make-pane 'push-button :label "squeeze" :activate-callback #'squeeze)
+        (make-pane 'push-button :label "press"   :activate-callback #'press)))
+     (application                         ; pane name
+      :application))                      ; pane type is :application
+                                          ; which is an extended stream pane
+    (:layouts
+     (default
+      (vertically ()
+        (1/8 button) (7/8 application)))
+     (alternate
+      (horizontally ()
+        (1/8 button) (7/8 application)))))
+#+end_src
+
+*** Laying Out Panes
+你可以试试切换排版布局:
+
+#+begin_src lisp
+  (let* ((layouts (frame-all-layouts *application-frame*))
+         (old-layout (frame-current-layout *application-frame*))
+         (new-layout (or (second (member old-layout layouts))
+                         (car layouts))))
+    (setf (frame-current-layout *application-frame*) new-layout))
+#+end_src
+
+*** Exercises
++ 试试看运行 =buttons=
++ 试试看改变 =buttons= 的布局
+
+** Sheets
+panes 的父类为 sheet. sheet 为最基本的类似于窗体一样的元素,
+其声明了用于处理输入和输出的屏幕空间. sheet 包含了屏幕的一块区域,
+一个坐标系统, 以及可能的一些父或子 sheet.
+
+详细请看 [[https://www.lispworks.com/reference/lww42/CLIM-W/html/climguide-291.htm#14449][chapter 18. sheet]], 一般来说不需要了解那么多.
+
+** Enabling Input and Output
+通过连接到 display server (比如 McCLIM 的 X Server), pane 可以支持输入和输出.
+通过使用 port 和 graft 可以处理这些输入和输出. 一个 port 声明了作为 display
+server 的设备, 而 graft 为特殊的 sheet, 一般为直接连接 display server 的 root window.
+
+#+begin_html
+<details><summary>graft 的小小说明</summary>
+#+end_html
+graft 有嫁接意. 
+#+begin_html
+</details>
+#+end_html
+
+同样的, 一般的 CLIM 应用开发者应该不必直接处理这些元素.
+直接调用 =make-application-frame= 应当可以自动处理 port 和 graft 的初始化.
+请参考 [[https://www.lispworks.com/reference/lww42/CLIM-W/html/climguide-137.htm#37468][Define CLIM Application Frames]] 了解详情.
+
+** Graphics & Text
+对一个可以输出的 pane, 你可以在上面输出图像等元素.
+CLIM 提供了一些基础性的绘图函数, 比如 =draw-point= 以及 =draw-circle=,
+以及一些更加高阶的函数 =draw-arrow=, =make-elliptical-arc= 等
+(参考 [[https://www.lispworks.com/reference/lww42/CLIM-W/html/climguide-61.htm#41842][Using CLIM Drawing Options]]). CLIM 也支持对区域的操作,
+如 =region-intersection= 和 =region-difference=
+(参考 [[https://www.lispworks.com/reference/lww42/CLIM-W/html/climguide-43.htm#58489][General Geometric Objects in CLIM]]).
+
+
+对于文本的输出, 最基础的函数为 =draw-text=. 相比其他图形绘制函数,
+文本的输出还支持对文本样式属性的控制, 比如字体, 大小和 face.
+
+*** Questions
++ 输入是显示到对应的 pane 上?
++ 有哪些基本的绘图函数?
+
+*** Reading
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-33.htm#12578][Mediums, Sheets, and Streams]]
+
+  #+begin_html
+  <details><summary>简单的一个笔记</summary>
+  #+end_html
+  + Mediums 和具体的设备相关, 并且和底层的绘图函数进行操作.
+  + Sheet 是可移植的, 声明了图像该如何被绘制到 Medium 上
+  + Stream 类似于标准的输出流, 但是同时添加了更多的功能,
+    比如当前光标位置, 能够绘制图像元素等等. 
+  #+begin_html
+  </details>
+  #+end_html
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-35.htm#pgfId-838328][CLIM Drawing Functions]]
+
+  #+begin_html
+  <details><summary>简单的笔记</summary>
+  #+end_html
+  + 命名约定: 许多函数满足如下的命名约定, 比如 =draw-point= 接受一个 =point= 类实例,
+    而 =draw-point*= 接受 =x=, =y= 来声明 =point=.
+  + 绘图函数被定义为普通的函数, 而非类函数 (generic function).
+    有性能上的考虑.
+  + =define-graphics-method= 可以定义绘图
+  + 这些函数可以在 sheet, streams, medium 上进行绘制
+  #+begin_html
+  </details>
+  #+end_html
+
+*** Mediums
+在定义一个 pane 的时候, 可以通过 pane option 来进一步对 pane 进行声明.
+比如通过 =:display-function= 可以定义绘制 pane 所用的函数.
+
+如下提供了一个例子. 请注意 frame slot 中 =doc-title= 被用于记录窗体标题.
+并且也请注意对于 =title= pane, 其有一个特殊的 =:display-function=.
+
+#+begin_src lisp
+  (define-application-frame word
+    ()
+    ((doc-title
+      :accessor doc-title
+      :initarg :doc-title))
+
+    ;; options
+    (:panes
+     (title
+      :application
+      ;; pane options
+      :display-function #'display-doc-title)
+     (document
+      :application))
+
+    (:layouts
+     (default
+      (vertically ()
+        (1/4 title)
+        (3/4 document)))))
+#+end_src
+
+于是可以构建绘图函数:
+
+#+begin_src lisp
+  (defmethod display-doc-title ((frame word) stream)
+    (draw-text* stream "Document:" 10 15)
+    (if (slot-boundp frame 'doc-title)
+        (draw-text* stream (doc-title frame) 20 40)
+        (draw-text* stream "Untitled" 20 40)))
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/mcclim/core-of-clim/frame-draw-function.png]]
+
+请注意, 坐标系统是从顶向下, 从左到右的 (以 window 为坐标).
+
+*** Exercises
+#+begin_quote
+Man are sent into the world with bills of credit, and seldom draw to their
+full extent. -- Horace Walpole
+#+end_quote
+
+注: 这里的原始代码里面有一个比较有趣:
+
+#+begin_src lisp
+  (defun line-height (frame pane-name)
+    "Return the line height of the default text style for pane-name."
+    (text-sytle-height *default-text-style* (get-frame-pane frame pane-name)))
+#+end_src
+
+可以用这个来做一些简单的排版.
+
+** Formatted Output
+*** Questions
++ 如何输出结构化的图像显示, 比如表格, 图片与文本
+
+*** Reading
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-271.htm#pgfId-49174][Formatting Tables in CLIM]]
+
+  #+begin_html
+  <details><summary>简单笔记</summary>
+  #+end_html
+  + 特点
+    + 绘制单元格的代码有一个私有的 drawing plane.
+    + 当单元格绘制完成后, 然后形成单元格的外框.
+    + 额外的矩形区域仅包含 background ink 用于绘制背景
+  + 声明 Table 的相关参数
+    + 如何绘制单元格中的元素布局 (水平/竖直居中, 左/右对齐等)
+    + 单元格之间间隔
+    + 是否使所有的列有相同宽度等
+    + ...
+  + 一些相关的函数
+    + =(formatting-table (&optional stream &key ...) &body body)=
+    + =(formatting-row (&optional stream &key ...) &body body)=
+    + =(formatting-column (&optional stream &key ...) &body body)=
+    + =(formatting-cell (&optional stream &key ...) &body body)=
+  + 这里做一个简单且无聊的操作来进行演示:
+
+    #+begin_src lisp
+      (defmacro with-formatted-table ((i j row col &optional (stream t)
+                                       x-spacing y-spacing)
+                                      &body body)
+        "Formatted table output into `stream'."
+        `(formatting-table (,stream :x-spacing ,x-spacing :y-spacing ,y-spacing)
+           (dotimes (,i ,row)
+             (formatting-row (,stream)
+               (dotimes (,j ,col)
+                 (formatting-cell (,stream)
+                   ,@body))))))
+
+      (let ((stream *standard-output*))
+        (with-formatted-table (i j 5 5 stream)
+          (draw-polygon* stream (list 0 0
+                                      (* i 5 (1- (random 0.5)))
+                                      (* j 5 (1- (random 0.5)))
+                                      20 20))))
+    #+end_src
+
+    [[{{ site.github.url }}/_img/lisp/mcclim/core-of-clim/with-formatted-table-draw-polygon.png]]
+  #+begin_html
+  </details>
+  #+end_html
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-280.htm#pgfId-49488][Formatting Graphs in CLIM]]
+
+  #+begin_html
+  <details><summary>一些简单的解释和例子</summary>
+  #+end_html
+  + 这个 Graph 在这里值得是有向图 (DAG)
+  + 这个的话看看例子估计就比较轻松了:
+
+    #+begin_src lisp
+      (format-graph-from-roots '((a (b (d)) (c (d))))
+                               #'(lambda (x s) (princ (car x) s))
+                               #'cdr)
+    #+end_src
+
+    [[{{ site.github.url }}/_img/lisp/mcclim/core-of-clim/format-graph-from-roots.png]]
+  #+begin_html
+  </details>
+  #+end_html
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-284.htm#pgfId-48668][Formatting Text in CLIM]]
+
+  
+*** Exercises
+** Presentation Types
+*** Reading
++ [[http://ccrma-www.stanford.edu/CCRMA/Software/cltl/clm/node44.html][Type Specifiers]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-98.htm#pgfId-383464][How to Specify a CLIM Presentation Type]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-100.htm#marker-383133][with-output-as-presentation, present, present-to-string]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-115.htm#pgfId-383787][Conceptual Overview of Defining a New Presentation Type]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-119.htm#pgfId-383899][Presentation Methods in CLIM]]
+
+*** What are they?
+一个 presentation 是如下的元素的绑定:
++ 一个对象的类型
++ 该类型的对象的一个实例
++ 与该对象的一个可视化的表现
+
+或者更加特殊地说, 当一个元素以 presentation 进行输出后,
+CLIM 将创建一个包含元素以及其 presentation 类型的输出记录,
+并将该记录保存在窗体的输出历史中.
+
+通过如下的命令可以将对一个元素声明其输出形式:
++ =(with-output-as-presentation (stream object type &key single-box allo-sensitive-inferiors modifier parent record-type) &body body)=
++ =(present object &optionaly presentation-type &key (stream *standard-output*) view modifier acceptably for-context-type single-box allow-sensitive-inferiors sensitive query-identifier prompt record-type)=
++ =(present-to-string object &optional presentation-type &key view acceptably for-context-type string index)=
+  
+** Events
+事件为通过 display server 传来的表示用户操作的信号 (比如鼠标移动, 键盘按键等) 的对象.
+事件对象记录了和事件相关的 sheet, 光标相对 sheet 的 =x=, =y= 信息, 按键名称等信息.
+
+** Commands
+*** Questions
++ 命令是如何与 presentation 进行绑定的?
+
+*** Reading
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-191.htm#pgfId-407832][Introduction to CLIM Commands]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-195.htm#pgfId-407874][Command Objects]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-124.htm#pgfId-384075][Conceptual Overview of Presentation Translators]]
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-129.htm#marker-383296][define-presentation-to-command-translator (Macro)]]
+  
+*** Command Tables
+你可以在定义一个 frame 的时候声明命令表和其命令的定义函数:
+
+#+begin_src lisp
+  (define-application-frame word ()
+    ()
+    (:command-table word-command-table)
+    (:command-definer define-word-commad)
+    ...)
+#+end_src
+
+=command-definer= 会声明一个和 =(define-command name arguments &body body)=
+参数相同的函数:
+
+比如:
+
+#+begin_src lisp
+  (define-word-command (com-print         ; name
+                        :name "Print"
+                        :keystroke (:p :control)
+                        :menu "Print Document")
+    ((document                            ; argument
+      (or memo outline)                   ; presentation-type
+      ;; argument options
+      :documentation "Print the current document"))
+    ;; command body
+    (print document))
+#+end_src
+
+*** Associating Output with Commands
++ =define-command=
++ =define-presentation-to-command-translator=
+  
+** Output Records
+*** Questions
++ 输出记录是什么?
+  
+*** Reading
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-234.htm#pgfId-347294][Conceptual Overview of Output Recording]]
+  
+*** What are they?
+类似于一列绘图指令, 这些绘图指令可能包含子命令. 通过这种方法可以增量更新,
+而不必每次都全部刷新.
+
+** Mediums
+** Menus and Dialogs
+*** Reading
++ [[http://www.lispworks.com/reference/lw44/CLIM/html/climguide-213.htm#pgfId-3950][Examples of Menus and Dialogs in CLIM]]
