@@ -1,0 +1,95 @@
+#+title: Build Geant 4 on macOS
+#+date: 2023-12-27
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: geant4
+* About
+反正以后也是要用 [[https://geant4.web.cern.ch][Geant 4]], 不如学着如何在自己的电脑里面把这个该死的 Geant 4
+给配置好这个奇怪的环境.
+
+参考的连接: [[http://geant4-dna.in2p3.fr/styled-6/styled-12/index.html][GEANT4-DNA : EXTENDING THE GEANT4 MONTE CARLO SIMULATION TOOLKIT FOR RADIOBIOLOGY]].
+
+反正这个也就只是一个简单的笔记.
+
+* macOS 步骤
+注: 你首先可能需要一个 [[https://brew.sh][homebrew]] 的环境.
+
+然后给它一堆的依赖给搞定:
+
+#+begin_src shell
+  brew install cmake qt@5 xerces-c root
+#+end_src
+
+下载 Geant4 的源代码, 然后建立一个 =build= 文件夹.
+
+#+begin_src shell
+  git clone https://github.com/Geant4/geant4.git geant4 && cd geant4
+  mkdir build && cd build
+#+end_src
+
+为了方便解决一坨的依赖关系, 不如直接切到 homebrew 的 shell 环境中:
+
+#+begin_src shell
+  brew sh
+#+end_src
+
+然后, 你问然后? 这太简单了:
+
+#+begin_src shell
+  cmake \
+  -DCMAKE_INSTALL_PREFIX=/path/to/geant4-install/ \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DGEANT4_USE_GDML=ON \
+  -DGEANT4_BUILD_MULTITHREADED=ON \
+  -DXERCESC_ROOT_DIR=/opt/homebrew/Cellar/xerces-c/3.2.4_1/ \
+  -DGEANT4_USE_QT=ON \
+  -DGEANT4_INSTALL_EXAMPLES=ON \
+  -DGEANT4_USE_SYSTEM_EXPAT=OFF \
+  -DGEANT4_BUILD_TLS_MODEL=auto \
+  ..
+#+end_src
+
+然后就, 漫长的编译过程了:
+
+#+begin_src shell
+  cmake --build . --target install -- -j8
+#+end_src
+
+然后你可以修改一下 shell 配置, 可以方便你快速打开一个有 Geant4 的环境:
+
+#+begin_src shell
+  geant4_start()
+  {
+      GEANT4PATH=/path/to/geant4-install
+      source $GEANT4PATH/bin/geant4.sh
+      export G4COMP=$GEANT4PATH/lib/Geant4-11.2.0/
+      export CMAKE_PREFIX_PATH=$G4COMP
+      alias geant4_comp='cmake -DGeant4_DIR=$G4COMP -DGEANT4_BUILD_MULTITHREADED=ON'
+  }
+#+end_src
+
+在终端中运行 =geant4_start= 后你估计会发现有报错提示, 这个时候再运行:
+
+#+begin_src shell
+  geant4-config --install-datasets
+#+end_src
+
+理论上就可以下载数据集了. 祝你好运.
+
+(可惜受限于网络, 可能会非常慢, 下载 =data= 部分比较坑,
+这里感谢校园网, 让我一个臭搞物理的学会了那么多的 HTTP Error Code.)
+
+注: 因为校园网太牛逼了, 所以我放弃了下载...
++我觉得就是坐飞机到欧洲 CERN 然后用 U 盘拷贝过来, 再坐飞机回来都比这个校园网快+
+
+* Arch Linux 步骤
+突然发现有大佬做了 AUR, 直接:
+
+#+begin_src shell
+  git clone https://aur.archlinux.org/geant4.git geant4 && cd geant4
+  makepkg -si
+  sudo geant4-config --install-datasets
+#+end_src
+
+完活, 编译的时候直接 =cmake= 即可, 也不用太多麻烦的事情.
