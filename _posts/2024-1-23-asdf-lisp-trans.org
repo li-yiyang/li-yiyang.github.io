@@ -1,0 +1,236 @@
+#+title: ASDF 简单翻译
+#+date: 2024-01-13
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+翻译自 [[https://asdf.common-lisp.dev][ASDF (Another System Definition Facility)]].
+
+#+begin_quote
+请注意这并不是完整的翻译, 更多类似于笔记的东西. 
+#+end_quote
+
+** ASDF 3
+ASDF 为 Common Lisp 事实上的编译工具链. 一般的 CL 发行一般都包含了 ASDF.
+(使用 =(require "asdf")= 可以调用).
+
+** What it is
+ASDF 为 CL 程序员用于编译和加载程序的软件. 其由 =asdf/defsystem= 和 =uiop= 组成:
++ =asdf/defsystem=
+
+  一个用于定义 Lisp 代码是如何组织的工具, 以及定义了如何编译和加载这些系统.
+  编译过程会通过系统代码的组织结构自动生成并解决编译依赖关系.
+
++ =uiop=
+
+  为 *U* tilities for *I* mplementation- and *OS* - *P* ortability,
+  之前被称为 =asdf/driver=, 可以帮助写出比较通用的跨平台的软件.
+
+** What it is not
+ASDF 并不会自动下载缺省的依赖包, 可以使用 [[http://quicklisp.org/][Quicklisp]] 来解决该问题.
+
+* Documentation
+翻译自 [[https://asdf.common-lisp.dev/asdf.html][ASDF Manual]]. 
+
+** Quick start summary
++ 载入 ASDF 的系统
+  + 首先需要保证 ASDF 已经在你的系统中了, 可以参考 [[https://asdf.common-lisp.dev/asdf.html#Loading-ASDF][Loading ASDF]].
+
+    #+begin_quote
+    一般新的发行版都已经有了吧...
+    #+end_quote
+  + 确保要载入的文件在可以被 ASDF 找到,
+    可以参考 [[https://asdf.common-lisp.dev/asdf.html#Configuring-ASDF-to-find-your-systems][Configuring ASDF to find your system]].
+    常见的应该是被放在 =~/common-lisp/=,
+    =~/.local/share/common-lisp/source/= 文件夹下.
+  + 使用 =(asdf:load-system "my-system")= 来载入系统, 参考 [[https://asdf.common-lisp.dev/asdf.html#Using-ASDF][Using ASDF]].
++ 定义自己的 ASDF 系统
+  + 同上, 载入并配置 ASDF
+  + 在 ASDF 可以发现的路径下新建系统的目录, 比如 =my-system=
+  + 定义系统: 库依赖, 代码组成, 代码间相互依赖关系, 在 =my-system.asd= 中定义.
+    可以参考 [[https://asdf.common-lisp.dev/asdf.html#Defining-systems-with-defsystem][Defining systems with defsystem]].
+  + 使用 =asdf:load-system= 来确保正常工作
+
+#+begin_quote
+载入的代码可以用 [[https://www.quicklisp.org/beta/][Quicklisp]] 来: =ql:quickload=. 这自动解决依赖不是一件美事么?
+#+end_quote
+
+** Defining systems with defsystem
+*** defsystem 的形式
+#+begin_src lisp
+  (defsystem "system-name"
+    :description "this is a simple description for system-name"
+    :version "0.0.1"
+    :author "ryo"
+    :licence "MIT"
+    :depends-on ("..." "...")
+    :components ((:file "packages")
+                 (:file "macros" :depends-on ("packages"))
+                 (:file "hello" :depends-on ("macros"))))
+#+end_src
+
++ =defsystem= 定义了一个叫做 =system-name= 的系统,
+  该系统包含了 =packages.lisp=, =macros.lisp= 和 =hello.lisp= 的文件
++ =.lisp= 后缀在命名文件的时候是可以省略的, 该定义文件要被放在 =.asd= 文件中
++ +这个依赖关系一目了然了吧+,
+  通过 =:depends-on= 的方式声明 =:components= 中的依赖关系
++ 对于外部依赖, 通过 =:depends-on= 来声明
++ 其他的一些元数据, 比如 =:bug-tracker=, =:mailto=, =:long-description=,
+  =:source-control= 等同样可以说明
++ 对于 =:version=, 参考 [[https://asdf.common-lisp.dev/asdf.html#Version-specifiers][Version specifiers]]
++ 推荐的声明的方法就是单一 =defsystem=, 不建议使用 =in-package= 和 =asdf:defsystem=
+
+*** The defsystem grammar
+#+begin_html
+<details><summary>defsystem grammar</summary>
+#+end_html
+
+#+begin_example bnf
+  system-definition := ( defsystem system-designator system-option* )
+
+  system-designator := simple-component-name
+                     | complex-component-name
+
+  # NOTE: Underscores are not permitted.
+  # see Simple component names
+  simple-component-name := lower-case string | symbol
+
+  # see Complex component names
+  complex-component-name := string | symbol
+
+  system-option := :defsystem-depends-on dependency-def
+                 | :weakly-depends-on system-list
+                 | :class class-name # see System class names
+                 | :build-pathname pathname-specifier
+                 | :build-operation operation-name
+                 | system-option/asdf3
+                 | module-option
+                 | option
+
+  # These are only available since ASDF 3 (actually its alpha release
+  # 2.27)
+  system-option/asdf3 := :homepage string
+                       | :bug-tracker string
+                       | :mailto string
+                       | :long-name string
+                       | :source-control source-control
+                       | :version version-specifier
+                       | :entry-point object # see Entry point
+
+  source-control := ( keyword string )
+
+  module-option := :components component-list
+                 | :serial [ t | nil ]
+
+  option := :description string
+          | :long-description string
+          | :author person-or-persons
+          | :maintainer person-or-persons
+          | :pathname pathname-specifier
+          | :default-component-class class-name
+          | :perform method-form
+          | :explain method-form
+          | :output-files method-form
+          | :operation-done-p method-form
+          | :if-feature feature-expression
+          | :depends-on ( dependency-def* )
+          | :in-order-to ( dependency+ )
+
+  person-or-persons := string | ( string+ )
+
+  system-list := ( simple-component-name* )
+
+  component-list := ( component-def* )
+
+  component-def := ( component-type simple-component-name option* )
+
+  component-type := :module | :file | :static-file | other-component-type
+
+  other-component-type := symbol-by-name # see Component types
+
+  # This is used in :depends-on, as opposed to "dependency", which is used
+  # in :in-order-to
+  dependency-def := simple-component-name
+                  | ( :feature feature-expression dependency-def ) # see Feature dependencies
+                  | ( :version simple-component-name version-specifier )
+                  | ( :require module-name )
+
+  # "dependency" is used in :in-order-to, as opposed to "dependency-def"
+  dependency := ( dependent-op requirement+ )
+  requirement := ( required-op required-component+ )
+  dependent-op := operation-name
+  required-op := operation-name
+
+  # NOTE: pathnames should be all lower case, and have no underscores,
+  # although hyphens are permitted.
+  pathname-specifier := pathname | string | symbol
+
+  version-specifier := string
+                     | ( :read-file-form pathname-specifier form-specifier? )
+                     | ( :read-file-line pathname-specifier line-specifier? )
+  line-specifier := :at integer # base zero
+  form-specifier := :at [ integer | ( integer+ ) ]
+
+  method-form := ( operation-name qual lambda-list &rest body )
+  qual := method-qualifier?
+  method-qualifier := :before | :after | :around
+
+  feature-expression := keyword
+                      | ( :and feature-expression* )
+                      | ( :or feature-expression* )
+                      | ( :not feature-expression )
+
+  operation-name := symbol
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+**** System designators
+系统名称可以为一个简单的名字, 或者是通过 =/= 分割的这样的比较复杂的名字.
+
+**** Simple component names =simple-component-name=
+可以是字符串或者符号 (strings or symbols).
+
+在使用字符串的时候, 请仅使用 *小写* 符号.
+
+符号 (symbols) 会被转换成对应的名字字符串 (小写).
+
+*不要* 使用下划线来命名.
+
+在简单的组件名称中 *不要* 使用 =/=, =/= 意味着一个复杂的组件名字.
+使用 =/= 会导致 ASDF 进行一个 Warning 提示.
+
+破坏这些命名约定的后果就是会导致系统难以被发现.
+
+**** Complex component names
+复杂组件名称即包含 =/= 的组件名称, 其用于将多个子系统包含在一个 =.asd= 文件中定义.
+
+其中主系统名称需要和 =.asd= 文件名称相同.
+
+=foo.asd= 中定义叫做 =foo= 的系统. 同时, 该文件中可以包含类似于 =foo/test=,
+=foo/docs= 等子系统. ASDF 将会理解这些子系统定义.
+
+**** Serial dependencies
+这个是一个依赖关系的简化记号, 若 =:serial t= 开启了该选项,
+那么 ASDF 对于组件会默认认为是线性依赖, 即:
+
+#+begin_src lisp
+  :serial t
+  :components ((:file "a") (:file "b") (:file "c"))
+#+end_src
+
+与
+
+#+begin_src lisp
+  :components ((:file "a")
+               (:file "b" :depends-on ("a"))
+               (:file "c" :depends-on ("a" "b")))
+#+end_src
+
+等价.
+
+* 暂时性的停止
+感觉翻译这么多就够了, 对于我平时用到的小项目声明应该不至于需要更多的功能了. 
