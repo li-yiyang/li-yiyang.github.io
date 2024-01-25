@@ -1,0 +1,425 @@
+#+title: Morphological Analyzer for Japanese | 01 Dictionary Tree
+#+date: 2024-01-25
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: learning
+* About
+参考了何晗 (开发 [[https://github.com/hankcs/HanLP][HanLP]] 的大佬) 写的自然语言处理入门一书.
+
+主要是为了做一个玩具分词工具, 目标并不是为了能够有啥使用性. 
+
+* 词典的准备
+:PROPERTIES:
+:header-args:shell: :dir ../_img/lisp/jp-word-segmentation/ :results silent
+:END:
+在自然语言处理入门一书中, 提供了中文的词典用于使用,
+但是我的目标是用来做日语分词的, 所以得找一些日语词典.
+这里考虑的是使用 [[http://www.edrdg.org/jmdict/edict.html][EDICT Dictionary File]] 来作为简单的日语词典,
+并且仅使用其词条信息, 并不考虑其他的各种信息.
+
+#+begin_html
+<details><summary>获取和处理方法</summary>
+#+end_html
+
+从网页上下载 =edict.gz= 文件包并解压可以得到一个 =EUC-JP= 编码的文件,
+将其使用 =iconv= ([[https://en.wikipedia.org/wiki/Iconv][iconv (Wikipedia)]], 对于 macOS 可以通过 homebrew 安装)
+转换为 UTF-8 的编码:
+
+下载词典 (去网站上直接下载也不是不行):
+
+#+begin_src shell
+  wget http://ftp.edrdg.org/pub/Nihongo/edict.gz
+#+end_src
+
+解压 =.gz= 文件:
+
+#+begin_src shell
+  gunzip edict.gz
+#+end_src
+
+然后转换文字编码:
+
+#+begin_src shell
+  iconv -f EUC-JP -t UTF-8 edict > edict-utf8
+#+end_src
+
+你可以用 =head edict-utf8= 命令来预览部分的词典.
+
+#+begin_src shell :results replace :results verbatim :exports both
+  tail edict-utf8 # head is also ok
+#+end_src
+
+#+RESULTS:
+#+begin_example
+凜々しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/
+凜乎 [りんこ] /(adj-t,adv-to) commanding/awe-inspiring/
+凜然 [りんぜん] /(adj-t,adv-to) (1) commanding/awe-inspiring/(adj-t,adv-to) (2) bitter (cold)/piercing/
+凜烈 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/
+凜冽 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/
+凜凜 [りんりん] /(adj-t,adv-to) (1) severe/intense/awe-inspiring/commanding/(adj-t,adv-to) (2) biting/bitter (cold)/piercing/frigid/
+凜凜しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/
+熙々 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/
+熙春茶 [ひちゅんちゃ] /(n) hyson (Chinese green tea)/
+熙熙 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/
+#+end_example
+
+可以看到里面的数据大概如下:
+
+#+begin_example
+  词条 [读音] /(词性) 定义.../
+#+end_example
+
+用 Lisp 把它提取出来:
+
+#+headers: :var file=(expand-file-name "../_img/lisp/jp-word-segmentation/edict-utf8")
+#+headers: :results silent
+#+begin_src lisp
+  (defparameter *dictionary*
+    (with-open-file (stream file)
+      (let ((scaner (ppcre:create-scanner "[^ ]+")))
+        (loop for line = (read-line stream nil)
+              while line
+              collect (ppcre:scan-to-strings scaner line))))
+    "EDict Dictionary for Japanese word.")
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+在之后会考虑使用其他的日语词典来进行替换. 
+
+* 词典分词
+** 完全切分
+朴素的切分方法如下:
+
+#+begin_src lisp
+  (defun simple-full-segment (text &optional (dic *dictionary*))
+    "对 `text' 使用简单的匹配进行完全切分."
+    (let ((word-list nil))
+      (loop for i below (length text) do
+        (loop for j from (1+ i) upto (length text)
+              for word = (subseq text i j)
+              if (find word dic :test #'string=)
+                do (push word word-list)))
+      ;; output shall be in sequence
+      (nreverse word-list)))
+#+end_src
+
+一个简单的效果如下:
+
+#+begin_src lisp :exports results :results verbatim
+  (simple-full-segment "大学で日本語を勉強します")
+#+end_src
+
+#+RESULTS:
+: ("大" "大学" "学" "で" "日" "日本" "日本語" "本" "語" "を" "勉強" "強" "し" "しま" "ま" "ます" "す")
+
+#+begin_html
+<details><summary>显然易见的可以提升的部分</summary>
+#+end_html
+
++ 这个历遍搜索的部分就看起来让人很想去修改
++ 然后字符串匹配的部分也很需要去修改, 用自动机的话估计可以快一些
+
+#+begin_html
+</details>
+#+end_html
+
+** 最长匹配
+目标是能够将句子划分成词的序列, 完全分割可能没啥用处.
+
+*** 正向最长匹配算法
+一个简单的伪代码如下:
+
+#+begin_src lisp
+  (defun forward-segment (text &optional (dict *dictionary*))
+    "正向最长匹配算法"
+    (if (zerop (length text))
+        nil
+        (multiple-value-bind (longest-word rest-text)
+            (longest-prefix-segment text dict)
+          (cons longest-word (forward-segment rest-text dict)))))
+
+  (defun longest-prefix-segment (text &optional (dict *dictionary*))
+    "找到并返回在 `text' 中的开头在字典 `dict' 中的最长单词和剩下的字符串."
+    (loop with longest-word = ""
+          with longest-len  = 0
+          with longest-idx  = 0
+
+          for i from 1 upto (length text)
+          for word = (subseq text 0 i)
+          for word-len = (length word)
+          if (and (find word dict :test #'string=)
+                  (> word-len longest-len))
+            do (setf longest-word word
+                     longest-len  word-len
+                     longest-idx  i)
+
+          finally (return
+                    (if (zerop longest-len)
+                        (values :fail "")
+                        (values longest-word (subseq text longest-idx))))))
+#+end_src
+
+#+begin_html
+<details><summary>这里有一些补注</summary>
+#+end_html
+
+这里假定所有的匹配一定是最长匹配是正确的, 但是如果不一定最长匹配是对的,
+或者第二长的才是正确的匹配? 但是这样的算法并没有做到这样的 fallback 处理,
+所以这里有一个小小的修改.
+
+#+begin_src lisp
+  (defun forward-segment* (text &optional (dict *dictionary*))
+    "正向最长匹配算法"
+    (if (zerop (length text))
+        nil
+        (let ((patterns (longest-prefix-segments text dict)))
+          (loop for (word . shift-idx) in patterns
+                if (not (eq word :fail))
+                  return (cons word
+                               (forward-segment* (subseq text shift-idx) dict))))))
+
+  (defun longest-prefix-segments (text &optional (dict *dictionary*))
+    "找到并返回在 `text' 中的开头在字典 `dict' 中的最长单词和剩下的字符串."
+    (sort (loop for i from 1 upto (length text)
+                for word = (subseq text 0 i)
+                if (find word dict :test #'string=)
+                  collect (cons word i))
+          #'string> :key #'car))
+#+end_src
+
+相当于变成了一个深度搜索的算法了. 
+
+#+begin_html
+</details>
+#+end_html
+
+*** 反向匹配算法
+反过来也不是不行, 这样就变成了反向最长匹配:
+
+#+begin_src lisp
+  (defun backward-segment* (text &optional (dict *dictionary*))
+    "反向最长匹配算法"
+    (labels
+        ((backward-segment (text)
+           (if (zerop (length text))
+               nil
+               (loop for (word . shift-idx) in (longest-postfix-segments text dict)
+                     if (not (eq word :fail))
+                       return (cons word
+                                    (backward-segment (subseq text 0 shift-idx)))))))
+      (reverse (backward-segment text))))
+
+  (defun longest-postfix-segments (text &optional (dict *dictionary*))
+    "找到并返回在 `text' 中的结尾在字典 `dict' 中的最长单词和剩下的字符串."
+    (let ((len (length text)))
+      (sort (loop for i from (1- (length text)) downto 0
+                  for word = (subseq text i len)
+                  if (find word dict :test #'string=)
+                    collect (cons word i))
+            #'> :key (lambda (pattern) (length (car pattern))))))
+#+end_src
+
+注: 但是感觉效果一般, 很多都匹配不出来, 并且还很慢... 一个原因是词典可能不够大,
+另外一个可能是这个字符串匹配的过程有点太慢了. 
+
+*** 双向匹配算法
+对正向和反向的匹配结果进行比较, 选择较优的结果, 批判标准如下:
++ 优先返回词数较少的
++ 以及单字数量较少的
+
+#+begin_src lisp
+  (defun bidirectional-segment (text &optional (dict *dictionary*))
+    "双向匹配算法"
+    (labels ((single-word-count (seq)
+               (loop with count = 0
+                     for word in seq
+                     if (= (length word) 1)
+                       do (incf count)
+                     finally (return count))))
+      (let* ((forward  (forward-segment* text dict))
+             (backward (backward-segment* text dict))
+             (forward-len  (length forward))
+             (backward-len (length backward)))
+        (if (= forward-len backward-len)
+            (if (< forward-len backward-len) forward backward)
+            (let ((forward-count  (single-word-count forward))
+                  (backward-count (single-word-count backward)))
+              (if (< forward-count backward-count) forward backward))))))
+#+end_src
+
+缺点就是更慢了 (汗).
+
+** 字典树
+Lisp 的树的实现应该可以如下实现:
+
+#+begin_src lisp
+  (defclass dictionary-tree-node ()
+    ((chr       :accessor chr
+                :initarg :chr)
+     (terminal  :accessor dictionary-terminal-p
+                :initform nil :initarg :terminal)
+     (children  :accessor dictionary-children
+                :initform (make-hash-table :test 'equal))
+     (parent    :accessor dictionary-parent
+                :initform nil))
+    (:documentation "字典树的节点"))
+
+  (defun make-dictionary-tree-node (char &key terminal)
+    "创建一个字典树的节点"
+    (make-instance 'dictionary-tree-node :chr char :terminal terminal))
+
+  (defmethod insert-word ((tree dictionary-tree-node) word)
+    (if (zerop (length word))
+        ;; end of word -> terminal
+        (setf  (dictionary-terminal-p tree) t)
+      
+        (let* ((char (subseq word 0 1))
+               (node (gethash char (dictionary-children tree) nil)))        
+          (unless node
+            ;; append tree if not exists
+            (let ((new-node (make-dictionary-tree-node char)))
+              (setf (gethash char (dictionary-children tree)) new-node
+                    (dictionary-parent new-node)              tree
+                    node                                      new-node)))
+          (insert-word node (subseq word 1)))))
+
+  (defun make-dictionary-tree (dict)
+    "生成字典树"
+    (let ((tree (make-dictionary-tree-node "")))
+      (loop for word in dict do
+        (insert-word tree word))
+      tree))
+#+end_src
+
+看看效果, 生成一个词典所需用时:
+
+#+begin_src lisp
+  (time
+   (defparameter *dictionary-tree*
+     (make-dictionary-tree *dictionary*)
+     "简单的日语字典树"))
+#+end_src
+
+#+begin_example
+jp-nlp> (time
+         (dotimes (i 100) (make-dictionary-tree *dictionary*)))
+Evaluation took:
+  63.475 seconds of real time
+  63.065967 seconds of total run time (58.132774 user, 4.933193 system)
+  [ Real times consist of 38.394 seconds GC time, and 25.081 seconds non-GC time. ]
+  [ Run times consist of 37.901 seconds GC time, and 25.165 seconds non-GC time. ]
+  99.36% CPU
+  35,816,351,920 bytes consed
+#+end_example
+
+注: 感觉运算很多时间都花在 GC 上了, 估计是哪里程序写得不是很好... 
+
+#+begin_html
+<details><summary>一些没用的可视化工作</summary>
+#+end_html
+
+#+begin_src lisp
+  (defgeneric graphviz-render (tree &optional headers)
+    (:documentation "Render the tree into graphviz code."))
+
+  (defmethod graphviz-render ((tree dictionary-tree-node) &optional (headers ""))
+    (labels
+        ((renderer (node name)
+           (let* ((point (chr node))
+                  (type  (cond ((string= point "") "point")
+                               ((dictionary-terminal-p node) "doublecircle")
+                               (t "circle")))
+                  (nexts (alexandria:hash-table-alist (dictionary-children node))))
+             (if (null nexts)
+                 (format nil "\"~a\" [shape=~a,label=\"~a\"];" name type point)
+                 (loop for (char . next) in nexts
+                   for next-node-name = (gensym char)
+                   collect next-node-name into next-node-names
+                   collect (renderer next next-node-name) into next-nodes
+                   finally (return (format nil "\"~a\" [shape=~a,label=\"~a\"];~&\"~a\" -> { ~{\"~a\"~^, ~} };~&~{~&~a~}"
+                                           name type point name next-node-names
+                                           next-nodes)))))))
+      (format nil "digraph {~&~a~&~a~&}" headers (renderer tree "root"))))
+
+  (defun graphviz->svg (tree output &key (headers "") debug)
+    "把 `tree' 用 Graphviz 渲染 SVG 输出到 `output' 处. "
+    (with-input-from-string (input (if debug
+                                       (print (graphviz-render tree headers))
+                                       (graphviz-render tree headers)))
+      (uiop:run-program "dot -Tsvg" :input input :output (pathname output))
+    output))
+#+end_src
+
+简单的一些尝试:
+
+#+begin_src lisp :exports code :results file :var output="../_img/lisp/jp-word-segmentation/20-word-dict-tree.svg"
+  (let ((pivot (random (- (length *dictionary*) 20))))
+    (graphviz->svg (make-dictionary-tree (subseq *dictionary* pivot (+ 20 pivot)))
+                   output :headers "rankdir=LR;"))
+#+end_src
+
+#+RESULTS:
+[[file:../_img/lisp/jp-word-segmentation/20-word-dict-tree.svg]]
+
+[[{{ site.github.url }}/_img/lisp/jp-word-segmentation/20-word-dict-tree.svg]]
+
+注: 我有一个变态的想法... 不过只能说我的电脑跑不动那么大的输出渲染,
+或者也有可能是我的算法还不够优化, 只能跑一个小的图显示一下:
+
+#+begin_src lisp :exports code :results file :var output="../_img/lisp/jp-word-segmentation/crazy-word-dict-tree.svg"
+  (graphviz->svg (make-dictionary-tree (ryo:random-samples *dictionary* 100))
+                 output :headers "layout=fdp;")
+#+end_src
+
+#+RESULTS:
+[[file:../_img/lisp/jp-word-segmentation/crazy-word-dict-tree.svg]]
+
+[[{{ site.github.url }}/_img/lisp/jp-word-segmentation/crazy-word-dict-tree.svg]]
+
+#+begin_html
+</details>
+#+end_html
+
+用字典树看看能不能修改一下原来的最大正向匹配算法, 让其跑得稍微快一点:
+
+#+begin_src lisp
+  (defgeneric forward-segment (tree text)
+    (:documentation "使用字典树 `tree' 来分割 `text'. "))
+
+  (defgeneric longest-prefix-segments (tree text)
+    (:documentation "使用字典树 `tree' 来匹配所有 `text' 开头的词.
+  返回一个包含 (单词 . 相对开头位移) 的一个列表. "))
+
+  (defmethod longest-prefix-segments ((tree dictionary-tree-node) text)
+    (let ((node tree))
+      (loop with node = tree
+            with word-list = nil
+            for shift from 1 upto (length text)
+            do (setf node (gethash (subseq text (1- shift) shift)
+                                   (dictionary-children node) nil))
+            while node
+            if (dictionary-terminal-p node)
+              do (push (cons (subseq text 0 shift) shift) word-list)
+            finally (return word-list))))
+
+  (defmethod forward-segment ((tree dictionary-tree-node) text)
+    (if (zerop (length text))
+        nil
+        (let ((patterns (longest-prefix-segments tree text)))
+          (if patterns
+              (let ((res (loop for (word . shift) in patterns
+                               for next = (forward-segment tree (subseq text shift))
+                               if (not (eq next :fail))
+                                 return (cons word next))))
+                (if res res :fail))
+              :fail))))
+#+end_src
+
+嗯, 这下子快多了. 不过感觉效果还是一般, 菜得很... 
+
+* 暂时停止
+打算先去做点别的东西之后再回来继续, 反正也是玩玩. 
