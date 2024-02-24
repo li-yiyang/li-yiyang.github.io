@@ -1,0 +1,214 @@
+#+title: 1bit CPU writeUP
+#+date: 2024-02-24
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: misc
+* About
+其实也不是啥新的东西了... 好早之前就做好了,
+只是一直没来得及写一些解释性的文字. 恰好最近稍微有点空,
+来小小写个说明.
+
+项目地址在: [[https://github.com/li-yiyang/one-bit-CPU][li-yiyang/one-bit-cpu (github)]] 上. 懒得看解析的,
+可以直接看代码. 以及项目的最初来源为 [[https://github.com/naoto64/1bit-CPU][nato64/1bit-CPU]]. 
+
+* 原始逻辑门电路的分析
+** 还请直接看电路图
+[[https://raw.githubusercontent.com/naoto64/1bit-CPU/main/docs/img/schematic.jpg]]
+
+(原始图片在 [[https://github.com/naoto64/1bit-CPU/blob/main/docs/img/schematic.jpg][nato64 repo]] 中)
+
+这里把图片抽象一下, 大概如下图所示:
+
+[[{{ site.github.url }}/_img/pieces/1bit-cpu-structure.svg]]
+
+其中:
++ Registers: [[https://www.mouser.com/datasheet/2/308/74HC74-108792.pdf][74HC74 芯片]] 为一个双 D 触发器的一个逻辑芯片,
+  在这里用作一个一位寄存器的功能.
++ Memory: 通过两个 2 位编码开关来实现选择.
+  
+  这里通过 [[https://www.mouser.com/datasheet/2/308/74HC14.REV1-34947.pdf][74HC14 芯片]] (6 个施密特反相触发器,
+  作用类似于二值化模拟电平并反相输出, 可以简单看作是非门)
+  以及二极管实现了选择哪一个编码开关的功能:
+  若 PC 为 HIGH, 则 SW1 相当于是悬空而 SW2 生效.
++ ALU: 通过 [[https://www.diodes.com/assets/Datasheets/74HC00.pdf][74HC00 芯片]] (与非门) 实现的 XOR (异或门).
++ 多路选择器: 通过 [[https://www.mouser.com/datasheet/2/302/74HC_HCT153-353677.pdf][74HC153 芯片]] (4 输入选择器) 实现对结果的选择.
+
+  两个结果一个给了 Reg A (Y1) 另一个给了 PC (Y2).
++ Display: 通过几个 LED 显示 Reg A, PC, Clock 的情况.
+
+** 复刻的尝试
+正如上面所分析的一样, 这里把整个 CPU 做一个分割:
++ Clock: 时钟部分
++ Register: 寄存器, 通过时钟上升沿进行数据的写
++ ALU: 包含多路选择器的输出和逻辑计算部分
++ Program: 连接外部的编码器
++ Display: 连接显示的 LED
+
+#+begin_src verilog
+  // Clock
+  wire clk;
+  slower_clk #(.SLOW_RATE(20_000_000)) slower_clk (.clk(clock), .slow_clk(clk));   
+
+  // Register
+  wire reg_out, pc_out, a, p;
+  register reg_a (.clk(clk), .set_p(1), .data(reg_out), .reset(reset), .data_reg(a));
+  register pc    (.clk(clk), .set_p(1), .data(pc_out),  .reset(reset), .data_reg(p));
+
+  // ALU
+  wire [1:0] code;
+  alu alu (.reg_in(a), .pc_in(p), .code(code), .reg_out(reg_out), .pc_out(pc_out));
+
+  // Program
+  assign code = p ?
+                memory[3:2] :
+                memory[1:0];
+
+  // Display
+  assign clk_led = clk;
+  assign reg_led = a;
+  assign pc_led  = p;
+#+end_src
+
+(具体请参考: [[https://github.com/li-yiyang/one-bit-CPU/blob/master/cpu.v][one-bit-CPU/cpu.v]] 中的代码)
+
+不难发现每一部分的功能都非常容易实现,
+(所以我觉得作为一个 FPGA 的练手项目简直非常适合).
+
+*** Clock
+这里用计数器实现将板子 ([[https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html][Nano Tang 9K]]) 自身的时钟 (27MHz) 变成一个慢时钟.
+
+#+begin_html
+<details><summary>
+方法就是计数, 若达到一定值, 则翻转输出
+</summary>
+#+end_html
+
+#+begin_src verilog
+  always @(posedge clk)
+    if (counter == SLOW_RATE) begin
+       counter <= 0;
+       slow_clk <= ~slow_clk;        
+    end else
+      counter <= counter + 1; 
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+(具体请参考: [[https://github.com/li-yiyang/one-bit-CPU/blob/master/slower_clk.v][one-bit-CPU/slower-clock.v]] 中的代码)
+
+*** ALU
+在 Verilog 里面写这种就感觉轻松好多了呢...
+基本上只需要规定好控制部分和参数部分即可,
+比如:
+
+#+begin_src verilog
+  // code[1] is the cmd, code[0] is the arg
+  assign reg_out = code[1] == 1'b0 ?
+                   reg_in ^ code[0] : // xor
+                   reg_in;            // reg
+
+  assign pc_out  = code[1] == 1'b1 ?
+                   code[1] & code[0] : // jmp
+                   ~pc_in;             // pc++
+#+end_src
+
+(具体请参考: [[https://github.com/li-yiyang/one-bit-CPU/blob/master/alu.v][one-bit-CPU/alu.v]] 中的代码)
+
++注: 这里我就想要吐槽一下我之前的代码定义了...+
++不是一般会把命令放在前面, 但是为什么会反过来呢.+
+
+啊, 这里思考了一下, 发现自己以前还是很聪明的 (并没有).
+这里应该是 Big-Endian 和 Little-Endian 的区别.
+在这里, =1'b10= 的 =[1]= 指向的是 =1= (即从右往左). 
+
+注: 这里还要吐槽一下... 诶, 写代码最好不要太过依赖复制了...
+因为我发现旧的代码因为复制的原因导致了一个命令的错误 ([[https://github.com/li-yiyang/one-bit-CPU/commit/02b73ce82e6c9f3d211f8ff76d9c7cc6dac31a2c][one-bit-CPU@02b73ce]]).
+
+*** Register
+寄存器大概长这样:
+
+#+begin_src verilog
+  // At every clock, if set_p, set data_out as data
+  always @(posedge clk)
+    if (reset == 1'b0)
+      data_reg <= 1'b0;        // reset data_reg
+    else if (set_p == 1'b1)
+      data_reg <= data;        // set data_reg
+#+end_src
+
+(具体请参考: [[https://github.com/li-yiyang/one-bit-CPU/blob/master/register.v][one-bit-CPU/register.v]] 中的代码)
+
+这里有一个小小的坑, 因为我用的开发板上的按钮的电平是按下为低 (?),
+所以一开始仿真测试的时候搞反了... 
+
+** Coding for 1bit CPU
+虽然可以支持的程序大小只有 2 条指令, 但是又不是不能用.
+你甚至可以通过历遍程序的方式来实现对程序的所有的编程.
+
+*** Assembler 和 Disassembler
+直接看 [[https://github.com/li-yiyang/one-bit-CPU/blob/master/alu.v][one-bit-CPU/alu.v]] 中的代码, 可以发现命令就两种:
++ =XOR <a>=: 为 =0*= 的形式
++ =JMP <l>=: 为 =1*= 的形式
+
+于是很容易就可以对代码 =(* * * *)= 的形式写一个简单的 disassembler:
+
+#+begin_src lisp
+  (defun disassembler (code)
+    "1 bit cpu disassmbler"
+    (when code
+      (destructuring-bind (cmd arg . rest) code
+        (cons (ecase cmd
+                (0 (list :xor arg))
+                (1 (list :jmp arg)))
+              (disassembler rest)))))
+#+end_src
+
+同理也有 assembler:
+
+#+begin_src lisp
+  (defun assembler (code1 &optional (code2 '(:jmp 0)))
+    "1 bit cpu assembler"
+    (flet ((:> (code)
+             (destructuring-bind (cmd arg) code
+               (list (ecase cmd (:xor 0) (:jmp 1)) arg))))
+      (append (:> code1) (:> code2))))
+#+end_src
+
+*** 代码上的分析...
+嗯, 虽然我觉着手动分析有点麻烦, 但是毕竟代码还是简单嘛...
+
+**** =(:jmp 0) xxx= 和 =xxx (:jmp 1)= 原地 TP
+比如说代码类似于: =(:jmp 0) xxx= 这样的程序. 相当于是一直原地 TP,
+此时 =PC= 保持 =0= 不变, =REG A= 保持不变.
+
+而 =xxx (:jmp 1)= 相当于是做了一条指令后进行原地 TP. 
+
+**** =(:jmp 1) xxx= 和 =xxx (:jmp 0)= 单指令有效
+类似于 =(:jmp 1) xxx= 和 =xxx (:jmp 0)= 这样的程序,
+相当于直接浪费了一个代码槽, 只有一个 XOR 的功能.
+
+**** 剩下的?
+大概就是 XOR 吧, 剩下的直接看仿真吧... 
+
+** 仿真测试
+诶, 仿真...
+
+真是让人伤心和头秃, 一开始以为自己以前的代码写错了,
+结果最后发现是自己仿真的测试条件搞错了... 
+
+诶.
+
+(具体代码请看: [[https://github.com/li-yiyang/one-bit-CPU/blob/master/cpu_test.v][one-bit-CPU/cpu_test.v]])
+
+仿真的结果如下 (大家就图一乐吧, 还没有写比较用的检测代码,
+但是太晚了先去准备睡觉了. )
+
+[[{{ site.github.url }}/_img/pieces/1bit-cpu-test-simulation.png]]
+
+(仿真时的参数: =STEP = 10, LENGTH = 16=)
+
+* 后记
+大概, 就酱, 去吃饭了. 
