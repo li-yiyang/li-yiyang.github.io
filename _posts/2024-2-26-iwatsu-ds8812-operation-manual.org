@@ -1,0 +1,827 @@
+#+title: Iwatsu DS8812 Operation Manual
+#+date: 2024-02-26
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: misc
+* About
+闲鱼上淘了一个二手岩崎示波器 (IWATSU DS8812). 虽然感觉可能不如普源,
+甚至感觉不如再加点钱上普源 1k 左右的入门款 (虽然这样就相当于两倍的价格了).
+
+#+begin_html
+<details><summary>淘咸鱼的一个小插曲</summary>
+#+end_html
+
+一开始本来是想要买 DS8814 (四通道 100MHz) 的, 结果被别人抢先了,
+无奈, 隧打算选择二通道 500MHz 的版本 -- 结果看图片发现软盘件貌似没了,
+(我虽然可能用不上, 但是我不能没有是吧), 并且长得有些惨,
+于是就来到了这台 DS8812 (两通道 100MHz).
+
+到手之后发现这机器非常的轻 -- 或者也有可能是发货的卖家的箱子比较大,
+让我拿的时候感觉怕不是要被骗了... 不过好在最后打开之后竟然一切正常,
+稍微擦拭之后就是女大学生自用 99 新了 (bushi).
+
+虽然感觉在价格上这玩意肯定不是赚的, 但是它带一个打印机呢 (虽然我还没用过),
+还有一个软盘槽呢 (虽然我没用过), 还有... (感觉没啥了). 但是至少不太坑,
+至少比我在淘宝上买二手书死活不发货的黑心店好多了.
+
+啊, 结论就是, 哪里都有鸟人, 但是并不是说某些地方就没有好人了... 
+
+#+begin_html
+</details>
+#+end_html
+
+但是网络上相关的资料, 呃, 都有些稀缺.
+
+(哦, 我是说, 如果你只是使用 =iwatsu ds8812=, 可能找到的结果不太好)
+
+但是在打印机里面有这样的一段话:
+
+#+begin_quote
+PLEASE REFER THE *OPERATION MANUAL*
+WHEN YOU SET A THERMAL PAPER ON
+THE PRINTER
+#+end_quote
+
+(没错, 用 =iwatsu ds8812 operation manual= 搜索可以找到对应的文档)
+
+在我随便翻到的一页有这样的一段话:
+
+#+begin_quote
+How to restore the setting at time of purchase
+1. Press the power switch to turn OFF the power
+2. While holding down the ACQUISITION button, press the power switch to
+   turn ON the power.
+3. "SHUT DOWN..." is displayed and the power is automatically turned OFF
+4. Turn OFF the power switch and then turn it ON again.
+   All panel setting and internal memories are cleared and the factory
+   setting is restored.
+
+   Note that carrying out this procedure will also initialize the
+   content stored in internal memory by operating the SETUP button or
+   REF button.
+#+end_quote
+
+于是我试了一下, 发现这样不知为何就解决了我之前没法自动测量读数的问题.
+(果然重启, 重装, 重置是解决问题的绝佳方案).
+
+由此我决定开始翻译并修补说明书, (因为有点年代了, 图片啥的都很糊),
+就当是学习笔记了.
+
+啊, 看了一部分, 感觉可能还是要之后换一个排版方式来排版,
+Jekyll 的排版实在是不敢恭维... 
+
+* 操作手册 (Operation Manual)
+#+begin_quote
+我将使用 =quote= 的形式来记录我自己的一些注记.
+而当这些注记太长, 我将会使用折叠的方式进行处理. 
+#+end_quote
+
+** Preface
+*** Introduction
++ 感谢你购买 IWATSU 的仪器
++ 请在使用前仔细阅读本手册, 并妥善保存本手册以便未来查阅
++ 为保使用安全, 防止发生损坏, 请格外注意以下章节中的 WARNING 和 CAUTION 部分
++ 本手册 (Operation Manual) 主要介绍使用操作的方法, 使用示例, 仪器性能以及
+  基于 RS-232C 和 GP-IB 的远程控制指令.
+
+*** Note
++ 囿于性能和功能上的更改, 部分手册中的内容可能会有所更改
++ Reproduction or reprinting of the contents of this manual without prior permission from IWATSU is prohibited.
+
+  #+begin_quote
+  这句话我不是很懂呢, 翻译不来, 英文不是很好...
+  #+end_quote
++ The TFT color LCD contains cold cathode fluorescent lamps.
+  Observe local ordinances and regulations when disposing of the LCD.
++ Windows and MS-DOS are registered trademarks of Microsoft Corporation.
++ For questions about this instrument, contact IWATSU at the address
+  listed at the end of this manual or our sales agent.
+
+#+begin_quote
+都是一些无法兑现的售后保障和警告了, 没啥好翻译的.
+#+end_quote
+
+*** Revision History
++ Novermber 1999: 1st edition
++ May 2000: 2nd edition
+
+*** Safety Precautions 安全须知
+为保证你和示波器的安全, 请仔细阅读下列信息.
+
+**** 本手册中使用的 WARNING 和 CAUTION 符号
+#+begin_quote
+因为我不太方便整这些 (排版太麻烦, 加上 Jekyll 可能不能很好解析),
+所以里面的一些符号我会稍作修改. 
+#+end_quote
+
+| ⚠ WARNING | 表示那些可能会导致重大伤亡的错误操作 |
+| ⚠ CAUTION | 表示那些可能会导致仪器损坏的错误操作 |
+
+**** 表单中的符号说明
+| 符号 | 说明                                       |
+|------+--------------------------------------------|
+| ⚠   | 贯穿本手册, 表示可能会导致受伤或损坏的行为 |
+| ⏚   | 表示机箱或是信号线的接地                   |
+| ⌁    | 表示可能有触电危险                         |
+| ⏽    | 开机 (Power ON)                            |
+| ⏻    | 待机 (Stand by)                            |
+
+*STAND BY*: 待机模式是指插电却没有按下 POWER 按钮.
+
+**** ⚠ WARNING
+***** 安装 Installation
++ 别在有爆炸可能的气体环境中使用示波器. 这可能会导致爆炸.
++ 如果你注意到冒烟, 奇怪的气味或者不正常的噪声, 请立刻停止示波器.
+  将电源线从示波器上拔下来.
+
+  #+begin_quote
+  什么规则怪谈式翻译... 不过也没人可以帮忙修了吧?
+  估计得自己修了, 如果真坏了的话.
+  #+end_quote
+
+***** 供电 Power Supply
++ 请按照在后部面板上标识的标准工作电压使用示波器. 对于超过范围的输入电压,
+  可能会有触电, 起火, 不正确的测量等的风险.
+
+  本仪器仅在 115V (90-132V) 或 220V (180-250V) 45-66Hz 交流输入下工作.
+  电压输入是自动选择的, 不需要手动设置供电类型.
++ 请使用 3 孔电源线以保证接地. 若非如此, 可能会导致触电或仪器损坏.
+  当仅使用 2 孔电源线时, 请将接地段子和地面链接.
++ 2 孔电源线可能导致触电.
+
+  若供电系统为 200V (200-240V) 时, 请务必使用对应的 3 孔电源线.
++ 请不要使用损坏的电源线或变压器, 否则可能会导致起火或触电.
+  当电源线损坏时, 请联系维修.
+
+  #+begin_quote
+  虽然这样不是很专业, 但是我想问, 电饭煲的线能通用吗? (bushi)
+  #+end_quote
+  + 不要乱改电源线
+  + 不要拉扯电源线
+  + 不要强力掰弯电源线
+  + 不要加热电源线
+  + 不要扭曲电源线
+  + 不要让电源线受潮
+  + 不要用重物挤压电源线
+
+***** 测量时 When measuring
++ 将探针地和输入探针连接到测量对象的时, 不正确的接地可能会导致触电,
+  仪器或相连设备的损毁. 请参考下图所示的不正确接地:
+
+  [[{{ site.github.url }}/_img/iwatsu-osc/improper-ground-connections.svg]]
+
+  当进行浮地测量时, 换用不同的测量方式, 如下图所示,
+  更加推荐同时使用 CH1, CH2 输入的测量方法. 
+
+  [[{{ site.github.url }}/_img/iwatsu-osc/example-of-recommand-measurement.svg]]
+
+  #+begin_quote
+  这里的图我尽可能重新画了, 但是估计会缺一些图注文字,
+  图上的一些细节估计也没那么丰富... 不过尽量会努力做到把关键点带上...
+  #+end_quote
+
+***** 操作 Operation
++ 别让水弄湿示波器
++ 别在潮湿环境使用, 有触电或着火的分享. 如果水进入了示波器,
+  请务必将电源切换为 STBY, 并将电源线移除.
+
+  #+begin_quote
+  你也没法联系到岩崎的工作人员了吧...
+  #+end_quote
++ 别用你的湿手插/摸电源线, 你也不想触电的吧.
++ 请在一个稳定的平台上操作示波器. 否则, 摔坏了可不好.
++ 别把底座和后盖给去掉, 这会导致高压电路暴露在外, 有触电的风险.
++ 别擅自修改本仪器.
++ 别在可能有异物粒子 (铁, 或易燃颗粒) 的环境中工作.
+
+**** ⚠ CAUTIONS
+***** 安装 Installation
++ 请在标称安全工作环境区间进行工作
+
+  工作环境
+  + 温度: 0 到 +40 °C
+  + 湿度: 80% RH 以下
+  + 高度: 2000m 以下
++ 请不要遮盖堵塞散热进风口或是堵塞散热风扇.
+  这会导致散热困难以致着火.
++ 请在仪器后方和四周留有一定空间.
+
+  请注意不要让该仪器有过热可能, 它边上的其他仪器, 电源插座的过热也最好不要.
+  否则会导致错误.
+
+  #+begin_quote
+  坏, 我桌子很挤, 这玩意被我塞到了角落诶...
+  #+end_quote
++ 别在水汽或灰尘过大的地方工作
+
+#+begin_quote
+其实我觉得这也没得选就是了...
+#+end_quote
+
+***** 供电 Power Supply
++ 请使用标准保险丝 (\(\phi 5 \times 20 \mathrm{mm}, 250 \mathrm{V}, \mathrm{T} 3.15 \mathrm{A}\)) 替换保险丝.
+
+  在替换保险丝时:
+  1. 将电源开关切换为 STBY 后再将电源线移除
+  2. 在换保险丝前记得拔掉电源线
+
+***** 测量时 When measuring
++ 输入端子 (CH1, CH2, EXT, TRIG) 的电压请控制在标称范围内.
+  否则会导致错误. 以下是最大输入电压:
+
+  直接输入:
+
+  \(1 \mathrm{M}\Omega: \pm 400 \mathrm{V}\) (DC + ACpeak \(\leq 5 \mathrm{kHz}\))
+
+  当使用 SS-0130R (10:1) 等价的探针时: \(\pm 600V\) (DC + ACpeak)
+
+  [Note]: 根据当前输入信号的频率和最大脉冲电压值,
+  所能测量的最大电压值是不一样的.
++ 当探针等线缆连接在仪器上时, 请不要用力拉扯, 这可能导致仪器倾倒.
+  这可能会导致触电, 受伤, 起火等危险.
+
+***** Handling
++ 在连接/拔出电源线前, 请将电源开关切换为 STAND BY
++ 在仪器带电时拔出电缆可能会导致触电或错误.
++ 在移除电缆线时, 请握紧插头而不要直接拉线缆, 否则会导致线缆破损和触电.
++ 在使用前检查所有线缆, 不要使用损坏的线缆和插头.
++ 别在示波器上放东西.
+
+  可能会导致外壳变形, 压迫线路等.
+
+  #+begin_quote
+  坏... 穷逼没有那么大的桌面空间. 
+  #+end_quote
++ 别把示波器摔了
++ 别在示波器破损的情况下使用示波器
++ 长时间不使用示波器时, 请将电源拔出.
+
+***** 移动设备 Carrying the instrument
++ 把设备摔了砸到人多不好, 摔坏了也不好. 所以请务必将把手紧握.
+  移动时:
+  1. 请将线缆都从仪器上移除
+     1. 请将电源线从仪器上移除, 将其收束捆绑好
+     2. 逆时针旋转探针连接口以将其移除
+  2. 握紧把手
+     1. 将把手抬起
+     2. 在移动过程中请手握把手中间位置
+
+#+begin_quote
+这么详细总给我有一种它在水字数/它觉得我是傻逼的感觉.
+不过也没啥关系, 毕竟大多数设计防呆不防蠢.
+毕竟每个奇怪的规定后面都有一些离谱的事实...
+#+end_quote
+
+*** 菜单按键和表单关系 Menu hierarchy and table of contents
+#+begin_html
+<details><summary>绘图用的代码</summary>
+#+end_html
+#+begin_src lisp :results silent
+  (defparameter *ds8812-menu-tables*
+    (make-hash-table :test 'equal)
+    "IWATSU DS8812 menu table.")
+
+  (defmacro def-menu (menu &body slots)
+    `(setf (gethash ,menu *ds8812-menu-tables*)
+           (quote ,slots)))
+
+  (defun menu--graph (menu &optional (headers ""))
+    (with-output-to-string (dot)
+      (format dot "graph {~%node[shape=plain,fontname=Arial];")
+      (format dot "~&splines=ortho;~%nodesep=0.2;~%rankdir=LR;")
+      (format dot "~%~a~%" headers)
+      (labels ((-> (node parent)          ; Draw single node
+                 (let ((node-name (gensym node)))
+                   (format dot "~&\"~a\" [label=\"~a\"];" node-name node)
+                   (format dot "~&\"~a\" -- \"~a\";" parent node-name)
+                   node-name))
+               (:> (leaf parent)          ; Draw Tree
+                 (if (listp leaf)
+                     (loop with node-name = (-> (car leaf) parent)
+                           for child in (cdr leaf) do (:> child node-name))
+                     (-> leaf parent))))
+        (let ((tree (gethash menu *ds8812-menu-tables* nil))
+              (root (gensym  menu)))
+          (format dot "~&\"~a\" [label=\"~a\"]" root menu)
+          (loop for leaf in tree do (:> leaf root))))
+      (format dot "~&}")))
+
+  (defun menu-graph (&key menu (output-dir ".") (headers ""))
+    (labels ((:> (menu)
+               (let ((output (format nil "~a/~a.svg" output-dir
+                                     (str:replace-all "/" "-"
+                                                      (format nil "~a" menu)))))
+                 (with-input-from-string (dot (menu--graph menu headers))
+                   (uiop:run-program '("dot" "-Tsvg")
+                                     :input dot :output output)))))
+      (if menu (:> menu) (alexandria:maphash-keys #':> *ds8812-menu-tables*))))
+
+  (def-menu "CH1/CH2"
+    ("Trace"  "On"
+              "Off")
+    ("Price"  "Auto"
+              "1:1 to 1000:1")
+    ("BW"     "On"
+              "Off")
+    ("Zoom"   "Off"
+              "x1.00 to 2.50")
+    ("Offset" "Division"
+              "Volts"))
+
+  (def-menu "Display"
+    ("Contrast" "0 to 100%")
+    ("Join"     "On"
+                "Off")
+    ("Type"     "YT"
+                "XY")
+    ("Scale"    "Grid"
+                "Axis"
+                "Frame")
+    ("Math"     "Off"
+                "Add"
+                "Sub"
+                "Mult")
+    ("Status"   "Off"
+                "Counter"
+                "Date"
+                "Measure"
+                "Comment"))
+
+  (def-menu "ACQUISITION"
+    ("Mode"     "Norm Smpl"
+                "Peak Dat"
+                "Average Count 2 to 256")
+    ("Equ Smpl" "On"
+                "Off")
+    ("Presist"  "On"
+                "Off")
+    ("Length"   "Short"
+                "Long"))
+
+  (def-menu "SAVE/RECALL"
+    ("Device"    "Floppy"
+                 "ATA Card")
+    ("Type"      "Set up"
+                 "Waveform")
+    ("Function"  "Save"
+                 "Recall"
+                 "Delete")
+    ("File No"   "Floppy 1 to 200"
+                 "ATA Card 1 to 6666")
+    ("Format"    "Floppy"
+                 "ATA Card")
+    ("Auto Save" "On"
+                 "Off")
+    ("Default"   "Setup")
+    ("Style"     "Binary"
+                 "ASCII"))
+
+  (def-menu "MEASURE"
+    ("A/B/C/D" "Off"
+               ("CH1/CH2" "Tr" "Tf"
+                          "Vrms" "Vmean"
+                          "Freq" "Period"
+                          "+PW" "-PW" "Duty"
+                          "+Peak" "-Peak" "P-P"
+                          "Skew"))
+    ("Parameter" "A" "B" "C" "D"))
+
+  (def-menu "UTILITIES"
+    ("Copy" ("Device" "Printer"
+                      "Floppy"
+                      "ATA Card"
+                      "Centro")
+            "Type, Function (Floppy, ATA Card only)"
+            ("File No" "Floopy 1 to 200"
+                       "ATA Card 1 to 9999")
+            ("Auto Copy" "On"
+                         "Off")
+            ("Source" "Screen"
+                      "Pannel"))
+    ("Interface" ("Interface" "RS232C"
+                              "GP-IB (Optional GP-IB Card)")
+                 ("Delimiter" "LF"
+                              "CR/LF")
+                 ("BaudRate" "2400 to 115.2k")
+                 ("Data"     "7bits"
+                             "8bits")
+                 ("Address"  "GP-IB only (0 to 30)"))
+    ("Comment"   "End" "Cancel")
+    ("Date"      "Date"
+                 "Month"
+                 "Year (1999 to 2099)"
+                 "Hour"
+                 "Minutes")
+    ("Config"    ("Lanuage" "English"
+                            "Japanese"
+                            "Simplified Chinese"
+                            "Traditional Chinese")
+                 ("LCD" "Normal"
+                        "Reverse")
+                 ("Self Cal" "Cancel" "OK")
+                 "System"))
+
+  (menu-graph)                            ; draw the graph
+#+end_src
+#+begin_html
+</details>
+#+end_html
+
+[[{{ site.github.url }}/_img/iwatsu-osc/ACQUISITION.svg]]
+
+[[{{ site.github.url }}/_img/iwatsu-osc/CH1-CH2.svg]]
+
+[[{{ site.github.url }}/_img/iwatsu-osc/Display.svg]]
+
+[[{{ site.github.url }}/_img/iwatsu-osc/MEASURE.svg]]
+
+[[{{ site.github.url }}/_img/iwatsu-osc/SAVE-RECALL.svg]]
+
+[[{{ site.github.url }}/_img/iwatsu-osc/UTILITIES.svg]]
+
+** 基本操作 Basic Operation
+本节主要介绍的一些比如启动之类的基本操作. 对于更多的一些细节,
+请参考下一节 "功能说明 Explanation of Functions".
+
+*** 外观
+[[{{ site.github.url }}/_img/iwatsu-osc/iwatsu-Model.jpg]]
+
+#+begin_quote
+用 AutoCAD 描的图, 但是肯定会丢掉很多的细节, 大概的结构应该都有了...
+感觉可以理解早期仿制品在外壳的工业设计上为什么会比不过了... 
+#+end_quote
+
+*** 操作按钮和旋钮
+**** 按钮
++ 单功能的按钮: 按下按钮就会触发对应的功能.
+
+  AUTOSET, RUN/STOP, HELP, COPY, SETUP SAVE, SETUP UNDO, REF SAVE,
+  REF CLEAR, ZERO DELAY
++ 功能选择的按钮: 按下按钮会改变对应的功能.
+  + Curosr (光标): ∆V/∆t/∆V&∆t/V (t/OFF 时), C1/C2/TCK
+  + Sweep mode: AUTO/NORM/SGL
+  + Coupling: COUPLING, PRESISTENCE
+
+  例: COUPLING DC - GND - AC.
+
+  #+begin_quote
+  按下 COUPLING 按钮后, 会使得对应通道的耦合 (COUPLIG) 方式在 DC, GND, AC 之间轮换.
+  #+end_quote
++ 菜单显示的按钮: 按下对应的菜单按钮会在屏幕上的菜单栏显示内容.
+  这些按钮的颜色是灰色的.
+
+  ACQUISITION, DISPLAY, MEASURE, SAVE/RECALL, UTITIES, CH1, CH2, TRIG
+
+  #+begin_quote
+  可以看上面的菜单按键和对应的表单关系. 不过对于按钮的颜色, 估计是二手的缘故,
+  不仔细看还针难以分辨出来. 大概感觉就像是灰色里面相邻的两个色阶一样的感觉.
+
+  以及这里的 CH1, CH2 应该是指 VERTICAL - CH1 - MENU 的按钮.
+  #+end_quote  
+
+**** 旋钮
++ 单功能的旋钮: 旋转或者按压这些旋钮将改变范围或者改变量的等级阶数.
+
+  CH1/CH2-VOLTS/DIV, CH1/CH2-OFFSET, TIME/DIV, DELAY, TRIG LEVL
+
+  + FUNCTION 旋钮: 该旋钮可以选择菜单栏的项, 修改对应菜单栏的值,
+    控制光标 (cursor) 的 V/H (测量游标在屏幕上的位置).
++ 旋钮被按下时的功能:
+  + CH1/CH2-VOLTS/DIV: Toggles the function 1-2-5 sequence or 1 to 2.5 times
+    ZOOM when the knob is rotated.
+
+    #+begin_quote
+    这里不知道是我理解问题还是写的问题, 这里的意思应该是:
+
+    按照 1-2-5 这个顺序进行切换. 若已经有过旋转, 则会向旋转反向进行 1 到 2.5 倍
+    的倍率增减.
+
+    但是实际使用的时候貌似是改变旋转时的缩放比例?
+    #+end_quote
+  + CH1/CH2-OFFSET: 以 1-division step (1 分辨率为步长) 将信号进行上下移动,
+    移动的反向为该旋钮之前被旋转的反向.
+
+    #+begin_quote
+    比如之前是向上旋转, (OFFSET 增加), 那么按下按钮后就会向上移动一个大单位.
+    #+end_quote
+  + TIME/DIV: 以 10 倍的比例沿着之前旋钮调节的方向进行调节.
+
+    #+begin_quote
+    比如从 10us 变成 100us.
+    #+end_quote
+  + DELAY, TRIG LEVEL: 也是沿着之前旋钮调节的方向调节一个大单位 (1-division step).
+
+*** 菜单 (FUNCTION 旋钮) 的操作
+关于如何选择并设置菜单上的选项, 这里有两种方法:
+1. 通过旋转 FUNCTION 旋钮进行选中, 按下旋钮来修改
+2. 另一种这是通过按下对应的菜单按钮进行修改光标高亮的栏
+
+#+begin_quote
+有点怪, 那么这不还是需要用 FUNCTION 旋钮去选中吗? 
+#+end_quote
+
+[例] 在 Display 菜单中, 修改 Scale 为 Grid 值:
++ 使用 FUNCTION 旋钮
+  1. 按下 DISPLAY 按钮, 打开 Display 菜单
+  2. 转动 FUNCTION 旋钮并选中 Scale 栏
+  3. 按下 FUNCTION 旋钮来选中对应栏的值.
+
+     这将会翻转对应值的显示颜色. (背景高亮)
+  4. 旋转 FUNCTION 旋钮使得对应值显示为 Grid
+  5. 按下 FUNCTION 旋钮确认对应的修改.
+
+     此时对应值的显示颜色会恢复. (背景恢复)
+
+  *请注意!!* 在之后的说明中, 类似上面的在 Display 菜单中,
+  将 Scale 栏的值设置为 Grid 的操作 (上面的 2-5 步骤) 将会被简记为:
+
+  [FUCTION]: 将 Scale 菜单值设置为 Grid.
++ 使用 MENU 按钮设置
+  1. 按下 DISPLAY 按钮, 打开 Display 菜单
+  2. 旋转 FUNCTION 旋钮选中 Scale
+  3. 按下 DISPLAY 按钮来切换 Frame, Grid 或是 Axes
+
++ 如何设置数字值
+
+  在设置类似于 Trigger 菜单中的 Hold off, Event Trigger 中的 Interval
+  或是 TV Trigger 中的 Line 等数字值; 或是在 SAVE/RECALL, Copy 菜单中,
+  设置 File No 的数字值时:
+
+  + Pressing the FUNCTION knob changes the numerical value displayed
+    in reverse video one by one. Pressing the FUNCTION knob again after
+    the numerical setting is done changes the settable menu to “Coarse”
+    after the values are confirmed.
+  + Pressing the FUNCTION knob changes the numerical value in rough
+    steps. The set value is displayed in reverse video. Pressing the
+    FUNCTION knob again after the numerical setting is done changes
+    the settable menu to “Hold off” after the values are confirmed.
+
+  #+begin_quote
+  TODO: p5
+  #+end_quote
+
+*** 对操作的简单描述
+详细请看之后的说明.
+
+#+begin_quote
+这里原文是页码跳转, 但是毕竟是网页, 所以就没有页码了. 
+#+end_quote
+
++ [CH1/CH2 MENU] 按钮: 显示 CH-1 或 CH-2 的菜单
++ [COUPLING] 按钮: 依次轮换选择输入信号的耦合方式: DC - ⏚ Ground - AC
++ [OFFSET] 旋钮: 设置径迹的竖直方向的位置
++ [VOLTS/DIV] 旋钮: 旋转时以 1-2-5 的倍率或者 +1 到 +2.5 精调倍率
+  对径迹进行竖直方向上的缩放; 按下旋钮切换 1-2-5 粗调和精调模式
+
+  #+begin_quote
+  这里用人话来说就是, 按下旋钮切换粗调和精调. 
+  #+end_quote
++ [MENU] 按钮: 显示 ACQUISITION, DISPLAY, MEASURE, SAVE/RECALL 以及 UTILITIES
+  对应的菜单
++ [FUNCTION] 旋钮: 选中并修改菜单中的选项,
+  或是在游标测量时控制 V/H 游标在屏幕上的位置.
++ [∆V, ∆t, ∆V/∆t, V at t, Off] 按钮: 按照 ∆V - ∆t - ∆V/∆t - V at t - Off
+  的顺序切换游标测量的模式, 选中的测量模式将会在屏幕上方显示
++ [C1/C2/TCK] 按钮: 按下后切换当前 FUNCTION 旋钮所控制的游标
++ [TRIG MENU] 按钮: 显示 TRIGGER 菜单
++ [TRIG LEVEL] 旋钮: 更改触发电平
++ [AUTO/NORM/SGL] 按钮: 按下后在 Auto - Normal - Single 中轮换设置扫描模式
++ [DELAY] 旋钮: 设置触发延时
++ [ZERO DELAY] 按钮: 将触发延时设置为零
++ [PERSISTENCE] 按钮: 切换重写与否. 如果重写 ON, 波形将会在显示屏上进行累计
++ [TIME/DIV] 旋钮: 按照 1-2-5 的顺序设置设置扫描的速率
++ [AUTOSET] 按钮: 自动设置水平垂直和触发
++ [RUN/STOP] 按钮: 切换信号的捕捉与停止, 在屏幕上方中心会有状态标识
++ [HELP] 按钮: 显示当前选中的功能的说明. 当在 remote 模式下,
+  除了 [HELP] 按钮, 前面板的所有按钮和旋钮都将无效
++ [COPY] 按钮: 将屏幕进行硬拷贝, 或者根据设置输出到指定设备中
++ SETUP [SAVE] 按钮: 将当前的设置 (setup) 写入内存.
++ SETUP [UNDO] 按钮: 从内存中导入设置 (setup),
+  再次按下将撤销导入并回到前一状态的设置
++ REF [SAVE] 按钮: 将当前波形数据储存到内存中并在屏幕上进行显示以作为参考波形
++ REF [CLEAR] 按钮: 按下后显示参考菜单, 再次按下将会清空所有储存的参考波形
+
+*** 如何阅读屏幕
+#+begin_quote
+TODO: p8
+
+这里需要补图, 之后估计要去重画/实物拍照.
+#+end_quote
+
+*** 在测量开始前
+以下是一些可能有用的参考调整:
+
+**** 设置显示对比度
+在按下电源键时, 会根据周围光照自动设置对比度.
+
+#+begin_quote
+这么智能? 我都不知道... 我甚至都没有看到类似光线传感器一样的东西
+#+end_quote
+
+如果有需要, 你可以手动调节对比度设置:
+1. 按下 DISPLAY 按钮打开显示菜单
+2. 使用 FUNCTION 旋钮可以在 0 到 100% 之间对屏幕对比度进行调节
+
+手动的对比度设置将会在电源关闭前一致保持.
+
+**** 设置 HELP 显示的语言
+1. 打开 UTILITIES 菜单, 使用 FUNCTION 旋钮选中 Config 栏
+2. 按下 FUNCTION 旋钮以编辑 Config 项
+3. 转动 FUNCTION 旋钮以选择语言
+
+*HELP 功能*:
++ 按下左上方的 HELP 按钮后, 将会显示最后一次操作过的功能的说明文档
++ 任何操作都会关闭 HELP 菜单
+
+**** 设置日期
+可以用于时间显示, 同时, 也用于在保存文件时的时间戳生成.
+1. 在 UTILITIES 菜单中使用 FUNCTION 旋钮选中 Date 栏
+2. 按下 FUNCTION 旋钮显示 Date 菜单
+3. 使用 FUNCTION 旋钮可以在 1 到 12 之间设置月份 Month.
+   Date (日), Year (年), Hours (小时) 和 Minutes (分钟) 也同理.
+
+   当修改了 Date 菜单后, (Seconds) 秒 将会被设置为零.
+
+**** 在屏幕上 (的 Message 区域) 显示日期
+1. 按下 DISPLAY 按钮打开显示菜单
+2. 使用 FUNCTION 旋钮选中 Status 栏, 并修改为 Date
+3. 此时时间将会在屏幕右下方显示
+
+**** (LCD) 反色显示
+切换正常 (Normal) 显示 (白色底) 和反色 (Reverse) 显示 (蓝色底).
+
+但是这只会影响 LCD 的显示, 不会影响 COPY 的输出.
+1. 在 UTILITIES 菜单中, 使用 FUNCTION 旋钮选中 Config
+2. 在 Config 菜单中, 使用 FUNCTION 旋钮选中 LCD 项
+3. 使用 FUNCTION 旋钮在 Normal (正常), Reverse (反色) 选项中进行切换
+
+**** 如何初始化设置
+1. 在 SAVE/RECALL 菜单中, 使用 FUNCTION 旋钮移动到 DEFAULT 栏
+2. 按下 FUNCTION 旋钮将会显示信息: "再按 FUNCTION 钮做自我检查(自检)"
+
+   #+begin_quote
+   这里原文是: "Push the FUNCTION to go on", 我根据我机器上的显示来改了.
+   #+end_quote
+3. 再次按下 FUNCTION 旋钮将会将设置 (readout 和部分菜单) 设置为出厂设置.
+
+   COPY 和 Interface 等相关的设置并不会改变.
+
+*** 使用 AUTOSET 显示 CAL 的波形
+如果你不确定信号的幅值和频率, 或者不确定如何操作范围, 直接按 AUTOSET 按钮.
+示波器将会自动根据输入确定水平垂直和触发的范围.
+
++ AUTO SETUP 功能: 当有信号输入是, 先按下 AUTOSET,
+  示波器将会根据输入信号自动去找到最优的设置.
++ AUTO SETUP UNDO 功能: 长按 AUTOSET 按钮约 1 秒多钟,
+  将会将 panel setting (setup, 即捕获设置) 恢复到按下 AUTOSET 之前的样子.
+
+下面的是一些如何在 CH1 通道里面观察 CAL (内部方波) 信号的方法:
+
+你应当选择一根探针连接到 CH1 中, 确保不同的信道对应不同颜色标识的探针以作区分.
+
+#+begin_quote
+这里我知道了为什么买探头的时候会送一个不同颜色的小环了...
+原来是为了快速对应不同的探头信道的区分啊. 
+#+end_quote
+
+**** 连接探针
++ 将探头连接到 CH1 的输入端口
++ 将探头连接到 CAL 端口, 并将探头接地和机箱 GND 接口相连.
+
+  CAL 的接口输出为 1kHz 的方波, Vpp 为 0.6V.
+
+**** 选择信道菜单
++ 按下 CH1 菜单键以显示 CH1 菜单
+
+**** 设置跟踪
++ 使用 FUNCTION 旋钮选中菜单中的 TRACE 栏, 并将其打开. 
+
+  CH1 和 CH2 的 Trace 是不能同时都关上的.
+  
+**** 耦合设置
++ 通过按下 CH1 的 COUPLING 按钮, 设置 CH1 的耦合方式为 DC
+  
+**** 探针设置
++ 使用 FUNCTION 旋钮将 Probe 项设置为 Auto.
+  这将会自动探测 CH1 的衰减比率并自动显示. (10:1, 100:1)
+
+**** 为什么不试试 AUTOSET 呢
++ 按下 AUTOSET 按钮.
+  
+**** 探针补偿
+在使用探针前, 对探针进行补偿是有必要的. 这有助于使得探针的频响特性
+(frequency characteristic) 与示波器的输入相匹配. 如果没有很好的调整,
+那么测量的信号很可能会有一些较大的误差. 
+
+**** Procedures
+可以使用一个螺丝刀来调节探针的电容以看到一个正确的方波.
+
+*10:1 PURPOSE OF THE PROBE*
+
+The probe is used to provide a convenient, reliable and repeatable
+method of coupling the DUT to the oscilloscope. The probe is used to
+minimize measurement error due to loading, poor shielding and limited
+frequency bandwidth.
+
+Consider the problems that arise when a wire is connected directly from
+a DUT to the input terminal of an oscilloscope:
+1. Susceptible to interference and noise
+2. Limited frequency bandwidth
+3. Large loading effect on DUT
+   
+The first problem can be remedied by using a coaxial cable or shielded wire.
+However, this does not resolve the second and third problems.
+
+The second problem of limited frequency bandwidth is caused by the inductance
+and stray capacitance of the wire. Use of a 10:1 probe will eliminate such an
+effect.
+
+The third problem, the large loading effect, is due to poor impedance matching
+between the DUT and oscilloscope. This can be minimized by using an appropriate
+probe.
+
+#+begin_quote
+TODO: p13
+#+end_quote
+
+*** 垂直操作
+*** 水平操作
+*** 触发
+*** 扫描模式 Sweep mode
+*** 游标测量 Cursor Measurement
+*** 拷贝功能
+*** SETUP 的 SAVE/UNDO 功能
+*** Acquisition 彩带
+*** DISPLAY 菜单
+*** MEASURE (auto measurement) 菜单
+*** SAVE/RECALL 菜单
+*** UTILITIES 菜单
+
+** 功能说明 Explanation of Functions
+*** 波形显示
+*** 竖轴
+*** 横轴
+*** 同步
+*** TV 触发
+*** ACQUISITION
+*** XY 显示
+*** 波形计算
+*** 自动测量 (MEASURE)
+*** Save/recall/delete
+*** Copy
+*** 附录
+** 日常维护 Daily Care
+*** 维护方法
++ 清洁
+
+  以防触电, 将电源线从仪器上移除. 可以使用少量的水和稀释后的清洁剂
+  (mild detergent) 擦拭表面灰尘.
++ 请使用水稀释后的清洁剂进行擦拭
++ 请不要使用: 酒精, 机油 (gasoline), 丙酮, 喷漆 (lacquer), 乙醚, 含酮的清洁剂
++ 显示屏的清洁
+  + 请使用软布擦除一般的灰尘
+  + 对于难以去除的灰尘, 可以使用沾有稀释后的清洁剂
+
+*** 自动自校准
+1. 在
+
+*⚠ 注意*: 在自动自校准的过程中, 请不要将任何信号与示波器输入相连.
+
+#+begin_quote
+乐, 不看还不知道, 原来之前我的操作是有问题的...
+#+end_quote
+
+*** 诊断指南
+*** 如何恢复出厂设置
+1. 按下电源按钮, 将机器切换为 OFF 状态
+2. 一直按住 ACQUSITION 按钮, 同时按下电源按钮打开机器
+3. 屏幕中应当会显示 "SHUT DOWN...", 然后自动关机
+4. 刚下电源键关机并再次打开. 所有的面板设置和内存将会被清空回到初始设置.
+
+   注意, 以上操作也会初始化在用与 SETUP 和 REF 的储存在内存中的数据.
+   
+** 规格说明 Specifications
+#+begin_quote
+注: 懒得翻译这部分, 可以参考 [[http://www.miko.com.cn/IWATSU/DS-8814cn.htm][DS-8814数字示波器]]. 应该是国内的一个经销商 (?)
+的销售介绍? 
+#+end_quote
+
+* 指令手册
+#+begin_quote
+因为我没有 GP-IB 的卡, 所以我不会翻译 GP-IB 的部分. 
+#+end_quote
+
+** GP-IB 接口
+** 通过 GP-IB 接口远程控制
+** 通过 RS-232C 接口远程控制
+** 硬件相关的指令
+
+* 指令文档
+* Others
+** Log
+#+begin_example
++ [2024-2-26]: 开始翻译
++ [2024-03-04]: 部分翻译, 缺了很多, 但是要去写作业了, 先这样先
+#+end_example
+
