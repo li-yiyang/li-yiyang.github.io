@@ -897,6 +897,54 @@ TODO: p13
   #+end_quote
 
 *** 扫描模式 Sweep mode
++ AUTO/NORM/SGL 按钮: 按照 AUTO -> NORMAL -> SINGLE 的顺序轮换改变扫描模式
+
+  (同样的操作可以在 TRIG 菜单中通过修改 Sweep 来实现.
+  扫描模式将会在屏幕下方以 [Auto], [Norm], [Sngl] 的形式显示)
+  + AUTO (automatic sweep): Free run sweep starts when no trigger signal
+    is avaliable.
+
+    #+begin_quote
+    其实这句话有点不太理解... 直译应该是: 在没有有效触发信号的时候,
+    将会自动设置扫描. 或者理解成: 在没有触发信号的时候, 也会对波形进行扫描.
+    这样估计就可以和下文的 NORMAL 进行区分了? 
+    #+end_quote
+
+    但触发信号频率过低的时候, AUTO 触发可能不稳定. 在这种情况下,
+    建议切换为 NORM 模式.
+  + NORMAL (normal sweep): 在触发信号产生的时刻捕获波形.
+
+    当没有触发信号的时候, 将会停止波形记录,
+    此时最后一次捕获的波形将会在屏幕上显示.
+  + SGL (single): 当触发信号生成的时候, 只捕获一次波形.
+
+    按下 RUN/STOP 按钮来再一次捕获波形.
++ 在 roll function 中的扫描模式: 当设置为滚动模式 (roll mode) 时,
+  扫描模式将会被设置为:
+  + Endless: 一直捕捉并显示波形直到按下 STOP 按键
+  + Trigger'd: 当触发信号产生时, 停止记录波形
+
+*AUTO 和 NORM 的扫描模式的区别*:
+在 NORMAL 或者 SINGLE 模式下, 当输入信号没有与触发电平有交点时,
+不会有新的波形被记录. 而在 AUTO 模式下, 新的波形将会自动被记录,
+即使没有触发信号产生.
+
++ RUN/STOP 按钮: 停止或继续波形捕捉.
+
+  按下后在屏幕上方中央的 Run/Stop 显示将会改变.
++ 停止时的操作: 在 STOP 的时候, 不会捕获新的波形. 已经捕获的波形
+  (也就是当前正在显示的波形) 可以在屏幕上被缩放或者在横纵轴移动.
+  + VOLTS/DIV: 可以任意取值. 
+  + OFFSET: 可以任意取值. 
+  + TIME/DIV: 可以任意取值. 但在放大时有限制:
+    + 当内存为 Short 时: 最大 7 倍放大 (7 range expansion)
+    + 当内存为 Long 时: 最大 11 倍放大 (11 range expansion)
+
+    不论任何内存类型, 缩小时最大 7 倍 (7 range).
+  + DELAY: 波形信号头尾不能超过屏幕中心.
+  + RUN: 重新继续波形捕获. 在 RUN 时重新按下 RUN 按键,
+    将会停止捕获波形并显示当前条件下捕获的新波形. 
+
 *** 游标测量 Cursor Measurement
 *** 拷贝功能
 *** SETUP 的 SAVE/UNDO 功能
