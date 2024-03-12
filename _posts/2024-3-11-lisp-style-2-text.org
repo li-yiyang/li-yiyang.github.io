@@ -1,0 +1,232 @@
+#+title: Lisp Style Guide
+#+date: 2024-03-11
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+以下是一篇在 [[https://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/lang/lisp/txt/style/][CMU Lisp Style Guide]] 中的 Lisp 风格指南的简单翻译和笔记.
+
+(注: 应该是部分的翻译. )
+
+* How to be a Stylish Lisp Programmer
+** General Programming Style
++ 短的函数 (易读, 易写, 易调试, 易懂)
++ 说明性的变量/函数名称
+
+** Lisp Specific Guidelines
++ 别像 Pascal 或者 C 代码一样写 Lisp
+  + 尽量用已有的函数 -- 参考 [[https://www.cs.cmu.edu/Groups/AI/html/cltl/cltl2.html][CLtL2]] 或者使用 =apropos= 或者 =describe=.
+  + 不要让括号单独成行 -- 代码结构应当通过缩进表现.
+    大多数 Lisp 系的编辑器都包含了自动括号配对, 括号间跳转, 括号操作,
+    自动代码缩进的功能. 
++ 如果刚接触 Lisp, 请避免使用下面的函数/宏/特殊形式 -- 大部分时间你没必要用它们:
+  =eval=, =progv=, =catch=, =throw=, =block=, 以及 =return-from=. 类似的, 尽量避免破坏性
+  (带副作用的) 的函数, 如 =nconc=, =sort=, =delete=, =rplaca=, 以及 =replacd=.
+  因为它们可能不会如你所愿地工作. 如果你一定要用 =rplaca= 和 =rplacd=,
+  请使用 =(setf (car ...) ..)= 以及 =(setf (cdr ..) ..)= 来代替.
++ 避免使用 =prog=, =go= 以及 =tagbody=. 请直接使用循环函数或者写一个递归函数来代替.
++ 不要用类似 =c{a,d}r= 这样但是 =c=, =r= 中间 =a=, =d= 数量超过两个即以上的函数
+  (如 =cddr=, =cadar= 等), 因为它们真的很难读. 请使用 =first=, =second=, =third=,
+  =nth= 以及 =nthcdr= 来代替.
++ 使用 =cond= 来代替 =if= 和 =progn= 的组合. 使用 =cond= 而不是嵌套的 =if=.
+  请记住要检查并排除不可能发生 =cond= 条件分支.
++ 不要使用单条件分支或者某一个条件分支返回值为 =nil= 的 =if=. 使用 =when= 或者
+  =unless= 来代替.
++ 尽可能使用局部变量而不是全局变量. 用 =let= 或者 =let*= 来定义局部变量.
+  如果一定要使用全局变量, 用 =*= 包围名字的方式来对全局变量进行命名,
+  这有助于其在代码中容易被看出来.
++ 当 =nil= 被用于做空列表时, 请使用 =()= 做字面量.
+  当 =nil= 被用于布尔运算时, 请使用 =nil= 做字面量.
+  类似的, 使用 =null= 来判断空列表; =not= 来判断逻辑值.
+  使用 =endp= 来判断是否是列表的尾部, 而不是 =null=.
++ 当能够用 =dotimes= 或者 =dolist= 时, 不要用 =do=.
+  能用 =let= 时不要用 =let*=.
+  能用 =flet= 时不要用 =labels=.
+  能用 =do= 时不要用 =do*=.
++ 不要在 =case= 判断中使用 =quote=. 如 =(case x ('a 3) ..)=, 这时不对的,
+  因为这会等价于判断 =x= 是否是 ='(quote a)=. 使用 =(case x (a 3))= 来代替.
++ 避免用 =apply= 来将列表进行扁平化. 函数可能会接受有限个参数,
+  而构造类似于 =(apply #'append list-of-lists)= 可能会产生冲突.
++ 不要在你之后想要按结构修改的地方使用 =quote=. 比如:
+
+  #+begin_src lisp
+    (defun foo ()
+      (let ((var '(c d)))
+        ..))
+  #+end_src
+
+  不要用 ='(c d)=, 而是用 =(list 'c 'd)=.
++ 不要混淆 =listp= 和 =consp=. =consp= 将会判断是否是 cons 的结构, 即对 =nil=
+  会返回 =nil=, 而 =listp= 更类似于:
+
+  #+begin_src lisp
+    (defun listp (x)
+      (or (null x)
+          (consp x)))
+  #+end_src
++ 当对两个数做除法的时候, 如果想要得到一个实数的话, 记得使用 =tuncate=
+  和 =round=, 否则可能会得到一个分数.
+
+** Documentation
++ 在 top-level expression 的前后至少放一行空行.
++ 对于左对齐的注释, 使用 =;;;= 三个分号开头. 你可以在这里描述一些类似于代码功能,
+  使用的算法, 以及其他的解释性的文字.
++ 在函数定义的时候带上 documentation string. 有助于帮助用户了解函数功能.
++ 对于和代码平齐浮动的注释, 使用 =;;= 两个分号开头. 大多数 Lisp
+  系的编辑器可以根据代码自动缩进这些注释.
++ 对于代码右侧的短注释, 使用 =;= 一个分号开头.
++ 感性地认识就是, 使用的分号的大概和注释的长度差不多.
++ 如果你需要注释一小段代码, 使用左对齐的单个分号.
+
+** Examples
+*** Documentation
+#+begin_src lisp
+  ;;; A function to compute the nth fibonacci number.
+  (defun fib (n)
+    "Returns the nth Fibonacci number, where f(n) = f(n-1) + f(n-2); f(1)=f(0)=1."
+    ;; check for the two base cases, otherwise recurse
+    (cond ((zerop n) 1) ; zerop is potentially faster than (= n 0)
+          ((= n 1) 1)
+          (t (+ (fib (1- n))
+                (fib (- n 2))))))
+#+end_src
+
+*** Control Structures
+*Poor style*:
+
+#+begin_src lisp
+  (if <condition>
+      (progn <statement1>
+             <statement2>
+             <statement3>))
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (when <condition>
+    <statement1>
+    <statement2>
+    <statement3>)
+#+end_src
+
+*Poor style*:
+
+#+begin_src lisp
+  (if <condition>
+      nil
+      (progn <statement1>
+             <statement2>
+             <statement3>))
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (unless <condition>
+    <statement1>
+    <statement2>
+    <statement3>)
+#+end_src
+
+*Poor style*:
+
+#+begin_src lisp
+  (if <condition>
+      (progn <statement1>
+             <statement2>)
+      (progn <statement3>
+             <statement4>))
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (cond (<condition>
+         <statement1> <statement2>)
+        (t <statement3> <statement4>))
+#+end_src
+
+*Poor style*:
+
+#+begin_src lisp
+  (if <condition1>
+      <statement1>
+      (if <condition2>
+          <statement2>
+          (if <condition3>
+              <statement3>)))
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (cond (<condition1> <statement1>)
+        (<condition2> <statement2>)
+        (<condition3> <statement3>))
+#+end_src
+
+*Poor style*:
+
+#+begin_src lisp
+  (cond (<condition> t)
+        (t <statement>))
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (if <condition>
+      t
+      <statement>)
+#+end_src
+
+*Poor style*:
+
+#+begin_src lisp
+  (defun function (arg1 arg2)
+    (setf local1 value1)
+    (setf local2 value2)
+    <statement>)
+#+end_src
+
+*Good style*:
+
+#+begin_src lisp
+  (defun function (arg1 arg2)
+    (let ((local1 value1)
+          (local2 value2))
+      <statement>))
+#+end_src
+
+在上面的 =setf= 的例子里面, =local1= 和 =local2= 实际上是在函数外也是可见的全局变量.
+而 =let= 构造的局部变量仅仅在 =let= 声明的环境中可见. 
+
+*** Iteration
+递归的一个模版
+
+#+begin_src lisp
+  (defun function (arg1 arg2)
+    (if end-condition
+        return-result
+        recurse))
+#+end_src
+
+例:
+
+#+begin_src lisp
+  (defun factorial (n)
+    (if (zerop n)
+        1
+        (* n (factorial (1- n)))))
+
+  ;; 尾递归 tail recursion 形式:
+  (defun factorial (n &optional (result 1))
+    (if (zerop n)
+        result
+        (factorial (1- n) (* n result))))
+#+end_src
+
+通常尾递归会被编译器优化以减少栈调用, 从而效率更高.
+但是两种形式都是比较好的代码风格.
