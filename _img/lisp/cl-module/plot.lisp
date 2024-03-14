@@ -56,7 +56,7 @@
   (setf *plot-frame*
         (make-application-frame 'plot :width width :height height)))
 
-(defun show-plot (&key (background t))
+(defun show-plot (&key (background t) (name "PLOT"))
   "Open the `*plot-frame*' window."
   (unless *plot-frame*
     (warn "Plot not initilized yet, auto inited.")
@@ -64,7 +64,7 @@
   (flet ((run () (run-frame-top-level *plot-frame*)))
     (if background
         (bt:make-thread #'run
-                        :name "PLOT"
+                        :name name
                         :initial-bindings
                         `((*default-server-path* . ',*default-server-path*)))
         (run))))
@@ -105,6 +105,7 @@
   (with-in-plot-pane (pane)
     (draw-rectangle* pane x y (+ x xsize) (+ y ysize)
                      :line-thickness pen-width
+                     :ink color
                      :filled nil)))
 
 (defun plot-line (x1 y1 x2 y2
