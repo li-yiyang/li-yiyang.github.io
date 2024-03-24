@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Corsika Parse Output | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Corsika Parse Output" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 本文将会是一个简单的踩坑介绍. Corsika Install and Run 发邮件, 下载程序, 使用 ./coconut 进行安装, 最后 run 目录下开始运行. Corsika Output Corsika 程序的输出 DAT&lt;run-number&gt; 是一个 Fortran 的二进制结构. 本来还有一个比较友好的数据读取和处理程序 COAST. 但是一个比较尴尬的事情是貌似它有些问题无法正常读取数据 (学长说的), 在我的电脑上无法正常编译 (configure 文件没了, make 爆了). 那么与其去修代码解决依赖问题, 我决定听从学长的建议, 写一个程序自己读. 找到官方的文档 (CORSIKA_GUIDE), 然后找到 Output 部分. 嗯, 接下来就是一些肮脏的过程了. 也不算坑的一些东西 Corsika 的安装和使用 二进制数据读取 我用的是 lisp-binary 来帮助我从二进制文件里面读取数据. 毕竟不是严格意义上搞这些的人, 啥 IEEE 的浮点数定义和实现也不是很懂. 总之能读就好了吧. 按照 Corsika Guide 里面定义的块结构, 可以如下定义如何读取数据: (defbinary particle-data (:export t :byte-order :little-endian) (description 0d0 :type single-float) (p-x 0d0 :type single-float) (p-y 0d0 :type single-float) (p-z 0d0 :type single-float) (x 0d0 :type single-float) (y 0d0 :type single-float) (time 0d0 :type single-float))" />
+<meta property="og:description" content="About 本文将会是一个简单的踩坑介绍. Corsika Install and Run 发邮件, 下载程序, 使用 ./coconut 进行安装, 最后 run 目录下开始运行. Corsika Output Corsika 程序的输出 DAT&lt;run-number&gt; 是一个 Fortran 的二进制结构. 本来还有一个比较友好的数据读取和处理程序 COAST. 但是一个比较尴尬的事情是貌似它有些问题无法正常读取数据 (学长说的), 在我的电脑上无法正常编译 (configure 文件没了, make 爆了). 那么与其去修代码解决依赖问题, 我决定听从学长的建议, 写一个程序自己读. 找到官方的文档 (CORSIKA_GUIDE), 然后找到 Output 部分. 嗯, 接下来就是一些肮脏的过程了. 也不算坑的一些东西 Corsika 的安装和使用 二进制数据读取 我用的是 lisp-binary 来帮助我从二进制文件里面读取数据. 毕竟不是严格意义上搞这些的人, 啥 IEEE 的浮点数定义和实现也不是很懂. 总之能读就好了吧. 按照 Corsika Guide 里面定义的块结构, 可以如下定义如何读取数据: (defbinary particle-data (:export t :byte-order :little-endian) (description 0d0 :type single-float) (p-x 0d0 :type single-float) (p-y 0d0 :type single-float) (p-z 0d0 :type single-float) (x 0d0 :type single-float) (y 0d0 :type single-float) (time 0d0 :type single-float))" />
+<link rel="canonical" href="/corsika/corsika-parse/" />
+<meta property="og:url" content="/corsika/corsika-parse/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-10-10T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Corsika Parse Output" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-10-10T00:00:00+00:00","datePublished":"2023-10-10T00:00:00+00:00","description":"About 本文将会是一个简单的踩坑介绍. Corsika Install and Run 发邮件, 下载程序, 使用 ./coconut 进行安装, 最后 run 目录下开始运行. Corsika Output Corsika 程序的输出 DAT&lt;run-number&gt; 是一个 Fortran 的二进制结构. 本来还有一个比较友好的数据读取和处理程序 COAST. 但是一个比较尴尬的事情是貌似它有些问题无法正常读取数据 (学长说的), 在我的电脑上无法正常编译 (configure 文件没了, make 爆了). 那么与其去修代码解决依赖问题, 我决定听从学长的建议, 写一个程序自己读. 找到官方的文档 (CORSIKA_GUIDE), 然后找到 Output 部分. 嗯, 接下来就是一些肮脏的过程了. 也不算坑的一些东西 Corsika 的安装和使用 二进制数据读取 我用的是 lisp-binary 来帮助我从二进制文件里面读取数据. 毕竟不是严格意义上搞这些的人, 啥 IEEE 的浮点数定义和实现也不是很懂. 总之能读就好了吧. 按照 Corsika Guide 里面定义的块结构, 可以如下定义如何读取数据: (defbinary particle-data (:export t :byte-order :little-endian) (description 0d0 :type single-float) (p-x 0d0 :type single-float) (p-y 0d0 :type single-float) (p-z 0d0 :type single-float) (x 0d0 :type single-float) (y 0d0 :type single-float) (time 0d0 :type single-float))","headline":"Corsika Parse Output","mainEntityOfPage":{"@type":"WebPage","@id":"/corsika/corsika-parse/"},"url":"/corsika/corsika-parse/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Corsika Parse Output</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-10-10T00:00:00+00:00" itemprop="datePublished">Oct 10, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>本文将会是一个简单的踩坑介绍.</p>
+<h2>Corsika Install and Run</h2>
+<p>发邮件, 下载程序, 使用 <code>./coconut</code> 进行安装, 最后 <code>run</code> 目录下开始运行.</p>
+<h2>Corsika Output</h2>
+<p>Corsika 程序的输出 <code>DAT&lt;run-number&gt;</code> 是一个 Fortran 的二进制结构.
+  本来还有一个比较友好的数据读取和处理程序 COAST.
+  但是一个比较尴尬的事情是貌似它有些问题无法正常读取数据 (学长说的),
+  在我的电脑上无法正常编译 (<code>configure</code> 文件没了, <code>make</code> 爆了).
+  那么与其去修代码解决依赖问题, 我决定听从学长的建议, 写一个程序自己读.</p>
+<p>找到官方的文档 (CORSIKA_GUIDE), 然后找到 Output 部分. 嗯,
+  接下来就是一些肮脏的过程了.</p>
+<h1>也不算坑的一些东西</h1>
+<h2>Corsika 的安装和使用</h2>
+<h2>二进制数据读取</h2>
+<p>我用的是 <a href="https://github.com/j3pic/lisp-binary">lisp-binary</a> 来帮助我从二进制文件里面读取数据.
+  毕竟不是严格意义上搞这些的人, 啥 IEEE 的浮点数定义和实现也不是很懂.
+  总之能读就好了吧.</p>
+<p>按照 <a href="https://www.iap.kit.edu/corsika/downloads/CORSIKA_GUIDE7.7500.pdf">Corsika Guide</a> 里面定义的块结构, 可以如下定义如何读取数据:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defbinary</span><span class="w"> </span><span class="nv">particle-data</span><span class="w"> </span><span class="p">(</span><span class="nf">:export</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">:byte-order</span><span class="w"> </span><span class="nv">:little-endian</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">description</span><span class="w">                 </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">p-x</span><span class="w">                         </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">p-y</span><span class="w">                         </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">p-z</span><span class="w">                         </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">x</span><span class="w">                           </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">y</span><span class="w">                           </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">time</span><span class="w">                        </span><span class="mi">0d0</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="nv">single-float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defbinary</span><span class="w"> </span><span class="nv">particle-data-block</span><span class="w"> </span><span class="p">(</span><span class="nf">:export</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">:byte-order</span><span class="w"> </span><span class="nv">:little-endian</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">particles</span><span class="w">                   </span><span class="o">#</span><span class="p">()</span><span class="w">    </span><span class="nv">:type</span><span class="w"> </span><span class="p">(</span><span class="nf">simple-array</span><span class="w"> </span><span class="nv">particle-data</span><span class="w"> </span><span class="p">(</span><span class="mi">38</span><span class="p">))))</span>
+</pre></div>
+<p>然后通过 <code>(read-binary &#39;particle-data-block stream)</code> 从输入流中读取信息.
+  当然, 这里有一些小小的 Trick, 在之后会介绍.</p>
+<h1>Sub Block Read and Unread</h1>
+<p>一个简单的读取想法就是读数, 判断类型, 然后根据类型返回结构. 道理是这个样子,
+  但是有一个小小问题, 因为 lisp-binary 是用 stream 的方式进行数据读取的,
+  读完了之后, 已经读过的东西是不能再读的.</p>
+<p>除非你把它放到一个缓冲块里面. (注: 我没有学过更加高深的数据读取方法,
+  所以我也说不好这样的操作是否最优, 至少当前我觉得能用就好了)</p>
+<p>于是我写了这样的一个宏来帮助我实现 <code>unread</code> 这样的操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-stream-block</span><span class="w"> </span><span class="p">((</span><span class="nf">stream</span><span class="w"> </span><span class="nv">block</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">alexandria:with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="w"> </span><span class="nv">out</span><span class="p">)</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="nf">flexi-streams:with-input-from-sequence</span>
+<span class="w">         </span><span class="p">(</span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">flexi-streams:with-output-to-sequence</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">out</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">write-binary</span><span class="w"> </span><span class="o">,</span><span class="nv">block</span><span class="w"> </span><span class="o">,</span><span class="nv">out</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">with-wrapped-in-bit-stream</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="p">)</span>
+<span class="w">         </span><span class="o">,@</span><span class="nv">body</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">read-block</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">dummy</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;dummy-sub-block</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">type</span><span class="w">  </span><span class="p">(</span><span class="nf">dummy-sub-block-type</span><span class="w"> </span><span class="nv">dummy</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">with-stream-block</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">dummy</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;RUNH&quot;</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;run-header</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">             </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;EVTH&quot;</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;event-header</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">             </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;LONG&quot;</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;longitudinal-block</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">             </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;EVTE&quot;</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;event-end</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">             </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;RUNE&quot;</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;run-end</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nf">read-binary</span><span class="w"> </span><span class="ss">&#39;particle-data-block</span><span class="w"> </span><span class="nv">stream</span><span class="p">))))</span>
+<span class="w">     </span><span class="nv">type</span><span class="p">)))</span>
+</pre></div>
+<p>这里默认 DATA BLOCK 全部都是粒子数据块.</p>
+<p>并且会发现这里是一口气读取整个 sub-block, 并且只使用头部一个很小的部分进行类型判断,
+  这样有点慢. 最好是能够根据头部信息进行动态判断, 但是这个 particle-data-block 的结构,
+  和其他的 sub-block 的结构并不一样, 所以还是有点坑.</p>
+<h1>Data Block</h1>
+<p>首先到网上找了一个讲解 Corsika 的教学 PPT (<a href="https://indico.cern.ch/event/719824/contributions/2972404/attachments/1743623/2821942/Corsika_Installation_Physics.pdf">Corsika_Installation_Physics.pdf</a>),
+  然后里面的一节介绍了 Corsika 的二进制数据结构:</p>
+<p><img src="/_img/corsika/structure-of-corsika-binary-files.jpg" alt="/_img/corsika/structure-of-corsika-binary-files.jpg" /></p>
+<p>(当然, 更加详细的可以看 <a href="https://www.iap.kit.edu/corsika/downloads/CORSIKA_GUIDE7.7500.pdf">Corsika Guide</a> 在第 10 节的 Output 里面的说明)</p>
+<p>对于 <code>THIN</code> 参数, 可以跳过不理会先 (我应该没有在安装的过程中选择这个模式).
+  每个块的大小和作用都讲得挺清楚的, 所以看看图应该就能够理解.
+  这里有一个让人一开始比较容易误会的地方就是:</p>
+<blockquote>
+  <p>1 block = 5733(6552) words (4 bytes)
+    = 21 sub-blocks of 273(312) words</p>
+</blockquote>
+<p>并且在 Corsika Guide 里面也是这样画的:</p>
+<p><img src="/_img/corsika/corsika-output-block-strcutre.png" alt="/_img/corsika/corsika-output-block-strcutre.png" /></p>
+<p>看起来一个 Block 的结构里面就是类似于:</p>
+<pre class="example">
+Run Header
+  Event Header
+    Data Block
+    ...
+    Long Block
+  Event End
+  ...
+Run End
+</pre>
+<p>这样的东西, 那么如果真就这样去读取数据的话, 那么就进入了一个比较坑爹的大坑了.
+  尤其是当你用二进制读取程序去看这个最后输出的文件的话,
+  发现好像这个 <code>RUN HEADER</code> 和 <code>RUN END</code> 只有一对 (对于一次的 <code>RUN</code>),
+  但是不同事件数 <code>EVENT</code> 却有不同的长度, 那么这个 <code>1 block = 21 sub-blocks</code> 究竟是啥?</p>
+<p>中间我试过去掉开头的 32 bytes (学长建议), 后来发现开头的 32 bytes 在无符号整数下代表
+  block 的大小 (对于我手上的, 就是 <code>22932</code>), 紧跟着的就是子块结构, 所以我的做法就是:</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; This is not TRUE!!!!</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">parse-corsika</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; how to read block shall depend on output type</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">read-corsika-type</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span><span class="w">           </span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">sub-block</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">read-block</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="ss">&#39;run-end</span><span class="w"> </span><span class="p">(</span><span class="nf">type-of</span><span class="w"> </span><span class="nv">sub-block</span><span class="p">)))</span>
+<span class="w">        </span><span class="nv">collect</span><span class="w"> </span><span class="nv">sub-block</span><span class="p">))</span>
+</pre></div>
+<p>这样读到的结果是什么呢? 答案是前几个可以正常地读出来, 而之后的几个就开始出现乱码了.
+  (其实不是乱码, 而是输出很明显不符合物理), 并且一只读下去会卡死并报出文件空的读取错误.
+  显然事情并没有那么简单.</p>
+<p>那么最终的答案是什么呢?</p>
+<p>答案是, 这个 block 就是个没有任何意义, 也没有啥结构的, 强行对输出文件每 21 个 sub-block
+  进行一划分的一个东西. (可能来源于历史上的卡片输出, 但是对于现在的这个, 真的是, 没啥必要).
+  也就是真实的数据如下:</p>
+<pre class="example">
+block marker (22932)
+  RUN HEADER
+    EVENT HEADER
+      DATA BLOCK
+      ... (21 subblocks)
+block marker (22932)
+
+block marker (22932)
+      DATA BLOCK
+      LONG BLOCK
+      ...
+    EVENT END
+    ... (21 sub-blocks)
+block marker (22932)
+
+block marker (22932)
+  ...
+  RUN END
+  ... (empty with 0)
+block marker (22932)
+</pre>
+<p>如果你用下面的程序来读取的话:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-open-binary-file</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="w"> </span><span class="nv">output-data-path</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;append</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">5</span>
+<span class="w">               </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">read-corsika-type</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">21</span>
+<span class="w">                             </span><span class="nv">for</span><span class="w"> </span><span class="nv">sub-block</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">read-block</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span>
+<span class="w">                             </span><span class="nv">collect</span><span class="w"> </span><span class="nv">sub-block</span><span class="p">)</span>
+<span class="w">               </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">read-corsika-type</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))))</span>
+</pre></div>
+<details><summary>那么就能合理的看到最终的输出了</summary>
+<pre class="example">
+(#S(RUN-HEADER
+    :TYPE &quot;RUNH&quot;
+    :RUN-NUMBER 69.0
+    :START-DATE 231009.0
+    :PROGRAM-VERSION 7.75
+    ;;; 略
+    :NFLCHE+100NFRAGM 200.0)
+ #S(EVENT-HEADER
+    :TYPE &quot;EVTH&quot;
+    :EVENT-NUMBER 1.0
+    :PARTICLE-ID 5626.0
+    ;;; 略
+    :NO-USE #(0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+              0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+              0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0))
+ #S(PARTICLE-DATA-BLOCK
+    :PARTICLES #(#S(PARTICLE-DATA
+                    :DESCRIPTION 6561.0
+                    :P-X -2.552703
+                    :P-Y 0.38220033
+                    :P-Z 1.9585683
+                    :X -152077.31
+                    :Y 41590.297
+                    :TIME 176972.77)
+    ;;; 略
+)))
+</pre>
+</details>
+<h1>Parse Data Structure</h1>
+<p>一个简单的数据读取程序如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">parse-corsika</span><span class="w"> </span><span class="p">(</span><span class="nf">file</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-open-binary-file</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="w"> </span><span class="nv">file</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">eof</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;nconc</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">read-corsika-type</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">21</span>
+<span class="w">                                 </span><span class="nv">for</span><span class="w"> </span><span class="nv">sub-block</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">read-block</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)</span>
+<span class="w">                                 </span><span class="nv">collect</span><span class="w"> </span><span class="nv">sub-block</span>
+<span class="w">                                 </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="ss">&#39;run-end</span><span class="w"> </span><span class="p">(</span><span class="nf">type-of</span><span class="w"> </span><span class="nv">sub-block</span><span class="p">)))</span>
+<span class="w">                                 </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="ss">&#39;run-end</span><span class="w"> </span><span class="p">(</span><span class="nf">type-of</span><span class="w"> </span><span class="nv">sub-block</span><span class="p">))</span>
+<span class="w">                                             </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">eof</span><span class="w"> </span><span class="nv">T</span><span class="p">)))</span>
+<span class="w">                   </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="nv">eof</span><span class="p">)</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">read-corsika-type</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))))))</span>
+</pre></div>
+<p>缺点就是有点太慢了, 并且出来的东西还不是有层次结构的东西, 需要能够更快一点,
+  更好一点&#8230;</p>
+<p>写了一个简单的 parser, 看看能不能读出结构:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">parse-corsika-structure</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">parse-run-block</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">parse-run-block</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">header</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">remain</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">typep</span><span class="w"> </span><span class="nv">header</span><span class="w"> </span><span class="ss">&#39;run-header</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:header</span><span class="w"> </span><span class="nv">header</span>
+<span class="w">            </span><span class="nv">:events</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">event</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">event</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">parse-event-block</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span>
+<span class="w">                                        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">remain</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span>
+<span class="w">                                        </span><span class="nv">event</span><span class="p">)</span>
+<span class="w">                          </span><span class="k">while</span><span class="w"> </span><span class="nv">event</span>
+<span class="w">                          </span><span class="nv">collect</span><span class="w"> </span><span class="nv">event</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">:end</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">remain</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">parse-event-block</span><span class="w"> </span><span class="p">(</span><span class="nf">corsika</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">header</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">remain</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">corsika</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">typep</span><span class="w"> </span><span class="nv">header</span><span class="w"> </span><span class="ss">&#39;event-header</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:header</span><span class="w"> </span><span class="nv">header</span>
+<span class="w">               </span><span class="nv">:data-block</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">data-block</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span>
+<span class="w">                                 </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nf">typep</span><span class="w"> </span><span class="nv">data-block</span><span class="w"> </span><span class="ss">&#39;particle-data-block</span><span class="p">)</span>
+<span class="w">                                 </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">remain</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">                                 </span><span class="nv">collect</span><span class="w"> </span><span class="nv">data-block</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">:long-block</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">long-block</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span>
+<span class="w">                                 </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nf">typep</span><span class="w"> </span><span class="nv">long-block</span><span class="w"> </span><span class="ss">&#39;longitudinal-block</span><span class="p">)</span>
+<span class="w">                                 </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">remain</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">                                 </span><span class="nv">collect</span><span class="w"> </span><span class="nv">long-block</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">:end</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">NIL</span><span class="w"> </span><span class="nv">corsika</span><span class="p">))))</span>
+</pre></div>
+<p>用一个简单的函数来处理一下最终的结果, 防止出来的数据太多把屏幕给挤爆:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">map-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">tree</span>
+<span class="w">              </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">map-tree</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nv">tree</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">map-tree</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">keywordp</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="p">(</span><span class="nf">type-of</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">parse-corsika-structure</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">parse-corsika</span><span class="w"> </span><span class="nv">file</span><span class="p">)))</span>
+</pre></div>
+<details><summary>结果速览</summary>
+<pre class="example">
+(:HEADER RUN-HEADER :EVENTS
+ ((:HEADER EVENT-HEADER :DATA-BLOCK
+   (PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK
+    PARTICLE-DATA-BLOCK PARTICLE-DATA-BLOCK)
+   :LONG-BLOCK
+   (LONGITUDINAL-BLOCK LONGITUDINAL-BLOCK LONGITUDINAL-BLOCK
+    LONGITUDINAL-BLOCK)
+   :END EVENT-END))
+ :END RUN-END)
+</pre>
+</details>
+<p>又: 好像也没有那么慢, 因为之前读的是一个产生了 1000 个 EVENT 的模拟结果,
+  所以会读得慢一点, 对于一个 EVENT 的结果用时大约是 0.117 秒, 还算可以接受,
+  那么就不管了. 对于 19 个 EVENT 的结果, 大约是 0.647 秒, 也不是不行.</p>
+<p>整理一下进入下一个阶段.</p>
+<h1>End</h1>
+<p>总之目前先这样, 之后再想想看有没有更加好的方法来解决这个问题吧&#8230;
+  还是先着重处理物理上的问题.</p>
+
+  </div><a class="u-url" href="/corsika/corsika-parse/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

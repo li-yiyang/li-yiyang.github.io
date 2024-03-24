@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ASDF 简单翻译 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ASDF 简单翻译" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 翻译自 ASDF (Another System Definition Facility). 请注意这并不是完整的翻译, 更多类似于笔记的东西. ASDF 3 ASDF 为 Common Lisp 事实上的编译工具链. 一般的 CL 发行一般都包含了 ASDF. (使用 (require &quot;asdf&quot;) 可以调用). What it is ASDF 为 CL 程序员用于编译和加载程序的软件. 其由 asdf/defsystem 和 uiop 组成: asdf/defsystem 一个用于定义 Lisp 代码是如何组织的工具, 以及定义了如何编译和加载这些系统. 编译过程会通过系统代码的组织结构自动生成并解决编译依赖关系. uiop 为 U tilities for I mplementation- and OS - P ortability, 之前被称为 asdf/driver, 可以帮助写出比较通用的跨平台的软件. What it is not ASDF 并不会自动下载缺省的依赖包, 可以使用 Quicklisp 来解决该问题. Documentation 翻译自 ASDF Manual. Quick start summary 载入 ASDF 的系统 首先需要保证 ASDF 已经在你的系统中了, 可以参考 Loading ASDF. 一般新的发行版都已经有了吧&#8230; 确保要载入的文件在可以被 ASDF 找到, 可以参考 Configuring ASDF to find your system. 常见的应该是被放在 ~/common-lisp/, ~/.local/share/common-lisp/source/ 文件夹下. 使用 (asdf:load-system &quot;my-system&quot;) 来载入系统, 参考 Using ASDF. 定义自己的 ASDF 系统 同上, 载入并配置 ASDF 在 ASDF 可以发现的路径下新建系统的目录, 比如 my-system 定义系统: 库依赖, 代码组成, 代码间相互依赖关系, 在 my-system.asd 中定义. 可以参考 Defining systems with defsystem. 使用 asdf:load-system 来确保正常工作 载入的代码可以用 Quicklisp 来: ql:quickload. 这自动解决依赖不是一件美事么? Defining systems with defsystem defsystem 的形式 (defsystem &quot;system-name&quot; :description &quot;this is a simple description for system-name&quot; :version &quot;0.0.1&quot; :author &quot;ryo&quot; :licence &quot;MIT&quot; :depends-on (&quot;...&quot; &quot;...&quot;) :components ((:file &quot;packages&quot;) (:file &quot;macros&quot; :depends-on (&quot;packages&quot;)) (:file &quot;hello&quot; :depends-on (&quot;macros&quot;)))) defsystem 定义了一个叫做 system-name 的系统, 该系统包含了 packages.lisp, macros.lisp 和 hello.lisp 的文件 .lisp 后缀在命名文件的时候是可以省略的, 该定义文件要被放在 .asd 文件中 这个依赖关系一目了然了吧, 通过 :depends-on 的方式声明 :components 中的依赖关系 对于外部依赖, 通过 :depends-on 来声明 其他的一些元数据, 比如 :bug-tracker, :mailto, :long-description, :source-control 等同样可以说明 对于 :version, 参考 Version specifiers 推荐的声明的方法就是单一 defsystem, 不建议使用 in-package 和 asdf:defsystem The defsystem grammar defsystem grammar system-definition := ( defsystem system-designator system-option* )" />
+<meta property="og:description" content="About 翻译自 ASDF (Another System Definition Facility). 请注意这并不是完整的翻译, 更多类似于笔记的东西. ASDF 3 ASDF 为 Common Lisp 事实上的编译工具链. 一般的 CL 发行一般都包含了 ASDF. (使用 (require &quot;asdf&quot;) 可以调用). What it is ASDF 为 CL 程序员用于编译和加载程序的软件. 其由 asdf/defsystem 和 uiop 组成: asdf/defsystem 一个用于定义 Lisp 代码是如何组织的工具, 以及定义了如何编译和加载这些系统. 编译过程会通过系统代码的组织结构自动生成并解决编译依赖关系. uiop 为 U tilities for I mplementation- and OS - P ortability, 之前被称为 asdf/driver, 可以帮助写出比较通用的跨平台的软件. What it is not ASDF 并不会自动下载缺省的依赖包, 可以使用 Quicklisp 来解决该问题. Documentation 翻译自 ASDF Manual. Quick start summary 载入 ASDF 的系统 首先需要保证 ASDF 已经在你的系统中了, 可以参考 Loading ASDF. 一般新的发行版都已经有了吧&#8230; 确保要载入的文件在可以被 ASDF 找到, 可以参考 Configuring ASDF to find your system. 常见的应该是被放在 ~/common-lisp/, ~/.local/share/common-lisp/source/ 文件夹下. 使用 (asdf:load-system &quot;my-system&quot;) 来载入系统, 参考 Using ASDF. 定义自己的 ASDF 系统 同上, 载入并配置 ASDF 在 ASDF 可以发现的路径下新建系统的目录, 比如 my-system 定义系统: 库依赖, 代码组成, 代码间相互依赖关系, 在 my-system.asd 中定义. 可以参考 Defining systems with defsystem. 使用 asdf:load-system 来确保正常工作 载入的代码可以用 Quicklisp 来: ql:quickload. 这自动解决依赖不是一件美事么? Defining systems with defsystem defsystem 的形式 (defsystem &quot;system-name&quot; :description &quot;this is a simple description for system-name&quot; :version &quot;0.0.1&quot; :author &quot;ryo&quot; :licence &quot;MIT&quot; :depends-on (&quot;...&quot; &quot;...&quot;) :components ((:file &quot;packages&quot;) (:file &quot;macros&quot; :depends-on (&quot;packages&quot;)) (:file &quot;hello&quot; :depends-on (&quot;macros&quot;)))) defsystem 定义了一个叫做 system-name 的系统, 该系统包含了 packages.lisp, macros.lisp 和 hello.lisp 的文件 .lisp 后缀在命名文件的时候是可以省略的, 该定义文件要被放在 .asd 文件中 这个依赖关系一目了然了吧, 通过 :depends-on 的方式声明 :components 中的依赖关系 对于外部依赖, 通过 :depends-on 来声明 其他的一些元数据, 比如 :bug-tracker, :mailto, :long-description, :source-control 等同样可以说明 对于 :version, 参考 Version specifiers 推荐的声明的方法就是单一 defsystem, 不建议使用 in-package 和 asdf:defsystem The defsystem grammar defsystem grammar system-definition := ( defsystem system-designator system-option* )" />
+<link rel="canonical" href="/lisp/asdf-lisp-trans/" />
+<meta property="og:url" content="/lisp/asdf-lisp-trans/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ASDF 简单翻译" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-01-13T00:00:00+00:00","datePublished":"2024-01-13T00:00:00+00:00","description":"About 翻译自 ASDF (Another System Definition Facility). 请注意这并不是完整的翻译, 更多类似于笔记的东西. ASDF 3 ASDF 为 Common Lisp 事实上的编译工具链. 一般的 CL 发行一般都包含了 ASDF. (使用 (require &quot;asdf&quot;) 可以调用). What it is ASDF 为 CL 程序员用于编译和加载程序的软件. 其由 asdf/defsystem 和 uiop 组成: asdf/defsystem 一个用于定义 Lisp 代码是如何组织的工具, 以及定义了如何编译和加载这些系统. 编译过程会通过系统代码的组织结构自动生成并解决编译依赖关系. uiop 为 U tilities for I mplementation- and OS - P ortability, 之前被称为 asdf/driver, 可以帮助写出比较通用的跨平台的软件. What it is not ASDF 并不会自动下载缺省的依赖包, 可以使用 Quicklisp 来解决该问题. Documentation 翻译自 ASDF Manual. Quick start summary 载入 ASDF 的系统 首先需要保证 ASDF 已经在你的系统中了, 可以参考 Loading ASDF. 一般新的发行版都已经有了吧&#8230; 确保要载入的文件在可以被 ASDF 找到, 可以参考 Configuring ASDF to find your system. 常见的应该是被放在 ~/common-lisp/, ~/.local/share/common-lisp/source/ 文件夹下. 使用 (asdf:load-system &quot;my-system&quot;) 来载入系统, 参考 Using ASDF. 定义自己的 ASDF 系统 同上, 载入并配置 ASDF 在 ASDF 可以发现的路径下新建系统的目录, 比如 my-system 定义系统: 库依赖, 代码组成, 代码间相互依赖关系, 在 my-system.asd 中定义. 可以参考 Defining systems with defsystem. 使用 asdf:load-system 来确保正常工作 载入的代码可以用 Quicklisp 来: ql:quickload. 这自动解决依赖不是一件美事么? Defining systems with defsystem defsystem 的形式 (defsystem &quot;system-name&quot; :description &quot;this is a simple description for system-name&quot; :version &quot;0.0.1&quot; :author &quot;ryo&quot; :licence &quot;MIT&quot; :depends-on (&quot;...&quot; &quot;...&quot;) :components ((:file &quot;packages&quot;) (:file &quot;macros&quot; :depends-on (&quot;packages&quot;)) (:file &quot;hello&quot; :depends-on (&quot;macros&quot;)))) defsystem 定义了一个叫做 system-name 的系统, 该系统包含了 packages.lisp, macros.lisp 和 hello.lisp 的文件 .lisp 后缀在命名文件的时候是可以省略的, 该定义文件要被放在 .asd 文件中 这个依赖关系一目了然了吧, 通过 :depends-on 的方式声明 :components 中的依赖关系 对于外部依赖, 通过 :depends-on 来声明 其他的一些元数据, 比如 :bug-tracker, :mailto, :long-description, :source-control 等同样可以说明 对于 :version, 参考 Version specifiers 推荐的声明的方法就是单一 defsystem, 不建议使用 in-package 和 asdf:defsystem The defsystem grammar defsystem grammar system-definition := ( defsystem system-designator system-option* )","headline":"ASDF 简单翻译","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/asdf-lisp-trans/"},"url":"/lisp/asdf-lisp-trans/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ASDF 简单翻译</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-01-13T00:00:00+00:00" itemprop="datePublished">Jan 13, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>翻译自 <a href="https://asdf.common-lisp.dev">ASDF (Another System Definition Facility)</a>.</p>
+<blockquote>
+  <p>请注意这并不是完整的翻译, 更多类似于笔记的东西.</p>
+</blockquote>
+<h2>ASDF 3</h2>
+<p>ASDF 为 Common Lisp 事实上的编译工具链. 一般的 CL 发行一般都包含了 ASDF.
+  (使用 <code>(require &quot;asdf&quot;)</code> 可以调用).</p>
+<h2>What it is</h2>
+<p>ASDF 为 CL 程序员用于编译和加载程序的软件. 其由 <code>asdf/defsystem</code> 和 <code>uiop</code> 组成:</p>
+<ul>
+  <li><code>asdf/defsystem</code>
+    <p>一个用于定义 Lisp 代码是如何组织的工具, 以及定义了如何编译和加载这些系统.
+      编译过程会通过系统代码的组织结构自动生成并解决编译依赖关系.</p>
+  </li>
+  <li><code>uiop</code>
+    <p>为 <b>U</b> tilities for <b>I</b> mplementation- and <b>OS</b> - <b>P</b> ortability,
+      之前被称为 <code>asdf/driver</code>, 可以帮助写出比较通用的跨平台的软件.</p>
+  </li>
+</ul>
+<h2>What it is not</h2>
+<p>ASDF 并不会自动下载缺省的依赖包, 可以使用 <a href="http://quicklisp.org/">Quicklisp</a> 来解决该问题.</p>
+<h1>Documentation</h1>
+<p>翻译自 <a href="https://asdf.common-lisp.dev/asdf.html">ASDF Manual</a>.</p>
+<h2>Quick start summary</h2>
+<ul>
+  <li>载入 ASDF 的系统
+    <ul>
+      <li>首先需要保证 ASDF 已经在你的系统中了, 可以参考 <a href="https://asdf.common-lisp.dev/asdf.html#Loading-ASDF">Loading ASDF</a>.
+        <blockquote>
+          <p>一般新的发行版都已经有了吧&#8230;</p>
+        </blockquote>
+      </li>
+      <li>确保要载入的文件在可以被 ASDF 找到,
+        可以参考 <a href="https://asdf.common-lisp.dev/asdf.html#Configuring-ASDF-to-find-your-systems">Configuring ASDF to find your system</a>.
+        常见的应该是被放在 <code>~/common-lisp/</code>,
+        <code>~/.local/share/common-lisp/source/</code> 文件夹下.</li>
+      <li>使用 <code>(asdf:load-system &quot;my-system&quot;)</code> 来载入系统, 参考 <a href="https://asdf.common-lisp.dev/asdf.html#Using-ASDF">Using ASDF</a>.</li>
+    </ul>
+  </li>
+  <li>定义自己的 ASDF 系统
+    <ul>
+      <li>同上, 载入并配置 ASDF</li>
+      <li>在 ASDF 可以发现的路径下新建系统的目录, 比如 <code>my-system</code></li>
+      <li>定义系统: 库依赖, 代码组成, 代码间相互依赖关系, 在 <code>my-system.asd</code> 中定义.
+        可以参考 <a href="https://asdf.common-lisp.dev/asdf.html#Defining-systems-with-defsystem">Defining systems with defsystem</a>.</li>
+      <li>使用 <code>asdf:load-system</code> 来确保正常工作</li>
+    </ul>
+  </li>
+</ul>
+<blockquote>
+  <p>载入的代码可以用 <a href="https://www.quicklisp.org/beta/">Quicklisp</a> 来: <code>ql:quickload</code>. 这自动解决依赖不是一件美事么?</p>
+</blockquote>
+<h2>Defining systems with defsystem</h2>
+<h3>defsystem 的形式</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defsystem</span><span class="w"> </span><span class="s">&quot;system-name&quot;</span>
+<span class="w">  </span><span class="nv">:description</span><span class="w"> </span><span class="s">&quot;this is a simple description for system-name&quot;</span>
+<span class="w">  </span><span class="nv">:version</span><span class="w"> </span><span class="s">&quot;0.0.1&quot;</span>
+<span class="w">  </span><span class="nv">:author</span><span class="w"> </span><span class="s">&quot;ryo&quot;</span>
+<span class="w">  </span><span class="nv">:licence</span><span class="w"> </span><span class="s">&quot;MIT&quot;</span>
+<span class="w">  </span><span class="nv">:depends-on</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="w"> </span><span class="s">&quot;...&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">:components</span><span class="w"> </span><span class="p">((</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;packages&quot;</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;macros&quot;</span><span class="w"> </span><span class="nv">:depends-on</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;packages&quot;</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;hello&quot;</span><span class="w"> </span><span class="nv">:depends-on</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;macros&quot;</span><span class="p">))))</span>
+</pre></div>
+<ul>
+  <li><code>defsystem</code> 定义了一个叫做 <code>system-name</code> 的系统,
+    该系统包含了 <code>packages.lisp</code>, <code>macros.lisp</code> 和 <code>hello.lisp</code> 的文件</li>
+  <li><code>.lisp</code> 后缀在命名文件的时候是可以省略的, 该定义文件要被放在 <code>.asd</code> 文件中</li>
+  <li><del>这个依赖关系一目了然了吧</del>,
+    通过 <code>:depends-on</code> 的方式声明 <code>:components</code> 中的依赖关系</li>
+  <li>对于外部依赖, 通过 <code>:depends-on</code> 来声明</li>
+  <li>其他的一些元数据, 比如 <code>:bug-tracker</code>, <code>:mailto</code>, <code>:long-description</code>,
+    <code>:source-control</code> 等同样可以说明</li>
+  <li>对于 <code>:version</code>, 参考 <a href="https://asdf.common-lisp.dev/asdf.html#Version-specifiers">Version specifiers</a></li>
+  <li>推荐的声明的方法就是单一 <code>defsystem</code>, 不建议使用 <code>in-package</code> 和 <code>asdf:defsystem</code></li>
+</ul>
+<h3>The defsystem grammar</h3>
+<details><summary>defsystem grammar</summary>
+<pre class="example">
+system-definition := ( defsystem system-designator system-option* )
+
+system-designator := simple-component-name
+                   | complex-component-name
+
+# NOTE: Underscores are not permitted.
+# see Simple component names
+simple-component-name := lower-case string | symbol
+
+# see Complex component names
+complex-component-name := string | symbol
+
+system-option := :defsystem-depends-on dependency-def
+               | :weakly-depends-on system-list
+               | :class class-name # see System class names
+               | :build-pathname pathname-specifier
+               | :build-operation operation-name
+               | system-option/asdf3
+               | module-option
+               | option
+
+# These are only available since ASDF 3 (actually its alpha release
+# 2.27)
+system-option/asdf3 := :homepage string
+                     | :bug-tracker string
+                     | :mailto string
+                     | :long-name string
+                     | :source-control source-control
+                     | :version version-specifier
+                     | :entry-point object # see Entry point
+
+source-control := ( keyword string )
+
+module-option := :components component-list
+               | :serial [ t | nil ]
+
+option := :description string
+        | :long-description string
+        | :author person-or-persons
+        | :maintainer person-or-persons
+        | :pathname pathname-specifier
+        | :default-component-class class-name
+        | :perform method-form
+        | :explain method-form
+        | :output-files method-form
+        | :operation-done-p method-form
+        | :if-feature feature-expression
+        | :depends-on ( dependency-def* )
+        | :in-order-to ( dependency+ )
+
+person-or-persons := string | ( string+ )
+
+system-list := ( simple-component-name* )
+
+component-list := ( component-def* )
+
+component-def := ( component-type simple-component-name option* )
+
+component-type := :module | :file | :static-file | other-component-type
+
+other-component-type := symbol-by-name # see Component types
+
+# This is used in :depends-on, as opposed to &quot;dependency&quot;, which is used
+# in :in-order-to
+dependency-def := simple-component-name
+                | ( :feature feature-expression dependency-def ) # see Feature dependencies
+                | ( :version simple-component-name version-specifier )
+                | ( :require module-name )
+
+# &quot;dependency&quot; is used in :in-order-to, as opposed to &quot;dependency-def&quot;
+dependency := ( dependent-op requirement+ )
+requirement := ( required-op required-component+ )
+dependent-op := operation-name
+required-op := operation-name
+
+# NOTE: pathnames should be all lower case, and have no underscores,
+# although hyphens are permitted.
+pathname-specifier := pathname | string | symbol
+
+version-specifier := string
+                   | ( :read-file-form pathname-specifier form-specifier? )
+                   | ( :read-file-line pathname-specifier line-specifier? )
+line-specifier := :at integer # base zero
+form-specifier := :at [ integer | ( integer+ ) ]
+
+method-form := ( operation-name qual lambda-list &amp;rest body )
+qual := method-qualifier?
+method-qualifier := :before | :after | :around
+
+feature-expression := keyword
+                    | ( :and feature-expression* )
+                    | ( :or feature-expression* )
+                    | ( :not feature-expression )
+
+operation-name := symbol
+</pre>
+</details>
+<h4>System designators</h4>
+<p>系统名称可以为一个简单的名字, 或者是通过 <code>/</code> 分割的这样的比较复杂的名字.</p>
+<h4>Simple component names <code>simple-component-name</code></h4>
+<p>可以是字符串或者符号 (strings or symbols).</p>
+<p>在使用字符串的时候, 请仅使用 <b>小写</b> 符号.</p>
+<p>符号 (symbols) 会被转换成对应的名字字符串 (小写).</p>
+<p><b>不要</b> 使用下划线来命名.</p>
+<p>在简单的组件名称中 <b>不要</b> 使用 <code>/</code>, <code>/</code> 意味着一个复杂的组件名字.
+  使用 <code>/</code> 会导致 ASDF 进行一个 Warning 提示.</p>
+<p>破坏这些命名约定的后果就是会导致系统难以被发现.</p>
+<h4>Complex component names</h4>
+<p>复杂组件名称即包含 <code>/</code> 的组件名称, 其用于将多个子系统包含在一个 <code>.asd</code> 文件中定义.</p>
+<p>其中主系统名称需要和 <code>.asd</code> 文件名称相同.</p>
+<p><code>foo.asd</code> 中定义叫做 <code>foo</code> 的系统. 同时, 该文件中可以包含类似于 <code>foo/test</code>,
+  <code>foo/docs</code> 等子系统. ASDF 将会理解这些子系统定义.</p>
+<h4>Serial dependencies</h4>
+<p>这个是一个依赖关系的简化记号, 若 <code>:serial t</code> 开启了该选项,
+  那么 ASDF 对于组件会默认认为是线性依赖, 即:</p>
+<div class="highlight"><pre><span></span><span class="nv">:serial</span><span class="w"> </span><span class="nv">t</span>
+<span class="nv">:components</span><span class="w"> </span><span class="p">((</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="p">))</span>
+</pre></div>
+<p>与</p>
+<div class="highlight"><pre><span></span><span class="nv">:components</span><span class="w"> </span><span class="p">((</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="w"> </span><span class="nv">:depends-on</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">:file</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="w"> </span><span class="nv">:depends-on</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>等价.</p>
+<h1>暂时性的停止</h1>
+<p>感觉翻译这么多就够了, 对于我平时用到的小项目声明应该不至于需要更多的功能了.</p>
+
+  </div><a class="u-url" href="/lisp/asdf-lisp-trans/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
