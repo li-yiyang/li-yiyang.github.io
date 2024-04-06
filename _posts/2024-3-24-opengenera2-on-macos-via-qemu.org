@@ -57,3 +57,24 @@
 虽然... [[https://news.ycombinator.com/item?id=1878608][Lisp Machines are something that you think is really cool when you first learn about them, then you come to the realization that pining for them is a waste of time.]]
 
 就酱先.
+
+** OpenGenera Fonts on macOS
+参考 [[https://symbolics.lisp.engineer/genera-x11-fonts-on-mac/][Genera X11 Fonts on Mac]], 可以在 =sys.sct/x11/fonts/bdf/genera=
+中找到形为 =*.bdf.~*~= 的 [[https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format][BDF]] 形式的字体. 可以使用 FontForge 来进行转换:
+
+#+begin_src shell
+  for i in *;
+  do
+      fontforge -c "open(argv[1]).generate(argv[2], 'dfont')" $i $i:r:r
+  done
+#+end_src
+
+转换为 Apple 的 dfont 的格式, 就可以添加到 macOS 的字体中去了.
+不过实际会发现, 里面有一部分是用来表示一些特殊符号的,
+比如 =GENERA-ARROW= 之类的.
+
+并且也不是所有的字体都适合用来作为写代码的字体...
+不过要是点阵字体真有那么好的话, 估计也不会有人想要做矢量字体了吧.
+
+(哦, 实际发现使用的效果貌似字间距有些问题, 在 Emacs 上测试是没有问题的,
+但是在其他正常的显示里面会有问题... 感觉还是需要一些修正.)
