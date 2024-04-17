@@ -1,0 +1,111 @@
+#+title: Charming Common Lisp Debugging Experience
+#+date: 2024-04-17
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+在做 GURAFU 的时候, 各种函数套来套去, 调用来调用去, debug 就非常痛苦, 吗?
+
+为了记录下这个 debug 的经历和学到的东西, 这里留一个简单的小笔记.
+
+参考:
++ [[https://lispcookbook.github.io/cl-cookbook/debugging.html][The Common Lisp Cookbook - Debugging]]
+
+注: 我尽量会只使用 SLY 和最基本的 Common Lisp 的特性.
+
+* Barebone Print Debug
+虽然很 low 但是很管用的 debug 方法, 很自然的就是在表达式里面用 =print= 来打印.
+
+一个简单的例子:
+
+#+begin_src lisp
+  (defun example (input &optional debug)
+    (call-program (if debug (print input) input)))
+#+end_src
+
+并且得益于 Common Lisp 的 =print= 的返回值就是打印的表达式的返回值,
+所以你可以直接对已有的代码进行 wrap.
+
+* Inspect with SLY
+在 SLY 里面, 你可以使用鼠标直接点击元素来检查其内容. 理论上你可以用 Common Lisp
+自带的 =inspect= 函数, SLY 做得和这个函数功能是一样的, 不过交互更加容易一些.
+
+这样对于 OOP 的 instance (比如在 GURAFU 中, 我用 OOP 的方法来构造绘制的元素)
+或者是数据结构的检查 (比如在 CL-CORSIKA 中, 我用这样的方式来 debug) 还是会轻松很多的. 
+
+* GDB Like Debugging Methods
+虽然我只学过一点点 C 语言 (基本上就是之前做 RE 学到的一点点 C 的知识),
+但是毕竟还是逆向, 和 GDB 打交道比较多, 加上一堆好用的插件, 体验还是不错的.
+毕竟你可以做到打断点, 步进, 步出之类的.
+
+在 Lisp (Common Lisp) 里面, 你也可以做到类似的事情. 
+
++ =trace= 函数可以跟踪函数栈的调用和返回, 对于其他的语言, 我一直没有找到类似的东西,
+  所以每次在 Python 里面写:
+
+  #+begin_src python
+    def newton_min(f, df, x0, debug=False):
+        if debug:
+            print x0
+
+        # ...
+  #+end_src
+
+  这样类似的代码的时候, 我都非常怀念 Lisp 的 =trace= 函数.
+  (你可以用 =untrace= 来取消特定函数或者所有函数的跟踪). 
++ =(trace :break t ...)= 可以在进入这个函数的时候停下来, 类似于其他函数的打断点.
++ =step= 虽然用的比较少, 毕竟可以打断点的干啥要手动步进 (自动狗头)
+
+用的比较少的:
++ =(trace ... :method :around)= 可以对 Common Lisp 的 method 的组合进行条件断点
++ =(trace :break (equal 0 (sb-debug:arg 0)))= 第一个参数是 =0= 的时候的时候断
+
+  不过貌似不同实现的 Common Lisp 的结果不太一样.
+
+* It's Live
+虽然 GDB 很好用, 但是 Lisp 有一个更加让人身心愉悦的特性: 它带了一个 REPL.
+所以实际上你可以从零构建一个 Lisp kernel 环境, 然后一步步往里面添加各种特性,
+实时调试各种东西, 最后将这个环境 dump 成一个 image 然后在未来的某个时候载入,
+然后继续开发.
+
+不过也有一个比较小坑的地方就是, 你可能会发现自己不知道在何时定义过的函数,
+因为没有更新定义而导致了奇妙的 bug.
+
+不过先别急着重启 Lisp 环境, 怎么说 Lisp 也是一个动态的语言,
+理论上来说你可以随时随地对这个语言进行几乎任意的修改:
+
++ 比如删除某个已经定义的变量, 函数, 或者方法:
+
+  #+begin_src lisp
+    (unintern symbol)
+  #+end_src
+
+  当然, 这个样的代码可能在正式工作环境里面是比较危险的,
+  但是你现在属于是一个开发环境嘛...
++ 或者是删除某个已经载入的包:
+
+  #+begin_src lisp
+    (delete-package package-name)
+  #+end_src
++ 删除某个类的某个方法
+
+  #+begin_src lisp
+    (remove-method #'method
+                   (find-method #'method
+                                (list :around)
+                                (list (find-class class-name))))
+  #+end_src
++ 当然, 最简单的覆写定义什么的肯定是再简单不过了
+
+并且还有一个更加好用的 debugging 方法: 那就是在遇到错误停下来的时候,
+比如一个函数的定义导致了错误的产生, SLY 的 debugger 会停在对应的函数调用上,
+不过不要担心, 其实这个时候程序并不是被停下来的状态, 只不过是一个计算进程停着而已,
+这个时候可以不要直接退出, 而是通过修改错误的函数的方法, 让函数在停止的地方重新执行,
+从而快速恢复原来的计算状态.
+
+甚至有时候还可以直接给一个没有赋值的值手动赋值, 主打的就是一个怎么简单怎么来...
+
+这种编程体验我觉得是非常舒服的. 当然, 像是有 LSP 这样的支持,
+其他语言的 "静态" 编程体验也是不错的. 只是不禁让人有些好奇, 这样的静态体验,
+真的就是未来编程语言的发展方向吗?
