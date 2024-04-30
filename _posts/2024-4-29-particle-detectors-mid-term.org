@@ -1,0 +1,339 @@
+#+title: 粒子探测器
+#+date: 2024-04-30
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* About
+#+begin_quote
+粒子探测器与数据获取这本书神中神.
+#+end_quote
+
+* 粒子探测简介
++ 粒子: 自然界中或人工实验中各类反应产生的各种末态粒子和辐射
+  (\(\alpha, e, X, \gamma, p, n, \mu, \pi, K, \dots\))
+  + 带电粒子: \(\alpha, p, e^{\pm}, \pi^{\pm}, K^{\pm}, \mu^{\pm}\)
+  + 电磁辐射: \(\mathrm{X-ray}, \gamma, \dots\)
+  + 中性粒子: \(n, \pi^0, K^0, \nu, \dots\)
++ 粒子探测: 通过粒子和物质的相互作用测量粒子的各种特征和属性
+  (径迹, 能量, 动量, 电荷, 质量) 并识别粒子
+  + 基本范式: 粒子源 \(\rightarrow\) 相互作用 \(\rightarrow\) 探测
+    + 不是通过直接观测, 而是通过与物质相互作用并 _转移能量_ 时被探测;
+    + 主要通过记录 _粒子数目_ 来测定其性质
++ 谱仪: 多个具有不同功能的探测器组成的粒子探测系统
++ 粒子源:
+  + 放射源:
+    + 天然放射源
+    + 人工放射源
+  + 宇宙射线:
+    [[{{ site.github.url }}/_img/particle-detector/Cosmic_ray_flux_versus_particle_energy.svg]]
+
+    (图片来源于 [[https://en.wikipedia.org/wiki/Cosmic_ray][Wikipedia]])
+    + 流强: 海平面 \(1 \mathrm{cm}^{-2} \mathrm{min}^{-1}\)
+    + 可获得超高能量 (宇宙线能谱是幂率谱)
+    + 统计量低
+    + 随机性强
+  + 反应堆
+    + 中微子源
+  + 粒子加速器
+    + 能量较宇宙线低
+    + 能量可调节
+    + 统计量高
+    + 可控制, 可重复性强
+
+#+begin_html
+<details><summary> 历史上的探测器 </summary>
+#+end_html
++ Cloud Chamber 云室
++ Bubble Chamber 气泡室
++ Nuclear Emulsions 核乳胶
+#+begin_html
+</details>
+#+end_html
+
+* 物理过程
+** 电离能损
++ 电离: _带电粒子_ 和物质原子的 _电子_ 发生库仑相互作用,
+  电子脱离原子成为自由电子, 得到正离子和自由电子;
+  对于内层空穴, 外层电子跃迁, 放出 X 射线或俄歇电子.
++ 激发: _带电粒子_ 激发 _电子_ 跃迁到较高的能级
++ 电离能损: 带电粒子与核外电子碰撞, 导致电离或激发损失能量.
++ 阻止本领 \(- (\mathrm{d} E / \mathrm{d} x)\): 粒子通过某种物质中单位长度损失的能量
++ Bethe-Bloch 公式
+
+  \[- \left\langle \frac{\mathrm{d} E}{\mathrm{d} x} \right\rangle = 4 \pi N_{\mathrm{A}} r_e^2 m_e c^2 z^2 \left( \frac{Z}{A} \right) \left( \frac{1}{\beta^2} \right) \left[ \ln \left( \frac{2 m_e c^2 \gamma^2 \beta^2}{I} \right) - \beta^2 - \frac{\delta}{2} \right]\]
+
+  简单关系:
+  + \(- \left\langle \frac{\mathrm{d} E}{\mathrm{d} x} \right\rangle \propto \frac{Z}{A}\)
+  + \(- \left\langle \frac{\mathrm{d} E}{\mathrm{d} x} \right\rangle \propto \ln T_{\mathrm{max}}\), 和最大损失能量 \(T_{\mathrm{max}}\)
+
+  #+begin_html
+  <details><summary> 公式说明 </summary>
+  #+end_html
+  + \(N_{\mathrm{A}}\) Avogadro 常数
+  + \(r_e\) 经典电子半径, \(m_e\) 电子质量
+  + \(z\) 入射粒子电荷量
+  + \(Z\) 介质原子序数
+  + \(A\) 介质质量数
+  + \(\beta\) 入射粒子速度
+  + [] 中:
+    + \(\delta/2\) 项: 密度效应
+  #+begin_html
+  </details>
+  #+end_html
++ 混合物: \(\frac{\mathrm{d} E}{\mathrm{d} x} = \sum w_j (\frac{\mathrm{d} E}{\mathrm{d} x})_j\)
++ 最小电离粒子 (MIP): \(\beta \gamma = 3 \sim 4\), \(\mathrm{d} E / \mathrm{d} x\) 达到最小, 称为最小电离粒子
++ 俄歇电子: 内壳层电子被电离, 外层电子跃迁放出 X 射线或者俄歇电子
++ 原初电离: 入射粒子通过电离过程直接产生的电子-离子对
++ 次级电离: \(\delta\) 电子产生的次生电离
++ 总电离: 原初电离 + 次级电离
+
+  \[n_{\mathrm{T}} = \frac{\Delta E}{W}\]  
+
+#+begin_html
+<details><summary> 电离能损的推导中的说明 </summary>
+#+end_html
++ 两体碰撞, 电子能获得的最大动能: \(T_{\mathrm{max}} = \frac{2 m_e p^2}{m_0^2 + m_e^2 + 2 m_e E / c^2}\)
+#+begin_html
+</details>
+#+end_html
+
++ Landau 分布
+  + \(\delta\) 电子: 入射 _带电粒子_ 与 _介质_ 相互作用能量损失过程中,
+    碰撞出的高能电子, 可以继续与其他介质原子相互作用产生次级电离.
+    + 能谱分布: \(P(E) = k \cdot \frac{Z}{A} \cdot \frac{\rho}{\beta^2} \cdot \frac{X}{E^2}\)
+    + 发射角: \(\cos \theta = E / T_{\mathrm{max}}\)
+    + 最大能量: \(T_{\mathrm{max}} = \frac{2 m_e c^2 \beta^2 \gamma^2}{1 + (m_e / M)^2 + 2 (m_e / M) \gamma}\)
+  + 泊松分布/高斯分布: 当带电粒子一次通过相互作用次数很多的时候,
+    满足泊松分布或高斯分布: \(\beta^4 / (1 - \beta^2) \ll 0.074 x\)
+  + 入射粒子通过薄介质的时候 \(\beta^4 / (1 - \beta^2) \gg 0.074 x\)
+  + 拟合公式: \(f(\lambda) = \frac{1}{\sqrt{2 \pi}} \mathrm{exp} \left[ - \frac{1}{2} (\lambda + \mathrm{e}^{-\lambda}) \right]\).
+
+    其中 \(\lambda\) 为约化能量变量, 表示最可几能量损失的归一化偏差.
+    
+#+begin_html
+<details><summary> 习题和相关问题 </summary>
+#+end_html
++ 如何进行 PID (粒子类型鉴别), 根据 \(\beta\) 来进行判断:
+  1. 计算 \(\gamma = \frac{1}{\sqrt{1 - \beta^2}}\)
+  2. 计算 \(\beta \gamma\) 并判断是否在 \(3 \sim 4\) 之间
+#+begin_html
+</details>
+#+end_html
+
+** 辐射能损
++ 韧致辐射: _带电粒子_ 受到介质原子 (原子核等) 作用改变运动速度大小和方向,
+  发生电磁辐射.
++ 韧致辐射能损:
+
+  \[- \frac{1}{E} \left( \frac{\mathrm{d} E}{\mathrm{d} x} \right) = 4 \alpha \frac{N_{\mathrm{A}}}{A} Z^2 r_e^2 \left[ \ln (183 Z^{-1/3}) + \frac{1}{18} \right], E \gg 137 m_e c^2 Z^{-1/3}\]
+
+  简单关系:
+  + \(- \frac{\mathrm{d} E}{\mathrm{d} x} \propto \frac{E}{m^2}\)
++ 辐射长度 \(X_0\)
+  + \(\frac{1}{X_0} = 4 \alpha \frac{N_{\mathrm{A}}}{A} Z^2 r_e^2 \ln (183 Z^{-1/3}) \Rightarrow \frac{\mathrm{d} E}{E} = - \frac{\mathrm{d} x}{X_0}\)
+  + \(\frac{1}{X_0} 4 \alpha \frac{N_{\mathrm{A}}}{A} Z (Z + 1) r_e^2 \ln (183 Z^{-1/3})\)
+  + \(\left\langle E \right\rangle = E_0 \mathrm{e}^{- \frac{X}{X_0}}\)
+  + 混合物: \(\frac{1}{X_0} = \sum \frac{w_i}{X_i}\)
++ 临界能量:
+  + \(- (\frac{\mathrm{d} E}{\mathrm{d} x})_{\mathrm{ion}} = - (\frac{\mathrm{d} E}{\mathrm{d} x})_{\mathrm{brems}}\)
+  + Rossi 定义: 入射电子电离能损率等于 \(E / X_0\) 时具有的能量
++ 光核作用: 入射带电粒子与介质原子核交换虚光子发生非弹性碰撞, 激发原子核发生
++ 射程 \(R\): 带电粒子在物质中运动到最后静止所经过的距离
+  
+  能量大, 质量小的粒子在电子密度小的吸收物质中的射程长.
+  + 平均射程 \(R_0\): 是带电粒子计数下降到没有吸收体时带电粒子计数的一半的吸收体厚度
+  + 外推射程: 吸收曲线的下降直线部分延长与 X 轴相交的射程
+  + 等效射程 \(R_m = \rho \cdot R\), 单位 \(\mathrm{g} / \mathrm{cm}^2\)
+  + 射程歧离: 初始能量相同的单个粒子路径长度的涨落
+
+** 切伦科夫辐射
++ 切伦科夫辐射: 匀速 _带电粒子_ 穿过均匀透明介质,
+  运动速度超过光在该介质中的速度 \(c / n\) 时, 会产生微弱定向光辐射.
++ 波长分布: \(\frac{\mathrm{d}^2 N}{\mathrm{d} \lambda \mathrm{d} x} = \frac{2 \pi \alpha z^2}{\lambda^2} \sin^2 \theta_{\mathrm{c}}\)
++ 能量分布: \(\frac{\mathrm{d^2} N}{\mathrm{d} E \mathrm{d} x} = \frac{z^2 \alpha}{\hbar c} \sin^2 \theta_{\mathrm{c}}\)
++ 可见光区域有近似公式: \(\frac{N}{L} = 490 \sin^2 \theta_{\mathrm{c}}\) (穿越长度为 \(L\) 的介质)
+
+** 穿越辐射
++ 穿越辐射: 高能带电粒子穿越两种介电常数不同的介质交界面发生辐射
++ 穿越辐射的能量和入射粒子 \(\gamma\) 成正比
++ 穿越辐射发射角: \(\theta = \frac{1}{\gamma}\)
++ 能谱连续分布, 从可见光到 X 光区
++ 通过叠加多层介质增加总辐射强度
++ 穿越辐射应用: 
+
+** 光子和物质相互作用
++ 总的反应截面为光电效应, 康普顿散射, 电子对产生的和.
++ 射程对光子没有意义 (探测光子为间接探测产生的次级粒子)
++ 衰减系数由相互过程的截面定义
+  + \(\sigma = \frac{\Delta I}{I N \Delta x}\) 一个入射光子与单位面积上一个靶原子发生作用的几率
+
+    #+begin_html
+    <details><summary> 系数解释 </summary>
+    #+end_html
+    + \(\Delta I\) 发生作用光子数
+    + \(I\) 入射光子数
+    + \(N\) 单位体积内靶原子数
+    + \(\Delta x\) 靶厚
+    #+begin_html
+    </details>
+    #+end_html
+
+*** 光电效应
++ 光电效应截面: 和 \(Z^5\) 成正比, 随光子能量下降而下降
+  + \(E_{\gamma} \gg m c^2\): \(\sigma_{\mathrm{ph}} = 2 \pi r_e^2 \alpha^4 Z^5 (m c^2) / E_{\gamma}\)
+
+    简单版本: \(\sigma_{\mathrm{ph}} \propto Z^5 E_{\gamma}^{-1}\)
+  + \(I_0 \ll E_{\gamma} \ll m c^2\): \(\sigma_{\mathrm{ph}} = \alpha \pi a_{\mathrm{B}} Z^5 (I_0 / E_{\gamma}^{7/2})\)
+
+    简单版本: \(\sigma_{\mathrm{ph}} \propto Z^5 E_{\gamma}^{-7/2}\)
++ 选择高 \(Z\) 物质可以获得高光子探测率, 屏蔽 X 和 \(\gamma\) 
+
+*** 康普顿散射
++ 康普顿散射: _入射光子_ 和物质原子相互作用, 与 _轨道电子_ 发生散射,
+  主要发生在外层电子上.
++ 康普顿散射截面: \(\sigma \propto Z\)
++ 散射能量
+  + 光子: \(E_{\gamma} = \frac{E_0}{1 + \frac{E_0}{m_e c^2} (1 - \cos \theta)}\)
+  + 电子: \(E_e = \frac{E_{\gamma}}{1 + \frac{m_e c^2}{E_{\gamma} (1 - \cos \theta)}}\)
++ 反冲电子能谱
+  + 连续分布
+  + 较低能量区平缓, 平台状
+  + 最大反冲能量处有康普顿沿 (尖锐边界)
+
+*** 电子对产生
++ 电子对: _入射光子_ 从 _原子核_ 旁经过, 当光子能量超过两个电子静止能量+原子核反冲能量,
+  此时可能会转化为正负电子对.
++ 电子对产生截面: \(\sigma \propto Z^2\)
++ 一般反冲原子核能量可以忽略
++ 产生的正负电子对的能量分布均匀
++ 正负电子对在介质中:
+  + 电离能损
+  + 辐射能损
+  + 湮灭辐射
+  
+** 强子和物质相互作用
++ 宏观截面: \(\Sigma = N \times \sigma\)
+
+  #+begin_html
+  <details><summary> 系数说明 </summary>
+  #+end_html
+  + \(\Sigma\) 表征粒子在介质中穿行单位距离与介质发生相互作用的概率
+  + \(N\) 单位体积内的原子数
+  #+begin_html
+  </details>
+  #+end_html
++ 核相互作用长度 \(\lambda = 1 / \Sigma\)
+
+  粒子束在介质中通过一定距离后衰减: \(N = N_0 \mathrm{e}^{- x / \lambda}\)
+
+*** 中子
++ 中子分类
+  + 慢中子
+    + 冷中子 (\(< 0.002 \mathrm{eV}\))
+    + 热中子 (\(< 0.025 \mathrm{eV}\))
+    + 镉上中子 (\(0.3 \sim 0.5 \mathrm{eV}\))
+    + 超热中子 (\(< 0.5 \mathrm{eV}\))
+    + 共振中子 (\(1 \sim 100 \mathrm{eV}\))
+  + 中能中子 \(1 \mathrm{keV} \sim 0.5 \mathrm{MeV}\)
+  + 快中子 \(0.5 \sim 10 \mathrm{MeV}\)
+  + 极快中子 \(10 \sim 50 \mathrm{MeV}\)
+  + 相对论中子 \(> 50 \mathrm{MeV}\)
++ 中子探测
+  + 低能
+    + 中子衍射
+  + 热中子
+    + 核反应法
+    + 核裂变法
+    + 核活化法
+  + 慢中子/中能中子
+    + 核反冲法
+    + 飞行时间法
+      
+** 簇射过程
+*** 电磁簇射
++ 电磁簇射: _高能电子_ 或者 _\(\gamma\) 光子_ 与 _介质原子_ 通过电磁相互作用产生
+  电子 - \(\gamma\) 光子 - 电子的级联过程
+
+  主要过程: 韧致辐射, 康普顿散射, 电子对产生, 电子散射
++ 纵向发展
+  + 辐射长度 \(X_0\): 电磁簇射的纵深
+  + \(\left\langle E \right\rangle = E_0 \mathrm{e}^{- \frac{x}{X_0}}\), \(X_0 = \frac{716.4 A}{Z (Z + 1) \ln (287 / \sqrt{Z})} \mathrm{g} \cdot \mathrm{cm}^{-2}\)
++ 横向发展
+  + 莫里哀半径 \(R_{\mathrm{M}}\): 电磁簇射的横向展宽
+  + \(R_{\mathrm{M}} = X_0 (\frac{E_s}{E_0})\)
++ 临界能量 \(E_{\mathrm{c}}\): 簇射截止时对应的次级粒子能量
+
+*** 强子簇射
++ 强子簇射: 高能强子与介质原子通过强相互作用产生次级强子的级联过程
+  
+* 统计
+** 统计分布
+*** Landau 分布
+** 统计量
++ 粒子计数 \(N\) 平均值很大时服从高斯分布
++ 统计误差: \(\sigma = \sqrt{N}\)
++ 相对标准偏差: \(\nu = \sigma / N = 1 / \sqrt{N}\)
++ 测量结果: \(N \pm \sqrt{N}\)
++ 计数时间选择
+  
+* 气体探测器
+** 物理过程
+*** 电离过程
++ 平均电离能: 介质产生一个自由电子所需要的能量
++ 原初电子数:
+
+#+begin_html
+<details><summary> 计算电离数 </summary>
+#+end_html
+1. 查表得到 \(\mathrm{d} E / \mathrm{d} x\) 和 \(W_{\mathrm{i}}\) (或者是 \(n_{\mathrm{t}}\) 和 \(n_{\mathrm{p}}\))
+2. 计算 \(\Delta x\), 即 \(\rho \cdot \Delta L\) (密度乘以经过距离)
+3. 得到 \(\Delta E = (\mathrm{d} E / \mathrm{d} x) \Delta x\)
+4. 计算 \(n_{\mathrm{t}} = \frac{\Delta E}{W_{\mathrm{i}}}\)
+5. 对于混合物: \(n_{\mathrm{t}} = \sum w_i n_{\mathrm{t}, i}\)
+6. 对于原电离: \(n_{\mathrm{p}} = \sum w_i p_i\)
+7. 已知原电离 \(n_{\mathrm{p}}\), 可知平均自由程 \(\lambda = \frac{1}{n_{\mathrm{p}}}\), 以及离子对产生的失效率 \(1 - \eta = e^{-n_{\mathrm{p}}}\)
+#+begin_html
+</details>
+#+end_html
+
+*** 扩散过程
++ 离子漂移
+  + 混合气体中 \(\frac{1}{\mu_i} = \sum \frac{p_j}{\mu_{ij}}\) (离子 \(i\) 在混合气体中的速度, 其中 \(p_{j}\) 为气体 \(j\) 的体积浓度)
++ 离子扩散
+  + 横向扩散与气体和离子无关, 仅与电场有关 (电场越大, 扩散越少)
++ 原初电子运动:
+  + 漂移速度 \(\mu^2 = \frac{e E}{m N \sigma} \sqrt{\frac{\eta}{2}}\)
+  + 瞬时速度 \(v^2 = \frac{e E}{m N \sigma} \sqrt{\frac{2}{\eta}}\)
++ 电子横向扩散 \(\sigma^2 = \frac{4 \varepsilon_E L}{3 e E}\)
++ 磁场下运动: 一致扩散
+
+** 信号产生
++ 粒子 _运动_ \(\rightarrow\) 电镜像 \(\rightarrow\) 平板电荷重分布 \(\rightarrow\) 平板间有电流信号
++ 信号形状
++ 信号极性: 电子靠近电子学读出则为负信号 (负电压负信号, 正电压正信号)
++ 能量分辨
++ 时间分辨
++ 分辨时间
++ 空间分辨
+
+** 电离室
+** 正比计数器
++ 空间分辨: 外筒半径 \(b\), 空间分辨 \(\frac{2 b}{\sqrt{12}}\)
++ 主要是阳离子贡献信号
++ 圆柱形正比计数器的输出信号
++ 能量, 位置, 时间 (动量)
++ 能量分辨
+  + 气体增益 \(\times\) 原初总电离电荷 (线性能量分辨)
+  + 增益线性是区间线性, 不能过高
++ 影响时间分辨:
+  + 入射粒子位置, 角度
+  + 漂移速度晃动
+  + 漂移时间
+  + 电子学时间
+  + ...
++ 分辨时间 \(\tau\): 入射粒子时间间隔小于 \(\tau\) 时, 后一个粒子不会被记录.
+  + 真实计数率: \(m = \frac{n}{1 - n \tau}\), \(n\) 为测量得到的计数率
+  + 如何提高分辨时间:
+    + 缩短脉冲宽度
+    + 合适微分时间 (电子学)
