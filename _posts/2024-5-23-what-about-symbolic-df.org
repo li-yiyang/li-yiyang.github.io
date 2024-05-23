@@ -1,0 +1,543 @@
+#+title: What about Symbolic df?
+#+date: 2024-05-23
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+This post will be a small part of a larger system.
+The whole picture is that you could build a automatical
+PDE solver iterator constructor. 
+
+(Note: if I'd have enough time... )
+
+Please note that what I'm talking is not a CAS or something
+like that, it may be only a simple attemp to mechanically
+mimic the procedure that human do before writing a iterator
+for PDE. If you are interest in CAS, here's a little intro
+presentation about CAS I have written for Mathematical Physics
+Method class [[{{ site.github.url }}/misc/navie-symbolic-computation/][符号计算的一个介绍]]. 
+
+(Note: +I donnot know if any possible route is here+,
+but since Mathematica could do so, I think I could do so. )
+
+Here is a brief introduction about it:
+
+for an example equation:
+
+\[(\partial_x^2 + \partial_y^2) u = 0\]
+
+(for which you may notice as a vacuum static electron field)
+
+1. make a solve space where \(u_{i,j}\) will stands for \(u(x_{i}, y_{j})\)
+2. trun \(\partial_x^2 u\) into \(\Delta u = u_{i+1,j} + u_{i-1,j} - 2 u_{i,j}\)
+3. simplify the equation to \(u_{i,j} = \frac{1}{4} (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j+1})\)
+4. iter on \(u_{i,j}\) for a solution
+
+so what is the question?
++ the solve space may in arbitrary shape
++ the boundary condition, how to deal with it?
++ what about \((\partial_x^2 + \partial_y^2) u = f(u, x, y)\)?
+
+#+begin_html
+<details><summary>Why English? | 为啥用英文? </summary>
+#+end_html
+因为这个估计最后得写成一个英文报告 (如果成功了的话).
+
+就可以向老师证明 +我时间很多+ 我可以做到这件事情.
+
+Just because I can. 
+
+#+begin_html
+</details>
+#+end_html
+
+* \(\partial \rightarrow \Delta\)?
+This is quite simple if you consider the Talyor expansion:
+
+\[\left\{ \sum \frac{h^i}{i!} f^{(i)}(x) = f(x + h_i) - f(x) \right\} = \boldsymbol{H} \{f^{(i)} (x)\} = \boldsymbol{F}\]
+
+so the problem now is truned to solving a linear equation
+(find the inverse of \(\boldsymbol{H}\)).
+
+*a sad story*: I though of it at class, implemented it and the
+result is perfect. However, as you may guess, such method
+had been already done at 1998 by Bengt Fornberg in the paper
+[[https://www.jstor.org/stable/2653239][Calculation of Weights in Finite Difference Formulas]].
+
+#+begin_html
+<details><summary>My Common Lisp Implementation</summary>
+#+end_html
+#+name: finite-difference-formulas
+#+begin_src lisp
+  (defun make-hs-matrix (hs)
+    "Make H matrix for hs.
+  Return a n*n array (matrix).
+
+    H { f^{(i)}(x) } = { f(x + h_i) - f(x) }
+  "
+    (let ((n (length hs)))
+      (flet ((hw (h)
+               (loop for i below n
+                     for hi = h then (* hi h)
+                     for i! = 1 then (* i! i)
+                     collect (float (/ hi i!)))))
+        (make-array (list n n) :initial-contents (mapcar #'hw hs)))))
+
+  (defun make-fs-matrix (n)
+    "Make a F matrix for `n' f(x + h_i).
+  Return a (n+1)*n matrix.
+
+    F { f(x), f(x + h_i) } = { f(x + h_i) - f(x) }
+  "
+    (let ((f-mat (make-array (list n (1+ n)) :initial-element 0)))
+      (loop for j below n do
+        (setf (aref f-mat j (1+ j)) 1     ; f_{i+1,j} = 1
+              (aref f-mat j 0)      -1))  ; f_{0,j}   = -1
+      f-mat))
+
+  (defun make-finite-differentor-matrix (hs)
+    "Make a matrix for finite differentor calculation.
+
+    M = H^{-1} F; M { f(x), f(x + h_i) } = { f^{(i)}(x) }
+  "
+    (let* ((n (length hs))
+           (mat-h (make-hs-matrix hs))
+           (mat-f (make-fs-matrix n)))
+      (lla:mm (lla:invert mat-h) mat-f)))
+#+end_src
+#+begin_html
+</details>
+#+end_html
+
+and what's even worse, the result (inverse matrix) may be poor
+in precision.
+
+But anyway, it's possible to do \(\partial \rightarrow \Delta\).
+
+* \(eq(u) = 0\)
+So the next problem I encounter is to solve the equation.
+Simply, you could use Newton's method or secant method.
+Let's say that I use Newton's method:
+
+\[x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}\]
+
+#+name: newton-solve
+#+begin_src lisp
+  (defun newton-solve (f df x0 &optional (tol 1e-5))
+    "Solving the function `f' == 0.
+  Given `df' as derivative of `f' and `x0' as initial point."
+    (loop for x = x0 then (- x delta)
+          for delta = (/ (funcall f x) (funcall df x))
+          if (< (abs delta) tol)
+            return x
+          do (print x)))
+#+end_src
+
+#+RESULTS: newton-solve
+: newton-solve
+
+** Numerically =df=
+It is so easy to generate a =df= with \(\partial \rightarrow \Delta\) process introduced
+before.
+
+#+name: numerical-df
+#+begin_src lisp
+  (defun make-finite-differentor (hs &optional (dx 1e-3) (d 1))
+    "Make a finite differentor with `hs'. "
+    (let ((rank (1- d)))
+      (lambda (fn &optional (dx dx))
+        (let* ((hs (mapcar (lambda (h) (* h dx)) hs))
+               (mat (make-finite-differentor-matrix hs))
+               (hs* (cons 0 hs)))
+          (lambda (x)
+            (flet ((f (h) (funcall fn (+ x h))))
+              (aref (lla:mm mat (map 'vector #'f hs*)) rank)))))))
+
+  (defmacro finite-diff ((&rest hs) &key (dx 1e-3) (d 1))
+    "Wrapper for `make-finite-differentor'. "
+    `(make-finite-differentor (list ,@hs) ,dx ,d))
+#+end_src
+
+** But what about Symbolics =df=?
+Yes, that's the main object of this blog post.
+
+*** Basic =df= rules
+Consider the fundamental four operators:
+
+\[C \Rightarrow 0\]
+\[f(x) \pm g(x) \Rightarrow f'(x) \pm g'(x)\]
+\[f(x) \times g(x) \Rightarrow f'(x) \times g(x) + f(x) \times g'(x)\]
+\[f(x) / g(x) \Rightarrow (f'(x) \times g(x) + f(x) \times g'(x)) / g^2(x)\]
+
+So the question will now be:
+1. match expression
+   + if it is number?
+     + it is a constant irrelevant with =x=? \(\rightarrow 0\)
+     + it is =x=? \(\rightarrow 1\)
+   + if it is function?
+     + for \(+, -, \times, /\), using the basic map rule
+     + for other function, using =*df-rules*= 
+2. transform it according to the rule
+   
+*** More =df= rules
+#+begin_src lisp
+  (defparameter *df-rules*
+    '(((sin x)  . (cos x))
+      ((cos x)  . (- (sin x)))
+      ((sinh x) . (cosh x))
+      ((cosh x) . (sinh x))
+      ((log x)  . (/ 1 x))
+      ((sqrt x) . (/ 1 (* 2 (sqrt x)))))
+    "Simple df rules using relacing method. ")
+#+end_src
+
+#+RESULTS:
+: *df-rules*
+
+*** Final =df=
+#+begin_src lisp
+  (defun symbolic-replace (expr from to)
+    "Replace symbolic in expression.
+
+  For example:
+
+    (symbolic-replace '(cos x) 'x '(+ x 2))
+    (symbolic-replace '(sin (+ x 2)) '(+ x 2) 'u)
+  "
+    (subst to from expr :test #'equal))
+
+  (defun symbolic-df-expr (x)
+    "Symbolic df for symbol `x'.
+  Return a lambda function take expression and return its derivative form. "
+    (labels ((basic-rule (op args)
+               (let ((arg-len (length args)))
+                 (case op
+                   ((+ -) `(,op ,@(mapcar #'df args)))
+                   (* (cond ((= arg-len 0) 0)
+                            ((= arg-len 1) (df (first args)))
+                            (t (let ((f (first args))
+                                     (g `(* ,@(rest args))))
+                                 `(+ (* ,(df f) ,g) (* ,f ,(df g)))))))
+                   (/ (cond ((= arg-len 1) (df `(/ 1 ,@args)))
+                            (t (let ((f (first args))
+                                     (g `(* ,@(rest args))))
+                                 `(/ (- (* ,(df f) ,g) (* ,f ,(df g)))
+                                     (* ,g ,g)))))))))
+             (df (expr)
+               (if (atom expr)
+                   (if (eq expr x) 1 0)
+                   (let ((op  (car expr))
+                         (arg (cdr expr)))
+                     (case op
+                       ((+ - * /) (basic-rule op arg))
+                       (expt
+                        (let ((a (first arg))
+                              (n (second arg)))
+                          `(* (expt ,a ,n)
+                              (+ (/ (* ,n ,(df a)) ,a)
+                                 (* (log ,a) ,(df n))))))
+                       (otherwise
+                        (let ((rule (assoc op *df-rules* :key #'car)))
+                          (cond (rule
+                                 `(+
+                                   ,@(loop with (from-expr . to-expr) = rule
+                                           for from-arg in (cdr from-expr)
+                                           for to-arg in arg
+                                           for d-to-arg = (df to-arg)
+                                           collect `(* ,(symbolic-replace
+                                                         to-expr from-arg to-arg)
+                                                       ,d-to-arg))))
+                                (t (error "No rule for ~a. ~%Avalible: ~a"
+                                          op *df-rules*))))))))))
+      #'df))
+#+end_src
+
+#+RESULTS:
+: symbolic-df-expr
+
+Here the most difficult part is how to match for each part.
+Let's see some examples:
+
+#+begin_src lisp :results verbatim :exports both
+  (funcall (symbolic-df-expr 't) '(+ (sinh (/ t (* g m))) (/ (* t t) 2)))
+#+end_src
+
+#+RESULTS:
+: (+
+:  (+
+:   (* (cosh (/ t (* g m)))
+:      (/ (- (* 1 (* (* g m))) (* t (+ (* 0 (* m)) (* g 0))))
+:         (* (* (* g m)) (* (* g m))))))
+:  (/ (- (* (+ (* 1 (* t)) (* t 1)) (* 2)) (* (* t t) 0)) (* (* 2) (* 2))))
+
+It's quite massy... Need some simplification.
+
+*** Simple Simplify
+Still, the rule works like this: match with simplify rules, and replace
+with the simplify rules.
+
+#+begin_html
+<details><summary>too long...</summary>
+#+end_html
+#+begin_src lisp
+  (defun all-that? (test list)
+    (loop for elem in list
+          if (not (funcall test elem))
+            return nil
+          finally (return t)))
+
+  (defun symbolic-simplify (expr)
+    (flet ((not-zerop* (num) (and (numberp num) (not (zerop num))))
+           (zerop* (num) (and (numberp num) (zerop num)))
+           (not-num (num) (not (numberp num)))
+           (not-onep* (num)  (and (numberp num) (not (= num 1))))
+           (length= (list n) (= (length list) n)))
+      (if (atom expr)
+          expr
+          (let ((op (car expr))
+                (arg (mapcar #'symbolic-simplify (cdr expr))))
+            (case op
+              (+ (loop for a in arg
+                       if (not-zerop* a)
+                         collect a into num
+                       if (not-num a)
+                         collect a into exp
+                       finally (return
+                                 (let ((num-val (reduce #'+ num)))
+                                   (if (zerop num-val)
+                                       (if (endp exp) 0
+                                           (if (length= exp 1) (first exp) `(+ ,@exp)))
+                                       (if (endp exp) num-val `(+ ,num-val ,@exp)))))))
+              (* (loop for a in arg
+                       if (not-onep* a)
+                         collect a into num
+                       if (zerop* a)
+                         return 0
+                       if (not-num a)
+                         collect a into exp
+                       finally (return
+                                 (let ((num-val (reduce #'* num)))
+                                   (if (= num-val 1)
+                                       (if (endp exp) 1
+                                           (if (length= exp 1) (first exp) `(* ,@exp)))
+                                       (if (endp exp) num-val `(+ ,num-val ,@exp)))))))
+              ;; (- x)
+              (:inverse (let ((a (first arg)))
+                          (if (numberp a) (- a) `(- ,a))))
+              ;; (/ x)
+              (:reciprocal (let ((a (first arg)))
+                             (if (numberp a) (/ a) `(/ ,a))))
+              ;; (/ a b ...)
+              (/ (let ((arg-len (length arg)))
+                   (if (= arg-len 1) (symbolic-simplify `(:reciprocal ,@arg))
+                       (let ((val  (first arg))
+                             (rest (symbolic-simplify `(* ,@(rest arg)))))
+                         (if (numberp val)
+                             (cond ((numberp rest) (/ val rest))  ;; (/ num1 num2)
+                                   ((and (listp rest)             ;; (/ num1 (* num2 . exp))
+                                         (eq (first rest) '*)
+                                         (numberp (second rest)))
+                                    `(/ ,(/ val (second rest)) ,@(rest (rest rest))))
+                                   ((= val 1) `(/ ,rest))         ;; (/ 1 exp)
+                                   ((= val 0) 0)                  ;; (/ 0 exp)
+                                   (t `(/ ,val ,rest)))           ;; (/ exp1 exp2)
+                             (cond ((and (listp rest) (eq (first rest) '*)) ;; (/ exp (* num exp))
+                                    `(/ ,val ,@(rest rest)))
+                                   ((and (numberp rest) (= rest 1)) val)    ;; (/ exp1 1)
+                                   (t `(/ ,val ,rest))))))))                ;; (/ exp1 exp2)
+              ;; (- x y ...)
+              (- (let ((arg-len (length arg)))
+                   (if (= arg-len 1) (symbolic-simplify `(:inverse ,@arg))
+                       (let ((val  (first arg))
+                             (rest (symbolic-simplify `(+ ,@(rest arg)))))
+                         (if (numberp val)
+                             (cond ((numberp rest)
+                                    (- val rest))
+                                   ((and (listp rest)
+                                         (eq (first rest) '+)
+                                         (numberp (second rest)))
+                                    `(- ,(- val (second rest)) ,@(rest (rest rest))))
+                                   ((zerop val)
+                                    `(- ,rest))
+                                   (t `(- ,val ,rest)))
+                             (cond ((and (listp rest) (eq (first rest) '+))
+                                    `(- ,val ,@(rest rest)))
+                                   ((zerop* rest) val)
+                                   (t `(- ,val ,rest))))))))
+              (otherwise `(,op ,@arg)))))))
+#+end_src
+
+#+RESULTS:
+: symbolic-simplify
+
+#+begin_html
+</details>
+#+end_html
+
+Note: the simplify function is not good, since the rules are not so flexible,
+and could not produce perfect results. 
+
+So:
+
+#+begin_src lisp :results verbatim :exports both
+  (symbolic-simplify
+   (funcall (symbolic-df-expr 't) '(+ (sinh (/ t (* g m))) (/ (* t t) 2))))
+#+end_src
+
+#+RESULTS:
+: (+ (* (cosh (/ t g m)) (/ (* g m) (* g m) (* g m))) (/ (+ 2 (+ t t)) 4))
+
+Much better... 
+
+*** Symbolic-df-and-newton-solve
+#+begin_src lisp
+  (defun symbolic-df-and-newton-solve (eq-expr x x0 &optional (tol 1e-5))
+    (let* ((eq-expr (symbolic-simplify eq-expr))
+           (f       (eval `(lambda (,x) ,eq-expr)))
+           (df      (eval `(lambda (,x)
+                             ,(symbolic-simplify
+                               (funcall (symbolic-df-expr x) eq-expr))))))
+      (newton-solve f df x0 tol)))
+#+end_src
+
+#+RESULTS:
+: symbolic-df-and-newton-solve
+
+kinda like this:
+
+1. Example 1
+   #+begin_src lisp :exports both
+     ;; Example 01: x * x == 2 => 1.414
+     (symbolic-df-and-newton-solve
+      '(- (* x x) 2)
+      'x 2.0)
+   #+end_src
+
+   #+RESULTS:
+   : 1.4142157
+2. Example 2
+   
+   \[\frac{m \times \mathrm{log}(\mathrm{cosh}(\mathrm{sqrt}(\frac{g \times k}{m}) \times x))}{k} - 10\]
+
+   #+begin_src lisp
+     (defun symbolic-replace* (pairs expr)
+       (loop with res = expr
+             for (from to) in pairs
+             do (setf res (symbolic-replace res from to))
+             finally (return res)))
+   #+end_src
+
+   #+begin_src lisp
+     ;; Example 02: m * log(cosh(sqrt(g * k / m) * t)) / k
+     (symbolic-df-and-newton-solve
+      (symbolic-replace*
+       '((m 1) (g 9.8) (k 0.1))
+       '(- (/ (* m (log (cosh (* (sqrt (/ (* g k) m)) x)))) k) 10))
+      'x 5)
+   #+end_src
+
+   #+RESULTS:
+   : 1.6743878
+
+   Note: using Mathematica got:
+
+   #+begin_example mathematica
+     NSolve[(m  Log[Cosh[Sqrt[g*k/m]*x]])/k == 10 /. {
+       m -> 1,
+       g -> 9.8,
+       k -> 0.1
+     }, x] (* { { x -> -1.67428, x -> 1.67428 } } *)
+   #+end_example
+   
+*** Some LaTeX export
+#+begin_html
+<details><summary>Not the main object, folded</summary>
+#+end_html
+#+begin_src lisp
+  (defun expr->tex (expr)
+    "Trun expression to LaTeX math. "
+    (let ((*env* 'top))
+      (declare (special *env*))
+      (labels ((->tex (expr)
+                 (if (atom expr)
+                     (format nil "~a" (or expr ""))
+                     (let* ((op (car expr))                          
+                            (args (let ((*env* op))
+                                    (declare (special *env*))
+                                    (mapcar #'->tex (rest expr))))
+                            (args-len (length args)))
+                       (case op
+                         (- (cond ((= args-len 1)
+                                   (if (eq *env* '*)
+                                       (format nil "(-~a)" (first args))
+                                       (format nil "-~a" (first args))))
+                                  ((eq *env* '*)
+                                   (format nil "(~{~a~^ - ~})" args))
+                                  (t (format nil "~{~a~^ - ~}" args))))
+                         (+ (cond ((= args-len 1)
+                                   (format nil "~a" (first args)))
+                                  ((eq *env* '*)
+                                   (format nil "(~{~a~^ + ~})" args))
+                                  (t
+                                   (format nil "~{~a~^ + ~}" args))))
+                         (* (cond ((= args-len 1)
+                                   (format nil "~a" (first args)))
+                                  (t
+                                   (format nil "~{~a~^ \\times ~}" args))))
+                         (/ (cond ((= args-len 1)
+                                   (format nil "\\frac{1}{~a}" (first args)))
+                                  (t
+                                   (format nil "\\frac{~a}{~a}"
+                                           (first args)
+                                           (->tex `(* ,@(rest args)))))))
+                         (expr (format nil "~a^{~a}" (first args) (second args)))
+                         (otherwise (format nil "\\mathrm{~a}(~{~a~^, ~})"
+                                            op args)))))))
+        (->tex expr))))
+#+end_src
+
+#+RESULTS:
+: expr->tex
+
+#+begin_html
+</details>
+#+end_html
+
+like this:
+
+#+begin_src lisp :results output latex :exports both
+  (format t "~a"
+          (expr->tex
+           (symbolic-simplify
+            (funcall (symbolic-df-expr 'x)
+                     '(+ (sinh (/ x (* g m))) (/ (* x x) 2))))))
+#+end_src
+
+#+RESULTS:
+#+begin_export latex
+\mathrm{cosh}(\frac{x}{g \times m}) \times \frac{g \times m}{g \times m \times g \times m} + \frac{2 + x + x}{4}
+#+end_export
+
+\[\mathrm{cosh}(\frac{x}{g \times m}) \times \frac{g \times m}{g \times m \times g \times m} + \frac{2 + x + x}{4}\]
+
+kinda like this. 
+
+* Post-thoughts
+Does it really need to solve the equation for \(eq(u) = f(u, x, y)\)?
+Maybe not really? Maybe just use \(u^{\mathrm{new}} = f(u^{\mathrm{old}}, x, y)\) will
+be enough? I can't tell right now, need more experiments.
+
+More thoughts:
++ use this as Lisp to LaTeX helper to write documentations... 
++ how does Maxima do such things? (and Mathematica, Matlab? )
+
+#+begin_html
+<details><summary>Some excuse | 一些万一我鸽了的借口</summary>
+#+end_html
+我鸽的次数还少么? (乐)
+
+相信未来有时间的我吧, 写大作业去了. 
+#+begin_html
+</details>
+#+end_html
