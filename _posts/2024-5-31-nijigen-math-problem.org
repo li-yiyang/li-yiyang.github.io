@@ -1,0 +1,233 @@
+#+title: 一些没什么用的代码
+#+date: 2024-05-31
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+有时候为了自己写的代码删起来还挺麻烦的, 可能偶尔可能会写出一些可以复用的,
+但是大多数时候写的都是一些用完就扔的代码. 不过虽然这么说, 但是实际上写多了之后,
+就会发现其实也不是不能复用, 只是暂时还没有发现有相关的应用方向.
+
+之后会考虑把自己的写的代码 (大部分都在 =scratch.lisp= 里面,
+一些比如说是在写项目的时候, 发现某些函数/宏很适合保留下来以后复用)
+都尽量收集在一个地方: [[https://github.com/li-yiyang/ryo][RYO (Github)]].
+
+但是可能还是会有一些实在没法分类的, 但是也还挺好玩的, 就留到这样 post 里面吧.
+
+* =iter-i*=
+在写计算物理的时候, 发现 [[https://github.com/lmj/lparallel][lparallel]] 的 =pdotimes= 的过程里面重复嵌套, 比如:
+
+#+begin_src lisp
+  (pdotimes (i 5)
+    (pdotimes (j 5)
+      ...))
+#+end_src
+
+貌似会出现一个卡死的情况, 于是就写了一个 =piter-i*= 的函数 ([[https://github.com/li-yiyang/ryo/blob/9dfa48e8e4c5551424044f54bf6b0d1c19a16c9c/iter.lisp#L135][piter-i* (L135)]]):
+
+#+begin_src lisp
+  (piter-i* ((i j) (j 5))
+    (do-something-with i j))
+#+end_src
+
+实际上的过程类似于串行提交计算任务, 然后等待计算结果的出来:
+
+#+begin_src lisp
+  (let ((channel (lparallel:make-channel))
+        (count   0))
+    (iter-i* ((i j) (j 5))
+      (incf count)
+      (lparallel:submit-task
+       channel (lambda (i j) (do-something-with i j)) i j))
+    (dotimes (i count) (lparallel:receive-result channel)))
+#+end_src
+
+* 二次元的数学题
+看到高中老师放出来的小孩受苦题 (奥数), 很是快活, 隧写程序爆破之.
+
+然数日, 观 南家三姐妹, 何だけ, 出现了一模一样的题目诶.
+
+[[{{ site.github.url }}/_img/pieces/minami-ke-quiz.jpg]]
+
+注: 不过我把原来的 =enum= 函数换成了 =defenum= ([[https://github.com/li-yiyang/ryo/blob/4cf159d226f605d096f7b074373e5e5cb198b894/enum.lisp#L3][defenum (L3)]]).
+
+#+begin_html
+<details><summary> 原来的形式 </summary>
+#+end_html
+
+是用的是 =lambda=, 实际上使用起来还是有点麻烦的:
+
+#+begin_src lisp
+  (defmacro enum (&rest keyword-index-pairs)
+    "Make an enumator lambda. "
+    `(lambda (keyword)
+       (ecase keyword
+         ,@(loop for index from 0
+                 for key-idx in keyword-index-pairs
+                 for pair? = (listp key-idx)
+                 for key = (if pair? (first key-idx) key-idx)              
+                 do (when pair? (setf index (second key-idx)))
+                 collect `(,key ,index)))))
+
+  (defparameter *周*
+    (enum :一 :二 :三 :四 :五 :六 :天))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+现在如下定义即可:
+
+#+begin_src lisp
+  (defenum 周? :一 :二 :三 :四 :五 :六 :天)
+#+end_src
+
+解题思路:
++ 注意到解空间大小为 7, 是一个小量, 可以枚举
++ 只需要列出以 =(周? n)= 开始的日历, 并直接数数即可,
+  判定函数 =count-day= 的复杂度为常数时间
+
+列出日历:
+
+#+begin_src lisp
+  (defun make-month-calender (start-day-in-week &optional (days-in-month 31))
+    "Make a calender in 2D array. "
+    (let* ((start (if (integerp start-day-in-week) start-day-in-week
+                      (周? start-day-in-week)))
+           (weeks (ceiling (+ start days-in-month) 7))
+           (calender (make-array (list weeks 7)))
+           (day 0))
+      (iter-i* ((weekday 7) (week weeks))
+        :reject (lambda (weekday week)
+                  (or (and (= week 0) (< weekday start))
+                      (>= day days-in-month)))
+        (setf (aref calender week weekday) (incf day)))
+      calender))
+#+end_src
+
+#+begin_html
+<details><summary> 可视化 </summary>
+#+end_html
+#+begin_src lisp :results output :exports both
+  (defun print-calender (calender &optional (stream *standard-output*))
+    (format-table stream
+                  (collect-i* ((weekday 7) (week (array-dimension calender 0)))
+                    (aref calender week weekday))
+                  :headers '("Mo" "Tu" "We" "Th" "Fr" "Sa" "Su")))
+
+  (print-calender (make-month-calender :天))
+#+end_src
+
+#+RESULTS:
+: | Mo | Tu | We | Th | Fr | Sa | Su |
+: |----|----|----|----|----|----|----|
+: | 0  | 0  | 0  | 0  | 0  | 0  | 1  |
+: | 2  | 3  | 4  | 5  | 6  | 7  | 8  |
+: | 9  | 10 | 11 | 12 | 13 | 14 | 15 |
+: | 16 | 17 | 18 | 19 | 20 | 21 | 22 |
+: | 23 | 24 | 25 | 26 | 27 | 28 | 29 |
+: | 30 | 31 | 0  | 0  | 0  | 0  | 0  |
+
+凎, 中文它不等宽... 之后再想办法. 总之现在换成英文. 
+
+#+begin_html
+</details>
+#+end_html
+
+数日历中某天的出现次数:
+
+#+begin_src lisp
+  (defun count-day (calender count-day-in-week)
+    (let ((weekday (if (integerp count-day-in-week) count-day-in-week
+                       (周? count-day-in-week)))
+          (count 0))
+      (dotimes (week (array-dimension calender 0) count)
+        (unless (zerop (aref calender week weekday))
+          (incf count)))))
+#+end_src
+
+于是就解决了:
+
+#+begin_src lisp :results output :exports both
+  (loop for start-day in '(:一 :二 :三 :四 :五 :六 :天)
+        for calender  = (make-month-calender start-day)
+        for wednesday = (count-day calender :三)
+        for tuesday   = (count-day calender :二)
+        do (format t
+                   "~&~%开始: 周~a, 周三次数 ~d 次, 周二次数 ~d 次, ~:[不满足~;满足~]"
+                   start-day wednesday tuesday (and (= wednesday 4) (= tuesday 5)))
+        do (print-calender calender))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+
+开始: 周一, 周三次数 5 次, 周二次数 5 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 1  | 2  | 3  | 4  | 5  | 6  | 7  |
+| 8  | 9  | 10 | 11 | 12 | 13 | 14 |
+| 15 | 16 | 17 | 18 | 19 | 20 | 21 |
+| 22 | 23 | 24 | 25 | 26 | 27 | 28 |
+| 29 | 30 | 31 | 0  | 0  | 0  | 0  |
+
+开始: 周二, 周三次数 5 次, 周二次数 5 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 1  | 2  | 3  | 4  | 5  | 6  |
+| 7  | 8  | 9  | 10 | 11 | 12 | 13 |
+| 14 | 15 | 16 | 17 | 18 | 19 | 20 |
+| 21 | 22 | 23 | 24 | 25 | 26 | 27 |
+| 28 | 29 | 30 | 31 | 0  | 0  | 0  |
+
+开始: 周三, 周三次数 5 次, 周二次数 4 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 0  | 1  | 2  | 3  | 4  | 5  |
+| 6  | 7  | 8  | 9  | 10 | 11 | 12 |
+| 13 | 14 | 15 | 16 | 17 | 18 | 19 |
+| 20 | 21 | 22 | 23 | 24 | 25 | 26 |
+| 27 | 28 | 29 | 30 | 31 | 0  | 0  |
+
+开始: 周四, 周三次数 4 次, 周二次数 4 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 0  | 0  | 1  | 2  | 3  | 4  |
+| 5  | 6  | 7  | 8  | 9  | 10 | 11 |
+| 12 | 13 | 14 | 15 | 16 | 17 | 18 |
+| 19 | 20 | 21 | 22 | 23 | 24 | 25 |
+| 26 | 27 | 28 | 29 | 30 | 31 | 0  |
+
+开始: 周五, 周三次数 4 次, 周二次数 4 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 0  | 0  | 0  | 1  | 2  | 3  |
+| 4  | 5  | 6  | 7  | 8  | 9  | 10 |
+| 11 | 12 | 13 | 14 | 15 | 16 | 17 |
+| 18 | 19 | 20 | 21 | 22 | 23 | 24 |
+| 25 | 26 | 27 | 28 | 29 | 30 | 31 |
+
+开始: 周六, 周三次数 4 次, 周二次数 4 次, 不满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 0  | 0  | 0  | 0  | 1  | 2  |
+| 3  | 4  | 5  | 6  | 7  | 8  | 9  |
+| 10 | 11 | 12 | 13 | 14 | 15 | 16 |
+| 17 | 18 | 19 | 20 | 21 | 22 | 23 |
+| 24 | 25 | 26 | 27 | 28 | 29 | 30 |
+| 31 | 0  | 0  | 0  | 0  | 0  | 0  |
+
+开始: 周天, 周三次数 4 次, 周二次数 5 次, 满足
+| Mo | Tu | We | Th | Fr | Sa | Su |
+|----|----|----|----|----|----|----|
+| 0  | 0  | 0  | 0  | 0  | 0  | 1  |
+| 2  | 3  | 4  | 5  | 6  | 7  | 8  |
+| 9  | 10 | 11 | 12 | 13 | 14 | 15 |
+| 16 | 17 | 18 | 19 | 20 | 21 | 22 |
+| 23 | 24 | 25 | 26 | 27 | 28 | 29 |
+| 30 | 31 | 0  | 0  | 0  | 0  | 0  |
+#+end_example
+
+就是这么简单 (bushi).  
