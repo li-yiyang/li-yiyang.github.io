@@ -1,0 +1,564 @@
+#+title: 固体物理学 | 期末
+#+date: 2024-06-21
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: learning
+* Quick Ref
++ Drude 模型: *自由* 电子近似, *独立* 电子近似, *弛豫* 时间近似
++ Sommerfeld 模型: (Drude 模型 + ) *Fermi-Dirac 分布*, *独立* 电子近似, *量子化* 条件
++ Drude 和 Sommerfeld 的电导形式 \(\sigma = \frac{n e^2 \tau}{m}\) 形式相同, 意义不同:
+  量子平均自由程比经典大, 电导率依赖费米面形状, 费米面附近电子参与导电. 
++ 准经典近似: 波包 \(k + \Delta k_{\ll \frac{1}{a}}, r + \Delta r_{\gg a} \rightarrow\) 准粒子
++ Boltzmann 方程: \(\frac{\partial f}{\partial t} = - \boldsymbol{v} \cdot \frac{\partial f}{\partial \boldsymbol{r}} - \frac{1}{\hbar} \boldsymbol{F} \cdot \frac{\partial f}{\partial \boldsymbol{k}} + b - a\)
+
+  不考虑温度和化学势梯度 \(\boldsymbol{F} = - e \boldsymbol{E}\) \(\Rightarrow\)电导率 \(\sigma = \frac{n e^2 \tau}{m}\)
++ 费米面测量: 回旋共振, dHvA (磁矩), SdH (电阻), 角分辨光电子谱
++ Hall 效应 \(R_{\mathrm{H}} = \frac{E_y}{j_x B} = \frac{\rho_{xy}}{B} = - \frac{1}{n e}\)
++ Bloch 定理
+  + \(\phi(r + R_n) = \mathrm{e}^{i k R_n} \phi(r) \Leftrightarrow \phi(r) = \mathrm{e}^{i k r} u(r), u(R + r) = u(r)\)
+
+    周期性在 e 指数还是后面那一项
+  + (能带理论) 的成立条件: *绝热*, *单电子* (平均势) 近似, *周期势*
++ 近自由电子近似: 带宽 \(\propto 2 | \int_0^T V(x) \cos \frac{2 n \pi x}{T} |\)
++ 紧束缚近似: \(E = E_{s} - J_0 - J_1 \sum \mathrm{e}^{\boldsymbol{k} \cdot \boldsymbol{R}_n}\) (最近邻格矢)
++ 准经典 Bloch 电子
++ 施主, 电子 (N), 受主, 空穴, (P) \(n p = N_- N_+ \mathrm{e}^{- \frac{E_- - E_+}{k_{\mathrm{B} T}}}\)
++ PN 结 (耗尽层) \(j = j_0 (1 - \mathrm{e}^{q (V - V_0) / k_{\mathrm{B}} T}\)
++ 半导体电导率: \(\sigma = \frac{n e^2 \tau_e}{m_e^{*} + \frac{n e^2 \rho \tau_e}{m_{h}^{ *}}}\)
++ 磁性: {顺, 抗, 铁, 亚铁, 反铁}磁性
+
+* Overview
+#+name: overview
+#+headers: :file ../_img/pieces/solid-state-phsics.svg
+#+begin_src dot :exports none
+  digraph {
+    bgcolor=transparent;
+    // layout=fdp;
+    // rankdir=LR;
+    // edge [color=white]; node[color=white];
+    node [shape=rect];
+    { "立方", "四方", "三方", "六方", "正交", "单斜", "三斜" } -> "七大晶系";
+    "七大晶系"         -> "晶体结构"         [label="周期性几何结构"];
+    { "离子", "共价", "金属", "分子", "氢键" } -> "化合键";
+    "化合键"           -> "晶体结构"         [label="势能"];
+    "晶体结构"         -> "声子\n玻色子"     [label="外场"];
+    "声子\n玻色子"     -> { "Einstein\n模型", "Debye\n模型" };
+    
+    "晶体结构"         -> "电子\n费米子"     [label="周期性势"];
+    "电子\n费米子"     -> "Drude\n模型"      [label="自由+独立+弛豫\n(经典)近似"];
+    "Drude\n模型"      -> "j = - n e v\nm v = - e E τ\n j = σ E\n→ σ = n e^2 τ / m";
+    
+    "Drude\n模型"      -> "Sommerfeld\n模型" [label="量子化\nFermi分布"];
+    "Fermi 分布"       ->  "Sommerfeld\n模型";
+    "Sommerfeld\n模型" -> "准经典近似"       [label="波包→准粒子"];
+    "Sommerfeld\n模型" -> "费米面";
+    "费米面"           -> "金属导电性"       [label="费米面电子导电"];
+
+    "Fermi 分布"       ->  {
+      "电子分布\nf(E) = 1 / (exp((E - μ) / kB T) + 1)",
+      "费米能级 εF\nεF = (ℏ^2 / 2m) * (3 π^2 n)^(2/3)"
+    };
+    "费米能级 εF\nεF = (ℏ^2 / 2m) * (3 π^2 n)^(2/3)" -> "费米温度\nTF = εF / kB";
+    "态密度" -> "电子分布\nf(E) = 1 / (exp((E - μ) / kB T) + 1)" -> {
+      "N = (V / 3 π^2) * (2 m εF / ℏ^2)^(3/2)",
+      "E = 3/5 εF + (π^2 / 4) * (kB T)^2 / εF"
+    }
+    "准经典近似"       -> "金属导电性";
+    "准经典近似"       -> "准电子"           [label="电子+屏蔽电荷\n(q / 4 π ε0 r) * exp(- ks r)"];
+
+    "电子\n费米子"     -> "能带理论"         [label="Bloch 定理\n绝热+单电子+周期场\n(周期场非必要条件)"];
+    "能带理论"         -> { "近自由电子近似", "紧束缚近似" } -> "半导体导电性";
+    { "金属导电性", "半导体导电性" } -> "输运能力";
+    "半导体导电性"     -> { "PN 结", "三极管" };
+    { "金属导电性", "输运能力" } -> "Hall 效应";
+  }
+#+end_src
+
+#+RESULTS: overview
+[[file:../_img/pieces/solid-state-phsics.svg]]
+
+[[{{ site.github.url }}/_img/pieces/solid-state-phsics.svg]]
+
+* 金属电子论
++ 自由电子气 \(\Rightarrow\) 固体中电子状态 + 运动规律
++ 经典理论: Drude 模型 (欧姆定律, Wiedemann-Franz 定律)
+
+  经典理论不能解释电子比热容和磁化率
++ Sommerfeld: 金属自由电子气的量子理论
++ 电子气比热容
++ 电导率 Hall 效应
++ 金属导热
++ 集体震荡, 屏蔽效应
++ Fermi 液体
+
+** 自由电子气理论
++ Drude 模型: 金属中价电子看作是稀薄理想气体,
+  电子除了与离子实碰撞外不受其他相互作用, 相邻两次碰撞之间自由独立
+  + *自由电子近似*: 除了碰撞外电子与离子实之间没有其他相互作用
+  + *独立电子近似*: 电子之间没有相互作用
+  + *弛豫时间近似*: 电子与离子实碰撞平均时间间隔 \(\tau\), 并通过碰撞达到热平衡
+
+  自由电子近似和独立电子近似合起来变成 *自由电子气* 假设
+
+  Drude 模型微观推导电导率 \(\sigma = \frac{n e^2 \tau}{m}\):
+  1. 电流密度: \(\boldsymbol{j} = - n e \boldsymbol{v}\)
+  2. 动量关系: \(m \boldsymbol{v} = - e \boldsymbol{E} \tau\)
+  3. 欧姆定律: \(\boldsymbol{j} = \sigma \boldsymbol{E}\)
+
+  Drude 模型的缺点:
+  + 自由电子气在 Drude 模型中的热导率 \(\frac{\kappa}{\sigma T}\)
+
+    #+begin_html
+    <details><summary>推导过程</summary>
+    #+end_html
+    1. (模仿普通气体) 自由电子气热导率: \(\kappa = \frac{1}{3} C_e v l\)
+    2. 每个电子平均热动能 \(\frac{3}{2} k_{\mathrm{B}} T\)
+    3. 高温下能量均分 \(\frac{1}{2} m v^2 = \frac{3}{2} k_{\mathrm{B}} T\)
+    4. Delong-Petit 定律: \(C_e = \frac{3}{2} n k_{\mathrm{B}}\)
+    5. 得到 \(\frac{\kappa}{\sigma T} = \frac{1}{3} \frac{C_e v l m}{n e^2 \tau T} = \frac{1}{2} \frac{k_{\mathrm{B}} v l m}{e^2 \tau T} = \frac{1}{2} \frac{k_{\mathrm{B}} m v^2}{e^2 T} = L = \mathrm{const}\),
+
+       \(L = \frac{3}{2} \frac{k_{\mathrm{B}}^2}{e^2}\) Lorenz number
+    #+begin_html
+    </details>
+    #+end_html
+
+    + 会发现在室温时, 预测的热电场和热容巨大.
+    + 金属中电子密度比普通气体要大 3 个数量级, 稀薄气体模型不适用
++ Sommerfeld 金属自由电子气量子理论
+
+  假设:
+  + 电子 *独立* 在晶格中运动
+
+    相当于求解周期性势场 (晶格) 中的电子运动方程
+
+    #+begin_html
+    <details><summary>周期性边界条件的解</summary>
+    #+end_html
+    + 单电子的薛定谔方程: \(\left[ - \frac{\hbar^2}{2 m} \nabla^2 + V \right] \phi(r) = E \phi(r)\)
+    + 本征函数 \(\phi(r) = \frac{1}{\sqrt{L^3}} \mathrm{e}^{i \boldsymbol{k} \cdot \boldsymbol{r}}\)
+    + 本征能量 \(E = \frac{\hbar^2 k^2}{2 m}\)
+    + 周期性边界条件 \(\phi(r + L) = \phi(r)\)
+    + 无限深势井 (边界条件) \(k_i = \frac{2 \pi}{L} n_i\)
+    #+begin_html
+    </details>
+    #+end_html
+  + 电子状态和能量满足 *量子化*
+  + *Fermi-Dirac 分布* 描述自由电子气的物理性质 (电子服从泡利不相容原理)
+    \(f(E, T) = \frac{1}{\mathrm{e}^{(E - \mu) / k_{\mathrm{B}} T} + 1}\).
+
+    (从 Maxwell-Boltzmann 分布变成了 Fermi-Dirac 分布)
+
+    #+begin_html
+    <details><summary>DOS</summary>
+    #+end_html
+    + 在构型分布均匀的空间中计算分布密度
+
+      在这里是倒空间 \(k\) 空间, 倒格矢 \(k\) 所对应的空间体积为 \(\frac{(2 \pi)^3}{V}\),
+      通过 \(\mathrm{d} k\) 壳层对应的体积计算倒空间中的状态数 \(\mathrm{d} Z = 2 \frac{1}{(2 \pi)^3 / V} 4 \pi k^2 \mathrm{d} k\).
+
+      通过 \(k(E)\) 替换变为 \(\mathrm{d} Z = \omega(E) \mathrm{d} E\).
+
+      不同维度的结论:
+
+      | Dim | 自旋 | 分布密度          | \(\int \mathrm{d} S\) | \(N(E)\)                            |
+      |-----+------+-------------------+--------------+-------------------------------------|
+      |   1 |    2 | \(\frac{L}{2 \pi}\)     | \(2\)        | \(\frac{L}{2 \pi} \sqrt{\frac{2 m}{E}}\)          |
+      |   2 |    2 | \(\frac{S}{(2 \pi)^2}\) | \(2 \pi k\)    | \(\frac{S m}{\pi \hbar^2}\)                  |
+      |   3 |    2 | \(\frac{V}{(2 \pi)^3}\) | \(4 \pi k^2\)  | \(\frac{V}{\pi^2} \frac{\sqrt{2 E m^2}}{\hbar^{3}}\) |
+    + 基态自由电子平均能量 \(\frac{3}{5} E_{\mathrm{F}}\)
+      + 总电子数 \(N = \int f(E, 0) \omega(E) \mathrm{d} E = \frac{V}{3 \pi^2} (\frac{2 m E_{\mathrm{F}}}{\hbar^2})^{3/2}\)
+      + 于是可以解得 \(E_{\mathrm{F}} = \frac{\hbar^2}{2 m} (\frac{3 \pi^2 N}{V})^{2/3}\)
+      + 电子总能量 \(E = \int_0^{\infty} E f(E, 0) \omega(E) \mathrm{d} E = \frac{V}{5 \pi^2} (\frac{2 m E_{\mathrm{F}}}{\hbar^2})^{3/2} E_{\mathrm{F}} = \frac{3}{5} N E_{\mathrm{F}}\)
+    #+begin_html
+    </details>
+    #+end_html
+
+    + 费米面: 固体中 \(N\) 个自由电子,
+      按照泡利原理, \(N\) 个电子从低到高填充的 \(N\) 个量子态,
+      对应费米球: 半径 \(k_{\mathrm{F}} = \frac{\sqrt{2 m E_{\mathrm{F}}}}{\hbar}\). 
+
+      #+begin_html
+      <details><summary>推导</summary>
+      #+end_html
+      电子的能级 \(E(k) = \frac{\hbar^2 k^2}{2 m}\)
+
+      \(N\) 个电子, \(k\) 空间球内包含状态数 \(N = 2 \frac{V}{(2 \pi)^3} \frac{4}{3} \pi k_{\mathrm{F}}^3\)
+      #+begin_html
+      </details>
+      #+end_html
+
+      | 物理量     | 结论                                                              |
+      |------------+-------------------------------------------------------------------|
+      | 费米能     | \(E_{\mathrm{F}} = \frac{\hbar^2 k_{\mathrm{F}}^2}{2 m}\)                            |
+      | 费米球半径 | \(k_{\mathrm{F}} = \frac{\sqrt{2 m E_{\mathrm{F}}}}{\hbar}\)                             |
+      | 费米动量   | \(p = \hbar k_{\mathrm{F}} = \sqrt{2 m E_{\mathrm{F}}}\)                             |
+      | 费米温度   | \(E_{\mathrm{F}} = k_{\mathrm{B}} T_{\mathrm{F}}, T_{\mathrm{F}} = \frac{E_{\mathrm{F}}}{k_{\mathrm{B}}}\) |
+    + 化学势 \(\mu(T) = E_{\mathrm{F}} \left[ 1 - \frac{\pi^2}{12} (\frac{k_{\mathrm{B}} T}{E_{\mathrm{F}}})^2 \right]\)
+    + 热容 \(C_{\mathrm{V}} = \gamma T + \beta T^3\)
+      + 电子比热 \(\gamma T\): \(C_e = \frac{N}{V} \frac{\partial E}{\partial T} = \frac{\pi^2}{2} \frac{n k_{\mathrm{B}}^2}{E_{\mathrm{F}}} T = \gamma T\)
+      + 晶格比热 \(\beta T^3\)
+        
+  可以解释电子比热问题 \(C_e = \frac{N}{V} \frac{\partial E}{\partial T}\)
+
+** 电导率 Hall 效应 (电子输运)
++ 准经典近似: 用 \(k\) 附近的 \(\Delta k\) 范围的平面波所组成的 *波包* 来描述电子在 *外场中的运动*,
+  电子的位置分布在波包中心附近 \(\Delta r\) 的范围, \(\Delta k\), \(\Delta r\) 满足不确定性关系.
+  + 波包稳定性要求 \(\Delta k \ll 1 / a\) (Brillouin 区的尺度)
+  + 输运自由程 \(\Delta r \gg a\) (\(a\) 为晶格常数)
+  + 作用在电子的外场变换相对缓慢, 变化波长远大于 \(a\)
+  + 外场只引起波矢变化, 不破坏电子原有能谱
+
+  相当于是用准经典粒子近似波包
++ 电导率公式 \(\sigma = \frac{n e^2 \tau}{m}\)
+
+  #+begin_html
+  <details><summary>推导</summary>
+  #+end_html
+  + 准经典近似电子输运 \(B = 0\)
+
+    准经典粒子的运动反冲 \(\hbar \frac{\mathrm{d} k}{\mathrm{d} t} = F = - e E\), 在弛豫时间 \(\tau\) 后, 稳定有
+    \(\delta k = k(\tau) - k(0) = - \frac{e \tau}{\hbar} E\).
+  + 计算的是 \(k\) 空间的位移 (波矢的重新分布), 对应实空间的速度,
+    稳定的体系表示稳定的电流.
+  + 散射:
+    + 晶格振动
+    + 晶格中的杂质, 缺陷
+    + 漂移 + 无规则散射 (碰撞) \(\Rightarrow\) 定态
+
+      电子在外场下被加速, 偏离平衡位置; 散射使得电子偏离定向运动:
+      能量耗散, 系统趋于平衡.
+
+    这部分实在是有点课上学的太麻烦了, 不如粒子探测器的漂移速度 \(\mu\)
+    讲得更容易理解.
+  + 波尔兹曼方程
+
+    \[\frac{\partial f}{\partial t} = - \frac{\mathrm{d} k}{\mathrm{d} t} \nabla_k f - \frac{\mathrm{d} r}{\mathrm{d} t} \nabla_r f + b - a\]
+  + 电导率公式 \(\sigma = \frac{n e^2 \tau}{m}\)
+    + 波尔兹曼方程的定态形式 \(- \frac{e E}{\hbar} \nabla_k f = b 0 a\)
+    + \(\delta v = \frac{\hbar}{m} \delta k = - \frac{e \tau}{m} E\)
+    + \(j = - n e \delta v = \frac{n e^2 \tau}{m} E = \sigma E\)
+  #+begin_html
+  </details>
+  #+end_html
+
+  + 量子平均自由程比经典大 (形式相同, 意义不同)
+  + 电导率依赖费米面形状
+  + 弛豫时间反比散射概率的加权积分, 大角度散射对 \(\tau\) 贡献大
+  + 费米面附近的电子参与导电
++ 霍尔 (Hall) 效应: 电流 \(j\) 沿着 \(x\) 方向流经金属, 垂直表面加磁场,
+  会有 \(y\) 方向的电压信号 \(V_y\)
+
+  霍尔系数 \(R_{\mathrm{H}} = \frac{E_y}{j_x B} = - \frac{1}{n e}\)
+
+  #+begin_html
+  <details><summary>相关方程</summary>
+  #+end_html
+  + 运动方程
+  #+begin_html
+  </details>
+  #+end_html
+
+* 能带理论
++ Bloch 定理
++ 近自由电子近似
++ 紧束缚近似
++ 能带对称性, 能带图
++ Bloch 电子的准经典运动
++ 导体绝缘体和半导体
+
+能带理论的前提条件:
+1. 绝热近似: *在哈密顿量中仅考虑电子项, 忽略离子的动能*
+   (或者说, 从多粒子体系变成多电子体系, 仅考虑单一粒子)
+   
+   电子质量远小于离子质量, 电子运动速度远大于离子运动速度. 
+2. 单电子近似: *哈密顿量中的电子相互作用项用平均场近似*
+3. 周期势: 晶格周期性假设
+
+求解方法:
+
+|          | 近自由电子近似                                   | 紧束缚近似                                   |
+|----------+--------------------------------------------------+----------------------------------------------|
+| 波函数   | \(\phi_k^0(r) = \frac{1}{\sqrt{V}} \mathrm{e}^{i k r}\)           | \(\phi(r) = \sum_l \mathrm{e}^{i k R_l} \phi(r - R_l)\)     |
+| 势能     | \(V(r) = \left\langle V \right\rangle + \Delta V(r)\) | \(V(r) = V(r - R_n) + \sum_{l \neq n} V(r - R_l)\) |
+| 求解方法 | 微扰                                             | 近似: 正交, 最近邻                                  |
+
+** Bloch 定理
+*Bloch 定理*: 周期性势的薛定谔方程的解满足 \(\phi(\boldsymbol{r} + \boldsymbol{R}_n) = e^{i \boldsymbol{k} \cdot \boldsymbol{R}_n} u_k(\boldsymbol{r})\) (Bloch 函数 \(u_k(\boldsymbol{r})\)).
+或者换一个表述: 当平移晶格矢量 \(\boldsymbol{R}_{l}\) 的时候,
+同一能量本征值的波函数只增加一个相位因子. 
+
+其中波矢量 \(\boldsymbol{k}\) 对应于平移算符本征值的量子数.
+表示不同原胞之间电子波函数的相位变化, 不同的 \(\boldsymbol{k}\) 对应不同的状态,
+与波函数, 能量本征值相关. 取值范围在第一布里渊区中.
++ \(\hbar \boldsymbol{k}\) 准动量 (晶体动量), (自由电子的动量本征值, 但是不是 Bloch 电子的真实动量)
++ Bloch 定理是晶格平移对称性的结果, 是普遍性的定理
++ 和自由电子平面波相比, 可以看作是被晶格周期性函数调幅的平面波
++ 称 Bloch 电子 (真的是很喜欢取名字啊... )
+
+退化:
++ 自由电子: \(\phi(r) = A \mathrm{e}^{i \boldsymbol{k} \cdot \boldsymbol{r}}\) (势能为常数)
++ 孤立电子: \(\phi(r) = C u(\boldsymbol{r})\)
+
+#+begin_html
+<details><summary>电子能带的形成</summary>
+#+end_html
+原子与原子结合称固体时, 原子之间存在相互作用的结果,
+周期性势场不是电子具有能带结构的必要条件. 
+#+begin_html
+</details>
+#+end_html
+
+布洛赫波与格波
++ 电子存在无穷多能带, 声子只存在有限能带
++ 格波不是标准调幅平面波
++ 格波不同于概率波
+
+** 平面波方法, 近自由电子近似
++ 近自由电子近似:
+
+  周期性势起伏小, 起伏看作微扰: \(V(r) = \left\langle V \right\rangle + \Delta V\).
+  同一能带的 \(k\) 的 Bloch 函数是倒格子的周期性函数:
+  \(\phi_k(k) = \frac{1}{\sqrt{V}} \sum_G C(k + G) \mathrm{e}^{i (G + k) r}\).
+
+  计算的时候取有限个平面波相叠加, 计算本征值.
+
+  (死去的量子力学的微扰论在攻击我... )
+
+** 紧束缚近似
++ 能带函数: \(E_s (\boldsymbol{k}) = E_s - J_0 - J_1 \sum \mathrm{e}^{i \boldsymbol{k} \cdot \boldsymbol{R}_n}\), \(\boldsymbol{R}_n\) 为最近邻格矢
++ 计算 \(E_{s}\) 可以得到带顶, 带底, 带宽
+
+** Bloch 电子的准经典运动
++ \(v(k) = \frac{1}{\hbar} \nabla_k E(k)\)
++ 有效质量 \(\frac{1}{m_{ij}} = \frac{1}{\hbar^2} \frac{\partial^2 E(k)}{\partial k_i \partial k_j}\)
++ \(F = \hbar \frac{\mathrm{d} \boldsymbol{k}}{\mathrm{d} t}\), 准动量 \(\hbar \boldsymbol{k}\)
+
+** 导体, 绝缘体, 半导体
++ 完全充满电子的能带不能形成电流
++ 满带: 电子填满,
+
+  导带: 部分空
+
+  近满带: 少数空
+
+* 固体的导电性
++ 输运问题
+  
+  | 强度量的空间不均匀 | 输运方程              | 广延量的流动 |
+  |--------------------+-----------------------+--------------|
+  | 温度               | \(\boldsymbol{j}_u = - K \nabla T\) | 热流         |
+  | 浓度               | \(\boldsymbol{j}_n = - D \nabla n\) | 粒子流       |
+  | 电势               | \(\boldsymbol{j}_e = - \sigma \nabla \varphi\) | 电流         |
+
+  相当于是要计算 \(K, D, \sigma\) 的晶体内禀性质
++ 金属: Boltzmann 方程, 费米面, 电子回旋共振, de Hass 震荡, AB 效应
++ 半导体: 能带结构, 有效质量近似, 载流子统计分布, 输运 PN 结,
+  MOSFET, Quantum Hall
+
+** 金属
+*** Boltzmann 输运方程
++ Boltzmann 方程
+
+  \[\frac{\partial f}{\partial t} = - \boldsymbol{v} \cdot \frac{\partial f}{\partial r} - \frac{1}{\hbar} \boldsymbol{F} \cdot \frac{\partial f}{\partial \boldsymbol{k}} + b - a\]
+
+  + 定态: \(\boldsymbol{v} \cdot \frac{\partial f}{\partial r} + \frac{1}{\hbar} \boldsymbol{F} \cdot \frac{\partial f}{\partial \boldsymbol{k}} = b - a\)
+  + 纯粹电导: \(\boldsymbol{F} = - e \boldsymbol{E} \Rightarrow - \frac{e \boldsymbol{E}}{\hbar} \cdot \frac{\partial f}{\partial \boldsymbol{k}} = b - a\)
++ 电导 \(\sigma = \frac{n e^2 \tau(E_{\mathrm{F}})}{m^{*}}\)
+
+  弛豫时间项: \(\frac{1}{\tau(k)} = \frac{2}{(2 \pi)^3} \int W(\boldsymbol{k}, \boldsymbol{k}') (1 - \cos \eta) \mathrm{d} k'\), 受到散射影响:
+  + 晶格中杂质, 缺陷 (温度无关)
+  + 晶格振动 (温度相关)
+    + 高温: \(\rho \sim T\)
+    + 低温: \(\rho \sim T^5\)
+
+      考虑电子关联和磁性杂质影响: \(\rho(T) = \rho_0 + a T^2 + c_m \ln \frac{\mu}{T} + b T^5\)
+
+*** 费米面测量
++ 回旋共振
++ dHvA (de Hass-van Alphen effect): 测磁矩随磁场的变化
+
+  #+begin_html
+  <details><summary>一个简单的解释</summary>
+  #+end_html
+  + 磁场下能级合并至朗道能级, 随着外场的变化而变化
+
+  [[{{ site.github.url }}/_img/pieces/solid-state-phsics-dHvA.png]]
+
+  (报告不能白做... )
+
+  实际上就是固定一个角度 (磁场相对于晶轴), 然后改变磁场大小,
+  通过傅里叶变换得到频谱 (变换周期与 \(1 / B\) 的关系). 
+  #+begin_html
+  </details>
+  #+end_html
++ SdH (Shubnikov-de Haas effect): 同 dHvA, 只不过测量的是电导率随磁场的变化
++ ARPES (Angle resolved photoemission spectroscopy) 角分辨光电子谱
+
+** 半导体
++ 电阻率介于金属 (\(\rho < 10^{-6} \mu \Omega \cdot \mathrm{cm}\) 和绝缘体 (\(\rho > 10^{12} \mu \Omega \cdot \mathrm{cm}\)) 的导电材料称为半导体
++ 经典元素半导体具有金刚石结构, 化合物半导体大多具有 ZnS 结构, 共价结合特征
++ 半导体的电阻随着温度降低而增大, 金属电阻随温度降低而降低
+
+  #+begin_html
+  <details><summary>粒子探测器的半导体耗尽层</summary>
+  #+end_html
+  + 降温可以使得耗尽层扩大
+  + 或者说降温可以减少本征载流子, 所以电阻变大
+  #+begin_html
+  </details>
+  #+end_html
+
+*** 能带结构
++ 一个完全充满电子的能带不能形成电流
++ 满带: 电子填满能带中所有的能态
++ 导带: 一个能带自由部分能态填有电子, 其余能态为没有电子填充的空态
++ 近满带: 一个能带绝大部分能态已填有电子, 只有少数能态是空的
++ 施主杂质, 施主能级: 为导带提供电子, N 型
++ 受主杂质, 受主能级: 为价带提供空穴, P 型
+
+#+begin_html
+<details><summary>粒子探测器杀疯了...</summary>
+#+end_html
+我觉得还是粒子探测器讲得稍微清晰一些, 虽然两个我都学得迷迷糊糊的,
+但是看了一下具体的探测器的结构, 哦, 大概能理解是个什么东西.
+没有实例只是堆概念的课程真是让人很累. emm... 大概是我的问题,
+就像是一个库 (编程里面), 把所有的 API 都提供了,
+但是没有给你提供事例代码一样痛苦. 
+#+begin_html
+</details>
+#+end_html
+
+*** 本征, 杂质激发
++ 一般半导体中导带带底能量与费米能之差远远大于 \(k_{\mathrm{B}} T\),
+  价带带顶能量与费米能之差远远大于 \(k_{\mathrm{B}} T\).
+
+  导带电子分布: \(f(E) = \frac{1}{\mathrm{e}^{(E - E_{\mathrm{F}}) / k_{\mathrm{B}} T} + 1} \approx \mathrm{e}^{- (E - E_{\mathrm{F}}) / k_{\mathrm{B}} T}\)
+
+  价带空穴分布: \(1 - f(E) = 1 - \frac{1}{\mathrm{e}^{(E - E_{\mathrm{F}}) / k_{\mathrm{B}} T} + 1} \approx \mathrm{e}^{- (E_{\mathrm{F}} - E) / k_{\mathrm{B}} T}\)
+
+  接近经典 Boltzmann 分布, 因为浓度很低, 可以不考虑泡利不相容原理.
+
+  有 \(n p = N_- N_+ \mathrm{e}^{- \frac{E_- - E_+}{k_{\mathrm{B}} T}}\).
+
++ 对于本征激发而, \(n = p \Rightarrow E_{\mathrm{F}} = \frac{1}{2} (E_- + E_+) + \frac{3}{4} k_{\mathrm{B}} T \ln \frac{m_h}{m_e} \overset{T = 0 \mathrm{K}}{=} \frac{1}{2} (E_- + E_+)\).
++ 对于杂质激发
+  + 低温区: 杂质激发占主导
+  + 中间区: 温度是的晶格散射增加, 电导率下降
+  + 高温区: 本征激发占主导
+
+*** PN 结
++ 两块半导体接触前, N 区费米面高于 P 区
++ 两者接触, 使得空穴和电子向对方区域扩散, 形成内建电场 (无载流子耗尽层)
++ 耗尽层中本征载流子电流: \(j = - j_0 (\mathrm{e}^{q V / k_{\mathrm{B}} T} - 1), j_0 = q(\frac{D_n}{L_n} n_p^0 + \frac{D_p}{L_p} p_n^0)\)
++ 正向电压使得内建电场抵消, 电流增加, 总电流与少子浓度正相关
++ 反向电压使得势垒提高阻止通过 (只有 N 区空穴, P 区电子可以通过).
+
+  #+begin_html
+  <details><summary>粒子探测器</summary>
+  #+end_html
+  参见高纯锗探测器. 为什么要用高纯锗探测器而不是普通的制备工艺.
+  #+begin_html
+  </details>
+  #+end_html
+
+*** 三极管
+
+* 磁性理论
++ 固体磁性:
+  1. 顺磁性
+  2. 抗磁性
+  3. 铁磁性
+  4. 亚铁磁性
+  5. 反铁磁性
++ 角动量
+  + 电子轨道磁矩: 电子绕原子核产生 \(\boldsymbol{\mu}_L = - \frac{e}{2 m} \boldsymbol{L}\)
+  + 电子自旋磁矩: 电子自旋产生 \(\boldsymbol{\mu}_S = - \frac{e}{m} \boldsymbol{S}\)
+  + 总角动量 (死去的原子物理知识... )
+    + \(L-S\) 耦合
+    + \(J-J\) 耦合
+
+* 习题
+** 金属电子论
+1. 计算费米能和费米温度 \(E_{\mathrm{F}} = \frac{\hbar^2}{2m} (3 \pi^2 n)^{2/3}\)
+
+   核心是计算数密度:
+   + 计算数密度 \(n = \frac{\rho}{m}\)
+   + 得到费米能 \(E_{\mathrm{F}} = \frac{\hbar^2}{2 m } (3 \pi^2 n)^{2/3}\)
+   + 费米温度 \(T_{\mathrm{F}} = E_{\mathrm{F}} / k_{\mathrm{B}}\)
+2. 计算电导率 \(\sigma = - \frac{e n v}{E}\)
+
+   核心是计算 \(v\):
+   + 电子漂移速度方程 \(m (\frac{\mathrm{d}}{\mathrm{d} t} + \frac{1}{\tau}) v = - e E\)
+   + 考虑外场 \(E = E_0 \mathrm{e}^{- i \omega t}\), 代入猜测的解 \(v = v_0 \mathrm{e}^{- i \omega t}\),
+     可以得到 \(v = - \frac{1 + i \omega \tau}{1 + (\omega \tau)^2} \frac{e \tau}{m} E\).
+   + 电导率 \(\sigma(\omega) = \frac{j}{E} = - \frac{e n v}{E}\)
+3. 最大表面电阻
+
+   边长为 \(L\), 厚度为 \(d\), 电阻率为 \(\rho\) 的方形薄片.
+   从薄片两边测到的表面电阻 \(R_{\mathrm{sq}} = \frac{\rho L}{L d} = \frac{\rho}{d}\).
+
+   假设表面散射决定碰撞时间 \(\tau \approx d / v_{\mathrm{F}}\):
+   + 电导率 \(\sigma = \frac{n e^2 \tau}{m}\)
+   + \(R_{\mathrm{sq}} = \frac{1}{\sigma d} = \frac{m v_{\mathrm{F}}}{n d^2 e^2}\)
+   + \(m v_{\mathrm{F}} = \sqrt{2 m E_{\mathrm{F}}} = \hbar (3 \pi^2 n)^{1/3} \approx \hbar n^{1/3}\)
+   + 单原子厚度的薄片 \(n d^3 = 1 \Rightarrow R_{\mathrm{sq}} \approx \hbar / e^2\)
+
+** 能带理论
+1. 近自由电子近似计算能带间隙宽度
+
+   差不多和周期性势场的求解过程类似:
+   + 在势周期 \([-T/2, T/2]\) 里面把势展开为傅里叶级数:
+     \(V(x) = V_0 + \sum_{n = 1}^{\infty} A_n \cos \frac{2 \pi n x}{T} + B_n \sin \frac{2 \pi n x}{T}\),
+     \(A_n = \int_{-T/2}^{T/2} V(x) \cos \frac{2 \pi n x}{T}\). 
+
+     一般可以通过对称性来减少计算
+   + \(\Delta E_1 = 2 |V_1|\), \(\Delta E_2 = 2 | V_2 |\)
+2. 紧束缚近似计算能带函数
+
+   + 能带表达式 \(E_s(\boldsymbol{k}) = E_s - J_0 - J_1 \sum \mathrm{e}^{i \boldsymbol{k} \cdot \boldsymbol{R}_n}\)
+   + 其中 \(\boldsymbol{R}_n\) 为最近邻格矢
+
+     对于面心立方: \((\pm \frac{a}{2}, \pm \frac{a}{2}, 0), (\pm \frac{a}{2}, 0, \pm \frac{a}{2}), (0, \pm \frac{a}{2}, \pm \frac{a}{2})\). 
+
+     对于体心立方: \((\pm a, 0, 0), (0, \pm a, 0), (0, 0, \pm a)\).
+
+     对于一维单原子链: \(\pm a\). 
+   + 代入能带表达式, 可以得到
+
+     对于面心立方: \(E_s - J_0 - 4 J_1 \left[ \cos \frac{k_x a}{2} \cos \frac{k_y a}{2} + \cos \frac{k_y a}{2} \cos \frac{k_z a}{2} + \cos \frac{k_z a}{2} \cos \frac{k_x a}{2} \right]\)
+
+     对于体心立方: \(E_s - J_0 - 2 J_1 \left[ \cos \frac{a k_x}{2} + \cos \frac{a k_y}{2} + \cos \frac{a k_z}{2} \right]\)
+
+     #+begin_src mathematica
+       Assuming[Element[{a, kx, ky, kz}, Reals],
+         Total[Exp[I * Dot[{kx, ky, kz}, #]] & /@ ({
+           {a, a, 0}, {-a, a, 0}, {-a, -a, 0}, {a, -a, 0},
+           {0, a, a}, {0, -a, a}, {0, -a, -a}, {0, a, -a},
+           {a, 0, a}, {-a, 0, a}, {-a, 0, -a}, {a, 0, -a}
+         }/2)] // FullSimplify]
+     #+end_src
+
+     对于一维单原子链: \(E_s - J_0 - 2 J_1 \cos k a\)
+3. 从能带函数知道:
+   + 带顶能量: 使得能带表达式最大的情况
+
+     对于面心立方 \((2 \pi / a, 0, 0) \Rightarrow E_s - J_0 - 4 J_1\)
+   + 带底能量:
+
+     对于面心立方 \((0, 0, 0) \Rightarrow E_s - J_0 - 12 J_1\)
+   + 有效质量: \(\frac{1}{m_{ij}} = \frac{1}{\hbar^2} \frac{\partial^2 E(k)}{\partial k_i \partial k_j}\)
+   + 态密度
+
+     一维 \(n(E) = \frac{L}{2 \pi} | \frac{\mathrm{d} k}{\mathrm{d} E} |\)
+   + 费米能
+     + 计算粒子数 \(N = \int_0^{k_{\mathrm{F}}} \rho(k) \mathrm{d} k\)
+     + 费米能公式 \(E_{\mathrm{F}} = \frac{\hbar^2}{2 m} (3 \pi^2 n)^{2/3}\)
+
+** 固体导电性
+1. 计算回旋频率 \(\omega_{\mathrm{c}} = \frac{e B}{m}\)
+2. PN 结伏安特性曲线: \(j = j_0 (1 - \mathrm{e}^{- q (V - V_0) / k_{\mathrm{B}} T})\)
+3. 三极管工作原理: 通过基极补充耗尽层中的电子/空穴
+   
+* Others
+有一种因为学不会所以愚蠢地抄写的学生的感觉. 
