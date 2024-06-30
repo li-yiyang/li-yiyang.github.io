@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>原子物理 [期末] | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="原子物理 [期末]" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About (注: 图文无关, 只是科技开放日去高能所看见觉得很好玩&#8230; 孩子不懂事, 瞎拍着玩的) 哦, 伟大的圆环之理啊, 保我&#8230; 精细结构 四个量子数: \(n, l, m_l, m_s\) 或者 \(n, l, j, m_j\). 三个实验: 碱金属双线 塞曼效应 施特恩-盖拉赫实验 电子轨道运动: \(&mu;_l = - &gamma; L = - \sqrt{l (l + 1)} \hbar &gamma; = - \sqrt{l (l + 1)} \frac{e \hbar}{2 m_e}\), 其中角动量大小 \(L = \sqrt{l (l + 1)} \hbar\), \(&gamma;\) 为角动量和磁矩的比. 在外磁场下 \(L_z = m_l \hbar\), \(&mu;_{l, z} = - &gamma; L_z = - \frac{e \hbar}{2 m_e} m_l\). 其中 \(m_l = &plusmn; l, &plusmn; (l - 1), &hellip;\) 为轨道角动量角分布量子化取值. 角分布量子化取值实验验证: 施特恩 - 盖拉赫实验 \(z\) 方向非均匀磁场, 使得 \(U = - \boldsymbol{&mu;} &sdot; \boldsymbol{B} &rArr; \boldsymbol{F} = - &nabla; U\) 在 \(z\) 方向上会有偏移. 根据 \(&mu;_{l,z} = - m_j g_j &mu;_B\), 可以知道最终会分裂成多少条谱线. 可以简记为 \(&mu;_B = \frac{e \hbar}{2 m_e}\), \(&mu;_l = - \sqrt{l (l + 1)} &mu;_B\), \(&mu;_{l, z} = - m_l &mu;_{B}\). 习题 根据磁矩计算能量差 \(&Delta; E = &Delta; \boldsymbol{&mu;} &sdot; \boldsymbol{B}\) \(\boldsymbol{&mu;} &sdot; \boldsymbol{B} = g_s m_s &mu;_B B\), 对于电子 \(g_s = 2, m_s = &plusmn; \frac{1}{2}\). 根据原子态计算磁矩 原子态: \(^{2S + 1}L_J\) 首先获得 \(S, L, J\) 的值, 然后计算得到 \(m_J\). 然后计算磁矩 \(&mu;_J = - g_J \sqrt{J (J + 1)} &mu;_B, &mu;_{J,z} = - m_J g_J &mu;_B\). (注: 如果已经得到磁矩了的话, 可以根据磁矩来算梯度场中的受力, 然后根据这个受力来进行计算谱线分离.) 一些代码 (defun sym-l (sym) (cond ((eq sym &#39;S) 0) ((eq sym &#39;P) 1) ((eq sym &#39;D) 2) ((eq sym &#39;F) 3) ((eq sym &#39;G) 4) ((eq sym &#39;H) 5) ((eq sym &#39;I) 6) (T sym))) ; I&#39;d bad in Lisp" />
+<meta property="og:description" content="About (注: 图文无关, 只是科技开放日去高能所看见觉得很好玩&#8230; 孩子不懂事, 瞎拍着玩的) 哦, 伟大的圆环之理啊, 保我&#8230; 精细结构 四个量子数: \(n, l, m_l, m_s\) 或者 \(n, l, j, m_j\). 三个实验: 碱金属双线 塞曼效应 施特恩-盖拉赫实验 电子轨道运动: \(&mu;_l = - &gamma; L = - \sqrt{l (l + 1)} \hbar &gamma; = - \sqrt{l (l + 1)} \frac{e \hbar}{2 m_e}\), 其中角动量大小 \(L = \sqrt{l (l + 1)} \hbar\), \(&gamma;\) 为角动量和磁矩的比. 在外磁场下 \(L_z = m_l \hbar\), \(&mu;_{l, z} = - &gamma; L_z = - \frac{e \hbar}{2 m_e} m_l\). 其中 \(m_l = &plusmn; l, &plusmn; (l - 1), &hellip;\) 为轨道角动量角分布量子化取值. 角分布量子化取值实验验证: 施特恩 - 盖拉赫实验 \(z\) 方向非均匀磁场, 使得 \(U = - \boldsymbol{&mu;} &sdot; \boldsymbol{B} &rArr; \boldsymbol{F} = - &nabla; U\) 在 \(z\) 方向上会有偏移. 根据 \(&mu;_{l,z} = - m_j g_j &mu;_B\), 可以知道最终会分裂成多少条谱线. 可以简记为 \(&mu;_B = \frac{e \hbar}{2 m_e}\), \(&mu;_l = - \sqrt{l (l + 1)} &mu;_B\), \(&mu;_{l, z} = - m_l &mu;_{B}\). 习题 根据磁矩计算能量差 \(&Delta; E = &Delta; \boldsymbol{&mu;} &sdot; \boldsymbol{B}\) \(\boldsymbol{&mu;} &sdot; \boldsymbol{B} = g_s m_s &mu;_B B\), 对于电子 \(g_s = 2, m_s = &plusmn; \frac{1}{2}\). 根据原子态计算磁矩 原子态: \(^{2S + 1}L_J\) 首先获得 \(S, L, J\) 的值, 然后计算得到 \(m_J\). 然后计算磁矩 \(&mu;_J = - g_J \sqrt{J (J + 1)} &mu;_B, &mu;_{J,z} = - m_J g_J &mu;_B\). (注: 如果已经得到磁矩了的话, 可以根据磁矩来算梯度场中的受力, 然后根据这个受力来进行计算谱线分离.) 一些代码 (defun sym-l (sym) (cond ((eq sym &#39;S) 0) ((eq sym &#39;P) 1) ((eq sym &#39;D) 2) ((eq sym &#39;F) 3) ((eq sym &#39;G) 4) ((eq sym &#39;H) 5) ((eq sym &#39;I) 6) (T sym))) ; I&#39;d bad in Lisp" />
+<link rel="canonical" href="/notes/atomic-end/" />
+<meta property="og:url" content="/notes/atomic-end/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-03T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="原子物理 [期末]" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-03T00:00:00+00:00","datePublished":"2023-07-03T00:00:00+00:00","description":"About (注: 图文无关, 只是科技开放日去高能所看见觉得很好玩&#8230; 孩子不懂事, 瞎拍着玩的) 哦, 伟大的圆环之理啊, 保我&#8230; 精细结构 四个量子数: \\(n, l, m_l, m_s\\) 或者 \\(n, l, j, m_j\\). 三个实验: 碱金属双线 塞曼效应 施特恩-盖拉赫实验 电子轨道运动: \\(&mu;_l = - &gamma; L = - \\sqrt{l (l + 1)} \\hbar &gamma; = - \\sqrt{l (l + 1)} \\frac{e \\hbar}{2 m_e}\\), 其中角动量大小 \\(L = \\sqrt{l (l + 1)} \\hbar\\), \\(&gamma;\\) 为角动量和磁矩的比. 在外磁场下 \\(L_z = m_l \\hbar\\), \\(&mu;_{l, z} = - &gamma; L_z = - \\frac{e \\hbar}{2 m_e} m_l\\). 其中 \\(m_l = &plusmn; l, &plusmn; (l - 1), &hellip;\\) 为轨道角动量角分布量子化取值. 角分布量子化取值实验验证: 施特恩 - 盖拉赫实验 \\(z\\) 方向非均匀磁场, 使得 \\(U = - \\boldsymbol{&mu;} &sdot; \\boldsymbol{B} &rArr; \\boldsymbol{F} = - &nabla; U\\) 在 \\(z\\) 方向上会有偏移. 根据 \\(&mu;_{l,z} = - m_j g_j &mu;_B\\), 可以知道最终会分裂成多少条谱线. 可以简记为 \\(&mu;_B = \\frac{e \\hbar}{2 m_e}\\), \\(&mu;_l = - \\sqrt{l (l + 1)} &mu;_B\\), \\(&mu;_{l, z} = - m_l &mu;_{B}\\). 习题 根据磁矩计算能量差 \\(&Delta; E = &Delta; \\boldsymbol{&mu;} &sdot; \\boldsymbol{B}\\) \\(\\boldsymbol{&mu;} &sdot; \\boldsymbol{B} = g_s m_s &mu;_B B\\), 对于电子 \\(g_s = 2, m_s = &plusmn; \\frac{1}{2}\\). 根据原子态计算磁矩 原子态: \\(^{2S + 1}L_J\\) 首先获得 \\(S, L, J\\) 的值, 然后计算得到 \\(m_J\\). 然后计算磁矩 \\(&mu;_J = - g_J \\sqrt{J (J + 1)} &mu;_B, &mu;_{J,z} = - m_J g_J &mu;_B\\). (注: 如果已经得到磁矩了的话, 可以根据磁矩来算梯度场中的受力, 然后根据这个受力来进行计算谱线分离.) 一些代码 (defun sym-l (sym) (cond ((eq sym &#39;S) 0) ((eq sym &#39;P) 1) ((eq sym &#39;D) 2) ((eq sym &#39;F) 3) ((eq sym &#39;G) 4) ((eq sym &#39;H) 5) ((eq sym &#39;I) 6) (T sym))) ; I&#39;d bad in Lisp","headline":"原子物理 [期末]","mainEntityOfPage":{"@type":"WebPage","@id":"/notes/atomic-end/"},"url":"/notes/atomic-end/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">原子物理 [期末]</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-07-03T00:00:00+00:00" itemprop="datePublished">Jul 3, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p><img src="/_img/pieces/atomic-physics/high-frequency-cavity-aging-radiation-danger.jpg" alt="/_img/pieces/atomic-physics/high-frequency-cavity-aging-radiation-danger.jpg" /></p>
+<p>(注: 图文无关, 只是科技开放日去高能所看见觉得很好玩&#8230; <del>孩子不懂事, 瞎拍着玩的</del>)</p>
+<p><del>哦, 伟大的圆环之理啊, 保我&#8230;</del></p>
+<h1>精细结构</h1>
+<ul>
+  <li>四个量子数: \(n, l, m_l, m_s\) 或者 \(n, l, j, m_j\).</li>
+  <li>三个实验:
+    <ul>
+      <li>碱金属双线</li>
+      <li>塞曼效应</li>
+      <li>施特恩-盖拉赫实验</li>
+    </ul>
+  </li>
+  <li><b>电子轨道运动</b>: \(&mu;_l = - &gamma; L = - \sqrt{l (l + 1)} \hbar &gamma; = - \sqrt{l (l + 1)} \frac{e \hbar}{2 m_e}\),
+    其中角动量大小 \(L = \sqrt{l (l + 1)} \hbar\), \(&gamma;\) 为角动量和磁矩的比.
+    <p>在外磁场下 \(L_z = m_l \hbar\), \(&mu;_{l, z} = - &gamma; L_z = - \frac{e \hbar}{2 m_e} m_l\).
+      其中 \(m_l = &plusmn; l, &plusmn; (l - 1), &hellip;\) 为轨道角动量角分布量子化取值.</p>
+  <details><summary>角分布量子化取值实验验证: 施特恩 - 盖拉赫实验</summary>
+    <p><img src="/_img/pieces/atomic-physics/stern-gerlach.png" alt="/_img/pieces/atomic-physics/stern-gerlach.png" /></p>
+    <ul>
+      <li>\(z\) 方向非均匀磁场, 使得 \(U = - \boldsymbol{&mu;} &sdot; \boldsymbol{B} &rArr; \boldsymbol{F} = - &nabla; U\) 在 \(z\) 方向上会有偏移.</li>
+      <li>根据 \(&mu;_{l,z} = - m_j g_j &mu;_B\), 可以知道最终会分裂成多少条谱线.</li>
+    </ul>
+  </details>
+    <p>可以简记为 \(&mu;_B = \frac{e \hbar}{2 m_e}\), \(&mu;_l = - \sqrt{l (l + 1)} &mu;_B\), \(&mu;_{l, z} = - m_l &mu;_{B}\).</p>
+  <details><summary>习题</summary>
+    <ul>
+      <li>根据磁矩计算能量差 \(&Delta; E = &Delta; \boldsymbol{&mu;} &sdot; \boldsymbol{B}\)
+        <p>\(\boldsymbol{&mu;} &sdot; \boldsymbol{B} = g_s m_s &mu;_B B\), 对于电子 \(g_s = 2, m_s = &plusmn; \frac{1}{2}\).</p>
+      </li>
+      <li>根据原子态计算磁矩 原子态: \(^{2S + 1}L_J\)
+        <p>首先获得 \(S, L, J\) 的值, 然后计算得到 \(m_J\).
+          然后计算磁矩 \(&mu;_J = - g_J \sqrt{J (J + 1)} &mu;_B, &mu;_{J,z} = - m_J g_J &mu;_B\).</p>
+        <p>(注: 如果已经得到磁矩了的话, 可以根据磁矩来算梯度场中的受力,
+          然后根据这个受力来进行计算谱线分离.)</p>
+    <details><summary>一些代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">sym-l</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;S</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;P</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;D</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;F</span><span class="p">)</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;G</span><span class="p">)</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;H</span><span class="p">)</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="ss">&#39;I</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="nv">sym</span><span class="p">)))</span><span class="w">               </span><span class="c1">; I&#39;d bad in Lisp</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">l-sym</span><span class="w"> </span><span class="p">(</span><span class="nf">l</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;S</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;P</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;D</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nf">intern</span><span class="w"> </span><span class="p">(</span><span class="nb">string</span><span class="w"> </span><span class="p">(</span><span class="nf">code-char</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">67</span><span class="p">)))))))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">lande-g-factor</span><span class="w"> </span><span class="p">(</span><span class="nf">atom-state</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;ATOM-STATE: (2S+1 L J) -&gt; Gj = 3/2 + (S(S + 1) - L(L + 1)) / (2J(J+1)).&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">s</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">atom-state</span><span class="p">))</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">l</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">atom-state</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">j</span><span class="w"> </span><span class="p">(</span><span class="nb">third</span><span class="w"> </span><span class="nv">atom-state</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">3/2</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">l</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">j</span><span class="p">))))))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">m-j-lst</span><span class="w"> </span><span class="p">(</span><span class="nf">j</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;mJ: ±J, ±(J - 1), ...&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">mj</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">mj</span><span class="p">))</span>
+</pre></div>
+    </details>
+      </li>
+    </ul>
+   </details>
+  </li>
+  <li><b>电子自旋</b>: 电子自旋角动量 \(S = \sqrt{s (s + 1)} \hbar\), \(s = \frac{1}{2}\).
+    在磁场 \(z\) 方向上 \(s_z = &plusmn; \frac{1}{2} \hbar = m_s \hbar, m_s = &plusmn; \frac{1}{2}\).</li>
+  <li>\(g_j\) <b>朗德 g 因子</b>:
+    \(g = \frac{\mathrm{measured}\ &mu;_z\ \mathrm{united\ in}\ &mu;_B}{z\ \mathrm{projection\ of}\ L\ \mathrm{united\ in}\ \hbar}\).
+    <p>通过 \(g\) 因子可以将自旋磁矩写成通用的形式:
+      \(&mu;_j = - g_j &mu;_B \frac{S}{\hbar} = - \sqrt{j (j + 1)} g_j &mu;_B\), \(&mu;_{j,z} = - m_j g_j &mu;_B\).</p>
+    <p>对于电子: \(&mu;_s = - \frac{g_s &mu;_B}{\hbar} S, &mu;_{s, z} = - m_s g_s &mu;_B\), 并且 \(g_s\).</p>
+  <details><summary>一些更多的解释和计算</summary>
+    <p>原子磁矩 \(&cong;\) 电子轨道磁矩 \(+\) 电子自旋磁矩 (\(\boldsymbol{&mu;} = \boldsymbol{&mu;}_l + \boldsymbol{&mu;}_s\))</p>
+    <p>轨道角动量 \(L = \sqrt{l (l + 1)} \hbar, l = 0, 1, &hellip;, n - 1\),
+      电子自旋角动量 \(S = \sqrt{s(s + 1)} \hbar, s = \frac{1}{2}\).
+      总角动量 \(\boldsymbol{J} = \boldsymbol{L} + \boldsymbol{S} &rArr; \boldsymbol{&mu;}_l = - \frac{e}{2 m} \boldsymbol{L}\).</p>
+    <p>为了简化表示, 通过 \(^{2S + 1}L_J\) 来表示原子状态,
+      其中 \(L\) 为轨道角动量对应的量子数,
+      \(L: [S, P, D, F, G, &hellip;] &rarr; [0, 1, 2, 3, &hellip;]\).
+      \(S\) 为自旋对应的量子数, \(J\) 为总角动量对应的量子数.</p>
+    <p>于是可以计算 \(g_J = \frac{3}{2} + \frac{1}{2} \frac{S^2 - L^2}{J^2}\).</p>
+    <p>于是可以计算 \(m_j g_j\), 得到最终谱线的分裂.</p>
+  </details>
+  </li>
+  <li><b>双线结构</b>
+    <ul>
+      <li><b>原子实</b> 和 <b>价电子</b>
+        <p>对碱金属原子的基态: 底层轨道填满, 然后留下一个在外头的电子.
+          尽管应当和氢原子很像和 \(l\) 有关, 但是因为 <span style="text-decoration:underline;">轨道贯穿</span> 和 <span style="text-decoration:underline;">原子实极化</span>,
+          导致能级还和 \(l\) 有关.</p>
+      </li>
+      <li><b>跃迁选择定则</b>
+        \(&Delta; l = &plusmn; 1, &Delta; j = 0, &plusmn; 1\)</li>
+      <li><b>精细结构</b> 和 <b>超精细结构</b>
+        <p>修正磁矩的影响, 加入由于自旋-轨道相互作用产生的:
+          <span style="text-decoration:underline;">精细结构</span> (自旋磁矩和轨道磁矩), <span style="text-decoration:underline;">超精细结构</span> (原子核磁矩和电子磁矩).</p>
+    <details><summary>自旋-轨道相互作用</summary>
+        <p>大概就是换系, (角动量, 圆周运动) 运动产生磁场, 磁场对自旋磁矩产生的能量.</p>
+        <p>那么如何估算磁场?</p>
+        <p>计算能量差 \(&Delta; U &rArr; U = g_s m_s &mu;_B B\), 选择已知的不同谱线进行计算.</p>
+    </details>
+      </li>
+      <li><b>兰姆移位</b></li>
+    </ul>
+  </li>
+  <li><b>塞曼效应</b>
+    <p>\[h &Delta; &nu; = &Delta; (m_j g_j - m_i g_i) &mu;_B B\]</p>
+  <details><summary>具体的一些说明</summary>
+    <p><img src="/_img/pieces/atomic-physics/zeeman-exp.png" alt="/_img/pieces/atomic-physics/zeeman-exp.png" /></p>
+    <p>如果要出现正常塞曼效应, 则需要原子形成 \(s = 0, 2 s + 1 = 1\) 的独态.
+      所以对于 \(^1L_j\) 的原子可行.</p>
+  </details>
+  </li>
+  <li><b>斯塔克效应</b></li>
+  <li><b>核磁共振</b></li>
+</ul>
+<details><summary>习题</summary>
+<ul>
+  <li>格罗春图</li>
+  <li>计算跃迁谱线波长</li>
+</ul>
+</details>
+<h1>多电子原子</h1>
+<ul>
+  <li>泡利原理</li>
+  <li>洪特定则</li>
+</ul>
+<h2>电子耦合</h2>
+<ul>
+  <li>电子组态</li>
+  <li>双电子耦合 (氢原子)
+    <p>将多电子的自旋和轨道角动量记作 \(S = (s_1, s_2, s_3, &hellip;)\) 和 \(L = (l_1, l_2, l_3, &hellip;)\)</p>
+    <ul>
+      <li>\(L-S\) 耦合 \((S, L) = J\)
+    <details><summary>更加详细的计算</summary>
+        <p>将原子态表示为 \((n_1 l_1 n_2 l_2)^{2s + 1} L_j\),
+          于是可以计算得到系统的 \(s = 0, 1\);
+          \(l = l_1 + l_2, l_1 + l_2 - 1, &hellip;, |l_1 - l_2|\);
+          \(j = l + s, l + s - 1, &hellip;, |l - s|\).</p>
+        <p>于是应当可以历遍得到原子态符号: \(^{2s+1}L_j\).</p>
+    <details><summary>计算过程</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">L-S-states</span><span class="w"> </span><span class="p">(</span><span class="nf">l1</span><span class="w"> </span><span class="nv">s1</span><span class="w"> </span><span class="nv">l2</span><span class="w"> </span><span class="nv">s2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">l-1</span><span class="w">   </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="nv">l1</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">l-2</span><span class="w">   </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="nv">l2</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">L-lst</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">l-1</span><span class="w"> </span><span class="nv">l-2</span><span class="p">)</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">l-1</span><span class="w"> </span><span class="nv">l-2</span><span class="p">))</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">l</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">S-lst</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">s1</span><span class="w"> </span><span class="nv">s2</span><span class="p">)</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">s</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">res</span><span class="w">   </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">S-lst</span><span class="w"> </span><span class="k">do</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">L-lst</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="nv">s</span><span class="p">)</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">l-sym</span><span class="w"> </span><span class="nv">l</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">))))</span>
+<span class="w">    </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">L-S-states</span><span class="w"> </span><span class="ss">&#39;p</span><span class="w"> </span><span class="mi">1/2</span><span class="w"> </span><span class="ss">&#39;d</span><span class="w"> </span><span class="mi">1/2</span><span class="p">)</span>
+</pre></div>
+        <p>((1 P 1) (1 D 2) (1 F 3) (3 P 0) (3 P 1) (3 P 2) (3 D 1) (3 D 2) (3 D 3)
+          (3 F 2) (3 F 3) (3 F 4))</p>
+    </details></details>
+      </li>
+      <li>\(j-j\) 耦合 \((s_1 l_1)(s_2 l_2)&hellip; = (j_1, j_2, j_3, &hellip;) = J\)
+    <details><summary>详细的说明和计算步骤</summary>
+        <ol>
+          <li>还是一样, 计算得到量子数 \(l, s, j\), 于是可以计算 \(m_j\)</li>
+          <li>由于泡利不相容, 所以同样状态的 \(n, l, j, m_j\) 只能有一个</li>
+        </ol>
+    </details>
+      </li>
+    </ul>
+    <p>在这样的耦合系统中, 从状态 \((S, L)\) (或者 \(J\)) 变换到状态 \((S', L')\) (或者 \(J'\)),
+      应当满足选择规则:</p>
+    <ul>
+      <li>\(L-S\) 耦合: \(&Delta; S = 0; &Delta; L = 0, &plusmn; 1; &Delta; J = 0, &plusmn; 1 (J = 0 &not;\rightarrow J' = 0)\)</li>
+      <li>\(j-j\) 耦合: \(&Delta; j = 0, &plusmn;1; &Delta; J = 0, &plusmn; 1(J = 0 &not;\rightarrow J' = 0)\)</li>
+    </ul>
+  </li>
+  <li>He 原子能级</li>
+</ul>
+<details><summary>习题</summary>
+<ul>
+  <li>计算对应态的 \(\boldsymbol{L} &sdot; \boldsymbol{S}\): (\(\boldsymbol{L} - \boldsymbol{S}\) 耦合)
+    <ol>
+      <li>得到 \(s, j, l\) (量子态)</li>
+      <li>计算 \(S = \sqrt{s(s + 1} \hbar, L = \sqrt{l(l + 1)} \hbar, J = \sqrt{j(j + 1)}\hbar\) (角动量)</li>
+      <li>利用耦合关系 \(\boldsymbol{J}^2 = (\boldsymbol{L} + \boldsymbol{S})^2 = \boldsymbol{L}^2 + \boldsymbol{S}^2 + 2 \boldsymbol{L} &sdot; \boldsymbol{S}\) 计算</li>
+    </ol>
+  </li>
+  <li>计算可能存在的原子态
+    <ul>
+      <li>考虑 \(L-S\) 耦合: <code>(L-S-state l1 s1 l2 s2)</code>,
+        并且对于同科电子, 由于泡利原理, 只有 \(l+s\) 为偶数的电子存在.
+    <details><summary>代码</summary>
+        <p>偶数定则是由于同科电子 (\(n\) 和 \(l\) 都相同的电子引入的限制)</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">even-rule</span><span class="w"> </span><span class="p">(</span><span class="nf">atom-state</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;L+S should be even.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">s</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">atom-state</span><span class="p">))</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">l</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">atom-state</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">evenp</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">l</span><span class="p">))))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">n-l-eq-e-possible-states</span><span class="w"> </span><span class="p">(</span><span class="nf">l</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">remove-if-not</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;even-rule</span><span class="w"> </span><span class="p">(</span><span class="nf">L-S-states</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">1/2</span><span class="w"> </span><span class="nv">l</span><span class="w"> </span><span class="mi">1/2</span><span class="p">)))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">n-l-eq-e-possible-states</span><span class="w"> </span><span class="ss">&#39;d</span><span class="p">)</span>
+</pre></div>
+        <p>((1 S 0) (1 D 2) (1 G 4) (3 P 0) (3 P 1) (3 P 2) (3 F 2) (3 F 3) (3 F 4))</p>
+    </details>
+      </li>
+      <li>考虑 \(j-j\) 耦合</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h2>泡利不相容原理</h2>
+<p>在一个原子中, 不可能有两个或者两个以上的电子据有完全相同的四个量子数 \((n, l, m_l, m_s)\).
+  或者更加一般地说: <i>在全同费米子 (自旋为半整数的粒子) 组成的系统中不能有两个或者多个粒子处于完全相同的状态</i>.</p>
+<details><summary>全同费米子</summary>
+<p>在 <a href="/notes/stastic-mechanics/">热统</a> 里面已经遇到过了. 交换两个全同粒子, 其波函数是否改变? (交换对称或者交换反对称)
+  若对称, 则是 <span style="text-decoration:underline;">玻色子</span>; 若反对称, 则为 <span style="text-decoration:underline;">费米子</span>.</p>
+<p>对于反对称的费米子, 则会有 \(&psi;(&alpha;, &beta;)\) 会使得 \(&alpha;, &beta;\) 不相同.</p>
+</details>
+<h2>元素周期表</h2>
+<ul>
+  <li>电子 <span style="text-decoration:underline;">壳层</span> (\((K, L, M, N, O, P, Q, &hellip;) &rarr; (1, 2, &hellip;)\))
+    和 <span style="text-decoration:underline;">支壳层</span> (\((s, p, d, f, g, h, i, &hellip;) &rarr; (0, 1, 2, &hellip;)\)).
+    <p>填充原则:</p>
+    <ul>
+      <li>支壳层能够容纳的电子数 \(2(2l + 1)\), 壳层能够容纳的电子数 \(N = &sum; 2 (2l + 1) = 2 n^2\).</li>
+      <li>能量最小 (从低开始填)
+    <details><summary>壳层次序和洪特定则</summary>
+        <p><b>壳层次序</b>:</p>
+        <p>填充顺序: \(1s, 2s, 2p, 3s, 3p, 4s, 3d, &hellip;\) 定性的解释就是对于圆轨道 \(3d\)
+          没有轨道贯穿和极化效应, 而 \(4s\) 轨道在径向扭曲, 靠近原子核处拉低了能量.</p>
+    <details><summary>代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">electron-shell-next</span><span class="w"> </span><span class="p">(</span><span class="nf">electron</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;ELECTRON (n . l): (1 . s) -&gt; (2 . s)&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">electron</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">l</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">electron</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">l</span><span class="p">)</span><span class="w">                       </span><span class="c1">; l = s</span>
+<span class="w">        </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">&#39;s</span><span class="p">))</span>
+<span class="w">              </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="ss">&#39;p</span><span class="p">))</span>
+<span class="w">              </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="ss">&#39;p</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span><span class="w"> </span><span class="c1">; not sure...</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">l-sym</span><span class="w"> </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">2</span><span class="p">))))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">l-sym</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">l</span><span class="p">))))))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="mi">10</span>
+<span class="w">      </span><span class="nv">with</span><span class="w"> </span><span class="nv">electron</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">&#39;s</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">collect</span><span class="w"> </span><span class="nv">electron</span>
+<span class="w">      </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">electron</span><span class="w"> </span><span class="p">(</span><span class="nf">electron-shell-next</span><span class="w"> </span><span class="nv">electron</span><span class="p">)))</span>
+</pre></div>
+        <pre class="example">
+((1 . S) (2 . S) (2 . P) (3 . S) (3 . P) (4 . S) (3 . D) (4 . P) (5 . S) (4 . D) (5 . P))
+        </pre>
+    </details>
+        <p><b>洪特定则</b>:</p>
+        <ol>
+          <li>给定电子组态, 能量最低的原子态必定具有泡利不相容原理所允许的最大 \(S\) 值.</li>
+          <li>\(S\) 值相同状态, \(L\) 值最大的原子态能量最低</li>
+          <li>对于同科电子 \((nl)^{&nu;}\):
+            <ul>
+              <li>\(&nu; \leq 2 l + 1\), \(J\) 最小的能量最低</li>
+              <li>\(&nu; &gt; 2 l + 1\), 超过半满, \(J\) 最大能量最低</li>
+            </ul>
+          </li>
+        </ol>
+    <details><summary>例题: 根据 \(Z\) 来确定基态原子态符号</summary>
+        <ol>
+          <li>根据 \(Z\) 来确定电子组态
+       <details><summary>代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">electron-shell-of-z</span><span class="w"> </span><span class="p">(</span><span class="nf">z</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Z -&gt; 1s2 2s2 ... (((1 . s) . 2) ((2 . s) . 2) ...)&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">n-shell</span><span class="w"> </span><span class="p">(</span><span class="nf">shell</span><span class="p">)</span><span class="w">                 </span><span class="c1">; shell: (n . l)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">l</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-l</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">shell</span><span class="p">))))</span><span class="w"> </span><span class="c1">; n-shell = 2(2l + 1)</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">l</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">e-shell</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="ss">&#39;s</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">with</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">          </span><span class="nv">with</span><span class="w"> </span><span class="nv">res</span><span class="w">     </span><span class="nb">=</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()</span>
+<span class="w">          </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">            </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">inc</span><span class="w"> </span><span class="p">(</span><span class="nb">min</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">z</span><span class="w"> </span><span class="nv">counter</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">n-shell</span><span class="w"> </span><span class="nv">e-shell</span><span class="p">))))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">e-shell</span><span class="w"> </span><span class="nv">inc</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="nv">inc</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">e-shell</span><span class="w"> </span><span class="p">(</span><span class="nf">electron-shell-next</span><span class="w"> </span><span class="nv">e-shell</span><span class="p">)))</span>
+<span class="w">          </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;&lt;</span><span class="w"> </span><span class="nv">:key</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;caar</span><span class="p">)))))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">electron-shell-of-z</span><span class="w"> </span><span class="mi">26</span><span class="p">)</span><span class="w">                </span><span class="c1">; Fe</span>
+</pre></div>
+            <pre class="example">
+(((1 . S) . 2) ((2 . P) . 6) ((2 . S) . 2) ((3 . D) . 6) ((3 . P) . 6) ((3 . S) . 2) ((4 . S) . 2))
+            </pre>
+       </details>
+          </li>
+          <li>根据洪特定则 (1), 使得 \(S\) 最大
+            <p>这个时候就不看那些被排满的电子, 而是看没有被排满的电子.</p>
+          </li>
+          <li>根据洪特定则 (2), 使得 \(L\) 最大 (考虑泡利原理)</li>
+          <li>根据洪特定则 (3), 使得 \(J\) 最大</li>
+        </ol>
+    </details>
+    </details>
+      </li>
+      <li>原子实贯穿和极化</li>
+    </ul>
+  </li>
+</ul>
+<details><summary> 习题 </summary>
+<ul>
+  <li>计算线系的能量和跃迁的波长
+    <ul>
+      <li>比如已知 \(Z = 45\) 的铑的电子组态 \(1s^2 2s^2 2p^6 3s^2 3p^6 3d^{10} 4s^2 4p^6 4d^8 5s^1\),
+        <ul>
+          <li>计算基态频谱:
+            <ol>
+              <li>拿到 \(Z\) 可以排电子组态 <code>(electron-shell-of-z Z)</code>:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">electron-shell-of-z</span><span class="w"> </span><span class="mi">45</span><span class="p">)</span>
+</pre></div>
+                <pre class="example">
+(((1 . S) . 2) ((2 . P) . 6) ((2 . S) . 2) ((3 . D) . 10) ((3 . P) . 6) ((3 . S) . 2) ((4 . D) . 7) ((4 . P) . 6) ((4 . S) . 2) ((5 . S) . 2))
+                </pre>
+                <p>Note: 啊, 上面的程序好像是错的&#8230; 不过因为没有时间所以就这样吧,
+                  保留的原因是为了说明程序是有错误的, 不删掉的原因是因为懒.
+                  (一个简单的猜想是填的时候要么是不满足轨道的选择 <code>electron-shell-next</code>,
+                  要么是我那块的代码写岔了.)</p>
+              </li>
+              <li>对于排满的轨道就不考虑了, 直接考虑没有排满的轨道.
+                对于题目给的, 没有排满的轨道为 \(4d^8 5s^1\), 于是由洪特定则,
+                将 \(S\) 和 \(L\) 填最大未满 (\(s = \frac{3}{2}, l = 3\)), 得到 \(j = l+s = \frac{9}{2}\),
+                于是最终的原子态 \(^4F_{9/2}\).</li>
+            </ol>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h2>多原子分子</h2>
+<h1>X 射线和激光</h1>
+<h2>X 射线</h2>
+<ul>
+  <li>X 射线的 <b>产生</b>
+    <p>X 射线管: 高能电子打击靶物质 (电子束, 靶物质, X 射线):</p>
+    <p><img src="/_img/pieces/atomic-physics/x-ray.png" alt="/_img/pieces/atomic-physics/x-ray.png" /></p>
+    <p>或者通过同步辐射的方式来产生, 对比之下可调范围更广:</p>
+    <p>X 射线 <b>发射谱</b>:</p>
+    <ul>
+      <li>对于 X 光管, 通常:
+        <p><img src="/_img/pieces/atomic-physics/x-ray-spem.png" alt="/_img/pieces/atomic-physics/x-ray-spem.png" /></p>
+      </li>
+      <li>对于连续谱 (韧致辐射, 变速运动产生)</li>
+    </ul>
+  </li>
+  <li>X 射线的 <b>实验</b>
+    <ul>
+      <li>偏振: 石墨双散射</li>
+      <li>衍射:
+        <p>劳厄晶体衍射和晶体结构测量 (布拉格 \(2 d sin &alpha; = n &lambda;\))</p>
+        <p><img src="/_img/pieces/atomic-physics/x-ray-diffraction.png" alt="/_img/pieces/atomic-physics/x-ray-diffraction.png" /></p>
+        <p>德拜照相</p>
+        <p><img src="/_img/pieces/atomic-physics/x-ray-debye.png" alt="/_img/pieces/atomic-physics/x-ray-debye.png" /></p>
+      </li>
+    </ul>
+  </li>
+  <li>X 射线应用
+    <ul>
+      <li>DNA 双螺旋</li>
+      <li>质子荧光分析 \(p-X\): 质子打击样品产生空穴放出 X 射线来分析元素.
+        (和 X 光管结构非常像, 区别在于打击样品的从高速电子变成了质子)
+        <p>比如越王勾践剑, 生物样品, 大气污染等 (珍贵的, 大型的, 生物的)</p>
+        <p>好处是:</p>
+        <ul>
+          <li>韧致辐射小</li>
+          <li>探测灵敏度高</li>
+          <li>可以在大气或者氦气环境下分析</li>
+        </ul>
+      </li>
+      <li>同步辐射</li>
+    </ul>
+  </li>
+</ul>
+<details><summary> 习题 </summary>
+<ul>
+  <li>X 射线管的工作电压: \(U e = E_{\mathrm{max}} = \frac{h c}{&lambda;_{\mathrm{min}}}\)</li>
+  <li>Moseley 公式: \(&nu;_{m &rarr; n} = R c (Z - 1)^2 (\frac{1}{n^2} - \frac{1}{m^2})\),
+    <p>可以用该方法来计算原子序数, 反过来也可以用来计算放出谱线的频率或者壳层的能量.</p>
+  </li>
+  <li>晶体衍射 (布拉格衍射) \(2 d sin &theta; = n &lambda;\)</li>
+  <li>计算吸收屏蔽效果 \(I = I_0 e^{- &mu; x}\), 其中 \(&mu;\) 为吸收系数.</li>
+</ul>
+</details>
+<h2>激光</h2>
+<h3>原理</h3>
+<p>认为原子处于两个态 \(E_1, E_2\), 两个态的数量分别为  \(N_1, N_2\) (\(\frac{\mathrm{d} N_1}{\mathrm{d} t} = - \frac{\mathrm{d} N_2}{\mathrm{d} t}\)).
+  产生激光的三个主要过程:</p>
+<ul>
+  <li>受激吸收: 吸收光子从低能态跃迁到高能态
+    <p>\[\frac{\mathrm{d}N_{12}}{\mathrm{d}t} = B_{12} N_1 u(&nu;, T)\]</p>
+    <p>其中 \(B_{12}\) 为单个原子在单位时间内发生吸收过程的概率. \(B_{21} = B_{12}\)</p>
+  </li>
+  <li>自发辐射: 从高能态跃迁到低能态发光
+    <p>\[E_2 &rarr; E_1: - \frac{\mathrm{d} N_2}{\mathrm{d} t} = A_{21} N_2\]</p>
+    <p>其中 \(A_{21}\) 称为爱因斯坦自发发射系数,
+      为单个原子在单位时间内发生自发辐射的概率.</p>
+  </li>
+  <li>受激辐射: 激发到高能态跃迁到低能态
+    <p>\[E_2 &rarr; E_1: \frac{\mathrm{d} N_{21}}{\mathrm{d}t} = B_{21} N_2 u(&or;, T)\]</p>
+    <p>其中 \(B_{21}\) 为单个原子单位时间内受激发辐射概率, \(u(&nu;, T)\) 为辐射场密度.
+      受激辐射光与外来光的频率, 偏振方向, 相位及传播方向均相同 (全同光子) 的相干光,
+      有光放大作用.</p>
+  </li>
+  <li>谐振腔选频</li>
+</ul>
+<h3>其他激光器原理</h3>
+<ul>
+  <li>X 射线自由电子激光器
+    <p>高速电子在不均匀磁场中运动周期性变速放出辐射.</p>
+  </li>
+  <li>同步辐射</li>
+</ul>
+<h1>原子核物理</h1>
+<h2>原子核基本性质</h2>
+<ul>
+  <li>结合能和比结合能
+    <p>结合能, 前后质量 (能量) 差, 不过需要注意的是,
+      计算的时候的质量单位 \(1 u = 931.5 MeV\):</p>
+    <p>\[&Delta; E = (&sum;_{\mathrm{before}} m - &sum;_{\mathrm{after}} m) c^2\]</p>
+    <p>比结合能: \(\frac{&Delta; E}{A}\).</p>
+    <ul>
+      <li>可以用来计算反应放出粒子的运动动量之类的, 需要考虑是否引入相对论修正.</li>
+      <li>以及类似的有阀能概念 (如果要考虑相对论的话, 需要考虑换系,
+        否则的话可以用结论 \(&Delta; E = \frac{M_A + M_B}{M_B}\) (两体碰撞的最大能量).)</li>
+    </ul>
+    <p>反应 \(Q\) 值 (反应前后粒子质量差)</p>
+  </li>
+</ul>
+<h2>原子核模型</h2>
+<ul>
+  <li>液滴模型: 能量: 体积, 表面, 库仑, 对称, 奇偶</li>
+  <li>费米气体模型</li>
+  <li>壳层模型</li>
+  <li>集体模型</li>
+</ul>
+<h2>原子核衰变 (\(&alpha;, &beta;, &gamma;\))</h2>
+<ul>
+  <li>半衰期, 衰变
+    <p>\[{\mathrm{d}_t N} = N_0 e^{- &lambda; t}, &lambda; = \frac{ln 2}{T_{1/2}}\]</p>
+  </li>
+  <li>\(^4_2&alpha;\) 实际上就是 He 核</li>
+  <li>\(&beta;: ^0_{-1}e\) 实际上就是电子</li>
+  <li>\(&gamma;\) 实际上就是光子</li>
+  <li>\(&nu;\) 中微子</li>
+</ul>
+<p>(注: 模型看情况, 不一定适用就是了&#8230; )</p>
+<h2>核能</h2>
+<h2>其他</h2>
+<h1>粒子物理</h1>
+<h2>粒子分类和基本性质</h2>
+<h2>费曼图和定量计算</h2>
+<h2>相互作用统一</h2>
+<h2>宇宙学</h2>
+<p>这个比较有意思, 多信使天文观测.</p>
+<h1>End</h1>
+<p>摆了, 懒得管了, 复习不过来了.</p>
+
+  </div><a class="u-url" href="/notes/atomic-end/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
