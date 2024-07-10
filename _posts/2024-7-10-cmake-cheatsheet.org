@@ -1,0 +1,171 @@
+#+title: CMake Cheatsheet
+#+date: 2024-07-10
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: learning
+* About
+看作是 Makefile 的 DSL 语法糖吧...
+
+* 基本的命令形式
+#+begin_example
+  command([arg]*) # 参数使用空格分隔, 括号内可以换行
+#+end_example
+
+#+begin_html
+<details><summary>一些基础的命令</summary>
+#+end_html
++ 设置变量 =set(<variable> <value>... [PARENT_SCOPE])= [[https://cmake.org/cmake/help/latest/command/set.html#set][CMake | set]]
++ 取消设置变量 =unset(<variable> [CACHE | PARENT_SCOPE])= [[https://cmake.org/cmake/help/latest/command/unset.html#unset][CMake | unset]]
++ 条件判断
+
+  #+begin_example
+    if(<condition>)
+      <commands>
+    elseif(<condition>) # optional block, can be repeated
+      <commands>
+    else()              # optional block
+      <commands>
+    endif()
+  #+end_example
+
+  [[https://cmake.org/cmake/help/latest/command/if.html#if][Cmake | if]]
++ 历遍
+
+  #+begin_example
+    # foreach(<loop_var> RANGE <stop>)
+    # foreach(<loop_var> RANGE <start> <stop> [<step>])
+    # foreach(<loop_var> IN [LISTS [<lists>]] [ITEMS [<items>]])
+    foreach(<loop_var> <items>)
+      <commands>
+    endforeach()
+  #+end_example
+
+  [[https://cmake.org/cmake/help/latest/command/foreach.html#foreach][CMake | foreach]]
+#+begin_html
+</details>
+#+end_html
+
+* 基本的 CMakeList.txt 的文件结构
+#+begin_example
+  # 声明当前项目最低的 CMake 版本
+  cmake_minimum_required(VERSION 3.10)
+
+  # 声明项目名称
+  project(PROJECT_NAME)
+
+  # 编译文件
+  add_executable(EXECUTABLE_NAME [SOURCE_FILE]+)
+
+  # 或以库的形式进行编译:
+  # add_libaray(LIB_NAME TYPE [SOURCE_FILE]+) # TYPE = STASTIC, SHARED, MODULE
+#+end_example
+
+** Files
+声明一个文件列表.
+
+#+begin_example
+  # Example:
+  #     file(GLOB sources ${SRC}/*.cc)
+
+  file(GLOB <variable> [LIST_DIRECTORIES true|false]
+                       [RELATIVE <path>]
+                       [CONFIGURE_DEPENDS]
+                       <globbing-expressions>...)
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/file.html#file][CMake | file]]
+
+复制一些文件.
+
+#+begin_example
+  # Example:
+  #     configure_file(IN_FILE OUT_FILE COPYONLY)
+
+  configure_file(<input> <output>
+                 [NO_SOURCE_PERMISSIONS | USE_SOURCE_PERMISSIONS |
+                  FILE_PERMISSIONS <permissions>...]
+                 [COPYONLY] [ESCAPE_QUOTES] [@ONLY]
+                 [NEWLINE_STYLE [UNIX|DOS|WIN32|LF|CRLF] ])
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/configure_file.html#configure-file][CMake | configure_file]]
+
+** Options
+为 config 过程提供可选参数.
+
+#+begin_example
+  option(<variable> "<help_text>" [value]) # value = ON / OFF, ...
+  if (OPTION_NAME)
+    # do-some-thing
+  endif()
+#+end_example
+
+#+begin_html
+<details><summary>解释</summary>
+#+end_html
+
+效果如下:
+
+#+begin_src shell
+  cmake .. -DOPTION_NAME=ON
+#+end_src
+
+在代码中以宏定义的形式存在:
+
+#+begin_src c++
+  #ifndef OPTION_NAME
+    ...
+  #else
+    ...
+  #endif
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+[[https://cmake.org/cmake/help/latest/command/option.html#option][CMake | option]]
+
+** Library
+链接库.
+
+#+begin_example
+  target_link_libraries(<target> ... <item>... ...)
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/target_link_libraries.html#target-link-libraries][CMake | target_link_libraries]]
+
+** Package
+导入外部项目.
+
+#+begin_example
+  find_package(<PackageName> [<version>] [REQUIRED] [COMPONENTS <components>...])
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/find_package.html#find-package][CMake | find-package]]
+
+** Include Other CMake
+载入并运行其他 CMake 配置文件. 
+
+#+begin_example
+  include(<file|module> [OPTIONAL] [RESULT_VARIABLE <var>]
+                        [NO_POLICY_SCOPE])
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/include.html#include][CMake | include]]
+
+** Install
+安装编译好的程序.
+
+#+begin_example
+  install(TARGETS <target>... [...])
+#+end_example
+
+[[https://cmake.org/cmake/help/latest/command/install.html#install][CMake | install]]
+
+* 一些内置的变量
+见 [[https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html][CMake | cmake-variables(7)]].
+
++ [[https://cmake.org/cmake/help/latest/variable/PROJECT_BINARY_DIR.html][PROJECT_BINARY_DIR]] 编译结果的路径
++ [[https://cmake.org/cmake/help/latest/variable/PROJECT_SOURCE_DIR.html][PROJECT_SOURCE_DIR]] 源文件的路径
