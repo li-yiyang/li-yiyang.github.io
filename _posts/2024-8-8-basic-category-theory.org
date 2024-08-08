@@ -1,0 +1,186 @@
+#+title: Reading: Basic Category Theory
+#+date: 2024-08-08
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: reading
+* About
+想要了解更多的一些关于 "函数式" 的知识,
+毕竟每次看到网上有人讲到函数式就是范畴论起手,
+让我这种对函数式的浅薄印象只停留在 "不可变数据结构",
+"函数一等公民" 这样的菜逼十分的担忧, 思来想去还是得学点硬的.
+
+这本书是看到网上有位 55 岁退休闲得慌的大哥推荐的 (推荐的 [[http://www.cs-study.com/koga/category/short_explanation_of_leinster01_j.html][网页]],
+[[http://www.cs-study.com/koga/category/short_explanation_of_leinster01.html][英文版]], 不过其实感觉更像是读书笔记, 虽然大哥的笔记真强 +什么日本人刻板印象+).
+
+(大哥的自述 [[http://www.cs-study.com/koga/][原文]]: "2014年に５５歳で退職しました．早まったかもです．")
+
+并且这本书 (Basic Category Theory) 的作者免费把书开放在了 arXiv 上:
+[[https://arxiv.org/abs/1612.09375][Tom Leinster : Basic Category Theory, 2014 (https://arxiv.org/abs/1612.09375)]].
+
+(真是好人啊)
+
+为了防止我鸽了, 采用一天一更新的方式进行一个记录.
+
+#+begin_html
+<details><summary>记录的内容</summary>
+#+end_html
+
++ 原文中的 Example, Exercise, Lemma, 保留原文的标号
++
+
+#+begin_html
+</details>
+#+end_html
+
+* Introduction
+*Example 0.1*:
++ 符号 \(1\) 用于表示 _只有一个元素的集合_.
++ 性质: *任意* 集合 \(X\), *存在* \(X \rightarrow 1\) 的映射.
++ 符号 \(\rightarrow\) 用于表示映射 (map, mapping, function)
+
+*Example 0.2*:
++ 性质: *任意* 环 (ring) \(R\), *存在* *唯一* (unique) 同态 \(\mathbb{Z} \rightarrow R\)
++ 证明:
+
+  #+begin_html
+  <details><summary>略</summary>
+  #+end_html
+  + 存在性:
+
+    \[\phi(n) = \left\{ \begin{matrix} \underbrace{1 + \cdots + 1}_{n} & \mathrm{if}\ n > 0 \\ 0 & \mathrm{if}\ n = 0 \\ - \phi(-n) & \mathrm{if}\ n < 0  \end{matrix} \right.\]
+  + 唯一性:
+
+    \[\psi(n) = \psi(\underbrace{1 + \cdots + 1}_n) = \underbrace{\psi(1) + \cdots + \psi(1)}_n = \underbrace{1 + \cdots + 1}_n = \phi(n)\]
+
+    注: 这里用了同态的线性, 反证法证明之; \(n = 0\) 用同态的零元; \(n < 0\) 同理.
+  #+begin_html
+  </details>
+  #+end_html
+
+*Lemma 0.3*:
++ 若对 *任意* 环 \(R\), *存在* 同态 \(A \rightarrow R\) (称该性质为 "initial"), 则 \(A \cong \mathbb{Z}\)
++ 符号: \(\cong\) isomorphism
++ 证明:
+
+  #+begin_html
+  <details><summary>略</summary>
+  #+end_html
+  + \(A\) initial \(\Rightarrow\) *存在唯一* 同态 \(\phi: A \rightarrow \mathbb{Z}\);
+  + \(\mathbb{Z}\) initial \(\Rightarrow\) *存在唯一* 同态 \(\phi': \mathbb{Z} \rightarrow A\);
+  + 得 \(\phi' \circ \phi = 1_A, \phi \circ \phi' = 1_{\mathbb{Z}}\)
+  #+begin_html
+  </details>
+  #+end_html
+
+*Example 0.4*:
++ 矢量空间 (vector space) 的映射可以变成基底 (basis, \((v_s)_{s \in S}\)) 的映射.
+
+  (specify a linear map from \(V\) to \(W\) simply by saying where
+  the basis elements go)
++ 任何定义在基底元素的函数可以被拓展为 \(V\) 唯一的线性映射
+
+  (any function defined on the basis elements exends uniquely to a
+  linear map on \(V\))
+
+  考虑函数: \(i: S \rightarrow V, i(s) = v_s, s \in S\), 对 *任意* 函数 \(f\),
+  *存在唯一* 线性函数 \(\overline{f}: V \rightarrow \forall W\). (这里是不是理解得有点错误? )
++ 交换图
+
+  [[{{ site.github.url }}/_img/reading/basic-category-theory/s-v-w-map.png]]
+
+*Example 0.5*:
++ 对集合 \(S\), 通过 discrete topology \(D(S)\) (topological space),
+  任意从 \(S \rightarrow X\)  的映射都是连续的.
+
+  这里不理解的是 discrete topology (all subsets are *open*?),
+  topological space 的概念, 为啥就连续了?
+
+*Example 0.6*:
++ *bilinear map* \(f: U \times V \rightarrow W\) 满足:
+
+  \[\begin{matrix} f(u, v_1 + \lambda v_2) & = & f(u, v_1) + \lambda f(u, v_2) \\ f(u_1 + \lambda u_2, v) & = & f(u_1, v) + \lambda f(u_2, v) \end{matrix}\]
++ universal bilinear map: 一个 universal 的 bilinear map 满足以下交换图:
+
+  [[{{ site.github.url }}/_img/reading/basic-category-theory/universal-bilinear-map.png]]
+
+
+*Lemma 0.7*:
++ \(b: U \times V \rightarrow T, b': U \times V \rightarrow T'\), \(b\) 和 \(b'\) 是 universal bilinear map,
+  则 \(T \cong T'\), 即 *存在唯一* 同构 \(j: T \rightarrow T', j \circ b = b'\).
++ 证明
+
+  #+begin_html
+  <details><summary>略</summary>
+  #+end_html
+
+  交换图:
+
+  [[{{ site.github.url }}/_img/reading/basic-category-theory/lemma-0-7.png]]
+
+  相当于利用 *Example 0.6* universal bilinear map 里面交换图,
+  固定 universal bilinear map \(b\) 和 \(\forall\) bilinear \(f \Rightarrow b'\),
+  得到的 \(\exists!\) linear \((\overline{f} \Rightarrow j, \forall W \Rightarrow T') \Rightarrow j: T \rightarrow T'\),
+  然后对称得到 \(j': T' \rightarrow T\), 即构造了 \(1_T = j' \circ j = j \circ j'\).
+
+  (所以交换图的作用就是来找路径咯? )
+
+  #+begin_html
+  </details>
+  #+end_html
+
+*Example 0.8*:
++ 令 \(\theta: G \rightarrow H\) 为一个群的同态, 有如下交换图:
+
+  [[{{ site.github.url }}/_img/reading/basic-category-theory/example-0-8.png]]
+
+  其中:
+  + \(\imath\) 是 \(\mathrm{ker}(\theta)\) 到 \(G\) 的包含映射 (inclusion)
+
+    包含映射 (inclusion): \(\forall x \in \mathrm{ker}(\theta), \imath(x) = x\),
+    用符号 \(\hookrightarrow \) 进行表示 (\(\subset\) 和 \(\rightarrow\) 结合).
+  + \(\varepsilon\) 为 trivial homomorphism.
+
+    trivial: \(\forall g \in G, \varepsilon(g) = 1\)
+
+*Example 0.9*:
+...
+
+* Categories, functors and natural transformations
+#+begin_quote
+A category is a system of related objects. The *objects* do not live
+in isolation: there is some notion of *map* between objects, binding
+them together.
+#+end_quote
+
+typical examples:
+
++ *object*: group, topological space;
++ *map*: homomorphism, continuous map
+
+** Categories
+*Definition 1.1.1*: 一个 *category* (范畴) \(\mathcal{A}\) 包含:
++ *objects* (对象) 的集合 \(\mathrm{ob}(\mathcal{A})\);
++ 对于每个 \(A, B \in \mathrm{ob}(\mathcal{A})\), 一个从 \(A\) 到 \(B\) 的 *map*,
+  *arrows*, *morphisms* 的集合 \(\mathcal{A} (A, B)\);
++ 对于每个 \(A, B, C \in \mathrm{ob}(\mathcal{A})\), 一个 composition 函数:
+
+  \[\begin{matrix} \mathcal{A}(B, C) \times \mathcal{A}(A, B) & \rightarrow & \mathcal{A}(A, C) \\ (g, f) & \mapsto & g \circ f \end{matrix}\]
++ 对于每个 \(A \in \mathrm{ob}(\mathcal{A})\), 一个 \(A\) 上的单位元: an element \(1_{A}\)
+  of \(\mathcal{A}(A, A)\), called the *identity* on \(A\)
+
+有以下公理:
++ *associativity*: \(f \in \mathcal{A}(A, B), g \in \mathcal{A}(B, C), h \in \mathcal{A}(C, D), (h \circ g) \circ f = h \circ (g \circ f)\).
++ *identity laws*: \(f \in \mathcal{A}(A, B), f \circ 1_{A} = f = 1_{B} \circ f\)
+
+* Appendix: English Dictionary
+看到同学有读论文学英文的操作, 不妨也来试试:
+
++ multiplicative \(\leftarrow\) multiplication \(\leftarrow\) multiply
++ multiplicative identity 乘法单位元
++ homomorphisms (\(\leftarrow\) Greek homoios morphe, "similar form") 同态
++ isomorphism \(\leftarrow\) Greek isos (equal), morphe (form, shape) 同构
+
+  /可逆的线性变换称为同构/
++ inclusion \(\leftarrow\) include
++ axiom: 公理
