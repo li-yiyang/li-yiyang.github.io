@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Turing Complete and Verilog | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Turing Complete and Verilog" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About About the FPGA Board I&#39;m using 为了看起来不像是广告, 隐藏了. 板子 (Tang Nano 9K) 是从网上按照大小和价格以及是否包邮进行筛选随便卖的, 大概是因为深夜购物的原因, 脑子没带完整&#8230; 于是卖完之后才发现商家给的文档也并不是那么完整&#8230; 最后在网上搜索了之后看到了相应的文档: OS Toolchain Manual Installation (不过基本上就是对应的环境配置而已&#8230; ) 这里做一个简单的记录, 方便之后复现. 还是以 MacOS 为主 (反正目前没钱卖新电脑&#8230; ) 基础设置搭建 homebrew python 安装一些相关的工具链 apicula | Documentation and open source tools for the Gowin FPGA bitstream format 因为使用的是芯片是 Gowin GW1NR-9 FPGA, 所以需要对应 Gowin 的工具链. pip install apycula yosys | Yosys Open SYnthesis Suite cmake | Cross-platform make 编译链工具 eigen | C++ template library for linear algebra openFPGALoader | Universal utility for programming FPGA brew install yosys cmake eigen openfpgaloader nextpnr | a portable FPGA place and route tool git clone https://github.com/YosysHQ/nextpnr.git nextpnr &amp;&amp; cd nextpnr" />
+<meta property="og:description" content="About About the FPGA Board I&#39;m using 为了看起来不像是广告, 隐藏了. 板子 (Tang Nano 9K) 是从网上按照大小和价格以及是否包邮进行筛选随便卖的, 大概是因为深夜购物的原因, 脑子没带完整&#8230; 于是卖完之后才发现商家给的文档也并不是那么完整&#8230; 最后在网上搜索了之后看到了相应的文档: OS Toolchain Manual Installation (不过基本上就是对应的环境配置而已&#8230; ) 这里做一个简单的记录, 方便之后复现. 还是以 MacOS 为主 (反正目前没钱卖新电脑&#8230; ) 基础设置搭建 homebrew python 安装一些相关的工具链 apicula | Documentation and open source tools for the Gowin FPGA bitstream format 因为使用的是芯片是 Gowin GW1NR-9 FPGA, 所以需要对应 Gowin 的工具链. pip install apycula yosys | Yosys Open SYnthesis Suite cmake | Cross-platform make 编译链工具 eigen | C++ template library for linear algebra openFPGALoader | Universal utility for programming FPGA brew install yosys cmake eigen openfpgaloader nextpnr | a portable FPGA place and route tool git clone https://github.com/YosysHQ/nextpnr.git nextpnr &amp;&amp; cd nextpnr" />
+<link rel="canonical" href="/misc/turing-complete-verilog/" />
+<meta property="og:url" content="/misc/turing-complete-verilog/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-09-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Turing Complete and Verilog" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-09-04T00:00:00+00:00","datePublished":"2023-09-04T00:00:00+00:00","description":"About About the FPGA Board I&#39;m using 为了看起来不像是广告, 隐藏了. 板子 (Tang Nano 9K) 是从网上按照大小和价格以及是否包邮进行筛选随便卖的, 大概是因为深夜购物的原因, 脑子没带完整&#8230; 于是卖完之后才发现商家给的文档也并不是那么完整&#8230; 最后在网上搜索了之后看到了相应的文档: OS Toolchain Manual Installation (不过基本上就是对应的环境配置而已&#8230; ) 这里做一个简单的记录, 方便之后复现. 还是以 MacOS 为主 (反正目前没钱卖新电脑&#8230; ) 基础设置搭建 homebrew python 安装一些相关的工具链 apicula | Documentation and open source tools for the Gowin FPGA bitstream format 因为使用的是芯片是 Gowin GW1NR-9 FPGA, 所以需要对应 Gowin 的工具链. pip install apycula yosys | Yosys Open SYnthesis Suite cmake | Cross-platform make 编译链工具 eigen | C++ template library for linear algebra openFPGALoader | Universal utility for programming FPGA brew install yosys cmake eigen openfpgaloader nextpnr | a portable FPGA place and route tool git clone https://github.com/YosysHQ/nextpnr.git nextpnr &amp;&amp; cd nextpnr","headline":"Turing Complete and Verilog","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/turing-complete-verilog/"},"url":"/misc/turing-complete-verilog/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Turing Complete and Verilog</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-09-04T00:00:00+00:00" itemprop="datePublished">Sep 4, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<h2>About the FPGA Board I'm using</h2>
+<details><summary>为了看起来不像是广告, 隐藏了. </summary>
+<p>板子 (Tang Nano 9K) 是从网上按照大小和价格以及是否包邮进行筛选随便卖的,
+  大概是因为深夜购物的原因, 脑子没带完整&#8230;
+  于是卖完之后才发现商家给的文档也并不是那么完整&#8230;
+  最后在网上搜索了之后看到了相应的文档:</p>
+<p><a href="https://learn.lushaylabs.com/os-toolchain-manual-installation/">OS Toolchain Manual Installation</a></p>
+<p>(不过基本上就是对应的环境配置而已&#8230; )</p>
+<details><summary>这里做一个简单的记录, 方便之后复现.</summary>
+<p>还是以 MacOS 为主 (反正目前没钱卖新电脑&#8230; )</p>
+<ol>
+  <li>基础设置搭建
+    <ul>
+      <li><a href="https://brew.sh">homebrew</a></li>
+      <li><a href="https://www.python.org">python</a></li>
+    </ul>
+  </li>
+  <li>安装一些相关的工具链
+    <ul>
+      <li><a href="https://github.com/YosysHQ/apicula">apicula | Documentation and open source tools for the Gowin FPGA bitstream format</a>
+        <p>因为使用的是芯片是 Gowin GW1NR-9 FPGA, 所以需要对应 Gowin 的工具链.</p>
+<div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>apycula
+</pre></div>
+      </li>
+      <li><a href="https://github.com/YosysHQ/yosys">yosys | Yosys Open SYnthesis Suite</a></li>
+      <li><a href="https://cmake.org">cmake | Cross-platform make</a> 编译链工具</li>
+      <li><a href="https://eigen.tuxfamily.org/index.php">eigen | C++ template library for linear algebra</a></li>
+      <li><a href="https://github.com/trabucayre/openFPGALoader">openFPGALoader | Universal utility for programming FPGA</a>
+<div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>yosys<span class="w"> </span>cmake<span class="w"> </span>eigen<span class="w"> </span>openfpgaloader
+</pre></div>
+      </li>
+      <li><a href="https://github.com/YosysHQ/nextpnr">nextpnr | a portable FPGA place and route tool</a>
+<div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/YosysHQ/nextpnr.git<span class="w"> </span>nextpnr<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>nextpnr
+
+cmake<span class="w"> </span>.<span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>-DARCH<span class="o">=</span>gowin<span class="w"> </span>-DGOWIN_BBA_EXECUTABLE<span class="o">=</span><span class="sb">`</span>which<span class="w"> </span>gowin_bba<span class="sb">`</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>-DPYTHON_INCLUDE_DIR<span class="o">=</span><span class="k">$(</span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from distutils.sysconfig import get_python_inc; print(get_python_inc())&quot;</span><span class="k">)</span><span class="w"> </span><span class="se">\</span>
+<span class="w">      </span>-DPYTHON_LIBRARY<span class="o">=</span><span class="k">$(</span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import distutils.sysconfig as sysconfig;import os;  print(os.path.join(sysconfig.get_config_var(&#39;LIBDIR&#39;), [f for f in os.listdir(sysconfig.get_config_var(&#39;LIBDIR&#39;)) if f.endswith(&#39;.dylib&#39;) or f.endswith(&#39;.a&#39;)][0]))&quot;</span><span class="k">)</span>
+
+make
+sudo<span class="w"> </span>make<span class="w"> </span>install
+</pre></div>
+      </li>
+      <li>Other Tools (I thought it useful)
+        <ul>
+          <li><a href="http://iverilog.icarus.com/">iverilog | Verilog simulation and synthesis tool</a></li>
+          <li><a href="https://gtkwave.sourceforge.io/">GtkWave | GTK+ based wave viewer</a>
+<div class="highlight"><pre><span></span>brew<span class="w"> </span>install<span class="w"> </span>iverilog<span class="w"> </span>gtkwave
+</pre></div>
+          </li>
+        </ul>
+      </li>
+      <li>Emacs (if you'd like suffer like me): <a href="https://github.com/veripool/verilog-mode">verilog-mode</a> (comes with Emacs after 21)</li>
+    </ul>
+  </li>
+  <li>项目搭建, 组织和常用命令
+    <ul>
+      <li><b>项目结构</b>:
+        (这里因为我没有写过啥大项目, 所以并不知道该怎么组织项目文件,
+        所以这里只能做一些简单的记录, 之后如果有更多的经验的话再说.)
+        <p>使用 <code>&lt;module-name&gt;.v</code> 来保存模块的功能.
+          使用 <code>&lt;board&gt;.cst</code> 来声明引脚关系.</p>
+      </li>
+      <li><b>常用命令</b>
+        <ol>
+          <li>yosys
+            <ul>
+              <li><code>read_verilog &lt;module&gt;.v</code>
+                <p>读取名为 <code>&lt;module&gt;.v</code> 的模块声明.</p>
+              </li>
+              <li><code>synth_gowin -top &lt;top-module-name&gt; -json &lt;output&gt;.json</code>
+                <p>将模块以 <code>&lt;top-module-name&gt;</code> 作为主模块进行 synthesize (综合生成? ),
+                  并以 <code>&lt;output&gt;.json</code> 为文件名导出.</p>
+              </li>
+              <li><code>exit</code> 退出, 嗯&#8230;</li>
+            </ul>
+          </li>
+          <li>nextpnr (其中频率应为 <code>27</code> (Mhz))
+<div class="highlight"><pre><span></span>nextpnr-gowin<span class="w"> </span>--json<span class="w">   </span>&lt;output&gt;.json<span class="w">       </span><span class="se">\</span>
+<span class="w">              </span>--freq<span class="w">   </span>&lt;frequency-in-Mhz&gt;<span class="w">  </span><span class="se">\</span>
+<span class="w">              </span>--write<span class="w">  </span>&lt;pnr-output&gt;.json<span class="w">   </span><span class="se">\</span>
+<span class="w">              </span>--device<span class="w"> </span>GW1NR-LV9QN88PC6/I5<span class="w"> </span><span class="se">\</span>
+<span class="w">              </span>--family<span class="w"> </span>GW1N-9C<span class="w">             </span><span class="se">\</span>
+<span class="w">              </span>--cst<span class="w">    </span>&lt;board&gt;.cst
+</pre></div>
+          </li>
+          <li>apicula
+<div class="highlight"><pre><span></span>gowin_pack<span class="w"> </span>-d<span class="w"> </span>GW1N-9C<span class="w"> </span>-o<span class="w"> </span>&lt;output&gt;.fs<span class="w"> </span>&lt;pnr-output&gt;.json
+</pre></div>
+          </li>
+          <li>openFPGALoader (烧写)
+<div class="highlight"><pre><span></span>openFPGALoader<span class="w"> </span>-b<span class="w"> </span>tangnano9k<span class="w"> </span>-f<span class="w"> </span>&lt;output&gt;.fs
+</pre></div>
+          </li>
+        </ol>
+        <p>等我把这套流程过得差不多之后再想想自动化的方法吧.</p>
+      </li>
+    </ul>
+  </li>
+</ol>
+<p>(注: 环境不一定配得够全, 也不一定最省力, 如果有更加方便的, 以后再更新算了.
+  并且如果以后可以的话, 看看能不能整一个 brew 安装脚本来自动安装&#8230; )</p>
+</details></details>
+<h1>NAND Gate</h1>
+<p><del>大概应该不叫做 &#8220;难的&#8221; 门&#8230;</del></p>
+<p>(该部分对应基础逻辑电路部分)</p>
+<p>我觉得吧, 任何知道点逻辑运算的应该都会吧&#8230;
+  (虽然可能不是最简单的逻辑门, 但是这部分基本就是德摩根定律乱杀.)</p>
+<blockquote>
+  <p>德摩根定律: \(\overline{A &and; B} = \overline{A} &or; \overline{B}, \overline{A &or; B} = \overline{A} &and; \overline{B}\)</p>
+</blockquote>
+<h1>算不来和记不住</h1>
+<p>(该部分对应的是算数运算和寄存器)</p>
+<h2>算数</h2>
+<ul>
+  <li>二进制速算: 这个感觉挺难的 (尤其是对于我这种两位数以上运算就捉急的呆逼)</li>
+  <li>成对的麻烦: 这个用与门两两配对后用或门合并结果即可</li>
+  <li>奇数个信号: 这个可以换一个想法来看, 变成一个不考虑进位的加法器就可以理解了,
+    因为奇数(1) + 奇数(1) = 偶数(0), 偶数(0) + 奇数(1) = 奇数(1),
+    偶数(0) + 偶数(0) = 偶数(0). 那么加法器对应的门是 XOR 门, OK, 问题解决.</li>
+  <li>半加器: XOR 和 AND 门分别代表 SUM 和 CAR, 和前面奇数个信号的思路一样.</li>
+  <li>全加器: 考虑进位的计算, SUM 还是一样, CAR 变成 \((A &and; B) &or; (A &and; C) &or; (B &and; C)\).</li>
+  <li>信号计数: 可以参考: <a href="/misc/simplify-logic/">Simplify Logic (Q-M Methods)</a>,
+    之前写了一个简单程序来实现了 Q-M 方法来话讲逻辑电路 (虽然不一定对就是).)</li>
+  <li>加倍: 其实就是 <code>shift</code> 操作&#8230; 毕竟二进制里面的乘二就是左移.</li>
+  <li>8 位加法器: 实际上就是全加器的连接</li>
+  <li>负数: 见下</li>
+  <li>相反数: 这个可能可以有一个更加无聊的做法, (除了直接使用结论).
+    比如说反过来想, 相反数就是 \(x + \overline{x} = 0\) 这样的东西吧:
+    <ol>
+      <li>按照最后位 \(x_n\) 进行一个判断, 若 \(x_n = 0\), 则 \(\overline{x}_n = 0\); 反之 \(\overline{x}_n = 1\),
+        但是会有一个进位 \(c_{n - 1} = 1\) (显然, 前者 \(c_{n - 1} = 0\)).</li>
+      <li>那对于 \(x_{n - 1}\), 若 \(c_{n - 1} = 0\), 则判断条件和 1 一样;
+        反之, \(c_{n - 1} = 1\), 则 \(x_{n - 1} = 1\) 时, \(\overline{x}_{n - 1} = 0\), \(c_{n - 2} = 1\);
+        而 \(x_{n - 1} = 0\) 时, \(\overline{x}_{n - 1} = 1, c_{n - 2} = 1\).
+        <p>写成真值表就是:</p>
+        <table>
+          <tr><th>C</th><th>X</th><th>NEG X</th><th>NEXT C</th></tr>
+          <tr><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+          <tr><td>1</td><td>1</td><td>0</td><td>1</td></tr>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+        </table>
+      </li>
+      <li>其他的依次类推.</li>
+    </ol>
+    <p>你看, 这样是否就变成了一个比较有意思的算法了呢?
+      并且从真值表也可以看出, NEG X 相对于 C 和 X 就是一个 XOR 门,
+      而 NEXT C 相对于 C 和 X 就是一个 OR 门.</p>
+    <p>这样不仅递归可以实现, 还方便用电路来实现了呢&#8230;</p>
+  <details><summary>注: 递归的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">binary-inverse-number</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">bins</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return - x and carry, x is binary expression of bins.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">bins</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">bins</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">bins</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">inv</span><span class="w"> </span><span class="nv">carray</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;binary-inverse-number</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">bins</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">bin</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">bins</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">carray</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">bin</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">carray</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">bin</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+<span class="w">                            </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                        </span><span class="nv">inv</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">carray</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">bin</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">neg</span><span class="w"> </span><span class="p">(</span><span class="nf">bins</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Negitive number of bins.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;binary-inverse-number</span><span class="w"> </span><span class="nv">bins</span><span class="p">))</span>
+</pre></div>
+    <p>代码上应该没有问题, 唯一的缺点就是写得不是很好看, 之后估计可以修改一下?</p>
+    <p>不过这个时候我就想到了一个问题, 是不是这种可以通过有限次递归构造的算法,
+      都能够被描述成硬件呢? 不过虽然很好奇, 但是我是不会去构造啥算法去实现的.
+      就当作是电脑硬盘太小, 写不下我这个丑陋的代码吧.</p>
+  </details>
+  </li>
+  <li>逻辑引擎: 实际上就是 3 位解码器加上逻辑运算,
+    复用逻辑门可以减少使用门的数量, 以及让电路图不会太爆炸.</li>
+  <li>计数器: 感觉我的实现有点不太正规&#8230; 让寄存器无时无刻不在读写,
+    然后用一个二路选择作为写的是给的数还是加一的数.</li>
+</ul>
+<h2>储存</h2>
+<ul>
+  <li>循环依赖: 有点类似 RS 锁存器, 但是在这个游戏里面是禁止出现的</li>
+  <li>延迟线: 延时一个信号周期</li>
+  <li>奇变偶不变: 通过延迟线构造的振荡器, 其实感觉就有点锁存器的感觉了,
+    毕竟 \(Q(t) = \overline{Q}(t - &tau;)\).</li>
+  <li>1 位取反器: 其实利用 <code>reg ^ reg</code> 异或即可</li>
+  <li>1 位开关: 等价于 AND 门, 但是可以把输出连在一起 (等价于 OR 门)</li>
+  <li>数据选通器: 这个个人感觉做得不是很好, 难道 8 位的 OR 门也就是这样胡乱连线吗?
+    不过这里感觉可以理解为什么引入开关这个元件的作用了.
+    (个人理解开关的作用: 防止串线.)</li>
+  <li>总线: 实际上就是两个数据选通器的组合而已.</li>
+  <li>优雅储存: 实际上感觉就是 RS 锁存器的感觉, 通过将两个延迟线连在一起即可,
+    \(Q(t) = Q(t - &tau;)\), 但是这样的话会造成短路, 也没有可以触发的来源,
+    所以用控制信号和开关做一个判断: \(Q(t) = \mathrm{if\ } W, S \mathrm{\ else\ } Q(t - &tau;)\).</li>
+  <li>储存 1 字节: 把一位拓展到八位?</li>
+  <li>解码器: 1 位和 3 位的思路都是一样的吧, 我感觉就是用开关进行选择的感觉.</li>
+  <li>小盒子: 这个大小限制感觉非常没有意义, 毕竟这个可以自动布线,
+    线都糊在一起了&#8230; 实际上就实现了一个两路选通和利用了 1 字节储存.</li>
+</ul>
+<h1>计算器, 启动</h1>
+<p>(该章节对应处理器架构)</p>
+<ul>
+  <li>算数引擎: 这不就是之前的逻辑引擎多加了两个门嘛&#8230;
+    (实际上还能通过门复用来减少, 比如用一个二路选择和取反来实现
+    ADD 和 SUB 共用一个 ADD 门).</li>
+  <li>条件判断: 这里还看到了开关的隔离功能呢&#8230;
+    这里的实现方法就是通过多路判选和开关将逻辑电路部分进行合并.
+    逻辑部分只要实现一个负数判断 (符号位) 和一个非零判断 (OR 门),
+    其他的就不过是一些逻辑组合而已.</li>
+  <li>寄存器之间: 这个就是一个多条件的选通而已, 诶, 就是连线连起来太麻烦.
+    这个时候就很好奇 Verilog 是怎样生成连线的了. 不过有意思的是,
+    这个电路实现的就是一个 MOV 指令 (大概). 而亲 (该) 爱 (死) 的 <a href="https://github.com/xoreaxeaxeax/movfuscator">movfuscator</a>
+    已经证明了只用 MOV 一个指令也可以构造程序 (图灵完备?)</li>
+  <li>指令解码器: 这更加简单了, 简直就是一个打表操作嘛.</li>
+  <li>可运行的计算机: (直接到这里了, 前面的忽略), 不是很难,
+    就是不容易排线. 不过目前这几个寄存器都是有作用的,
+    真正用来储存的只有一个寄存器, 所以应该谈不上是真正的计算机.</li>
+</ul>
+<details><summary>指令集</summary>
+<p>指令集的组成结构:</p>
+<div class="highlight"><pre><span></span>INSTRUCT <span class="o">::=</span> INSTANT   NUMBER
+           | COMPUTE   0 0 0 METHOD
+           | CONDITION 0 0 0 COND
+           | COPY      FROM  TO
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">to-bin</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">bin</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Trun `num&#39; to binary list.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">num</span><span class="p">)</span><span class="w"> </span><span class="nv">bin</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bin</span><span class="w"> </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="nv">bin</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">num-to-bin</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="mi">-1</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Turn `num&#39; into binary list with max length of `len&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w">  </span><span class="p">(</span><span class="nf">to-bin</span><span class="w"> </span><span class="nv">num</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="nv">size</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">len</span><span class="p">)))))</span>
+<span class="w">    </span><span class="nv">res</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">instant-number</span><span class="w"> </span><span class="p">(</span><span class="nf">number</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return instruct that write `number&#39; into REG0.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">num-to-bin</span><span class="w"> </span><span class="nv">number</span><span class="w"> </span><span class="mi">6</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*compute-method-table*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">OR</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">NAND</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">NOR</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">AND</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">ADD</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">SUB</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Table for method and their code.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compute</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return instruct that compute REG1 and REG2 by `method&#39;,</span>
+<span class="s">which writes results into REG3. </span>
+<span class="s">See `*compute-method-table*&#39; for method and their code.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">code</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">*compute-method-table*</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">code</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">copy</span><span class="w"> </span><span class="p">(</span><span class="nf">from</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return instruct that copy data from `from&#39; to `to&#39;.</span>
+<span class="s">The `from&#39; (or `to&#39;) can be `input&#39; (or `output&#39;) or number of reg.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">from-code</span><span class="w"> </span><span class="p">(</span><span class="nf">num-to-bin</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="ss">&#39;INPUT</span><span class="p">)</span><span class="w">  </span><span class="mi">6</span><span class="w"> </span><span class="nv">from</span><span class="p">)</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">to-code</span><span class="w">   </span><span class="p">(</span><span class="nf">num-to-bin</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">to</span><span class="w">   </span><span class="ss">&#39;OUTPUT</span><span class="p">)</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span><span class="w">   </span><span class="mi">3</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">from-code</span><span class="w"> </span><span class="nv">to-code</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*condition-type-table*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">NEVER</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">=0</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">ZERO</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">&lt;0</span><span class="w">     </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;=0</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">LESQ</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">LEQZ</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">ALWAYS</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">!=0</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">NEQZ</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">&gt;=0</span><span class="w">    </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">&gt;0</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">GEQZ</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">GRTZ</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Condition type table mapping condition with their code.</span>
+<span class="s">Also, I add some alias to make it more easy to type.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">condition-by</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return instruct that set Program Counter to REG0 by `type&#39;.</span>
+<span class="s">See `*condition-type-table*&#39; for more.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">code</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">*condition-type-table*</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">code</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)))))</span>
+</pre></div>
+</details>
+<h1>手搓二进制?</h1>
+<p>(该章节对应编程)</p>
+<ul>
+  <li>加 5 等于几: 相当于就是一个加常数
+  <details><summary>LISP</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">list</span><span class="w">                                   </span><span class="c1">; OUTPUT = INPUT</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">instant-number</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w">                     </span><span class="c1">; REG0 = 5</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">copy</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">                             </span><span class="c1">; REG1 = REG0</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">copy</span><span class="w"> </span><span class="ss">&#39;input</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">                        </span><span class="c1">; REG2 = INPUT</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">compute</span><span class="w"> </span><span class="ss">&#39;add</span><span class="p">)</span><span class="w">                         </span><span class="c1">; REG3 = REG1 + REG2</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">copy</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="ss">&#39;output</span><span class="p">)</span><span class="w">                       </span><span class="c1">; OUTPUT = REG3</span>
+<span class="w"> </span><span class="p">)</span>
+</pre></div>
+    <p>这样还是太麻烦了, 不如&#8230;</p>
+  </details>
+  </li>
+  <li>激光炮直瞄: 相当于是正整数乘法, 最朴素的一个做法就是
+    \(&lambda; a b . (\mathrm{if\ } a = 0, 0 \mathrm{\ else\ } b + Y(a - 1) b)\).
+  <details><summary>对应代码</summary>
+    <pre class="example">
+# λab.(a = 0 -&gt; 0; T -&gt; b + Y(a - 1)b)
+6            # 0:
+reg0_to_reg5 # 1: reg5 &lt;= sum count
+in_to_reg4   # 2: reg4 &lt;= sum result
+reg5_to_reg1 # 3:
+1            # 4: sum count step
+reg0_to_reg2 # 5: 
+sub          # 6: sum count -= 1
+16           # 7: return sum result
+less_eq_0    # 8: if sum count &lt;= 0
+reg3_to_reg5 # 9: sum count -= 1
+reg4_to_reg1 # 10:
+in_to_reg2   # 11:
+add          # 12:
+reg3_to_reg4 # 13: sum result += r
+3            # 14:
+jmp          # 15:
+reg4_to_out  # 16: output sum result
+    </pre>
+  </details>
+    <p>稍微复杂一点的做法会是
+      \(&lambda; a b . (\mathrm{cond\ } a = 0, 0; even(a), Y(a / 2)(b + b); b + Y(a - 1)b)\).
+      当然, 也可以选择不那么漂亮的做法, 因为是正整数常数数乘,
+      所以直接把代码变成: \(&lambda; r . (\overbrace{r + r + \cdots + r}^6)\) 也不是不行.
+      这样的话就一个普通寄存器都不需要用到了:</p>
+  <details><summary>对应代码</summary>
+    <pre class="example">
+in_to_reg1
+in_to_reg2
+add # r + r =&gt; 2r
+reg3_to_reg2
+add # 2r + r =&gt; 3r
+reg3_to_reg2
+reg3_to_reg1
+add # 3r + 3r =&gt; 6r
+reg3_to_out
+    </pre>
+  </details>
+    <p>(并且这个还快一点呢, 毕竟有折半操作).</p>
+  </li>
+  <li>太空入侵者: 我现在做的这个代码完全没有一点智能,
+    完全就是提前写好动作, 所以没啥意思.</li>
+  <li>密码锁: 这个自然可以直接枚举历遍 (就是慢了点).
+  <details><summary>对应代码</summary>
+    <pre class="example">
+0            # 0: 
+reg0_to_reg1 # 1: reg1 &lt;= guess number
+label output_guess
+reg1_to_out  # 2: output guess number
+1            # 3: 
+reg0_to_reg2 # 4: 
+add          # 5: guess number += 1
+reg3_to_reg1 # 6:
+output_guess # 7: label at 2
+jmp          # 8:
+    </pre>
+  </details>
+  <details><summary>你一定想说二分法是吧</summary>但是如果可以二分法搜索呢? 但是这里没有除法也没有位运算.
+    我也想不到可以怎样不在修改电路的基础上实现左移运算.
+    但是虽然这个除法没法实现, 但是可以历遍这个二进制啊:
+    <pre class="example">
+Algorithm: bin-search
+  guess = 0;
+  mask = 128;
+  if (mask + guess &lt; real)
+    guess += mask;
+  mask /= 2;
+    </pre>
+    <p>道理是这个道理, 但是一开始我是想这样做的:</p>
+    <pre class="example">
+# init mask =&gt; reg4
+mask_128
+jmp
+
+label init
+0
+reg0_to_reg3 # reg3 &lt;= guess
+
+label output_guess
+reg3_to_reg1 # reg1 &lt;= reg3 = guess
+reg4_to_reg2 # 
+add
+reg3_to_out  # out = mask + guess
+in_to_reg3
+next_mask
+neq_0
+reg3_to_reg1 # mask + guess =&gt; reg1
+sub          # reg3 = guess, guess not change
+
+label next_mask
+reg5_to_reg0 # move to next mask
+jmp          # next mask place stored in reg5
+
+label mask_128
+128
+reg0_to_reg4
+mask_64
+reg0_to_reg5 # next mask = 64
+output_guess
+jmp
+
+# ...
+    </pre>
+    <p>然后我就意识到一个致命的问题, 就是这个立即数最多只能写 6 位,
+      也就是最大 63. 这样就不能够打表了&#8230; 菜狗就不想办法优化了.</p>
+    <p>充分说明硬件支持软件, 只靠软件是有局限的 (bushi).</p>
+  </details>
+  </li>
+  <li>时间掩码: 模 4, 不就是取最后两位嘛&#8230; AND 一下不就好了.</li>
+  <li>迷宫: 贴墙靠右 (左也行) 走, 虽然应该就是这么简单,
+    但是实际实现还需要一些操作&#8230;
+  <details><summary>具体实现</summary>简单来说应该是:
+    <pre class="example">
+Algorithm: Maze-Walk-Left
+  if (right-road?)
+    walk-to-right;
+  else if (front-road?)
+    walk-to-front;
+  else if (left-road?)
+    walk-to-left;
+  else
+    walk-back;
+    </pre>
+    <p>变成代码就是:</p>
+    <pre class="example">
+label exit
+4
+reg0_to_out
+
+label loop
+# test_right_road
+2
+reg0_to_out  # turn to right
+test_front_road
+reg0_to_reg4
+test
+jmp          # call test
+
+label test_front_road
+0
+reg0_to_out  # turn to front
+test_left_road
+reg0_to_reg4
+test
+jmp          # call test
+
+label test_left_road
+0
+reg0_to_out  # turn to left
+walk_back
+reg0_to_reg4
+test
+jmp          # call test
+
+label walk_back
+0
+reg0_to_out  # turn to back
+
+label walk   # walk
+1
+reg0_to_out
+loop
+jmp
+
+label test
+in_to_reg1   # read input
+3
+reg0_to_reg2
+sub
+exit
+eq_0         # input = 3 =&gt; exit
+1
+reg0_to_reg2
+sub
+reg4_to_reg0 # reg4 &lt;= next condition
+eq_0         # input = 1 =&gt; wall =&gt; next condition
+walk         # if not 3 or 1, just walk
+jmp
+    </pre>
+  </details>
+  </li>
+</ul>
+<h1>计算机, 再启动</h1>
+<p>(对应处理器架构2)</p>
+<ul>
+  <li>异或: 感觉这个不难啊.
+  <details><summary>代码</summary>
+    <pre class="example">
+in_to_reg4    # reg4 &lt;= A
+in_to_reg5    # reg5 &lt;= B
+reg5_to_reg1
+reg5_to_reg2
+nand          # reg3 = reg5 nand reg5 = not B
+reg3_to_reg1
+reg4_to_reg2
+and           # reg3 = A and (not B)
+reg3_to_reg0
+reg4_to_reg1
+reg4_to_reg2
+nand          # reg3 = reg4 nand reg4 = not A
+reg3_to_reg1
+reg5_to_reg2
+and           # reg3 = (not A) and B
+reg0_to_reg1
+reg3_to_reg2
+or            # reg3 = (A and (not B)) or ((not A) and B)
+reg3_to_out
+    </pre>
+  </details>
+  </li>
+  <li>8 位常数: 这个不是更加简单了吗?</li>
+  <li>相等: 按位相比, NOT(NOR) 门</li>
+  <li>8 位异或: 拆开, 操作, 合并</li>
+  <li>无符号小于: 我承认, 虽然不难, 但是把我绕进去了.
+  <details><summary>实际上还是用递归的想法来思考会比较好一些</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">unsigned-less</span><span class="w"> </span><span class="p">(</span><span class="nf">bin1</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare less of unsigned binary list `bin1&#39; and `bin2&#39;.</span>
+<span class="s">Return `T&#39; if `bin1&#39; is less than `bin2&#39;, `NIL&#39; otherwise.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">bin1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">bin2</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">NIL</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">b1</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">bin1</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">b2</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">b1</span><span class="w"> </span><span class="nv">b2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">unsigned-less</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">bin1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">b1</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">  </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">              </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">b2</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">  </span><span class="nv">T</span><span class="p">)))))</span>
+</pre></div>
+    <p>对应的电路: <code>(eq b1 b2)</code> \(&rarr;\) NOT (b1 XOR b2), 通过一个开关去打开后面的通路.</p>
+  </details>
+  </li>
+  <li>有符号小于: 想不出来怎么用更少的门来实现这个功能.
+    有符号比较那么就先比较符号位, 再比较其他位:
+  <details><summary>大概是这个样子</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">signed-less</span><span class="w"> </span><span class="p">(</span><span class="nf">bin1</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sign1</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">bin1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">sign2</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign2</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">          </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign1</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign2</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="nv">T</span><span class="p">)</span>
+<span class="w">          </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign1</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign2</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">unsigned-less</span><span class="w"> </span><span class="p">(</span><span class="nf">neg</span><span class="w"> </span><span class="nv">bin2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">neg</span><span class="w"> </span><span class="nv">bin1</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">sign2</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">unsigned-less</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">bin1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">bin2</span><span class="p">))))))</span>
+</pre></div>
+    <p>虽然程序是这么写的, 但是电路实现的话就会有很多的问题,
+      要怎么样把这个简化呢&#8230;</p>
+    <p>啊, 最后直接复制了无符号小于的电路, 主打的就是一个懒于思考&#8230;</p>
+  </details>
+  </li>
+  <li>宽指令: 这个有点妙, 虽然实现很简单,
+    只要一个寄存器和一个对计数器奇偶判断的门电路即可.
+    但是这样就可以拓展指令能够支持的宽度了. (更多更好的指令集)</li>
+  <li>一把线, 像挂面: 并不觉得和之前的架构有什么太大的区别,
+    控制好读写, 然后折腾一下计算单元就好了.
+    <p>[2023-09-04] 出了些事情, 暂时到这里, 之后更新.</p>
+  </li>
+</ul>
+<h1>Verilog</h1>
+<h2>ENV and SIMULATION</h2>
+<p>虽然 <a href="https://hdlbits.01xz.net/wiki/Main_Page">HDLBits</a> 上面有模拟和仿真结果的测试,
+  但是总归还是在本地跑一边 (仿真和上机) 让人更加安心.</p>
+
+  </div><a class="u-url" href="/misc/turing-complete-verilog/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
