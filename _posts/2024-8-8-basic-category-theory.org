@@ -173,6 +173,148 @@ typical examples:
 + *associativity*: \(f \in \mathcal{A}(A, B), g \in \mathcal{A}(B, C), h \in \mathcal{A}(C, D), (h \circ g) \circ f = h \circ (g \circ f)\).
 + *identity laws*: \(f \in \mathcal{A}(A, B), f \circ 1_{A} = f = 1_{B} \circ f\)
 
+*Remarks 1.1.2* 记号:
+1. 将:
+   + \(A \in \mathcal{A}\) 记为 \(A \in \mathrm{ob}(\mathcal{A})\);
+   + 函数的映射 \(f: A \rightarrow B, A \xrightarrow{f} B\) 记为 \(f \in \mathcal{A}(A, B)\)
+
+     也有记为 \(\mathrm{Hom}_{\mathcal{A}}(A, B)\), 或者 \(\mathrm{Hom}(A, B)\) 的情况,
+     \(\mathrm{Hom}\) 表示 homomorphism (同态).
+   + 函数的结合 (compose) \(g f\) 记为 \(g \circ f\)
+2. 对一串映射的连接 (string of map):
+
+   \[A_0 \xrightarrow{f_1} A_1 \xrightarrow{f_2} \cdots \xrightarrow{f_n} A_n\]
+
+   可以用一个映射来代替:
+
+   \[A_0 \xrightarrow{f_n f_{n-1} \cdots f_1} A_n\]
+3. 交换图的 *commutes*: 如果一个交换图中有两条从 object \(X\) 到 object \(Y\)
+   的通路, 则称该交换图为 *commutes* 的;
+4. 称 "collection" 为 "set" 是一种比较模糊的称呼, 用 "class" 理解可能会比较好;
+5. 若 \(f \in \mathcal{A}(A, B)\), 则 \(A\) 为 \(f\) 的 *domain*, \(B\) 为 \(f\) 的 *codomain*.
+
+   在所有的范畴中的映射都对应有一个明确的 domain 和 codomain.
+
+*Examples 1.1.3*: (categories of mathematical structures)
+1. *set*: 其 object 为集合, 对应的 map 即传统的映射;
+2. *grp*: 其 object 为群, 对应的 map 为群同态;
+3. *ring*: 其 object 为环, 对应的 map 为环同态;
+4. \(\textbf{Vect}_{k}\): vector spaces over \(k\), 以及对应的线性映射;
+5. *top*: 拓扑空间以及对应的 continuous maps (连续映射).
+
+*Definition 1.1.4*:
+对于在范畴 \(\mathcal{A}\) 中的映射 \(f: A \rightarrow B\), 若 *存在* 在 \(\mathcal{A}\) 中的映射 \(g: B \rightarrow A\),
+使得 \(g f = 1_{A}, f g = 1_{B}\), 则称其为 *isomorphism* (同构), 称 \(g\) 为 \(f\) 的逆.
+
+#+begin_html
+<details><summary>吐槽</summary>
+#+end_html
+
+哦, 怪不得我觉得上线代的时候老师的用语非常的 "定语后置",
+现在自己读英文的时候, 感觉这种说法在简单直译的时候很正常啊...
+
+#+begin_html
+</details>
+#+end_html
+
+*Example 1.1.5*: *set* 中的同构为 bijection.
+
+*Example 1.1.6*: *grp* 中的同构及群同构, 类似的 *ring* 的同构为环同构.
+
+*Example 1.1.7*: *top* 中的同构为同态.
+
+(注: 因为不了解拓扑, 所以之后 top 的部分会尽可能跳过)
+
+*Example 1.1.8*:
+1. 一个范畴可以直接说明其 objects, maps, composition 以及 identities:
+   + \(\emptyset\): 没有 objects 与 map;
+   + \(\boldsymbol{1}\): 仅有一个 object 与单位映射 (其交换图就是一个点);
+   + 一个包含两个元素和一个非单位映射的范畴 \(A \xrightarrow{f} B\);
+   + 更多复杂的交换图:
+
+     [[{{ site.github.url /_img/reading/basic-category-theory/examples-1-1-8-a.png]]
+2. 一些范畴可以除了单位映射外完全没有其他的映射, 称其为 *discrete* 范畴 (离散范畴);
+3. 当一个群只有一个元素, 并且所有的映射都是同构时即为一个范畴.
+
+   #+begin_html
+   <details><summary>解释</summary>
+   #+end_html
+   + 考虑一个仅有一个元素 \(A\) 的范畴 \(\mathcal{A}\),
+     其有一个满足结合率的组合函数 (associative composition function):
+
+     \[\circ: \mathcal{A}(A, A) \times \mathcal{A}(A, A) \rightarrow \mathcal{A}(A, A)\]
+
+     以及一个单位映射 \(1_{A} \in \mathcal{A}(A, A)\)
+   + 于是有如下和群的对应关系:
+
+     | 范畴                        | 群                   |
+     |-----------------------------+----------------------|
+     | 单元素 \(A\) 的范畴 \(\mathcal{A}\) | \(G\)                |
+     | \(\mathcal{A}\) 中的映射            | \(G\) 中的元素       |
+     | \(\circ \in \mathcal{A}\)                | \(G\) 中的 \(\cdot\) 算子 |
+     | \(1_A\)                      | \(1 \in G\)             |
+   #+begin_html
+   </details>
+   #+end_html
+4. *monoid*: a set equipped with an associative binary operation and
+   two-sided unit element.
+5. *preorder*: a reflexive transitive binary relation.
+
+*Construction 1.1.9*:
+每个范畴 \(\mathcal{A}\) 都有一个对应的 *opposite* (或 *dual*) 范畴 \(\mathcal{A}^{\mathrm{op}}\),
+其定义为反转 \(\mathcal{A}\) 中的箭头方向.
++ 形式的定义:
++ 例子: 若 \(A \xrightarrow{f} B \xrightarrow{g} C\) 为 \(\mathcal{A}^{\mathrm{op}}\) 中的映射, 则 \(\mathcal{A}\) 的映射为 \(A \xleftarrow{f} B \xleftarrow{g} C\)/
+
+*Remark 1.1.10*:
+所有的范畴的定义, 定理以及证明都有一个反转箭头方向的 *dual* 形式.
+
+*Construction 1.1.11*:
+范畴的积 (*product category*) \(\mathcal{A} \times \mathcal{B}\) 定义为:
+
+\[\begin{matrix} \mathrm{ob}(\mathcal{A} \times \mathcal{B}) & = & \mathrm{ob}(\mathcal{A}) \times \mathrm{ob}(\mathcal{B}) \\ (\mathcal{A} \times \mathcal{B}) ((A, B), (A', B')) & = & \mathcal{A}(A, A') \times \mathcal{B}(B, B') \end{matrix}\]
+
+其中 \(\mathcal{A} \times \mathcal{B}\) 中的映射 \((A, B) \rightarrow (A', B')\) 是一个 pair.
+
+#+begin_html
+<details><summary>不知道对不对的注记</summary>
+#+end_html
+
+感觉很像线性空间的直积.
+
+#+begin_html
+</details>
+#+end_html
+
+简单的一个小节:
++ 这节大概定义了一个 "范畴" 是什么东西;
++ 范畴包含元素 (object) 的集合 (collection); 元素之间的映射 (map) 关系
+  (这些映射关系是如何组合 (compose) 在一起的, 单位映射);
++ 可以用交换图来表示一个范畴, 而将交换图中的箭头反向即可得到一个范畴的 *dual*.
+
+** Functors
+*Definition 1.2.1*:
+定义一个 *functor* \(F: \mathcal{A} \rightarrow \mathcal{B}\) 由以下组成:
++ 一个函数:
+
+  \[ \mathrm{ob}(\mathcal{A}) \rightarrow \mathrm{ob}(\mathcal{B}) \]
+
+  记作 \(A \mapsto F(A)\);
++ 对于所有 \(A, A' \in \mathcal{A}\), 其中的映射如下:
+
+  \[ \mathcal{A}(A, A') \rightarrow \mathcal{B}(F(A), F(A')) \]
+
+  记作 \(f \mapsto F(f)\).
+
+注: 相当于就是一个 *functor* 同时定义了范畴中元素 (object) 和映射 (map) 的映射关系.
+
+满足一下的公理:
++ \(F(f' \circ f) = F(f') \circ F(f)\), 对于 \(\mathcal{A}\) 中的 \(A \xrightarrow{f} A' \xrightarrow{f'} A''\);
++ \(F(1_{A}) = 1_{F(A)}, A \in \mathcal{A}\).
+
+*Remarks 1.2.2*:
+1.
+
 * Appendix: English Dictionary
 看到同学有读论文学英文的操作, 不妨也来试试:
 
@@ -184,3 +326,7 @@ typical examples:
   /可逆的线性变换称为同构/
 + inclusion \(\leftarrow\) include
 + axiom: 公理
++ vague: 模糊的
++ bijection: bijective function, one-to-one correspondence, 一一映射
++ associative: 结合的 associate, association
++ dual
