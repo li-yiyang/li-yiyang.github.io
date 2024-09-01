@@ -1,0 +1,186 @@
+#+title: Hi, Radiko
+#+date: 2024-09-02
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+看了一个漫画: 听我的电波吧 (波よ聞いてくれ). (确切来说是先看动画,
+然后顺带看了一下漫画与真人剧), 不剧透的安利就是: 有趣的灵魂.
+
+这漫画看了就想要去听广播... 但是 [[https://radiko.jp/][Radiko]] 对地域有一个限制,
+别说在日本国外无法听见, 就是在日本国内听其他地区的广播部分也有一定的限制.
+
+这不直接开始开始一手登陆绕过?
+
+虽然已经有一个 [[https://github.com/jackyzy823/rajiko][jackyzy823/rajiko]] 项目, 作为 Chrome 的插件来对 radiko
+进行绕过. 但是我不用 Chrome, 并且手机是该死的苹果, 所以,
+得整一个自己用的小玩具.
+
+目标是这样的:
+1. 先搞懂基本的原理, 这部分将使用 Common Lisp 进行重写;
+2. 核心使用 Swift 或者其他方式移植到 iOS 平台;
+
+* 基本的登陆原理
+*省流版*: 所谓的登陆其实就是为了得到一个 =token=, 为此需要进行两个步骤:
+1. =auth1=: 向服务器提交一个申请,
+   获得一个 =offset= 与 =length= 用于在本地的密钥中截取部分并在 =auth2= 中提交;
+2. =auth2=: 向服务器提交 =auth1= 中提取的密钥,
+   获得一个 =token=.
+
+是不是看起来很简单? 毕竟有前人的智慧 (前人的逆向).
+
+#+begin_html
+<details><summary>于是核心的代码如下所示</summary>
+#+end_html
+
+#+begin_src lisp
+  (defclass rajiko ()
+    ((app-version :reader rajiko-app-version)
+     (user-id     :reader rajiko-user-id)
+     (user-agent  :reader rajiko-user-agent)
+     (device      :reader rajiko-device)
+     (area        :initarg  :area
+  		:initform (error "Missing area. ")
+  		:reader rajiko-area)
+     (token       :reader rajiko-token)
+     (partial-key :reader rajiko-partial-key)
+     (location    :reader rajiko-location)
+     (player      :initform nil))
+    (:documentation
+     "The client of rajiko, with GPS bypassing. "))
+
+  (defmethod initialize-instance :after ((rajiko rajiko) &key (dummy nil))
+    (with-slots (app-version device user-id user-agent
+  	       token partial-key area location)
+        rajiko
+      (let* ((version (first (pick-random +version-alist+)))
+  	   (sdk        (alist-getf +version-alist+ version :sdk))
+  	   (build      (pick-random (alist-getf +version-alist+ version :builds)))
+  	   (model      (pick-random +model-list+)))
+        ;; generate random infomation
+        (setf app-version (pick-random +app-version-list+)
+  	    user-id     (gen-random-userid)
+  	    user-agent  (concat "Dalvik/2.1.0 (Linux; U; Android "
+  				version "; " model "/" build ")")
+  	    device      (concat sdk "." model)
+  	    location    (gen-GPS area)))
+        ;; if dummy, will not auth
+        (unless dummy
+  	(auth rajiko))))
+
+  (defmethod auth1 ((rajiko rajiko))
+    (with-slots (user-agent app-version device user-id token partial-key) rajiko
+      (multiple-value-bind (response http-code headers)
+  	(dex:get "https://radiko.jp/v2/api/auth1"
+  		 :headers `(("User-Agent"           . ,user-agent)
+  			    ("X-Radiko-App"         . "aSmartPhone7a")
+  			    ("X-Radiko-App-Version" . ,app-version)
+  			    ("X-Radiko-Device"      . ,device)
+  			    ("X-Radiko-User"        . ,user-id)))
+        (let ((offset     (parse-integer (gethash "x-radiko-keyoffset" headers)))
+  	    (length     (parse-integer (gethash "x-radiko-keylength" headers))))
+  	(setf token (gethash "x-radiko-authtoken" headers)
+  	      partial-key (extract-partialkey offset length))
+  	(values response http-code)))))
+
+  (defmethod auth2 ((rajiko rajiko))
+    (with-slots (user-agent app-version token device
+  	       user-id location partial-key)
+        rajiko
+      (multiple-value-bind (response http-code)
+  	(dex:get "https://radiko.jp/v2/api/auth2"
+  		 :headers `(("User-Agent"           . ,user-agent)
+  			    ("X-Radiko-App"         . "aSmartPhone7a")
+  			    ("X-Radiko-App-Version" . ,app-version)
+  			    ("X-Radiko-AuthToken"   . ,token)
+  			    ("X-Radiko-Device"      . ,device)
+  			    ("X-Radiko-User"        . ,user-id)
+  			    ("X-Radiko-Location"    . ,location)
+  			    ("X-Radiko-Connection"  . "wifi")
+  			    ("X-Radiko-Partialkey"  . ,partial-key)))
+        (values response http-code))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+那么如何播放电台呢? 很简单, 找到电台, 并找到其对应的推流链接 (HLS),
+然后在请求的头中加入: =X-Radio-AuthToken=, 也就是前面要得到的 =token= 即可.
+这里采用 =ffplay= 对推流链接进行播放, 实现一个简单的电台播放功能:
+
+#+begin_src lisp
+  (defmethod rajiko-play ((rajiko rajiko) (station rajiko-station))
+    (with-slots (player) rajiko
+      (when player (rajiko-pause rajiko))
+      (setf player
+  	  (uiop:launch-program `("ffplay"
+  				 "-v" "0"
+  				 "-headers" ,(concat "X-Radiko-AuthToken: "
+  						     (rajiko-token rajiko))
+  				 "-i" ,(rajiko-station-streaming-url
+  					station (rajiko-area rajiko))
+  				 "-nodisp")))))
+#+end_src
+
+播放部分和推流链接的获取参考的是: [[https://github.com/uru2/radish/][radi.sh]]. 原本的项目是用来下载 (录音) 的,
+但是因为用不着, 所以直接变成播放即可. 差不多就是这样:
+
+#+begin_src lisp
+  (defparameter *rajiko*
+    (make-rajiko (rajiko-random-area)))
+
+  (rajiko-play *rajiko* (rajiko-random-station "zenkoku")) ;; 开始播放电台
+  ;; (rajiko-pause) ;; 停止播放
+#+end_src
+
+有点水啊, 因为是两个项目, 所以 =area= 和 =station= 没有做一个比较好的连接,
+还需要手动去匹配, 确实是目前的一个坑. 然后也没有进行过抗压测试与特殊情况的全面测试,
+不能保证完全能用就是了...
+
+* 一个好看好用的前端
+这部分将使用 ncurses 来实现, 这里是使用 [[https://github.com/naryl/cl-tui][naryl/cl-tui]] 来写这个前端,
+目标是写一个类似于下面这样的一个界面:
+
+#+begin_example
+  ┌─Rajiko───────────────────────────────────────────┐
+  │                                                  │
+  │Region     [r]: zenkoku                           │
+  │Station    [s]: JOAK-FM                           │
+  │Client     [a]: 熊本                              │
+  │Status [Space]: paused                            │
+  │                                                  │
+  └──────────────────────────────────────────────────┘
+  ┌Select Region─────────────────────────────────────┐
+  │> zenkoku                                         │
+  │  kyushu                                          │
+  │  chugoku-shikoku                                 │
+  │  kinki                                           │
+  │  chubu                                           │
+  │                                                  │
+  └──────────────────────────────────────────────────┘
+#+end_example
+
+最终出来的效果我感觉还行, 只是代码写得太烂了.
+
+* Port to iPhone and iPad [NOT FINISH YET]
+本来打算用 [[https://github.com/ish-app/ish][iSH]] 上的 SBCL 直接运行, 结果发现更新了之后的源里面的 SBCL 没法运行了...
+同理, 源里面的 ECL 也不能使用 (运行都有问题... ).
+
+使用 QEMU (为什么不是 i386/alpine 的 docker 呢? 因为用 OrbStack 的 docker,
+貌似提供的 QEMU 缺指令无法运行一些命令? ) 模拟 alpine, 然后编译 ECL 和 SBCL
+并拷贝到手机上, 仍然有问题:
+
++ SBCL 仍然无法运行: 应该是缺指令?
++ 用 ECL 会有一个 SSL 证书登陆的 Bug, 在 QEMU 模拟时也遇到过,
+  但是忘了怎么解决的了...
+
+所以结论就是暂时还用不了.
+
+* 后记
+至少目前电脑上可以用了, 就没有那么多动力去修改了, 之后有时间的话,
+会考虑重新写一个更加通用的 TUI 框架, 然后修一下电台和 client
+之间的对应关系.
+
+repo: [[https://github.com/li-yiyang/rajiko][li-yiyang/rajiko]].
