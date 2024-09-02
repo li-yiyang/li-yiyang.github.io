@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>A Simple Regexp for Parser | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="A Simple Regexp for Parser" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 实际上就是编译原理课上的一个实践. 按照我的理解, 这个部分更像是 Token 的 Parser 部分. 一个简单的例子: tokenrize = input.scan(/\(|[^\s]|\)/) parse(tokenrize) 可以认为, 这部分的 Regexp 的作用就是将输入的部分一点一点切作臊子, 然后喂给之后的 parser. Note: 尽管在这里, tokenrize 和 parse 是分开的, 然而更多的情况下应该可以合并在一起. 在 parse 部分的东西可以考虑参考之前写的一篇 Ruby And EBNF (Very Navie). 里面做的差不多就是 parse 的工作. (以及一点点的 translate 的工作). 实际上还可以认为正则表达式就是一个不考虑匹配的结构的 parser. 于是就可以在 parse 的过程中将其融合进去. 那么知道了正则表达式的这么个作用, 接下来就可以去尝试实现了. Finite Automa 有限自动机 想到自动机 如果要匹配一段哭声 wuwuwu~. 在 Ruby 的 Regexp 中, 可以如下书写 /(wu)+~/. 但是如果看过之前的 Natural Language Processing in Lisp 的话, 估计会想到用一个有限自动机去匹配这一段的内容. 如果自动机看起来不是那么的直观的话 那么只需要让它变得直观就好了. 假如我就是一个小学生, 然后想要写一个程序来匹配这个东西. (还真别说, 我小时候还真的想过如何做这种东西). 很明显, 很可能写出这样的东西: recognize: if (getchar() == &#39;w&#39;) { if (getchar() == &#39;u&#39;) { if (getchar() == &#39;~&#39;) { return true; } else { goto recognize; } } }" />
+<meta property="og:description" content="About 实际上就是编译原理课上的一个实践. 按照我的理解, 这个部分更像是 Token 的 Parser 部分. 一个简单的例子: tokenrize = input.scan(/\(|[^\s]|\)/) parse(tokenrize) 可以认为, 这部分的 Regexp 的作用就是将输入的部分一点一点切作臊子, 然后喂给之后的 parser. Note: 尽管在这里, tokenrize 和 parse 是分开的, 然而更多的情况下应该可以合并在一起. 在 parse 部分的东西可以考虑参考之前写的一篇 Ruby And EBNF (Very Navie). 里面做的差不多就是 parse 的工作. (以及一点点的 translate 的工作). 实际上还可以认为正则表达式就是一个不考虑匹配的结构的 parser. 于是就可以在 parse 的过程中将其融合进去. 那么知道了正则表达式的这么个作用, 接下来就可以去尝试实现了. Finite Automa 有限自动机 想到自动机 如果要匹配一段哭声 wuwuwu~. 在 Ruby 的 Regexp 中, 可以如下书写 /(wu)+~/. 但是如果看过之前的 Natural Language Processing in Lisp 的话, 估计会想到用一个有限自动机去匹配这一段的内容. 如果自动机看起来不是那么的直观的话 那么只需要让它变得直观就好了. 假如我就是一个小学生, 然后想要写一个程序来匹配这个东西. (还真别说, 我小时候还真的想过如何做这种东西). 很明显, 很可能写出这样的东西: recognize: if (getchar() == &#39;w&#39;) { if (getchar() == &#39;u&#39;) { if (getchar() == &#39;~&#39;) { return true; } else { goto recognize; } } }" />
+<link rel="canonical" href="/misc/simple-regexp-for-parser/" />
+<meta property="og:url" content="/misc/simple-regexp-for-parser/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-03-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="A Simple Regexp for Parser" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-03-24T00:00:00+00:00","datePublished":"2023-03-24T00:00:00+00:00","description":"About 实际上就是编译原理课上的一个实践. 按照我的理解, 这个部分更像是 Token 的 Parser 部分. 一个简单的例子: tokenrize = input.scan(/\\(|[^\\s]|\\)/) parse(tokenrize) 可以认为, 这部分的 Regexp 的作用就是将输入的部分一点一点切作臊子, 然后喂给之后的 parser. Note: 尽管在这里, tokenrize 和 parse 是分开的, 然而更多的情况下应该可以合并在一起. 在 parse 部分的东西可以考虑参考之前写的一篇 Ruby And EBNF (Very Navie). 里面做的差不多就是 parse 的工作. (以及一点点的 translate 的工作). 实际上还可以认为正则表达式就是一个不考虑匹配的结构的 parser. 于是就可以在 parse 的过程中将其融合进去. 那么知道了正则表达式的这么个作用, 接下来就可以去尝试实现了. Finite Automa 有限自动机 想到自动机 如果要匹配一段哭声 wuwuwu~. 在 Ruby 的 Regexp 中, 可以如下书写 /(wu)+~/. 但是如果看过之前的 Natural Language Processing in Lisp 的话, 估计会想到用一个有限自动机去匹配这一段的内容. 如果自动机看起来不是那么的直观的话 那么只需要让它变得直观就好了. 假如我就是一个小学生, 然后想要写一个程序来匹配这个东西. (还真别说, 我小时候还真的想过如何做这种东西). 很明显, 很可能写出这样的东西: recognize: if (getchar() == &#39;w&#39;) { if (getchar() == &#39;u&#39;) { if (getchar() == &#39;~&#39;) { return true; } else { goto recognize; } } }","headline":"A Simple Regexp for Parser","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/simple-regexp-for-parser/"},"url":"/misc/simple-regexp-for-parser/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A Simple Regexp for Parser</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-03-24T00:00:00+00:00" itemprop="datePublished">Mar 24, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>实际上就是编译原理课上的一个实践.
+  按照我的理解, 这个部分更像是 Token 的 Parser 部分.
+  一个简单的例子:</p>
+<pre class="example">
+tokenrize = input.scan(/\(|[^\s]|\)/)
+parse(tokenrize)
+</pre>
+<p>可以认为, 这部分的 Regexp 的作用就是将输入的部分一点一点切作臊子,
+  然后喂给之后的 parser.</p>
+<details><summary>Note:</summary>
+<p>尽管在这里, <code>tokenrize</code> 和 <code>parse</code> 是分开的,
+  然而更多的情况下应该可以合并在一起.
+  在 <code>parse</code> 部分的东西可以考虑参考之前写的一篇
+  <a href="/ruby/ruby-ebnf-try/">Ruby And EBNF (Very Navie)</a>. 里面做的差不多就是 <code>parse</code> 的工作.
+  (以及一点点的 translate 的工作).</p>
+<p>实际上还可以认为正则表达式就是一个不考虑匹配的结构的 parser.
+  于是就可以在 <code>parse</code> 的过程中将其融合进去.</p>
+</details>
+<p>那么知道了正则表达式的这么个作用, 接下来就可以去尝试实现了.</p>
+<h1>Finite Automa 有限自动机</h1>
+<h2>想到自动机</h2>
+<p>如果要匹配一段哭声 <code>wuwuwu~</code>. 在 Ruby 的 Regexp 中,
+  可以如下书写 <code>/(wu)+~/</code>. 但是如果看过之前的
+  <a href="/reading/natural-language-processing-in-lisp/">Natural Language Processing in Lisp</a> 的话,
+  估计会想到用一个有限自动机去匹配这一段的内容.</p>
+<details><summary>如果自动机看起来不是那么的直观的话</summary>
+<p><del>那么只需要让它变得直观就好了.</del></p>
+<p>假如我就是一个小学生, 然后想要写一个程序来匹配这个东西.
+  (还真别说, 我小时候还真的想过如何做这种东西).
+  很明显, 很可能写出这样的东西:</p>
+<pre class="example">
+recognize: 
+if (getchar() == &#39;w&#39;) {
+  if (getchar() == &#39;u&#39;) {
+    if (getchar() == &#39;~&#39;) {
+      return true;
+    } else {
+      goto recognize;
+    }
+  }
+}
+
+return false;
+</pre>
+<p>(Note: 我小时候肯定不会写 C 的. 看到我们老师小孩小学就会写 C 语言,
+  真的让人十分惊讶. 甚至还有专门因为给小孩教编程然后写书的&#8230; 害.
+  不过为了体现是坑爹的我小时候写的东西的感觉, 我加入了 <code>goto</code> 语句. )</p>
+<details><summary>程序框图 (点击展开)</summary>
+<pre class="example">
+[0x100003ee4]&gt;  # sym._test (int64_t arg_20h);
+                                     ┌────────────────────────────────────────────────────┐
+                                     │  0x100003ee4                                       │
+                                     │ ; [00] -r-x section size 176 named 0.__TEXT.__text │
+                                     │   ;-- section.0.__TEXT.__text:                     │
+                                     │   ;-- func.100003ee4:                              │
+                                     │   ; NULL XREF from aav.0x100000020 @ +0xb0(r)      │
+                                     │   ; CALL XREF from main @ 0x100003f68(r)           │
+                                     │ 108: sym._test (int64_t arg_20h);                  │
+                                     │ ; var int64_t var_4h @ x29-0x4                     │
+                                     │ ; arg int64_t arg_20h @ sp+0x40                    │
+                                     │ ; var int64_t var_10h @ sp+0x10                    │
+                                     │ ; var int64_t var_10h_2 @ sp+0x18                  │
+                                     │ sub sp, sp, 0x20                                   │
+                                     │ stp x29, x30, [var_10h]                            │
+                                     │ add x29, var_10h                                   │
+                                     │ b 0x100003ef4                                      │
+                                     └────────────────────────────────────────────────────┘
+                                         v
+                                         │
+                                      ┌──┘
+           ┌────────────────────────────┐
+           │                          │ │
+           │                    ┌──────────────────────────────────────────────────────────────┐
+           │                    │  0x100003ef4                                                 │
+           │                    │ ; CODE XREFS from sym._test @ 0x100003ef0(x), 0x100003f30(x) │
+           │                    │ ; int getchar(void)                                          │
+           │                    │ bl sym.imp.getchar;[oa]                                      │
+           │                    │ subs w8, w0, 0x77                                            │
+           │                    │ b.ne 0x100003f38                                             │
+           │                    └──────────────────────────────────────────────────────────────┘
+           │                            f t
+           │                            │ │
+           │                            │ └──────────────────────────────────────────────────┐
+           │                 ┌──────────┘                                                    │
+           │                 │                                                               │
+           │             ┌────────────────────┐                                              │
+           │             │  0x100003f00       │                                              │
+           │             │ b 0x100003f04      │                                              │
+           │             └────────────────────┘                                              │
+           │                 v                                                               │
+           │                 │                                                               │
+           │     ┌───────────┘                                                               │
+           │     │                                                                           │
+           │ ┌─────────────────────────────────────────────┐                                 │
+           │ │  0x100003f04                                │                                 │
+           │ │ ; CODE XREF from sym._test @ 0x100003f00(x) │                                 │
+           │ │ ; int getchar(void)                         │                                 │
+           │ │ bl sym.imp.getchar;[oa]                     │                                 │
+           │ │ subs w8, w0, 0x75                           │                                 │
+           │ │ b.ne 0x100003f34                            │                                 │
+           │ └─────────────────────────────────────────────┘                                 │
+           │         f t                                                                     │
+           │         │ │                                                                     │
+           │         │ └───────────────────────────────────────────────┐                     │
+           │         └───────┐                                         │                     │
+           │                 │                                         │                     │
+           │             ┌────────────────────┐                    ┌────────────────────┐    │
+           │             │  0x100003f10       │                    │  0x100003f34       │    │
+           │             │ b 0x100003f14      │                    │ b 0x100003f38      │    │
+           │             └────────────────────┘                    └────────────────────┘    │
+           │                 v                                         v                     │
+           │                 │                                         │                     │
+           │     ┌───────────┘                                         │                     │
+           │     │                                                     └──┐                  │
+           │     │                                                        │ ┌────────────────┘
+           │     │                                                        │ │
+           │ ┌─────────────────────────────────────────────┐        ┌─────────────────────────────────────────────┐
+           │ │  0x100003f14                                │        │  0x100003f38                                │
+           │ │ ; CODE XREF from sym._test @ 0x100003f10(x) │        │ ; CODE XREF from sym._test @ 0x100003f34(x) │
+           │ │ ; int getchar(void)                         │        │ stur wzr, [var_4h]                          │
+           │ │ bl sym.imp.getchar;[oa]                     │        │ b 0x100003f40                               │
+           │ │ subs w8, w0, 0x7e                           │        └─────────────────────────────────────────────┘
+           │ │ b.ne 0x100003f30                            │            v
+           │ └─────────────────────────────────────────────┘            │
+           │         f t                                                │
+           │         │ │                                                │
+           │         │ └──────────────────┐                             │
+           │    ┌────┘                    │                             │
+           │    │                         │                             └──────────────────┐
+           │    │                         │                                                │
+           │┌────────────────────┐    ┌────────────────────┐                               │
+           ││  0x100003f20       │    │  0x100003f30       │                               │
+           ││ b 0x100003f24      │    │ b 0x100003ef4      │                               │
+           │└────────────────────┘    └────────────────────┘                               │
+           │    v                         v                                                │
+           │    │                         │                                                │
+    ┌──────│────┘                         │                                                │
+    │      └──────────────────────────────┘                                                │
+    │                                                                                      │
+┌─────────────────────────────────────────────┐                                            │
+│  0x100003f24                                │                                            │
+│ ; CODE XREF from sym._test @ 0x100003f20(x) │                                            │
+│ movz w8, 0x1                                │                                            │
+│ stur w8, [var_4h]                           │                                            │
+│ b 0x100003f40                               │                                            │
+└─────────────────────────────────────────────┘                                            │
+    v                                                                                      │
+    │                                                                                      │
+    └──────────────────────────┐                                                           │
+                               │ ┌─────────────────────────────────────────────────────────┘
+                               │ │
+                         ┌──────────────────────────────────────────────────────────────┐
+                         │  0x100003f40                                                 │
+                         │ ; CODE XREFS from sym._test @ 0x100003f2c(x), 0x100003f3c(x) │
+                         │ ldur w0, [var_4h]                                            │
+                         │ ; [00] -r-x section size 88 named 0.__TEXT.__text            │
+                         │ ldp x29, x30, [var_10h]; test.c:4   recognize:               │
+                         │ add sp, arg_20h                                              │
+                         │ ret                                                          │
+                         └──────────────────────────────────────────────────────────────┘
+</pre>
+<p>Generated by <a href="https://github.com/radareorg/radare2">radare2</a> <code>agf &gt; output.txt</code>.</p>
+<p>Compiled from: (on macos m1)</p>
+<pre class="example">
+#include &lt;stdio.h&gt;
+
+int test() {
+  recognize: 
+  if (getchar() == &#39;w&#39;) {
+    if (getchar() == &#39;u&#39;) {
+      if (getchar() == &#39;~&#39;) {
+        return 1;
+      } else {
+        goto recognize;
+      }
+    }
+  }
+  
+  return 0;
+}
+
+int main() {
+  printf(&quot;&gt;&gt;&quot;);
+  printf(&quot;res: %d\n&quot;, test());
+}
+</pre>
+</details>
+<p>那么如果将上面的那段程序框图仔细分析之后,
+  就可以并不困难地发现程序里面存在着的 &#8220;网状&#8221; 的逻辑关系.
+  那么想要匹配这样的一个东西, 实际上就是在一个个块里面根据条件进行游走判断:
+  如果匹配 xxx, 那么就到下一个块, 否则就变成 <code>return false</code>.</p>
+<p>那么自然就会想到如何将代码进行优化和简化,
+  能够自动根据规则进行构造任意匹配规则序列.
+  于是你就发现, 自己重新发明了自动机.</p>
+<p>啊, 斯巴拉希~.</p>
+</details>
+<p>(Note: 尽管现在的 NLP 应该并不是像现在这样编译原理一样的处理方法吧&#8230; )</p>
+<h2>自动机的匹配 NFA 与 DFA</h2>
+<p>比如对于上面提到的这个自动机:</p>
+<p><img src="/_img/finite-state-machine/simple-fa-for-wuwuwu.svg" alt="/_img/finite-state-machine/simple-fa-for-wuwuwu.svg" /></p>
+<p>实际上, 上面的自动机有一个漂亮的学名: <i>Non-determine Finite Automaton</i>
+  (<i>非确定有限自动机</i>, 简称 <i>NFA</i>). 之所以这么说,
+  是因为在状态 2 的时候, 因为跳转边的存在,
+  计算机并不能确定自己将要前往的下一个状态是 <code>0</code> 还是 <code>3</code>,
+  除非两条路都走, 否则并不能决定, 于是就叫做非确定的.</p>
+<p>自然, 对应的有 <i>确定有限自动机</i> (DFA). 比如上面的图可以对应写作如下 DFA:</p>
+<p><img src="/_img/finite-state-machine/simple-fa-dfa-wuwuwu.svg" alt="/_img/finite-state-machine/simple-fa-dfa-wuwuwu.svg" /></p>
+<p>当然, 可能还有其他更多的模型, 可以有很多的构造方式.
+  显然, 对于这样的一个 DFA, 因为其结构非常的简单,
+  每个节点根据读取的输入都明确对应一个边和下一个节点,
+  使用它来匹配输入简直不要太简单:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">dfa-match-tape</span><span class="w"> </span><span class="p">(</span><span class="nf">dfa</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">tape</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">next</span><span class="w">            </span><span class="c1">; next is next state of dfa at state reading first tape</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">fa-next</span><span class="w"> </span><span class="nv">dfa</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">tape</span><span class="p">))))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">next</span><span class="w">             </span><span class="c1">; there next to go</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span><span class="w"> </span><span class="nv">next</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">NIL</span><span class="p">))</span><span class="w">            </span><span class="c1">; failed to match next</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">final-p</span><span class="w"> </span><span class="nv">dfa</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span><span class="w"> </span><span class="c1">; if final state when empty tape</span>
+<span class="w">                     </span><span class="nv">T</span>
+<span class="w">                     </span><span class="nv">NIL</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-node</span><span class="w"> </span><span class="nv">dfa</span><span class="p">))))</span>
+</pre></div>
+<p><del>尽管我现在的 Lisp 代码写得还挺丑的 (悲).</del></p>
+<h2>自动机的转换 NFA 到 DFA</h2>
+<p>显然, DFA 这么好, 肯定是想要通过各种手段来将 NFA 变成 DFA.
+  那么这个过程如何构造呢? 一个朴素的想法如下:</p>
+<ul>
+  <li>拿到一个 NFA (和 <code>/b*(ab|ba)+/</code> 等价)
+    <p><img src="/_img/finite-state-machine/nfa-example.svg" alt="/_img/finite-state-machine/nfa-example.svg" /></p>
+  </li>
+  <li>将通过直接连接 ($&epsilon;$, 或者就是无 label 的箭头) 在一起的节点看作是一个点,
+    比如以从 <code>0</code> 出发, 可以通过直接跳转到达的节点为例, 即 <code>(0 1)</code>:
+    <p><img src="/_img/finite-state-machine/nfa-example-0-closure.svg" alt="/_img/finite-state-machine/nfa-example-0-closure.svg" /></p>
+  </li>
+  <li>然后将从 <code>(0 1)</code> 出发的所有相同标记的边看作是一条边,
+    比如从 <code>(0 1)</code> 出发的 <code>b -&gt; 3</code> 和 <code>b -&gt; 4</code> 可以同一成 <code>b -&gt; (3 4)</code>,
+    将 <code>(3 4)</code> 作为新的一个节点去进行处理.
+    <p>并且发现因为从 <code>4</code> 出发实际上还能够直接到达 <code>1</code>,
+      所以最终将 <code>(1 3 4)</code> 作为新的一个节点:</p>
+    <p><img src="/_img/finite-state-machine/nfa-example-0-arcs.svg" alt="/_img/finite-state-machine/nfa-example-0-arcs.svg" /></p>
+  </li>
+  <li>依次类推,
+    继续对 <code>(1 3 4)</code> 和 <code>(2)</code> 进行处理直到所有历遍的新的节点组都是已经记录过的节点组,
+    并且所有可能历遍的边都已经历遍过了:
+    <p><img src="/_img/finite-state-machine/nfa-example-more-arcs.svg" alt="/_img/finite-state-machine/nfa-example-more-arcs.svg" /></p>
+  </li>
+  <li>那么总的来说, 实际上做的事情如下:
+    <ol>
+      <li>从起始节点开始, 找到一个闭包,
+        从该闭包出发的所有的目标节点根据边的类型进行分类,
+        作为接下来查找的节点.</li>
+      <li>对于要查找的节点, 重复上面的操作,
+        找闭包, 如果该闭包并没有记录过, 则对接下来的节点继续搜索;
+        否则便结束.</li>
+      <li>Note: 什么是闭包? 一个简单的解释就是从节点出发,
+        仅经过直接跳转就能够到达的节点的集合.</li>
+    </ol>
+  </li>
+  <li>用简单的代码来实现如下:
+<div class="highlight"><pre><span></span><span class="c1">;;; Note: This code is only pseudo code. </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">nfa-to-dfa</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">dstate</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="p">(</span><span class="nf">find-closure</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-node</span><span class="w"> </span><span class="nv">nfa</span><span class="p">))</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">stack</span><span class="w">  </span><span class="p">(</span><span class="nf">out-nodes</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-node</span><span class="w"> </span><span class="nv">nfa</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">dfa</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">stack</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">node</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">stack</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">dstate</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">from</span><span class="w"> </span><span class="o">,</span><span class="nv">by</span><span class="w"> </span><span class="o">,</span><span class="nv">to</span><span class="p">))</span><span class="w"> </span><span class="c1">; push dfa arc to output</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">node</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">new-node-name</span><span class="p">)))</span><span class="w"> </span><span class="c1">;  </span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">out-nodes</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">                       </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">stack</span><span class="p">)))))))</span>
+</pre></div>
+  <details><summary>一些更加真实的代码</summary>
+    <p>如果使用如下的形式来表示自动机:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">nfa-example</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+</pre></div>
+    <p>即通过 <code>(from-state by to-state)</code> 这样的形式来表示一条边.</p>
+    <p>于是就可以定义对应的数据结构:</p>
+  <details><summary>详细的代码</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Data struct define</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; An example of FA:</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_src lisp</span>
+<span class="c1">;;;   (defun *nfa*</span>
+<span class="c1">;;;     &#39;((Initial 0)</span>
+<span class="c1">;;;       (Final 1 2)</span>
+<span class="c1">;;;       (from by to)</span>
+<span class="c1">;;;       (0 a 1)</span>
+<span class="c1">;;;       (0 ee 2)))</span>
+<span class="c1">;;; #+end_src</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; The =ee= stands for empty arc.</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="w"> </span><span class="nv">start</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cddr</span><span class="w"> </span><span class="nv">nfa</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">res</span><span class="p">))</span>
+
+<span class="c1">;;; Initial node of NFA</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">initial-node</span><span class="w"> </span><span class="p">(</span><span class="nf">fa</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">fa</span><span class="p">)))</span>
+
+<span class="c1">;;; Final node of NFA</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">final-node</span><span class="w"> </span><span class="p">(</span><span class="nf">fa</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">fa</span><span class="p">)))</span>
+
+<span class="c1">;;; If NODE is initial node in NFA.</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">initial-p</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">nfa</span><span class="p">)))</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+
+<span class="c1">;;; If NODE is FINAL node in NFA.</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">final-p</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">nfa</span><span class="p">)))</span><span class="w"> </span><span class="nv">T</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+</pre></div>
+  </details>
+    <p>那么接下来要解决的就是如何找到闭包.
+      实际上非常的简单:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-closure</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">closure</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">next-to-search</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+<span class="w">    </span><span class="c1">;; 如果还有要找的</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">next-to-search</span>
+<span class="w">          </span><span class="c1">;; 对于当前节点, 历遍所有周围的节点 (能通过 =EE= 访问到的)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">next-node</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">next-to-search</span><span class="p">))</span>
+<span class="w">                   </span><span class="c1">;; 如果周围的节点不在 closure 中,</span>
+<span class="w">                   </span><span class="c1">;; 则添加到 closure 中, 于是就能找到所有的周围节点. </span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">closure</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">next-to-search</span><span class="p">))))))</span>
+</pre></div>
+  <details><summary>更加真实的代码</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Find closure from START in NFA.</span>
+<span class="c1">;;; Return CLOSURE and NEXT informations.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; Note: NEXT having the form =((A (1 2)) (B (2 3)))=,</span>
+<span class="c1">;;; expressing arc with =A= symbol going to =(1 2)=,</span>
+<span class="c1">;;; =B= symbol going to =(2 3)=.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; NFA:</span>
+<span class="c1">;;;               A        B</span>
+<span class="c1">;;;             +---&gt; (2) &gt;---+</span>
+<span class="c1">;;;            /  A            \</span>
+<span class="c1">;;; (0) ---&gt; (1) ---&gt; (3) ---&gt; (5)</span>
+<span class="c1">;;;            \            B  /</span>
+<span class="c1">;;;             +---&gt; (4) &gt;---+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; </span>
+<span class="c1">;;; So the closure would like this:</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; | start | closure | next              |</span>
+<span class="c1">;;; | 0     | (0 1 4) | (A (2 3)) (B (5)) |</span>
+<span class="c1">;;; | (2 3) | (2 3 5) | (B (5)            |</span>
+<span class="c1">;;; | (5)   | (5)     | NIL               |</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-closure</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="w"> </span><span class="nv">start</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">stack</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">start</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">start</span><span class="p">)</span><span class="w"> </span><span class="nv">start</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">closure</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">start</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">start</span><span class="p">)</span><span class="w"> </span><span class="nv">start</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">bys</span><span class="w"> </span><span class="o">`</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">stack</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">stack</span><span class="p">))</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">by</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">to</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))</span>
+<span class="w">                        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="ss">&#39;ee</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">closure</span><span class="p">)</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">closure</span><span class="p">)</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">stack</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">bys</span><span class="p">)</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">bys</span><span class="p">)))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">by</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">to</span><span class="p">))</span><span class="w"> </span><span class="nv">bys</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="nv">closure</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;&lt;</span><span class="p">)</span><span class="w"> </span><span class="nv">bys</span><span class="p">)))</span>
+</pre></div>
+    <p>注: 为了方便之后的处理,
+      将其中找从 closure 出发的到达的边按照边的类型进行分类的操作也一起做了.</p>
+  </details>
+    <p>于是就可以直接完成最后的工作了:</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; Find assoc pairs in dstate, works like =assoc= function.</span>
+<span class="c1">;;; Return NIL if not found. If found, return VAL. Assoc like ((KEY . VAL)). </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">dstates-assoc</span><span class="w"> </span><span class="p">(</span><span class="nf">closure</span><span class="w"> </span><span class="nv">dstates</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">dstate</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">dstate</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">closure</span><span class="w"> </span><span class="p">(</span><span class="nb">caar</span><span class="w"> </span><span class="nv">dstate</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">dstate</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">dstate</span><span class="p">)))</span>
+<span class="w">                 </span><span class="o">&#39;</span><span class="p">())))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">dstates</span><span class="p">)))</span>
+
+<span class="c1">;;; NFA to DFA turn NFA to DFA</span>
+<span class="c1">;;; Return DFA of NFA.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; The rule is like below (For example):</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; NFA: /a+b/</span>
+<span class="c1">;;;      A        B</span>
+<span class="c1">;;; (0) ---&gt; (1) ---&gt; (2)</span>
+<span class="c1">;;;   \      /</span>
+<span class="c1">;;;    +-&lt;&lt;-+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; + Start from initial node =0=,</span>
+<span class="c1">;;;   find the initial closure =(0)=, name it with new id =0=,</span>
+<span class="c1">;;;   next is =(A (1))=.</span>
+<span class="c1">;;; + Search next node =(1)=,</span>
+<span class="c1">;;;   find closure =(1 0)=, name it with new id =1=,</span>
+<span class="c1">;;;   next is =(A (1)) (B (2))=.</span>
+<span class="c1">;;; + Search next node =(1)=,</span>
+<span class="c1">;;;   find closure =(1 0)=, already in dstate, stop.</span>
+<span class="c1">;;; + Search next node =(2)=,</span>
+<span class="c1">;;;   find closure =(2)=,</span>
+<span class="c1">;;;   next is empty.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+name: dstate</span>
+<span class="c1">;;; | closure | new id |</span>
+<span class="c1">;;; | (0)     |      0 |</span>
+<span class="c1">;;; | (0 1)   |      1 |</span>
+<span class="c1">;;; | (2)     |      2 |</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">nfa-to-dfa</span><span class="w"> </span><span class="p">(</span><span class="nf">nfa</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; Get the initial node done</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">closure</span><span class="w"> </span><span class="nv">next</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-closure</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-node</span><span class="w"> </span><span class="nv">nfa</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">(</span>
+<span class="w">          </span><span class="c1">;; store closure with its name in DSTATE</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">dstate</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">closure</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">reset-counter</span><span class="p">))))</span>
+<span class="w">          </span><span class="c1">;; store unsearched node in STACK</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">stack</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="p">(</span><span class="nf">reset-counter</span><span class="p">))))</span><span class="w"> </span><span class="nv">next</span><span class="p">))</span>
+<span class="w">          </span><span class="c1">;; store new final NODES</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">final</span><span class="w"> </span><span class="o">&#39;</span><span class="p">())</span>
+<span class="w">          </span><span class="c1">;; store translated DFA</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">dfa</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">stack</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">elem</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">stack</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">by</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">to</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">from</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">to-name</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">to-closure</span><span class="w"> </span><span class="nv">to-next</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-closure</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span>
+<span class="w">                   </span><span class="c1">;; If TO-CLOSURE is searched: stop.</span>
+<span class="w">                   </span><span class="c1">;; If TO-CLOSURE is not searched:</span>
+<span class="w">                   </span><span class="c1">;;   add TO-CLOSURE to DSTATE;</span>
+<span class="w">                   </span><span class="c1">;;   push next to STACK.</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">to-name</span><span class="w"> </span><span class="p">(</span><span class="nf">dstates-assoc</span><span class="w"> </span><span class="nv">to-closure</span><span class="w"> </span><span class="nv">dstate</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">to-closure</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">to-name</span><span class="w"> </span><span class="p">(</span><span class="nf">inc-counter</span><span class="p">)))</span><span class="w"> </span><span class="nv">dstate</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">to-elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">to-next</span>
+<span class="w">                           </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="nv">to-elem</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">to-name</span><span class="p">))</span><span class="w"> </span><span class="nv">stack</span><span class="p">)))</span>
+<span class="w">                   </span><span class="c1">;; Translate nfa to dfa.</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">to-name</span><span class="p">)</span><span class="w"> </span><span class="nv">dfa</span><span class="p">)</span>
+<span class="w">                   </span><span class="c1">;; If it is final node, and not in FINAL, add it to FINAL.</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">final-closure-p</span><span class="w"> </span><span class="nv">nfa</span><span class="w"> </span><span class="nv">to-closure</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">to-name</span><span class="w"> </span><span class="nv">final</span><span class="p">)))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">to-name</span><span class="w"> </span><span class="nv">final</span><span class="p">)))))</span>
+<span class="w">      </span><span class="c1">;; add final information to dfa (Final ...)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">Final</span><span class="p">)</span><span class="w"> </span><span class="nv">final</span><span class="p">)</span><span class="w"> </span><span class="nv">dfa</span><span class="p">)</span>
+<span class="w">      </span><span class="c1">;; add initial information to dfa (Initial ...)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="ss">&#39;Initial</span><span class="w"> </span><span class="p">(</span><span class="nf">reset-counter</span><span class="p">))</span><span class="w"> </span><span class="nv">dfa</span><span class="p">))))</span>
+</pre></div>
+  </details>
+    <p>一些测试的例子:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; RES:</span>
+<span class="c1">;; ((INITIAL 0)</span>
+<span class="c1">;;  (FINAL 4 2)</span>
+<span class="c1">;;  (4 A 1) (4 B 3)</span>
+<span class="c1">;;  (3 A 4) (0 B 3)</span>
+<span class="c1">;;  (2 B 2) (1 B 2)</span>
+<span class="c1">;;  (0 A 1))</span>
+<span class="p">(</span><span class="nf">nfa-to-dfa</span>
+<span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="mi">4</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+</pre></div>
+    <p><img src="/_img/finite-state-machine/nfa-to-dfa-example.svg" alt="/_img/finite-state-machine/nfa-to-dfa-example.svg" /></p>
+  </li>
+</ul>
+<p>如是, 我们便能够将一个 NFA 转换为一个容易匹配的 DFA 进行对字符的匹配和处理.</p>
+<h2>正则表达式到 NFA 与 DFA</h2>
+<p>但是哪怕已经实现了 NFA 到 DFA 的如此巨大的一个化简,
+  但是构造 NFA 本身仍然是一个麻烦的事情.</p>
+<p>具体有多麻烦, <a href="/ruby/turing-machine/">可以参考计科导如何构造图灵机的一个过程</a>.</p>
+<details><summary>一些没啥用的饼</summary>
+<p>实际上, 我曾经想过如何用一种类似编译的方式去简化图灵机的构造.
+  比如循环和分支的总的结构在上面的文章中只有一个简单的介绍.
+  不过现在仍然还想不到什么很好的解决方法.</p>
+<p>不过, 实际上在这里做的事情可能可以有点用处.
+  毕竟这个目标是将正则表达式变成自动机的一个算法.
+  不过可能只是因为正则表达式比较简单的缘故吧.</p>
+</details>
+<p>并且正如 &#8220;正则&#8221; 表达式之名, (Regular Expression), 它非常规整,
+  也很容易进行识别与匹配. (仅指简单的几个规则, 复杂一点的就会有点问题,
+  之后会写)</p>
+<h2>最简单的规则集的约定</h2>
+<p>现在假设有如下的 Regexp 的表达式的 AST:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">regexp-example</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">star</span><span class="w"> </span><span class="p">(</span><span class="nf">seq</span><span class="w"> </span><span class="nv">d</span><span class="w"> </span><span class="nv">e</span><span class="p">))))</span>
+</pre></div>
+<p>规定最简单的规则集如下:</p>
+<ul>
+  <li><code>seq</code> 连续序列的匹配: <code>/abc/</code> 等价于 <code>(seq a b c)</code>.</li>
+  <li><code>or</code> 或关系匹配: <code>/a|b|c/</code> 等价于 <code>(or a b c)</code>.</li>
+  <li><code>star</code> 零个或多个对应字符的匹配: <code>/a*/</code> 等价于 <code>(star a)</code>.</li>
+  <li><code>plus</code> 一个或多个对应字符的匹配: <code>/a+/</code> 等价于 <code>(plus a)</code>.</li>
+  <li><code>query</code> 零个或一个对应字符的匹配: <code>/a?/</code> 等价于 <code>(query a)</code>.</li>
+  <li>并且规则可以嵌套使用, 如 <code>/(ab)+/</code> 等价于 <code>(plus (seq a b))</code>.</li>
+</ul>
+<h2>最简单规则集的映射关系</h2>
+<p>现在想要将这些简单的规则映射到 NFA 的网络中, 于是需要一些简单的映射关系.
+  一个比较方便的做法如下:</p>
+<ul>
+  <li>对于单个字符 <code>char</code> 的匹配,
+    假设规定了起点状态 <code>start_state = 0</code>,
+    以及终点状态 <code>final_state = 1</code>,
+    那么对于这个字符的匹配就变成了 <code>(0 char 1)</code>.
+    <p><img src="/_img/finite-state-machine/char-linking-start-and-final.svg" alt="/_img/finite-state-machine/char-linking-start-and-final.svg" /></p>
+  </li>
+  <li>对于非单个字符的匹配,
+    假设已经匹配得到了一个网络,
+    要经过该网络连接起点状态 <code>start_state = 0</code> 以及终点状态 <code>final_state = 1</code>.
+    那么就可以构造直接跳转连接起点和终点:
+    <p><img src="/_img/finite-state-machine/block-linking-start-and-final.svg" alt="/_img/finite-state-machine/block-linking-start-and-final.svg" /></p>
+  <details><summary>代码的实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Iterator in regexp-to-nfa.</span>
+<span class="c1">;;; Return NFA START END.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; Currently supported regexp structure are:</span>
+<span class="c1">;;; + *Sequence*: =seq=, calls =regexp-seq-to-nfa=,</span>
+<span class="c1">;;;   which turn sequence into chained nfa in row.</span>
+<span class="c1">;;; + *Star*: =star=, calls =regexp-star-to-nfa=,</span>
+<span class="c1">;;;   which matches a symbol zero or more times.</span>
+<span class="c1">;;; + *Plus*: =plus=, calls =regexp-plus-to-nfa=,</span>
+<span class="c1">;;;   which matches a symbol one or more times.</span>
+<span class="c1">;;; + *Or*: =or=, calls =regexp-or-to-nfa=,</span>
+<span class="c1">;;;   which branchs between multi symbols.</span>
+<span class="c1">;;; + *Query*: =query=, calls =regexp-query-to-nfa=,</span>
+<span class="c1">;;;   which matches a symbol zero or one time.</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-to-nfa-iter</span><span class="w"> </span><span class="p">(</span><span class="nf">re</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">start</span><span class="w"> </span><span class="p">(</span><span class="nf">inc-counter</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">end</span><span class="w"> </span><span class="p">(</span><span class="nf">inc-counter</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">re</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="o">,</span><span class="nv">re</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">))</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span><span class="w"> </span><span class="c1">; re is atom</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">re</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">re</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;seq</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">regexp-seq-to-nfa</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;star</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">regexp-star-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;plus</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">regexp-plus-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;or</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">regexp-or-to-nfa</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;query</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">regexp-query-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))))))</span>
+</pre></div>
+  </details>
+  </li>
+  <li>对于一个 <code>seq</code> 结构, 将其子结构的头尾依次相连:
+    <p><img src="/_img/finite-state-machine/matrix-seq.svg" alt="/_img/finite-state-machine/matrix-seq.svg" /></p>
+  <details><summary>代码的实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp seq to NFA.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; Regexp: /abc/</span>
+<span class="c1">;;; Input: (regexp-seq-to-nfa &#39;(a b c) 1 2)</span>
+<span class="c1">;;; Return: ((1 EE 3) (3 A 4) (4 EE 5) (5 B 6) (6 EE 7) (7 C 8) (8 EE 2))</span>
+<span class="c1">;;; NFA:</span>
+<span class="c1">;;;               A                 B                 C</span>
+<span class="c1">;;; (1) ---&gt; (3) ---&gt; (4) ---&gt; (5) ---&gt; (6) ---&gt; (7) ---&gt; (8) ---&gt; (2)</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-seq-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">())</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">ss</span><span class="w"> </span><span class="nv">start</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">ss</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="nv">rule</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">ss</span><span class="w"> </span><span class="nv">e</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">ss</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+  </details>
+  </li>
+  <li>对于 <code>or</code> 结构为分支类,
+    可以构建从起点出发的各种到达不同分支的跳转,
+    最终会聚到终点.
+    <p><img src="/_img/finite-state-machine/regexp-or-nfa.svg" alt="/_img/finite-state-machine/regexp-or-nfa.svg" /></p>
+  <details><summary>代码实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp or to NFA.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;;   Regexp: /a|b/</span>
+<span class="c1">;;;   Input: (regexp-or-to-nfa &#39;(a b) 1 2)</span>
+<span class="c1">;;;   Return: ((1 EE 3) (3 A 4) (4 EE 2) (1 EE 5) (5 B 6) (6 EE 2))</span>
+<span class="c1">;;;   NFA:</span>
+<span class="c1">;;;                A</span>
+<span class="c1">;;;      +--&gt; (3) ---&gt; (4) &gt;--+</span>
+<span class="c1">;;;     /                      \</span>
+<span class="c1">;;;   (1)                      (2)</span>
+<span class="c1">;;;     \          B           /</span>
+<span class="c1">;;;      +--&gt; (5) ---&gt; (6) &gt;--+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-or-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="nv">rule</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+  </details>
+  </li>
+  <li>对于 <code>star</code>, <code>query</code>, <code>plus</code> 这样的重复出现次数的情况,
+    实际上是异曲同工的.
+    <ul>
+      <li>以 <code>plus</code> 开始, 如果匹配了一个对应的块,
+        那么可以结束, 也可以重新继续进行匹配相应的块.
+        于是示例如下:
+        <p><img src="/_img/finite-state-machine/regexp-plus-nfa.svg" alt="/_img/finite-state-machine/regexp-plus-nfa.svg" /></p>
+    <details><summary>代码实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp plus to nfa.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; Regexp: /a+/</span>
+<span class="c1">;;; Input: (regexp-plus-to-nfa &#39;a 1 2)</span>
+<span class="c1">;;; Return: ((1 EE 3) (3 A 4) (4 EE 3) (4 EE 2))</span>
+<span class="c1">;;; NFA:</span>
+<span class="c1">;;;               A</span>
+<span class="c1">;;; (1) ---&gt; (3) ---&gt; (4) ---&gt; (2)</span>
+<span class="c1">;;;            \      /</span>
+<span class="c1">;;;             +-&lt;&lt;-+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-plus-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="nv">rule</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">)))</span>
+<span class="w">            </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+    </details>
+      </li>
+      <li><code>query</code> 和 <code>plus</code> 的效果十分类似,
+        即可以选择跳过或者执行一次内容:
+        <p><img src="/_img/finite-state-machine/regexp-query-nfa.svg" alt="/_img/finite-state-machine/regexp-query-nfa.svg" /></p>
+    <details><summary>代码实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp query to nfa.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; Regexp: /a?/</span>
+<span class="c1">;;; Input: (regexp-query-to-nfa &#39;a 1 2)</span>
+<span class="c1">;;; Return: ((1 EE 3) (3 A 4) (3 EE 4) (4 EE 2))</span>
+<span class="c1">;;; NFA:</span>
+<span class="c1">;;;               A</span>
+<span class="c1">;;; (1) ---&gt; (3) ---&gt; (4) ---&gt; (2)</span>
+<span class="c1">;;;            \      /</span>
+<span class="c1">;;;             +-&gt;&gt;-+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-query-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()</span>
+<span class="w">                   </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span>
+<span class="w">                   </span><span class="nv">rule</span>
+<span class="w">                   </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">s</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">)))</span>
+<span class="w">            </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+    </details>
+      </li>
+      <li><code>star</code> 就像是 <code>plus</code> 和 <code>query</code> 的组合实现,
+        毕竟从某种程度上来说, <code>(star a)</code> 就等价于 <code>(plus (query a))</code>.
+        <p><img src="/_img/finite-state-machine/regexp-star-nfa.svg" alt="/_img/finite-state-machine/regexp-star-nfa.svg" /></p>
+    <details><summary>代码实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp star to nfa.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; For example,</span>
+<span class="c1">;;; </span>
+<span class="c1">;;; #+begin_example</span>
+<span class="c1">;;; Regexp: /a*/</span>
+<span class="c1">;;; Input: (regexp-start-to-nfa &#39;a 1 2)</span>
+<span class="c1">;;; Return: ((1 EE 3) (3 A 4) (4 EE 3) (4 EE 2) (3 EE 4))</span>
+<span class="c1">;;; NFA:</span>
+<span class="c1">;;;             +-&lt;&lt;-+</span>
+<span class="c1">;;;            /  A   \</span>
+<span class="c1">;;; (1) ---&gt; (3) ---&gt; (4) ---&gt; (2)</span>
+<span class="c1">;;;            \      /</span>
+<span class="c1">;;;             +-&gt;&gt;-+</span>
+<span class="c1">;;; #+end_example</span>
+<span class="c1">;;; </span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-star-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()</span>
+<span class="w">                   </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span>
+<span class="w">                   </span><span class="nv">rule</span>
+<span class="w">                   </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">s</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">e</span><span class="p">)))</span>
+<span class="w">            </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+    </details>
+      </li>
+    </ul>
+  </li>
+</ul>
+<p>这样就得到了最后的转换函数了, 尽管转换得到的 NFA 并不一定很好看,
+  至少已经完成了转换的操作了.</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; Regexp or to NFA.</span>
+<span class="c1">;;; Return nfa start end.</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">regexp-or-to-nfa</span><span class="w"> </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">e</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa-iter</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">start</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">s</span><span class="p">))</span><span class="w"> </span><span class="nv">rule</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">e</span><span class="w"> </span><span class="nv">ee</span><span class="w"> </span><span class="o">,</span><span class="nv">end</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)))</span>
+</pre></div>
+<details><summary>一些测试的例子</summary>
+<ul>
+  <li><code>/(a|b)+c?/</code>
+<div class="highlight"><pre><span></span><span class="c1">;;; RES:</span>
+<span class="c1">;; ((INITIAL 1)</span>
+<span class="c1">;;  (FINAL 2)</span>
+<span class="c1">;;  (1 EE 3) (3 EE 5) (5 EE 7) (7 A 8) (8 EE 6) (5 EE 9)</span>
+<span class="c1">;;  (9 B 10) (10 EE 6) (6 EE 5) (6 EE 4) (4 EE 11) (11 EE 13) (13 C 14) (13 EE 14)</span>
+<span class="c1">;;  (14 EE 12) (12 EE 2))</span>
+<span class="p">(</span><span class="nf">regexp-to-nfa</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="p">(</span><span class="nf">plus</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="nv">c</span><span class="p">)))</span>
+</pre></div>
+    <p><img src="/_img/finite-state-machine/regexp-to-nfa-example-1.svg" alt="/_img/finite-state-machine/regexp-to-nfa-example-1.svg" /></p>
+    <p>(Note: 还有很多的没有的边, 感觉可以修正一下,
+      不过可以转换成 DFA 的话, 应该可以暂时不管这部分. )</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; RES</span>
+<span class="c1">;; ((INITIAL 0)</span>
+<span class="c1">;;  (FINAL 3 2 1)</span>
+<span class="c1">;;  (0 A 2) (1 C 3) (1 B 1) (2 C 3) (2 B 1) (2 A 2)</span>
+<span class="c1">;;  (1 A 2) (0 B 1))</span>
+<span class="p">(</span><span class="nf">nfa-to-dfa</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp-to-nfa</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="p">(</span><span class="nf">plus</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="nv">c</span><span class="p">))))</span>
+</pre></div>
+    <p><img src="/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-1.svg" alt="/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-1.svg" /></p>
+    <p>(Note: 实际上, 生成的 DFA 不一定是最简的形式.
+      关于这个, 实际上还是可以补救一下的. )</p>
+  </li>
+  <li><code>/0b(1(0|1)*|0)/</code> 二进制数匹配
+<div class="highlight"><pre><span></span><span class="c1">;;; RES</span>
+<span class="c1">;; ((INITIAL 1)</span>
+<span class="c1">;;  (FINAL 2)</span>
+<span class="c1">;;  (1 EE 3) (3 0 4) (4 EE 5) (5 B 6) (6 EE 7) (7 EE 9)</span>
+<span class="c1">;;  (9 EE 11) (11 1 12) (12 EE 13) (13 EE 15) (15 EE 17) (17 0 18) (18 EE 16)</span>
+<span class="c1">;;  (15 EE 19) (19 1 20) (20 EE 16) (16 EE 15) (16 EE 14) (15 EE 16) (14 EE 10)</span>
+<span class="c1">;;  (10 EE 8) (7 EE 21) (21 0 22) (22 EE 8) (8 EE 2))</span>
+<span class="p">(</span><span class="nf">regexp-to-nfa</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">seq</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nf">star</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+</pre></div>
+    <p><img src="/_img/finite-state-machine/regexp-to-nfa-example-2.svg" alt="/_img/finite-state-machine/regexp-to-nfa-example-2.svg" /></p>
+    <p>转换为 DFA:</p>
+    <p><img src="/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-2.svg" alt="/_img/finite-state-machine/regexp-to-nfa-to-dfa-example-2.svg" /></p>
+  </li>
+</ul>
+</details>
+<h2>正则表达式的结构提取</h2>
+<p>那么既然是编译原理的课程, 显然会想要让事情更进一步变得更加简单吧.
+  于是便可以尝试根据正则表达式来直接生成 Regexp 的结构.</p>
+<details><summary>一些关于 Lisp 的一些注记</summary>
+<ul>
+  <li>我使用的是 <a href="http://www.sbcl.org">SBCL</a> 发行版.
+    之前也用过 <a href="https://clisp.sourceforge.io">CLISP</a> 和 <a href="http://www.lispworks.com">LISPWORKS</a>.
+    <p>不过因为我并不是很擅长 Common Lisp, 只能算是一个初学者.
+      在使用的过程中发现了一些小小的不同.
+      不过不一定正确:</p>
+  </li>
+  <li>在 Common Lisp 里面的符号貌似是不区分大小的.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="ss">&#39;A</span><span class="w"> </span><span class="ss">&#39;a</span><span class="p">)</span><span class="w">                              </span><span class="c1">; T</span>
+<span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="sc">#\A</span><span class="w"> </span><span class="sc">#\a</span><span class="p">)</span><span class="w">                            </span><span class="c1">; NIL</span>
+</pre></div>
+  </li>
+  <li>上面的 <code>#\A</code> 更像是一个字符的感觉.
+    可以通过这样来得到:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;list</span><span class="w"> </span><span class="s">&quot;string&quot;</span><span class="p">)</span>
+</pre></div>
+  </li>
+  <li>于是就有一个比较尴尬的事情了,
+    如果想要实现匹配字符串的话,
+    可能就需要在构造正则表达式的时候用 <code>#\A</code> 这样的形式来实现.
+<div class="highlight"><pre><span></span><span class="c1">;;; RES: NIL</span>
+<span class="p">(</span><span class="nf">dfa-match-tape</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">nfa-to-dfa</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">regexp-to-nfa</span>
+<span class="w">   </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="p">)))</span>
+<span class="w"> </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;list</span><span class="w"> </span><span class="s">&quot;abc&quot;</span><span class="p">))</span>
+
+<span class="c1">;;; T</span>
+<span class="p">(</span><span class="nf">dfa-match-tape</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">nfa-to-dfa</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">regexp-to-nfa</span>
+<span class="w">   </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">seq</span><span class="w"> </span><span class="sc">#\a</span><span class="w"> </span><span class="sc">#\b</span><span class="w"> </span><span class="sc">#\c</span><span class="p">)))</span>
+<span class="w"> </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;list</span><span class="w"> </span><span class="s">&quot;abc&quot;</span><span class="p">))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>但是在构造这个能够 Parse 正则表达式的机器的时候出现了一点点的小问题.
+  现有的规则有点不够用了&#8230;</p>
+<p>(欲知后事如何? 请等我解决之后再更新. )</p>
+<h1>后记</h1>
+<p>还是旁听的课有意思, 可以自己选择感兴趣的东西去做.
+  甚至还没有考试和作业的压力. 次修什么的都弱爆了,
+  旁听才是王道!</p>
+<p>不过这个学期真的是太 TMD 忙了,
+  没啥时间去做自己喜欢做的事情,
+  属于是有点因为学而学了.</p>
+
+  </div><a class="u-url" href="/misc/simple-regexp-for-parser/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Ghidra Basic | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Ghidra Basic" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Ghidra Basic and Tiny Reverse" />
+<meta property="og:description" content="Ghidra Basic and Tiny Reverse" />
+<link rel="canonical" href="/ctf/ghidra-basic/" />
+<meta property="og:url" content="/ctf/ghidra-basic/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-03-08T12:21:05+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Ghidra Basic" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-03-08T12:21:05+00:00","datePublished":"2022-03-08T12:21:05+00:00","description":"Ghidra Basic and Tiny Reverse","headline":"Ghidra Basic","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/ghidra-basic/"},"url":"/ctf/ghidra-basic/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Ghidra Basic</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-03-08T12:21:05+00:00" itemprop="datePublished">Mar 8, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="ghidra-basic-and-tiny-reverse">Ghidra Basic and Tiny Reverse</h1>
+<p><img src="/_img/ghidra-basic/welcome.png" alt="Welcome Page" title="加载中..." /></p>
+
+<blockquote>
+  <p>A software reverse engineering (SRE) suite of tools developed by 
+NSA’s Research Directorate in support of the Cybersecurity mission.  <br />
+<a href="https://ghidra-sre.org">ghidra site</a></p>
+</blockquote>
+
+<h2 id="逆向工具---啥是-ghidra-以及为啥用它">逆向工具 - 啥是 Ghidra 以及为啥用它</h2>
+<p>Ghidra 是一个 NSA(National Security Agency) 开发的一个逆向工具, 
+可以将打包的程序(比如<code class="language-plaintext highlighter-rouge">.exe</code>, <code class="language-plaintext highlighter-rouge">.out</code>之类的东西)给拆开来看看里面的内容, 
+这样就可以了解程序里面的运行逻辑. (然后就可以嘿嘿嘿了…)</p>
+
+<details>
+<summary> 
+点我看嘿嘿嘿:p 
+</summary>
+
+  <h3>逆向的个人理解</h3>
+
+  不知道有没有人用过外挂, 破解软件还有注册机之类的东西, 
+  嗯, 十分抱歉, 我用过的. QAQ, 不过现在基本上成为历史啦, 
+  因为(钱包富裕了, bushi), 不, 是使用开源软件了. 
+
+  啊, 扯远了. 就拿注册机来说明吧, 为什么逆向工程这么吸引我, 
+  一个简单的例子: 
+
+  
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby">    <span class="nb">print</span> <span class="s2">"Hello, what is your password: "</span>
+    <span class="n">get</span> <span class="o">=</span> <span class="nb">gets</span><span class="p">.</span><span class="nf">strip</span>
+    <span class="k">if</span> <span class="n">get</span> <span class="o">==</span> <span class="s2">"Lucky"</span>
+      <span class="nb">puts</span> <span class="s2">"Yes! You're in. "</span>
+    <span class="k">else</span>
+      <span class="nb">puts</span> <span class="s2">"Ah oh, something's wrong. "</span>
+    <span class="k">end</span>
+  </code></pre></figure>
+
+
+  呀, 假如我们能够看到代码的话, 想要破解密码就是易如反掌的事. 
+  这个就是逆向的一个想法吧: 得到一个程序, 然后将程序的逻辑进行分析, 
+  最后将这个程序给 ban 了. 
+
+  然而一般的什么要注册机的软件哪会直接吧代码给我呢... 稍微复杂一点的例子, 
+  假如有一个被 gcc 编译的程序也就是一个二进制的程序, 然后就"看不到"代码了, 
+  但是实际上并不是这样, 放到 ghidra 里面就可以看到反编译的汇编指令, 
+  以及反汇编的伪代码, 等等. (甚至, 假如只是简单的编译的话, 还能看到代码呢, 
+  比如说原来的程序里面的函数名称等等. )
+
+  不过嘛, 知道会被这样干的开发商怎么可能会坐以待毙呢? 肯定会将这些函数名字删掉, 
+  (stripped 的程序), 然后在程序里面加入混淆的代码, (就是恶心你这种逆向的人, 
+  但是不怕, 我有耐心, TAT), 或者是用别的什么方式, 比如说虚拟指令, 又比如说, 
+  给程序加壳(类似于压缩)等等. (虽然我不是很懂了, 毕竟才刚接触, 咳)
+
+  大概的介绍就是这样了. (滑稽)
+
+</details>
+
+<p><img src="/_img/ghidra-basic/color-pic.jpg" alt="色图" title="点开上面, 看好东西. " /></p>
+
+<p>嗯, 因为我现在不使用 IDA Pro 了, <del>真是日渐单薄的钱包啊</del>, 主要是为了减少盗版的使用, 
+真的是难啊. 虽然可惜的是, 两个都不是很会. 我只是记录一下我在使用 Ghidra 里面学到的, 
+或者是用到的一些小技巧, 或者是说, 学到的一点点小玩具啦…</p>
+
+<p>非科班出身, 不过是乱搞的经验之谈.</p>
+
+<h2 id="initilizing">Initilizing</h2>
+<p>去官网下载就好, 按照 <a href="https://github.com/NationalSecurityAgency/ghidra">github</a> 
+上面的说明, 准备好<a href="https://adoptium.net/releases.html?variant=openjdk11&amp;jvmVariant=hotspot">JDK</a>,
+然后执行<code class="language-plaintext highlighter-rouge">ghidraRun</code>的脚本.</p>
+
+<p>(注: 假如你不知道什么是<code class="language-plaintext highlighter-rouge">JDK</code>, <code class="language-plaintext highlighter-rouge">JRE</code>, <code class="language-plaintext highlighter-rouge">JVM</code>的话, 可以试试去 Google 一下, 
+我提供一个一点点的解释: <code class="language-plaintext highlighter-rouge">JDK</code> 是 Java Develop Kit 的缩写, 
+<code class="language-plaintext highlighter-rouge">JRE</code> 是 Java Runtime Environment 的缩写, <code class="language-plaintext highlighter-rouge">JVM</code> 则是 Java Visual Machine
+的缩写. 不过说了这么些应该是很难懂的… 但是假如玩过我的世界的 Java 版的话, 
+嗯, 应该是清楚的. )</p>
+
+<p>(Tips: 可以把这个脚本扔到macOS的shortcut里面, 然后以后就可以快速打开了. 呃, 
+其他系统随意? )</p>
+
+<p>打开软件, 会看到一个确认文件, 确认就好啦.</p>
+
+<p>对于 ghidra, 它的思路是基于项目的, 一个项目里面可以有很多的文件, 
+可能是为了处理那种大型的程序用的吧? (咳, 还真是高看我了. 我就只能将乱七八糟的, 
+什么一堆程序丢到里面去, 用完了之后再删掉… )</p>
+
+<p>一开始打开的时候就只有一个空界面, 选择<code class="language-plaintext highlighter-rouge">File-New project</code>就可以创建项目了, 
+创建完项目后就可以将要分析的程序拖进去分析啦.</p>
+
+<p><img src="/_img/ghidra-basic/window.png" alt="window" title="随便扔了一个最近在做的, 不会啊..." /></p>
+
+<p>双击文件可以打开<code class="language-plaintext highlighter-rouge">CodeBroswer</code>, 来看看里面程序里面到底卖的是什么药. 
+对于第一次打开的程序, 会问问你是不是要分析这个程序. (当然啦, 干他! 
+虽然目前还不是很会, 但是我直接就选择了<code class="language-plaintext highlighter-rouge">Analysis all</code>, 嘛, 一劳永逸嘛. 
+基本就是试试. 以后估计会学一点更深入的东西了. )</p>
+
+<p><img src="/_img/ghidra-basic/codebrowser.png" alt="CodeBroswer" title="这个是一个stripped程序, 所以里面看不见什么函数名字, 只有FUN_00100b6a这样的奇怪地址, 然后程序代码也挺无所谓的. " />
+观察窗口的主要组成部分: 左边的是一些东西, 中间是一些东西, 然后右边又是一些东西, 
+嗯, 解释完毕, 拜拜. (bushi</p>
+
+<p>(左边的是一些程序里面的符号表, 类型表等等, 中间是一个反汇编的代码, 
+可以理解为将二进制内容转换为了汇编语言以及数据字段等等. 右边的是对反汇编的反编译, 
+毕竟汇编语言不是什么让人喜欢的东西. 下面是命令的输出窗口, 呃, 没怎么用过. )</p>
+
+<p>其实一般对于那种没有<code class="language-plaintext highlighter-rouge">stripped</code>函数, 往往是可以通过查看左边的<code class="language-plaintext highlighter-rouge">Symbol Tree</code>来看看突破口的, 
+但是嘛, 这次的程序是<code class="language-plaintext highlighter-rouge">stripped</code>的, (也就是从程序里面删除了对应的函数符号表), 
+所以 ghidra 只能分析出一些函数的结构, 然后将程序的函数用地址来命名. 
+虽然可以通过将一个个的函数都看过去, 但是(好麻烦)这样非常的不切实际(虽然以前我就是这样的)
+有时候遇到超级多的一坨函数, 而且还是<code class="language-plaintext highlighter-rouge">stripped</code>了的话, 就不能了.</p>
+
+<p>后来我想到了一个妙招: 程序运行的时候会有输出, 那么看看输出的字符串在哪里, 然后反过来找函数, 
+就行了. (没想到这个方法是一个很基础的方法, 咳, 亏我没有虚拟机的时候还真的是一个个分析的, 
+真是傻啊)</p>
+
+<p>在 ghidra 里面找程序中的字符串只需要这样: 在菜单栏的<code class="language-plaintext highlighter-rouge">Search-Program Text</code>就可以找字符了. 
+因为我比较菜, 所以用的是<code class="language-plaintext highlighter-rouge">All Fields</code>, 或者可以精确一些, 选择<code class="language-plaintext highlighter-rouge">Selected Fields</code>, 
+然后在里面选择对应的类别.</p>
+
+<p><img src="/_img/ghidra-basic/search.png" alt="search" title="查找字符串, 别的功能还没用过" /></p>
+
+<p>找到了字符串, 就可以利用<code class="language-plaintext highlighter-rouge">XREF</code>, 也就是在中间<code class="language-plaintext highlighter-rouge">Listing</code>窗口(汇编和数据)的窗口里面, 
+在对应的数据边上会有像是注释一样的东西:</p>
+
+<p><img src="/_img/ghidra-basic/xref.png" alt="xref" title="看看右边的XREF" /></p>
+
+<p>所谓的<code class="language-plaintext highlighter-rouge">XREF</code>就是<code class="language-plaintext highlighter-rouge">Cross reference address</code>的标志, 稍微翻译一下就是引用了这段数据, 
+或者是调用这段函数的其他函数等等. 在上面的图片里面, 我们可以看见绿色的<code class="language-plaintext highlighter-rouge">XREF</code>, 
+后面跟着调用这个数据的函数<code class="language-plaintext highlighter-rouge">FUN_00100b6a</code>, 这个时候就可以双击这个<code class="language-plaintext highlighter-rouge">FUN_00100b6a</code>, 
+然后 ghidra 就会跳转到对应的地址. (其实 ghidra 里面的大部分东西都可以双击, 
+然后跳转到对应的地址里去)</p>
+
+<p>这样就可以得到(可能的)函数地址啦! 然后就可以开始试试通过看看这个函数里面有什么, 
+然后就可以将这个程序进行一个逆向了.</p>
+
+<h2 id="丑陋的代码">丑陋的代码</h2>
+<p>嗯, 假如我们得到了主要的函数(上面的<code class="language-plaintext highlighter-rouge">FUN_00100b6a</code>的函数就是了), 
+不过我还没有那么牛, 也没有那么有耐心, 不太能够有心情去搞汇编的逆向. 
+但是 ghidra 有一个很好的功能就是可以将汇编的东西反编译成类似于 C 语言的伪代码, 
+这样就很人性化了.</p>
+
+<p><img src="/_img/ghidra-basic/decompile.png" alt="decompile" title="就是右边的东西啦" /></p>
+
+<p>虽然现在的代码变得像是 C 代码一样的东西了, 但是里面的东西实在是, 反人类, 
+就跟我朋友写的随意换行, 随意命名变量, 能不用空格就死不用空格的令人心脏骤停的 C 代码, 
+咳. 这样的分析可真的是令人窒息.</p>
+
+<p>虽然简单的代码可能会比较能够理解, 但是还是可以解决的. 很容易分析得到里面的结果. 
+但是假如遇到那个很庞大的项目, 很坑爹的长长的函数的时候, 死磕的方式就不太适合了.</p>
+
+<p>但是 ghidra 可以对反编译的结果进行一个修改, 还可以进行一些批注等等, 
+进行一个对内容的美化吧:</p>
+
+<ul>
+  <li>将光标停在符号上面(比如变量名, 函数名), 按下快捷键<code class="language-plaintext highlighter-rouge">L</code>就能修改符号的名字, 
+(或者是右键<code class="language-plaintext highlighter-rouge">Rename Local Variable</code>, 这就可以修改名字了)</li>
+  <li>将光标停在符号上面, 右键<code class="language-plaintext highlighter-rouge">Retype Variable</code>就能将符号的类型修改, 
+(或者是用快捷键, 在 mac 上是<code class="language-plaintext highlighter-rouge">CMD-L</code>)</li>
+  <li>按快捷键<code class="language-plaintext highlighter-rouge">;</code>可以给代码做注释, 方便理解程序里面的内容之类的东西.</li>
+</ul>
+
+<p>不过, 这样一般还是很难理解 C 的代码, 除非它是真的简单. 不过, 我还是比较喜欢把这个伪代码
+进行一个抄写, 转换成我比较喜欢的 ruby 的代码, 这样会看起来舒服一点. (好吧, 
+就是我个人的 xp 系统啦. )</p>
+
+<p>这样一般就能够解决我目前遇到的问题了.</p>
+
+<details><summary> An example </summary>
+
+来一个简单的例子: 先写一个程序. 
+
+
+<figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">cmp</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">passwd</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"I'm Lucky. </span><span class="se">\n</span><span class="s">What is your password: "</span><span class="p">);</span>
+  <span class="n">scanf</span><span class="p">(</span><span class="s">"%5s"</span><span class="p">,</span> <span class="n">passwd</span><span class="p">);</span>
+  <span class="n">cmp</span> <span class="o">=</span> <span class="n">strcmp</span><span class="p">(</span><span class="n">passwd</span><span class="p">,</span> <span class="s">"Magic"</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">cmp</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Yes. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"No. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+
+虽然怎么说呢, 这个代码非常简单, 并且非常容易被破解, 用 ltrace 或者干脆 strings 
+命令就可以将密码得到了. 呃, 不管, 我的编程水平可差了. 毕竟是业余的. 
+<br />
+用 gcc 编译完了以后再放到 ghidra 里面打开, (我没有删除符号表, 所以会简单一点)
+
+
+<figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="n">undefined4</span> <span class="nf">entry</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">in_x1</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">acStack30</span> <span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+  <span class="kt">int</span> <span class="n">local_18</span><span class="p">;</span>
+  <span class="n">undefined4</span> <span class="n">local_14</span><span class="p">;</span>
+  
+  <span class="n">local_14</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"I</span><span class="se">\'</span><span class="s">m Lucky. </span><span class="se">\n</span><span class="s">What is your password: "</span><span class="p">);</span>
+  <span class="n">__stubs</span><span class="o">::</span><span class="n">_scanf</span><span class="p">(</span><span class="s">"%5s"</span><span class="p">,</span><span class="n">in_x1</span><span class="p">);</span>
+  <span class="n">local_18</span> <span class="o">=</span> <span class="n">__stubs</span><span class="o">::</span><span class="n">_strcmp</span><span class="p">(</span><span class="n">acStack30</span><span class="p">,</span><span class="s">"Magic"</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_18</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"Yes. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">else</span> <span class="p">{</span>
+    <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"No. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">local_14</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+
+啊, 坏了, 因为我为了偷懒, 所以直接用 mac 的 gcc 进行了一个编译, 
+可能和 linux 的结果不一样, 也可能和 Windows 的结果不一样. 
+并且还是 m1, 所以和 Intel 的 mac 的结果也是不一样的. 不过逆向的平台多样, 
+很多时候我没得选. (其实就是懒), 直接美化就好了: 
+
+
+<figure class="highlight"><pre><code class="language-c" data-lang="c"><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">in_x1</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="n">passwd</span> <span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+  <span class="kt">int</span> <span class="n">res</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+  
+  <span class="n">ret</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"I</span><span class="se">\'</span><span class="s">m Lucky. </span><span class="se">\n</span><span class="s">What is your password: "</span><span class="p">);</span>
+  <span class="n">__stubs</span><span class="o">::</span><span class="n">_scanf</span><span class="p">(</span><span class="s">"%5s"</span><span class="p">,</span><span class="n">in_x1</span><span class="p">);</span>
+  <span class="n">res</span> <span class="o">=</span> <span class="n">__stubs</span><span class="o">::</span><span class="n">_strcmp</span><span class="p">(</span><span class="n">passwd</span><span class="p">,</span><span class="s">"Magic"</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"Yes. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">else</span> <span class="p">{</span>
+    <span class="n">__stubs</span><span class="o">::</span><span class="n">_printf</span><span class="p">(</span><span class="s">"No. </span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="n">ret</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+
+现在至少看起来好看一点了, 对程序的结构也比较好懂了. 
+(虽然实际的问题会难亿点点, 不过大体上差不多了. )
+
+</details>
+
+<h2 id="鸽ing">鸽ing~</h2>
+<p>上面的大概就是一个简单的教程了, 先写到这里. 感觉可能是不如 IDA 热门吧, 
+又或者是还不够强大, 网上的教程数量感觉比较少. 待我出去看看有没有什么好资料, 
+学会一点点之后再补充.</p>
+
+<h2 id="拓展">拓展</h2>
+<p>找到了一个看起来比较有用的文章(实际上应该是相当有用了, 因为很多都是我不会的, 
+嗯, 学, 都可以学. )</p>
+
+<p>下面就类似与一个笔记(或者摘要的东西了), 原本的网址如下: 
+<a href="https://www.shogunlab.com/blog/2019/04/12/here-be-dragons-ghidra-0.html">原版网页第一篇</a>, 
+<a href="https://www.shogunlab.com/blog/2019/12/22/here-be-dragons-ghidra-1.html">原版网页第二篇</a>, 
+<a href="https://bbs.pediy.com/thread-257445.htm">翻译</a>.</p>
+
+<h3 id="文件管理">文件管理</h3>
+<ul>
+  <li>在项目窗口<code class="language-plaintext highlighter-rouge">File</code>选择<code class="language-plaintext highlighter-rouge">Batch Import...</code>可以批量导入文件
+(虽然我都是鼠标拖放导入的… )</li>
+</ul>
+
+<h3 id="主要窗口">主要窗口</h3>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Program Tree</code>里面可以查看程序的各个 sections, 嗯, 据说这对于PWN十分有帮助</li>
+  <li><code class="language-plaintext highlighter-rouge">Symbol Trees</code> 里面是程序导入, 导出, 还有函数, 标签, 类, 命名空间.</li>
+  <li><code class="language-plaintext highlighter-rouge">Data Type</code>窗口里面是程序里面用到的数据的类型(可以查看 Show reference)</li>
+  <li><code class="language-plaintext highlighter-rouge">Listing</code>窗口里面可以查看反汇编代码
+(可以通过右上角的 Edit the listing fields 来修改 Listing 窗口的排版内容)</li>
+  <li><code class="language-plaintext highlighter-rouge">Window -&gt; Function Graph</code> 可以显示函数的图形模式(类似于流程图一样的东西)</li>
+  <li><code class="language-plaintext highlighter-rouge">Window -&gt; Function Call Trees</code> 可以显示函数调用了什么其他的函数.</li>
+  <li><code class="language-plaintext highlighter-rouge">Window -&gt; Fuction Call Graph</code> 可以显示函数调用其他函数的图像(类似于流程图)</li>
+  <li><code class="language-plaintext highlighter-rouge">Decomplie</code>反编译窗口</li>
+  <li><code class="language-plaintext highlighter-rouge">Window -&gt; Script Manager</code> 可以查看, 使用脚本(这些脚本可以用来帮助逆向)
+(虽然我还没有用过… 不过看起来非常的香. 可以运行 python 的脚本, 
+但是需要 Jython. )</li>
+</ul>
+
+<h3 id="一些操作">一些操作</h3>
+<ul>
+  <li>在符号上面右键可以<code class="language-plaintext highlighter-rouge">Show References to</code>(快捷键<code class="language-plaintext highlighter-rouge">&lt;C-S-F&gt;</code>), 
+可以看到函数的被调用关系.</li>
+  <li>在符号上面双击可以跳转到符号所指向(大概)的地址, 比如查看储存在内部的字符, 
+或者是 call 的函数等等.</li>
+  <li>在<code class="language-plaintext highlighter-rouge">Listing</code>(或者<code class="language-plaintext highlighter-rouge">Decomplie</code>窗口)右键点击数值可以选择<code class="language-plaintext highlighter-rouge">Convert</code>来转换数值格式, 
+比如选择十进制<code class="language-plaintext highlighter-rouge">Unsigned Decimal</code>, 十六进制<code class="language-plaintext highlighter-rouge">Unsigned Hex</code>或者别的什么的. 
+(感觉有点像是改变显示方式)</li>
+  <li>在<code class="language-plaintext highlighter-rouge">Listing</code>里面看到放在内存里面的一堆数据, 比如说一堆字节数组, 
+可以选中, 右键, <code class="language-plaintext highlighter-rouge">Data -&gt; string</code> 就能够变成字符串的类型. 
+(或者也可以在这段数据的头部也可以右键修改)</li>
+  <li><code class="language-plaintext highlighter-rouge">Window -&gt; Memory Map</code> 内存映射, 可以设置反汇编的二进制文件的装载的基址
+(没用过, 不是很懂. )</li>
+</ul>
+
+<h3 id="帮助">帮助</h3>
+<ul>
+  <li>Gihdra 有一个叫做 Tip of the Day 的东西, 在启动的时候会给一些提示, 
+还是挺有用的. (尤其是在学习的时候)</li>
+  <li><code class="language-plaintext highlighter-rouge">F1</code>帮助: 在大多数的界面里面(呃, 假如你不确定的话, 用鼠标点一点, 
+就相当于聚焦在这个界面上了)按下<code class="language-plaintext highlighter-rouge">F1</code>, 就会打开一个对于这个界面功能说明的
+帮助文档.</li>
+</ul>
+
+<h2 id="更多的资源">更多的资源</h2>
+<p>嗯, <del>全球最大同性交友网站诚不欺我.</del> 果然, 以后想要学什么东西, 
+先去找找那些<code class="language-plaintext highlighter-rouge">awesome-xxx</code>的项目, 里面的资源实在是十分丰富.</p>
+
+<p>先留下<a href="https://github.com/AllsafeCyberSecurity/awesome-ghidra">链接</a>, 
+然后以后再慢慢看…</p>
+
+  </div><a class="u-url" href="/ctf/ghidra-basic/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

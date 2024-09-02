@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>LISP in Space | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="LISP in Space" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 这是对 LISP in Space with Ron Garret 的中文翻译, 原始文章 (或者说播客) 是对 Ron Garret 的一个访谈. 更加推荐听原始的播客或者是看原文, 我并不是一个很好的翻译者. 其他: 文中的图片全部下载自原始网站 并不会完全翻译, 一些客套话之类的就会选择直接摘抄, 但是会尽量做到不会删除/遗漏. 本人注释/吐槽将会以 quote 的形式或者折叠的形式加入 原文中并无超链接, 我会对一些字词加入超链接, 主要是为了补充语境和背景知识, 主要以 Wikipedia 为主. 省流总结 模拟硬件 (机器人/火星车) 以加速开发 (减少实机调试的时间) DSL 以对底层进行抽象封装 Introduction Adam: Hi, this is CoRecursive, and I&#39;m Adam Gordon Bell. Each episode is the story of a piece of software being built. 你是否有过想到了一种极棒的独特解决问题的方法, 但是你却受到了他人的质疑. 这就是今天的故事: 你带着对某种方法的热情来到了新的地方, 然而这种方法并不被普遍地接受 &#8211; 这大概就是今天的 LISP in Space 的故事. 你大概知道 LISP 这个充满了括号和宏 (marco), 把代码 (code) 当作数据 (data) 的特殊编程语言吧. 今天我们的嘉宾 Ron Garret 就是 Lisp 的一个超级粉丝. 故事的开始, 他取得了机器人和 AI 方面的博士学位. 不过这里的 AI 并不是 Machine Learning (机器学习) 的 AI, 而是类似于自动驾驶的自动化机器人的 AI. 这里的 &#8220;自动驾驶&#8221; 的 AI 其实也有点不太对了, 因为现在的自动驾驶的很多识别算法, 已经不再是简单的逻辑推导的那种专家系统了. 或者说应该更加像自动控制之类的 AI? 并不了解这方面背后具体的技术. Mars Rover Prototypes FANG, the Futuristic Autonomous Navigation Gizmo. &#8220;He was actually a Cybermotion K2A.&#8221; - Ron (Courtesy of Ron Garret) 让我们把时间拨回 1988 年. 那一年苏联 (USSR) 还没有解体, Ronald Reagon (里根) 还是美国的总统, Ron 和他的博士论文导师 (thesis advisor) 在 NASA 的项目下进行原型机设计. Ron: My name is Ron Garret. 我们的目标是开发一套软件来帮助 NASA 把自动火星车 (autonomous rover) 送到火星上. 为了能够在火星上控制火星车, 有一堆的问题需要解决, 其中一个就是大概 40 分钟的延时: 你发送了一个控制指令, 大概 40 分钟后, 你得到了这个指令执行的结果. 因为延时实在是太长了, 所以你不能直接远程操作火星车, 而是需要让火星车有一定程度的自动化, 能够自动在这 40 分钟的间隔里面做应该做的事情. 所以我们的目标就是让它更加自动化, 让它能够在这 40 分钟间隔里做更多的事情. Adam: 当时是在 Los Angeles 的 Jet Propusion Lab (JPL (NASA)), Ron 在那里有一个小隔间作为办公室. Ron: 在角落 (around the corner, 应该是指自己的办公室边上) 有一个电子元件商店. 我会时不时去那里买一些我们需要做硬件的材料. 在那个时候, 我们还经常需要自己搭建一些自制的硬件. 我们做的许多机器人都是室内机器人, 所以我们常常直接让它们在办公室里面乱跑. 在实验室边上有一个干掉的河床叫作 Arroyo Seco (应该是 Arroyo Seco (Los Angeles Country)), 大多数情况下我们会带着我们的机器人去那, 因为那里的环境和火星上的实际上非常类似. 只有少数情况下, 我们会真的去 Death Valley (Death Valley Park Service) 做实验. 那时候真的非常有趣. The Robots Tooth. &#8220;Fun fact: Tooth was built by Collin Angle who went on to become the founder and CEO of iRobot corporation, makers of the Roomba.&#8221; - Ron (Courtesy of Ron Garret) Adam: 这些机器人大概都有多大? Ron: 我记得大概最小的有鞋盒大小左右? 我应该先介绍我们中等大小的机器人, 它们大概是一个标准冰箱 (standard refrigerator) 的一半大小, 又大又重. 这个标准冰箱大小貌似有些模糊? 在 Google 上搜索 standard refrigerator size, 你应该得到的是 24~40x62~72x29~36 inches. 并且如果它们真的撞到什么东西, 那可能会导致一些严重的损坏. 所以我们叫它们 FANG, 就是 Futuristic Autonomous Navigation Gizmo (超酷超鱿型自动探索小东西). 对于那些鞋盒大小的机器人, 我们叫它们 Tooth. Adam: Oh, I see. Ron: 然后我们做了一组用于室外的机器人. 第一个是一个使用货车轮胎的超大六轮巨物. 它大概有一辆 SUV 大小, 所以我们叫它 Robbie. 不知道这个名字有啥关系, 找到了一个 Robby the Robot. 接下来就是一系列的小型漫游车, 最后得到了第一个可用的火星车: Sojourner. 所以之后那一系列的火星车的原型机就叫作 Rocky, Rocky 1, 2, 3, 4. (Rocky 系列, Rocky 8 Rover, Rocky 7 Rover). Robbie The Robot (Credit: NASA) Using LISP Rocky IV, the last prototype before the Sojourner mission, seen here in the Arroyo Seco next to JPL. (Courtesy of Ron Garret) Adam: Sojourner 是第一个火星车, 并且我们都知道它在 1997 年登上了火星并取得了一系列成功. 但是在那九年前 1988 年, 火星车还只是一个研究性质的项目. 他们还只是在做可行性探索, Ron 的团队在当时选择了使用 Lisp 作为他们的编程语言. Lisp 来自于他们所做的学术性研究. (it came right out of the academic research they were doing) 这里应该是指当时 Lisp 被用于机器人自动化控制算法研究之类的方面吧? 只有一个问题, LISP 并不是 NASA 写软件的方法. Ron: 当时有不少对 LISP 的偏见, 应为它长得比较奇怪并且大家都不太熟悉它. 并且因为它的垃圾回收技术导致你不知道它什么时候会停下来你的程序进行垃圾回收, 所以对于实时性要求极高的嵌入式环境来说, 这是比较灾难性的问题. 并且大多数人认为 LISP 需要很多的内存占用. 在当时, 哪怕是 8 metabytes 的机器也算是大内存 RAM, 所以经常会有人来质疑: 哟, 也许你确定你做研究用的机器有这么大的内存, 但是你根本没法把那样的机器飞上天. 当然, 在航天规格的硬件上也同样满足 Moore 定律, 所以这不过是落后几年的问题. 但是我仍然觉得这比较困扰. Adam: 我能理解. 我也有过这种认为自己有解决问题的巧妙办法, 但是很难说服别人接受这个方法的经历. 但是 Ron 是介绍在嵌入式机器人上运行 LISP 的经历的, 所以我猜你需要做一些 tick 来实现这个目标. Ron: 在缺乏足够 RAM 的大型机器人上, 我们实际上是直接在机器上运行 LISP. 也就是说, 实际控制机器人的代码是使用 LISP 进行编写的. 而另一种使用 LISP 的方法则是设计用于给小型机器人编程特殊语言, 然后将这些语言编译到在小机器人上运行的嵌入式代码. 这里更像是 DSL 的设计. Adam: 作为一个非相关领域的人, 这听起来非常有意思. 尽管你可以从底层开始编写自动化控制代码, 但是 Ron 的方法提供了高阶的抽象. 通过设计针对问题的特殊语言来把问题转变为一个编译器设计的问题. 在其他语言里面可能需要做非常多的工作, 而 LISP 在 80 年代中期开始就被用于这样的问题了. Ron: 并且你还要注意到, 那个时候并没有 Java, 没有 Python, 也没有 JavaScript 和 C++. 只有 Pascal, C 和最基础的机器码. 那些才是当时的流行语言. 但是用那些语言来解决问题, 是非常非常麻烦的. 相比之下, 你能够有一个不需要担心具体细节的高阶抽象层, 不需要担心内存管理, 不需要担心悬空的指针. 这样的高阶抽象层对开发者来说是又快又容易. 并且当时能做到的只有 LISP. 在那个时候 LISP 就像是有超能力一样, 其他的东西根本没法比. 真是遗憾, 因为现在的比拼已经不再是 User Friendly 了, 而是环境的生态完整度了. 不过也估计是因为一开始的 LISP 相关的开发者都是自己手搓, 缺乏一个很好的环境交流分享, 才导致很难形成一个足够好的生态圈吧&#8230; Testing Robbie Ron Garret, Robbie and Rocky III at an event in Washington DC. (More from event in Bonus Section.) (Courtesy of Ron Garret) Adam: Ron 不仅是个忠实信徒, 也同时是个有天赋的开发者, 因为当时 NASA 的火星车原型机项目还有另外一个竞争队伍, 所以在使用 LISP 这个决策上算是一个很大的赌注. 想要让他们的火星车被真正采纳用于火星项目, Ron 的团队需要让 Robbie 和 FANG 可以进行自动驾驶. Ron: 为了实现这个目标, 我们构建了一个开发环境: 我们在 Macintoshes 上搭建了一个模拟环境来模拟机器人, 我们会先在这个模拟器里开发我们的程序, 然后在机器人上运行相同的代码来查看这些代码是否能够在真实的机器上运行. 这么做的原因是因为在真实机器上, 尤其是 Robbie 上运行代码非常耗时: 我们需要把 Robbie 装到一台平板卡车上, 再运到 Arroyo (见前文), 然后再搭建好对应的测试仪器来进行对应的测试. 这一过程大概要花费好几个小时准备, 然后花费剩下的一整天运行实验, 最后结束的时候还得把一切打包带回去. 所以能够运行模拟代码对我们来说真的是非常节约时间的一件事情. Adam: Ron 的团队的工作在当时可以说是各方面的开创性的工作. 说实话, 读到这里的时候我一开始还觉得有些不可思议, 毕竟计算机模拟的思路, 竟然在当时还是非常新的一个概念&#8230; 这么想来在物理这边想到计算机模拟辅助设计, Geant4 和 Corsika 的这几个软件包在当时也真是牛逼. 诶, 要是早生几年&#8230; Ron: 我们的目标是让火星车能够在自然的环境下可以完全自主运动. 比方说, 你想要让它移动到某处. Robbie 有一对立体摄像头 (stereo camera), 事实上, Robbie 是实际上第一个通过立体视觉进行观察的机器人. 某种程度上来说, Robbie 是现在许多自动驾驶汽车的前身. 尽管它们可能并不使用立体视觉, 而是使用 LIDAR, 但是他们的其中一部分使用视觉处理来进行避障. 因为 Robbie 是第一个做这件事的机器人. And then there was the actual navigation code (这里应该是指当时并没有实际的分析代码吧?), 实际的分析代码将 3D 立体的图像数据和目标移动地点作为输入, 然后规划一条路线并移动到目标地点. 这是我所做的工作. Adam: 所以你做的事情类似于把它放到任何地方, 然后设置好目标地点, 接下来看它会如何执行&#8230; Ron: 是这样的. 但是同时需要注意的是 Robbie 移动的速度非常慢. 是的, 它又大又慢, 大概每小时不到一英里 (\(&sim; 0.4 \mathrm{m/s}\)). Adam: Okay. Ron: 所以它并不是那么危险. 假如它开始做一些不正常的动作, 我们有充足的时间去按下急停按钮. 但是这样你就需要一直盯着它看, 因为它是个昂贵的实验用的大家伙, 并且如果开到石头上面, 它很容易把自己弄翻车, 这估计会把它弄坏. 不过幸运的是, 这并没有发生过. 不过我们的确需要一直盯着它, 不过你不必担心它失控然后伤到别人之类的. Adam: 在 1980 年代给机器人开发实时软件 (real-time software) 确实是个困难重重的事情. Ron: 因为当时的代码都是最新的研究用代码 (cutting edge research code), 所以它们充满的 bug 并且很容易出错和崩溃. 不过好在我们还没有过任何灾难性的事件. 我记得只有一次 FANG 失控在办公室的墙 (drywall) 上撞出了一个洞. 不过这是因为 FANG 被设计得需要能够跑得足够得快. 不过它从来没有伤到任何人. Politics Rocky III. &#8220;The white thing on the mast is an electronic compass. The NCC-366R is an inside joke. Our group number was 366. Putting that number in a prominent location was a way of flaunting the fact that this robot belonged to us and not the group we were competing with.&#8221; - Ron (Courtesy of Ron Garret) Adam: Robbie, Rocky, Tooth 和 FANG, 这些都是在当时最先进的自动驾驶机器人. 在开发中产生了许多的自动寻路代码. 尽管当时 Ron 埋头在代码的工作里面, 但是团队中产生了其他的分歧. Ron: 讲述这个故事可能有些恼人, 因为它们在一定程度上和政治 (political) 相关. 当时我还很年轻, 完全只关心编程的问题, 只是略微了解周围的政治斗争. 但是我并不知道具体的细节, 也并不理解斗争的内容. 我当时并未察觉那么多, 这些大部分都是我之后了解到的事情. Adam: 在当时 Ron 的机器人团队和另一个机器人队伍在自动化上有一个地盘争夺. Ron: 与我们的指定目标地点并让火星车自动计算移动的路径, 另一个队伍的方案则是通过操作员手动描述移动的路径, 然后让火星车自己去执行. 两种方案都提供了一定程度的自动化, 但是对方的方案需要一个操作员在一个提供 周围 3D 环境信息的终端面前描述漫游车每个 40 分钟间隔 (指令循环) 内移动的路径. Adam: 我相信不论搭建什么种类的火星车原型机都是非常困难的. 但是另一个队伍通过描述特定指令来规划路线的方案, 类似于一个较小的设置终点 (设置的目标终点较近), 然后让机器人规划路线的问题. 这固然很好, 但是在开发的时候可能会有一些困难. Ron: 因为在你发送指令后的一个小时内你并不知道指令是否成功了. 所以你只能坐在那里咬着手指头希望你没有搞砸什么事情. Adam: 这个方法对操作上的负担是很大的, 相反的, 自动驾驶的方案在操作上是轻松的. 如果机器人可以自动驾驶的话, 那么就可以发送更多更小的机器人. 我是指, 假如每个机器人都可以可靠工作的话, 那么每个小机器人可以自行探索一片区域, 相对可以探索更多的空间. 但是这里有一个政治问题. Ron: 在直接操作上有数十年的经验积累. 并且如果引入自动驾驶, 那么这将减去大量操作员赖以生活的工作. 有许多人就指望着这项技术不存在吃饭的. 卧槽, 竟然是因为这么朴素的理由? 不过哪怕直到现在自动驾驶技术也是个不太能解决的问题, 尽管需要处理的问题的规模并不相同, 但是我很好奇当时的自动驾驶技术发展到了什么样的程度. 以及是否真的就只是技术竞争导致的不被采用. Sojourner on Mars Adam: 不过不要灰心, 故事还在继续发展. 尽管 LISP 代码并没有在第一次火星车上应用, 但是它们总会走向太空. 低自动化的操作方案在当时胜出了, 尽管这也不算什么坏事. Ron: 直到现在, 基于我看到他们实际实现的工作, 我也不认为 NASA 的决定是错误的. 我看到了那些火星车传回的图片以及基于火星车的科学研究, 这让我非常兴奋和震惊, 我几乎都找不到什么能够说明的文字了. 我现在可以坐在我家里的桌前, 看到这些来自另一个星球的高分辨率的彩色照片. 这真的是活着可以看到的写入人类历史的事情啊. Adam: Do you feel like it makes it real, like seeing these pictures? Does it seem more like a real place? Ron: 当然. 这些传回的清晰的照片可以给你对这个地方的一个直观的感觉. 最让我震惊的一件事就是这和我们地球上的地方, 比如我们做了很多次模拟测试的 Death Valley 是多么的相似. 特别的, 这也可以让我对走在火星上会是什么样的感觉有一个简单认识. 我很确信我不太会想去那里. 我在 Death Valley 以及其他地方呆了很多次了, 唯一的区别就是相比火星, 那里更加舒适, 你不需要真的穿上宇航服也能活着. 从这样的半第一手资料里, 我可以告诉你殖民火星是个幻想. 这就有点消极了吧. 感觉这位大佬对人类技术迭代有些消极了. 虽然现在登陆也是个问题, 并且也没有了冷战这种加速剂&#8230; Adam: Really? Ron: 是的. 我们真的需要保护好塑造我们的这颗星球. 因为不管发生什么坏事, 总会变得更好的. 地球化地球也总会比地球化火星更加容易. Adam: 所以 Sojourner 成功了, 并没有使用 LISP. 其控制代码由 C 编写, 并且其自动化程度相当有限. Ron 的团队解散了, 并且大部分离开了 JPL. 但 Ron 留下来了. 并且几年之后, 看起来有一个新的机会. NASA&#39;s New Millennium Program Website for Deep Space 1 Ron: 有一些人认为自动化技术可以被用于宇宙飞船 (spacecraft) 在宇宙空间中的飞行. 并且一些关于规模经济的理论 (some of the theories of economies of scale) 可以基于此应用. 并且 NASA 那个时候来了一个新的 director. 他主张跟踪记录规模经济以缩减任务开支. 呃, 提高自动化, 减少操作人员开支, 缩减任务成本? 估计是因为冷战结束, 太空军备竞赛的结束的缘故? 他启动了一系列称为 New Millennium 系列的先驱项目 (pilot program). 这一系列项目有着明确的目标: 通过在一定程度上应用可以缩减运行成本的新技术作为示范. 所以我们开发的用于火星车的自动化技术则在和 Ames Research Center (AMES (NASA)) 的 Remote Agent 项目中被重新提出以作为规划和分析系统. 其中大概 3/4 (根据你如何计算) 主要的工作是由 JPL 和 Ames 开发的; 其中 1/4 来自 Carnegie Mellon (CMU) 等等, 这些工作组成了 Remote Agent. 没错, 就是那个 CMU AI REPO 的 CMU. Deep Space 1 and The Remote Agent JPL Deep Space 1 Promotional Image Adam: It was called the Remote Agent because it was going to have agency. (应该是代理控制功能). 就像是火星车原型一样, Remote Agent 也有一个目标任务, 和火星车不同的是, 这一次是一个飞行控制器. Ron: 所以 New Millenium 计划被分成了两个类型: 地球轨道外的深空计划 (deep space), 以及地球轨道上的 EO 计划. 我们被作为第一个深空计划 DS1 (Deep Space 1) 的候选. DS1 预计将会和彗星和小行星会面. 他们有一组的尖端科技将会被用于这个项目, 然后这个项目将会作为示范用于其他的一系列类似的任务. Remote Agent 最开始被候选为整个项目的控制程序. Project Management Problems Adam: 但是不幸的是, 计划开始没多久就发生了问题. Ron: 这个故事也同样有些恼人. 我需要非常小心因为我不想冒犯团队里的其他人. 团队里的其他人都非常的好也工作得非常努力. 所以这个问题更像是管理上的而不是技术上的. 当时我们有四个来自三个不同机构的队伍来做这个系统, 但是整个过程被放任自然, 没有人来负责设计和整合最终的系统. 有一堆的谈判, 劝说甚至是内讧和争吵. 但是在技术层面, 事实上有一个部分大概 3/4 是用 LISP 来写的, 1/4 是用 C 来写的. 不过早些时候用 C 写的那部分一直在报错, 因为当你用 C 来写程序的时候, 你需要考虑一堆底层的细节. 尽管他们最终总能解决这些问题, 但是每次程序崩溃都会拖慢开发进度. 因为可能在你准备实验的时候, 突然崩溃了, 那么你可能就要重启所有东西, 这大概会花费你十分钟甚至更多的时间. 然后一天里多发生几次, 你的进度就落后了. Adam: 所以我猜大家学到的教训就是你不应该用 C. Ron: 嘛, 你可能觉得我们应当从中学到什么. 但是并没有. 现在的飞控程序, 我相信还是用 C 写的, 并且开发者需要非常小心, 并且使用一对测试和分析工具来保证可行. 尽管他们最终可以完成工作并保证他们的工作是可靠的, 但是这需要大量的精力. 并且不幸的是, 当时我并不擅长交涉 (politics), 所以我并没有那么强势. I ended up off a lot of people and I think that had probably as much to do with the ultimate failure of the project as anything else because all these old timers who knew how to run spacecraft just didn’t like me and didn’t want to have this obnoxious brat around. Adam: 是的, Ron 可能确实搞砸了 JPL 的一些人际关系 (ruffled some feathers at JPL). 但是在整合四个系统的时候, 这样的问题的确拖累了自动化开发进度, 并且导致了项目被降级为飞行试验 (flight experiment), 从在 Deep Space 1 的整个航行过程中进行控制, 变成了只控制 3 天时间. 但是哪怕只有三天, 控制飞行器也不是一个简单的事情. 各种队伍在一起工作来保证它能像预期一样可靠. The Executive Deep Space 1 being assembled (Credit: Nasa) Adam: Ron’s portion was called the executive. (负责的软件部分为决策/执行). Ron: 我们的软件大概做的事情就是进行决策: 根据输入的数据和一堆可能的突发事件, 接下来应该做什么事情, 大概这就是航空飞行器做的事情. 这段程序我们是用一个由 LISP 自定义的语言来实现的. 不过奇怪的是, 我几乎不记得这个语言的名字了, 尽管它就像我的孩子一样. 怎么会事呢. 读到这里也感觉 LISP 为啥这么臭名昭著了. 因为每个人都可以自由地创造自己的 DSL. 这对从零手搓是很方便的, 但是对于工程上来说, 就缺乏强势的统治能力. 哪怕 XXX 非常难用, 你也得接受, 因为它就是事实意义上的标准之一. 这门语言在一定程度上和 LISP 很像, 我们构造的语言结构可以阻止你写出可能导致问题的代码. 其中一个特点就是它可以帮助你在多线程的程序里面写出不会出错的代码. 一个主要例子就是在众所周知的很难管理的多线程的代码里面防止出现错误. 这感觉就像是 Rust 一样, 通过编译器强制检查拒绝危险代码. 不过相比以前, 现在关于多线程的分配问题已经有了非常成体系的解决方法了. 其中有一堆的隐藏问题, 比如说竞争和死锁之类的问题. 所以我们的语言的结构设计得可以阻止你写可能导致类似问题的代码. 并且我们的代码也可以被用于形式分析 (formal analysis), 我们有一个形式证明 (formal proof) 来验证我们设计的语言的正确性. 这真的帅啊&#8230; 关于形式证明, 我倒是很想了解一下 ACL 2&#8230; 以后再说吧. Adam: Oh, wow. Ron: 除了形式证明, 我们还有一遍又一遍的地面测试. 我们会在地面上有一个飞行器的复制品, 然后基本上除了它不是真的在太空之外, 我们的硬件模拟和太空中几乎一样. 所以我们有形式证明的正确性, 也通过了一系列的地面测试. 所以我们对它非常有信心并且相信它一定能正常工作, 但是它并没有. Deep Space Failure Deep Space Network Dishes in Canberra, Australia (Credit Nasa) 大概是三天中的第二天, 这个时间大部分但是没有很多人在睡觉, 我关于这部分的记忆有些模糊. 因为当时设计的就是在地面有一个安全监控 (safeguard) 以防有突发事情发生, 比如 Remote Agents 搞砸了的情况, 所以当时所有人都在待命 (all hands on deck situation). 但是事实是它真的搞砸了, 不过还是橙色警报而不是红色警报. Adam: 它停止决策还是死机了呢? Ron: 到了它本应做某事的时候, 但是它并没有按照预期执行任务, 所以警报响了. Adam: 它当时在哪里? Ron: 在外太空, 大概 150 million miles (\(2.414 &times; 10^{11} \mathrm{km}\)) 外. It was an hour around trip lifetime. Debugging Code in Space Adam: Whoa. So now it’s time to debug a production incident, but this isn’t code running on a server in the cloud, this code is one light hour round trip time away. This is code running in deep space and to fix the problem, there’s Ron who wrote the programming language, and then there’s this guy that he hired to help him do the spacecraft code. Ron: So I hired the guy in part so that I could push the coding responsibilities off onto him and kind of back away from the process because I could tell that I wasn’t really being very effective. And I was young and foolish and a very, very bad manager at that point. And I did not do a very good job of handing this task off to him. I basically just said, here’s what needs to be done. Go do it. Adam: And he did do it. He got things built, but now this code that’s been proven deadlock free seems to be frozen 150 million miles from home. And so it’s time for Ron to jump back in and take control. Ron: This guy was frustrated with me. He’d really been in the trenches for months doing my dirty work for me. That was all hands on deck and so I was swooping back in as a white knight to try and fix the situation again the way I had so skillfully done so many times before. The guy told me to go F myself, which came as a surprise to me because I didn’t realize that things had reached that level of tension. And so I think in retrospect, his reaction was very understandable, but at the time it took me completely by surprise. Adam: Emotions are running high and it’s time to debug this issue. The more time passes, the more off target Deep Space 1 is. 概要: 雇了个人来干的活因为沟通和交接的问题导致了问题. Sending S-Expressions Ron: 我们一开始完全没有概念哪里出错了. 我们只知道本该传回的遥测数据 (telemetry) 没有被接收到, 所以我们需要决定接下去做什么. 但是问题是, 我们能做的任何事情, 都需要等上大概一个小时左右才能直到执行的结果如何. Adam: 所以在你们知道除了问题的时候, 实际已经过去了一个多小时了. Ron: 实际上是一个半小时, 半个小时收到信号, 一个小时进行反馈. 当你去思考这些时间的时候其实还挺奇怪的, 是吧? 不过差不多就是一个小时. 这里应该是出事发生信号, 经过半个小时传回地球; 假如立刻进行处理, 发送决策信号, 到达 DS1 然后返回结果经过了一个小时. Adam: 这是如何实现的呢? 你们是如何和它进行通信的? Ron: 好问题. 我想你大概比较熟悉 Python 吧. Adam: 是的. Ron: 当你在使用 Python 编程的时候, 你有一个 REPL (read-eval-print-loop). 所以你就可以交互式地拓展程序的功能, 就像是增加一块代码, 然后像普通的程序一样运行. LISP 是这样的先驱者, 你想要和 LISP 进行交互, 一般的方法就是使用 REPL, LISP 也是第一个有这样的特性的语言, 或者说它是接下来十几年里唯一有这种特性的语言. 你可以去参考我之前写的 REPL 体验 Charming Common Lisp Debugging Experience. And that’s one of the reasons why it was such a big lever back in the early days, but this was REPL so we had a REPL running on the spacecraft and we could interact with the spacecraft through that REPL. 相当于给航天器提供了 REPL 的特性. 所以想要和航天器经行沟通, 你只需要做到终端前面往 REPL 里面输入指令即可, 你只需要通过 Deep Space Network 然后等上个一小时左右的时延. 实际上的过程是我们坐在会议室里, 然后想破脑袋来思考该发送什么指令给飞行器. 然后最终决定我们需要发送指令, 然后经过一堆管理层的 review 和签字, 然后最后交给培训后的 Deep Space network 的操作员, 然后他们才会坐在控制台发送指令. 指令会通过专用的网络链接到 Deep Space 的网络天线上. And there are three of these around the world so that you have coverage of the entire sky. Deep Space network 的天线是 70 米大小的巨物. 我并不知道其中的细节. 我不知道那里有没有一个人来做打印信息的工作, 或者是全部自动化了的工作, 总之信号传到了这个 70 米天线上然后以光速发往飞行器. 然后经过精密的天线的接受和解码并最终就像是你在物理终端上直接输入一样地输入到 LISP 的系统中. And it was a very elaborate and formal process that involved people wearing these headsets that you see like in the movies, going through this very formal process, that we are now going to send this command to the spacecraft and somebody else saying, yes, you are go to send the command to the spacecraft. And then finally the guy who was sitting at the console would push the big red button and then we’d sit around and wait for the results. And then we’d look at the results and do the whole thing over again. 大概就是说, 其实并没有想象得那么容易, 不是坐在终端前和现在用 SSH 连接远程服务器一样, 而是每个输入的指令都要进行审核, 还要传一长串的指令执行过程. 最后还得等一个小时, 看最终的结果是否能行. Adam: That&#39;s crazy. 那么你像是发送一个巨大的 LISP 表达式的树还是&#8230; Ron: 是的, 我们发送的是 S-Expression. Adam: 你们是如何做到这一点的? 你们如何让它重载的, 毕竟它是在实时运行的. Ron: 首先我们会让它返回一个递归栈跟踪 (back trace), 一个当前系统中所有运行进程状态的 dump. 我们发现进程在等待某些事情来触发它, 但是它到底在等待什么? 所以我们做的第一件事情就是根据传回数据, 可以几乎一下子发现问题: 其中有一个进程在等待一个早就应该发生过的事件. 所以这很可能就是为什么出错的原因. 事实证明这确实是这样的: 一个极不可能的事件发生了. The Proof and the Assumptions Adam: 我记得这不是被证明不可能发生吗? Ron: 是这样的. 但是这个证明依赖于一个假设: 当你在给一个东西编程的时候, 你只使用我们定义的语言中的结构体 (constructs). 所以严格上说, 如果你只是用我们 DSL 的结构体, 那么你将不会陷入死锁. 这就像现在 Rust 语言中的 safe 和 unsafe 的部分, 我们基本上做的就是这么个事情, 只是我们并没有明确地对其进行区分. 然后我们也没有预料到写这段代码的人恰好用了这样的代码. Adam: This is the F off guy that Ron hired to build the software using his language. 草, 什么临时工笑话 (bushi). 不过也确实, 如果我用 LISP 搓了一个 DSL, 那么我该如何对这个 DSL 进行 debug? 这个 DSL 是否有语法提示之类的编程辅助? 等等之类的. Ron: 并且因为他需要做某些特定的操作, 但是他并没有找到一个合适的方法在我们的 DSL 中使用结构体. 所以他最终选择调用在 LISP 中的结构体的底层来实现这个功能, 这导致了超出我们 DSL 的安全检测的范围. 实际上这是我的失误. 我并没有清晰地向我雇来的人解释清楚我们的工作 (work under supervision), 我只是说: &#8220;你需要做这些, 去做到它&#8221;. 然后他去做了, 但是因为我并没有向他强调这一点&#8230; 如果要我为自己辩护的话, 我可能当时并不觉得这是件值得强调的重要的事情. 我没有讲清楚他不应该怎么做, 但是他这么做了, 这并不是他的过错, 是我的锅. 这就是那个 bug 的原因. Fixing it Adam: 你们需要杀死什么进程或者重启什么东西吗? Ron: 我们当时在讨论是否能够通过往进程中注入一些事件来分离这个过程来抢救这个问题. 我们实际上也是这么做的, 所以我们最终成功地分离了这个 bug 并且让它回到正轨. Adam: 所以多亏了 LISP 和给航天器提供一个 REPL, 手动处理事件的方法成功了. 我觉得你可能会觉得很奇怪, 之前已经经过了大量的测试, 从未产生死锁. 如果你执行这个项目一百次, 可能只会发生在第一次发生死锁, 而之后从来不会. 实际上故障率非常的低, 但是因为我们只执行一次项目, 所以一旦它出现了死锁, 在其他人来看这个项目只发生一次就死锁实在称不上是一个成功. The Impact of the Deadlock Ron: 我们并没有失去飞行器, 并且我们的确完成了所有的项目观测. 所以技术上来说, 这算是成功的. 但是开发过程是很痛苦并且再一次充满了政治斗争. 所以尽管我们的确完成了目标, 但是自动飞行计划最终被取消了, 并且再也没有飞过一次. Adam: 整个过程对 Ron 来说应该是非常折磨的. Ron: 说折磨已经有点保守了. 那可以说是极其痛苦, 所以我在那之后退出了. 我的角色逐渐边缘化并且越来越少的人愿意和我共事, 所以合作的压力越来越大了. Enter Google Adam: 那段时间当 Ron 在职业低谷时, 他发现了一个叫作 Google 的新的搜索搜索引擎. Ron: 我当时在 Usenet 的新闻组里面, 或者说, 是 comp line LISP. 其中有一个人回复了一个复杂的技术问题, 我不记得具体的问题是什么了, 总之最后一句话就是 &#8220;thank God for Google&#8221;. 然后我就很好奇, Google 是啥? 所以我做了当时人们普遍会干的事情: 打开我的 Netscape navigator, 然后输入 Google. 当然了, 就是一个类似于 AltaVista 的搜索引擎, except that after just five minutes of noodling around with it was (大意就是 Google 就是快, AltaVista 慢). 我认为很明显, 这绝对领先当时类似的东西好几条街 (was light years ahead of anything else). 所以我很好奇他们是怎么做到这么快的. 在网页的底下我看见他们正在招人, 所以正如 Alan Greenspan 可能会说的 irrational exuberance (冲动的激情) 一样, 我发送了我的简历, 然后 15 分钟后我的电话响了. 卧槽, 以前的科研人员真是牛逼啊. Is LISP Worth It? Adam: 所以 Ron 离开了 JPL 并加入了当时还是一家小公司的 Google. 不过这里是 CoRecursive (story behind the code) 而不是一个太空探索播客. 所以我好奇的是, 在过去了这么多年, Ron 是否还是一个 LISP 布道者呢? Ron: 我从 LISP 上学到的一件事情就是它恰好和我的思考方式 (mindset) 相符合. 一个原因就是我从高中开始就使用它了, 所以我差不多进入 LISP 的世界大概 40 多年了. 尽管对于其他人来说, LISP 的语法可能有些奇怪: 各种括号以及奇怪的前置表达式, 这可能会让一般人比较抗拒. 尤其是 Common Lisp, 因为各种历史包袱, 以及一些奇怪的边缘用例可能会导致一些意想不到的惊喜. 不过实际上创造性更多的还是和你的工具是否和你的思路相符合, 而不是想要去找一个适用一切的究极工具, 毕竟不同的人应该有不同的思考方式, 对问题也应该有自己的解决方法, 应当去选择适合自己的工具. 对于 LISP 来说, 它可以给你一种对问题的核心更好的一个认识. 有了这样的认识, 就可以更容易学会其他的东西. 但是实际的情况则需要考虑和思路以及工具价值的关联程度. Outro Adam: A big thank you to Ron Garrett for being on the show. A link to his website is in the show notes. And if you want to hear more about Ron’s time at Google during the dot-com boom, then you’re in luck. I’ve released it as a bonus episode. So if you go to the supporters link in the show notes at corecursive.com/supporters, you can access the episode right now. Will this little startup, Google, make it through the dot-com crash of the 2000s. Will Ron convince them about the beauty of LISP? You don’t have to wait to find out. It’s right now available for supporters. And until next time, thank you so much for listening. Bonus Content From Ron 后面还有一堆照片, 建议去 原文 查看. 后记 Ron Garret 在 Google TechTalks 还有一个演讲视频: The Remote Agent Experiment (Youtube), 在 bilibili 也有人搬运. 视频最后有惊喜 最后被问到现在如何选择开发语言的时候, Ron 回答到如果条件一致的话, LISP. 可惜现在的条件并不一致, 而现代软件开发更多是一个团队工作. 所以估计还是 Python. 也就是说, 从零手搓已经不太现实了, 未来的开发还得是靠工程上的积累和团队合作么. 还有一个更加短的回忆录: Lisp in JPL. 以及一个 reddit 上的帖子: Lisp and the remote agent. 这些故事听得我都想去玩 KSP 了." />
+<meta property="og:description" content="About 这是对 LISP in Space with Ron Garret 的中文翻译, 原始文章 (或者说播客) 是对 Ron Garret 的一个访谈. 更加推荐听原始的播客或者是看原文, 我并不是一个很好的翻译者. 其他: 文中的图片全部下载自原始网站 并不会完全翻译, 一些客套话之类的就会选择直接摘抄, 但是会尽量做到不会删除/遗漏. 本人注释/吐槽将会以 quote 的形式或者折叠的形式加入 原文中并无超链接, 我会对一些字词加入超链接, 主要是为了补充语境和背景知识, 主要以 Wikipedia 为主. 省流总结 模拟硬件 (机器人/火星车) 以加速开发 (减少实机调试的时间) DSL 以对底层进行抽象封装 Introduction Adam: Hi, this is CoRecursive, and I&#39;m Adam Gordon Bell. Each episode is the story of a piece of software being built. 你是否有过想到了一种极棒的独特解决问题的方法, 但是你却受到了他人的质疑. 这就是今天的故事: 你带着对某种方法的热情来到了新的地方, 然而这种方法并不被普遍地接受 &#8211; 这大概就是今天的 LISP in Space 的故事. 你大概知道 LISP 这个充满了括号和宏 (marco), 把代码 (code) 当作数据 (data) 的特殊编程语言吧. 今天我们的嘉宾 Ron Garret 就是 Lisp 的一个超级粉丝. 故事的开始, 他取得了机器人和 AI 方面的博士学位. 不过这里的 AI 并不是 Machine Learning (机器学习) 的 AI, 而是类似于自动驾驶的自动化机器人的 AI. 这里的 &#8220;自动驾驶&#8221; 的 AI 其实也有点不太对了, 因为现在的自动驾驶的很多识别算法, 已经不再是简单的逻辑推导的那种专家系统了. 或者说应该更加像自动控制之类的 AI? 并不了解这方面背后具体的技术. Mars Rover Prototypes FANG, the Futuristic Autonomous Navigation Gizmo. &#8220;He was actually a Cybermotion K2A.&#8221; - Ron (Courtesy of Ron Garret) 让我们把时间拨回 1988 年. 那一年苏联 (USSR) 还没有解体, Ronald Reagon (里根) 还是美国的总统, Ron 和他的博士论文导师 (thesis advisor) 在 NASA 的项目下进行原型机设计. Ron: My name is Ron Garret. 我们的目标是开发一套软件来帮助 NASA 把自动火星车 (autonomous rover) 送到火星上. 为了能够在火星上控制火星车, 有一堆的问题需要解决, 其中一个就是大概 40 分钟的延时: 你发送了一个控制指令, 大概 40 分钟后, 你得到了这个指令执行的结果. 因为延时实在是太长了, 所以你不能直接远程操作火星车, 而是需要让火星车有一定程度的自动化, 能够自动在这 40 分钟的间隔里面做应该做的事情. 所以我们的目标就是让它更加自动化, 让它能够在这 40 分钟间隔里做更多的事情. Adam: 当时是在 Los Angeles 的 Jet Propusion Lab (JPL (NASA)), Ron 在那里有一个小隔间作为办公室. Ron: 在角落 (around the corner, 应该是指自己的办公室边上) 有一个电子元件商店. 我会时不时去那里买一些我们需要做硬件的材料. 在那个时候, 我们还经常需要自己搭建一些自制的硬件. 我们做的许多机器人都是室内机器人, 所以我们常常直接让它们在办公室里面乱跑. 在实验室边上有一个干掉的河床叫作 Arroyo Seco (应该是 Arroyo Seco (Los Angeles Country)), 大多数情况下我们会带着我们的机器人去那, 因为那里的环境和火星上的实际上非常类似. 只有少数情况下, 我们会真的去 Death Valley (Death Valley Park Service) 做实验. 那时候真的非常有趣. The Robots Tooth. &#8220;Fun fact: Tooth was built by Collin Angle who went on to become the founder and CEO of iRobot corporation, makers of the Roomba.&#8221; - Ron (Courtesy of Ron Garret) Adam: 这些机器人大概都有多大? Ron: 我记得大概最小的有鞋盒大小左右? 我应该先介绍我们中等大小的机器人, 它们大概是一个标准冰箱 (standard refrigerator) 的一半大小, 又大又重. 这个标准冰箱大小貌似有些模糊? 在 Google 上搜索 standard refrigerator size, 你应该得到的是 24~40x62~72x29~36 inches. 并且如果它们真的撞到什么东西, 那可能会导致一些严重的损坏. 所以我们叫它们 FANG, 就是 Futuristic Autonomous Navigation Gizmo (超酷超鱿型自动探索小东西). 对于那些鞋盒大小的机器人, 我们叫它们 Tooth. Adam: Oh, I see. Ron: 然后我们做了一组用于室外的机器人. 第一个是一个使用货车轮胎的超大六轮巨物. 它大概有一辆 SUV 大小, 所以我们叫它 Robbie. 不知道这个名字有啥关系, 找到了一个 Robby the Robot. 接下来就是一系列的小型漫游车, 最后得到了第一个可用的火星车: Sojourner. 所以之后那一系列的火星车的原型机就叫作 Rocky, Rocky 1, 2, 3, 4. (Rocky 系列, Rocky 8 Rover, Rocky 7 Rover). Robbie The Robot (Credit: NASA) Using LISP Rocky IV, the last prototype before the Sojourner mission, seen here in the Arroyo Seco next to JPL. (Courtesy of Ron Garret) Adam: Sojourner 是第一个火星车, 并且我们都知道它在 1997 年登上了火星并取得了一系列成功. 但是在那九年前 1988 年, 火星车还只是一个研究性质的项目. 他们还只是在做可行性探索, Ron 的团队在当时选择了使用 Lisp 作为他们的编程语言. Lisp 来自于他们所做的学术性研究. (it came right out of the academic research they were doing) 这里应该是指当时 Lisp 被用于机器人自动化控制算法研究之类的方面吧? 只有一个问题, LISP 并不是 NASA 写软件的方法. Ron: 当时有不少对 LISP 的偏见, 应为它长得比较奇怪并且大家都不太熟悉它. 并且因为它的垃圾回收技术导致你不知道它什么时候会停下来你的程序进行垃圾回收, 所以对于实时性要求极高的嵌入式环境来说, 这是比较灾难性的问题. 并且大多数人认为 LISP 需要很多的内存占用. 在当时, 哪怕是 8 metabytes 的机器也算是大内存 RAM, 所以经常会有人来质疑: 哟, 也许你确定你做研究用的机器有这么大的内存, 但是你根本没法把那样的机器飞上天. 当然, 在航天规格的硬件上也同样满足 Moore 定律, 所以这不过是落后几年的问题. 但是我仍然觉得这比较困扰. Adam: 我能理解. 我也有过这种认为自己有解决问题的巧妙办法, 但是很难说服别人接受这个方法的经历. 但是 Ron 是介绍在嵌入式机器人上运行 LISP 的经历的, 所以我猜你需要做一些 tick 来实现这个目标. Ron: 在缺乏足够 RAM 的大型机器人上, 我们实际上是直接在机器上运行 LISP. 也就是说, 实际控制机器人的代码是使用 LISP 进行编写的. 而另一种使用 LISP 的方法则是设计用于给小型机器人编程特殊语言, 然后将这些语言编译到在小机器人上运行的嵌入式代码. 这里更像是 DSL 的设计. Adam: 作为一个非相关领域的人, 这听起来非常有意思. 尽管你可以从底层开始编写自动化控制代码, 但是 Ron 的方法提供了高阶的抽象. 通过设计针对问题的特殊语言来把问题转变为一个编译器设计的问题. 在其他语言里面可能需要做非常多的工作, 而 LISP 在 80 年代中期开始就被用于这样的问题了. Ron: 并且你还要注意到, 那个时候并没有 Java, 没有 Python, 也没有 JavaScript 和 C++. 只有 Pascal, C 和最基础的机器码. 那些才是当时的流行语言. 但是用那些语言来解决问题, 是非常非常麻烦的. 相比之下, 你能够有一个不需要担心具体细节的高阶抽象层, 不需要担心内存管理, 不需要担心悬空的指针. 这样的高阶抽象层对开发者来说是又快又容易. 并且当时能做到的只有 LISP. 在那个时候 LISP 就像是有超能力一样, 其他的东西根本没法比. 真是遗憾, 因为现在的比拼已经不再是 User Friendly 了, 而是环境的生态完整度了. 不过也估计是因为一开始的 LISP 相关的开发者都是自己手搓, 缺乏一个很好的环境交流分享, 才导致很难形成一个足够好的生态圈吧&#8230; Testing Robbie Ron Garret, Robbie and Rocky III at an event in Washington DC. (More from event in Bonus Section.) (Courtesy of Ron Garret) Adam: Ron 不仅是个忠实信徒, 也同时是个有天赋的开发者, 因为当时 NASA 的火星车原型机项目还有另外一个竞争队伍, 所以在使用 LISP 这个决策上算是一个很大的赌注. 想要让他们的火星车被真正采纳用于火星项目, Ron 的团队需要让 Robbie 和 FANG 可以进行自动驾驶. Ron: 为了实现这个目标, 我们构建了一个开发环境: 我们在 Macintoshes 上搭建了一个模拟环境来模拟机器人, 我们会先在这个模拟器里开发我们的程序, 然后在机器人上运行相同的代码来查看这些代码是否能够在真实的机器上运行. 这么做的原因是因为在真实机器上, 尤其是 Robbie 上运行代码非常耗时: 我们需要把 Robbie 装到一台平板卡车上, 再运到 Arroyo (见前文), 然后再搭建好对应的测试仪器来进行对应的测试. 这一过程大概要花费好几个小时准备, 然后花费剩下的一整天运行实验, 最后结束的时候还得把一切打包带回去. 所以能够运行模拟代码对我们来说真的是非常节约时间的一件事情. Adam: Ron 的团队的工作在当时可以说是各方面的开创性的工作. 说实话, 读到这里的时候我一开始还觉得有些不可思议, 毕竟计算机模拟的思路, 竟然在当时还是非常新的一个概念&#8230; 这么想来在物理这边想到计算机模拟辅助设计, Geant4 和 Corsika 的这几个软件包在当时也真是牛逼. 诶, 要是早生几年&#8230; Ron: 我们的目标是让火星车能够在自然的环境下可以完全自主运动. 比方说, 你想要让它移动到某处. Robbie 有一对立体摄像头 (stereo camera), 事实上, Robbie 是实际上第一个通过立体视觉进行观察的机器人. 某种程度上来说, Robbie 是现在许多自动驾驶汽车的前身. 尽管它们可能并不使用立体视觉, 而是使用 LIDAR, 但是他们的其中一部分使用视觉处理来进行避障. 因为 Robbie 是第一个做这件事的机器人. And then there was the actual navigation code (这里应该是指当时并没有实际的分析代码吧?), 实际的分析代码将 3D 立体的图像数据和目标移动地点作为输入, 然后规划一条路线并移动到目标地点. 这是我所做的工作. Adam: 所以你做的事情类似于把它放到任何地方, 然后设置好目标地点, 接下来看它会如何执行&#8230; Ron: 是这样的. 但是同时需要注意的是 Robbie 移动的速度非常慢. 是的, 它又大又慢, 大概每小时不到一英里 (\(&sim; 0.4 \mathrm{m/s}\)). Adam: Okay. Ron: 所以它并不是那么危险. 假如它开始做一些不正常的动作, 我们有充足的时间去按下急停按钮. 但是这样你就需要一直盯着它看, 因为它是个昂贵的实验用的大家伙, 并且如果开到石头上面, 它很容易把自己弄翻车, 这估计会把它弄坏. 不过幸运的是, 这并没有发生过. 不过我们的确需要一直盯着它, 不过你不必担心它失控然后伤到别人之类的. Adam: 在 1980 年代给机器人开发实时软件 (real-time software) 确实是个困难重重的事情. Ron: 因为当时的代码都是最新的研究用代码 (cutting edge research code), 所以它们充满的 bug 并且很容易出错和崩溃. 不过好在我们还没有过任何灾难性的事件. 我记得只有一次 FANG 失控在办公室的墙 (drywall) 上撞出了一个洞. 不过这是因为 FANG 被设计得需要能够跑得足够得快. 不过它从来没有伤到任何人. Politics Rocky III. &#8220;The white thing on the mast is an electronic compass. The NCC-366R is an inside joke. Our group number was 366. Putting that number in a prominent location was a way of flaunting the fact that this robot belonged to us and not the group we were competing with.&#8221; - Ron (Courtesy of Ron Garret) Adam: Robbie, Rocky, Tooth 和 FANG, 这些都是在当时最先进的自动驾驶机器人. 在开发中产生了许多的自动寻路代码. 尽管当时 Ron 埋头在代码的工作里面, 但是团队中产生了其他的分歧. Ron: 讲述这个故事可能有些恼人, 因为它们在一定程度上和政治 (political) 相关. 当时我还很年轻, 完全只关心编程的问题, 只是略微了解周围的政治斗争. 但是我并不知道具体的细节, 也并不理解斗争的内容. 我当时并未察觉那么多, 这些大部分都是我之后了解到的事情. Adam: 在当时 Ron 的机器人团队和另一个机器人队伍在自动化上有一个地盘争夺. Ron: 与我们的指定目标地点并让火星车自动计算移动的路径, 另一个队伍的方案则是通过操作员手动描述移动的路径, 然后让火星车自己去执行. 两种方案都提供了一定程度的自动化, 但是对方的方案需要一个操作员在一个提供 周围 3D 环境信息的终端面前描述漫游车每个 40 分钟间隔 (指令循环) 内移动的路径. Adam: 我相信不论搭建什么种类的火星车原型机都是非常困难的. 但是另一个队伍通过描述特定指令来规划路线的方案, 类似于一个较小的设置终点 (设置的目标终点较近), 然后让机器人规划路线的问题. 这固然很好, 但是在开发的时候可能会有一些困难. Ron: 因为在你发送指令后的一个小时内你并不知道指令是否成功了. 所以你只能坐在那里咬着手指头希望你没有搞砸什么事情. Adam: 这个方法对操作上的负担是很大的, 相反的, 自动驾驶的方案在操作上是轻松的. 如果机器人可以自动驾驶的话, 那么就可以发送更多更小的机器人. 我是指, 假如每个机器人都可以可靠工作的话, 那么每个小机器人可以自行探索一片区域, 相对可以探索更多的空间. 但是这里有一个政治问题. Ron: 在直接操作上有数十年的经验积累. 并且如果引入自动驾驶, 那么这将减去大量操作员赖以生活的工作. 有许多人就指望着这项技术不存在吃饭的. 卧槽, 竟然是因为这么朴素的理由? 不过哪怕直到现在自动驾驶技术也是个不太能解决的问题, 尽管需要处理的问题的规模并不相同, 但是我很好奇当时的自动驾驶技术发展到了什么样的程度. 以及是否真的就只是技术竞争导致的不被采用. Sojourner on Mars Adam: 不过不要灰心, 故事还在继续发展. 尽管 LISP 代码并没有在第一次火星车上应用, 但是它们总会走向太空. 低自动化的操作方案在当时胜出了, 尽管这也不算什么坏事. Ron: 直到现在, 基于我看到他们实际实现的工作, 我也不认为 NASA 的决定是错误的. 我看到了那些火星车传回的图片以及基于火星车的科学研究, 这让我非常兴奋和震惊, 我几乎都找不到什么能够说明的文字了. 我现在可以坐在我家里的桌前, 看到这些来自另一个星球的高分辨率的彩色照片. 这真的是活着可以看到的写入人类历史的事情啊. Adam: Do you feel like it makes it real, like seeing these pictures? Does it seem more like a real place? Ron: 当然. 这些传回的清晰的照片可以给你对这个地方的一个直观的感觉. 最让我震惊的一件事就是这和我们地球上的地方, 比如我们做了很多次模拟测试的 Death Valley 是多么的相似. 特别的, 这也可以让我对走在火星上会是什么样的感觉有一个简单认识. 我很确信我不太会想去那里. 我在 Death Valley 以及其他地方呆了很多次了, 唯一的区别就是相比火星, 那里更加舒适, 你不需要真的穿上宇航服也能活着. 从这样的半第一手资料里, 我可以告诉你殖民火星是个幻想. 这就有点消极了吧. 感觉这位大佬对人类技术迭代有些消极了. 虽然现在登陆也是个问题, 并且也没有了冷战这种加速剂&#8230; Adam: Really? Ron: 是的. 我们真的需要保护好塑造我们的这颗星球. 因为不管发生什么坏事, 总会变得更好的. 地球化地球也总会比地球化火星更加容易. Adam: 所以 Sojourner 成功了, 并没有使用 LISP. 其控制代码由 C 编写, 并且其自动化程度相当有限. Ron 的团队解散了, 并且大部分离开了 JPL. 但 Ron 留下来了. 并且几年之后, 看起来有一个新的机会. NASA&#39;s New Millennium Program Website for Deep Space 1 Ron: 有一些人认为自动化技术可以被用于宇宙飞船 (spacecraft) 在宇宙空间中的飞行. 并且一些关于规模经济的理论 (some of the theories of economies of scale) 可以基于此应用. 并且 NASA 那个时候来了一个新的 director. 他主张跟踪记录规模经济以缩减任务开支. 呃, 提高自动化, 减少操作人员开支, 缩减任务成本? 估计是因为冷战结束, 太空军备竞赛的结束的缘故? 他启动了一系列称为 New Millennium 系列的先驱项目 (pilot program). 这一系列项目有着明确的目标: 通过在一定程度上应用可以缩减运行成本的新技术作为示范. 所以我们开发的用于火星车的自动化技术则在和 Ames Research Center (AMES (NASA)) 的 Remote Agent 项目中被重新提出以作为规划和分析系统. 其中大概 3/4 (根据你如何计算) 主要的工作是由 JPL 和 Ames 开发的; 其中 1/4 来自 Carnegie Mellon (CMU) 等等, 这些工作组成了 Remote Agent. 没错, 就是那个 CMU AI REPO 的 CMU. Deep Space 1 and The Remote Agent JPL Deep Space 1 Promotional Image Adam: It was called the Remote Agent because it was going to have agency. (应该是代理控制功能). 就像是火星车原型一样, Remote Agent 也有一个目标任务, 和火星车不同的是, 这一次是一个飞行控制器. Ron: 所以 New Millenium 计划被分成了两个类型: 地球轨道外的深空计划 (deep space), 以及地球轨道上的 EO 计划. 我们被作为第一个深空计划 DS1 (Deep Space 1) 的候选. DS1 预计将会和彗星和小行星会面. 他们有一组的尖端科技将会被用于这个项目, 然后这个项目将会作为示范用于其他的一系列类似的任务. Remote Agent 最开始被候选为整个项目的控制程序. Project Management Problems Adam: 但是不幸的是, 计划开始没多久就发生了问题. Ron: 这个故事也同样有些恼人. 我需要非常小心因为我不想冒犯团队里的其他人. 团队里的其他人都非常的好也工作得非常努力. 所以这个问题更像是管理上的而不是技术上的. 当时我们有四个来自三个不同机构的队伍来做这个系统, 但是整个过程被放任自然, 没有人来负责设计和整合最终的系统. 有一堆的谈判, 劝说甚至是内讧和争吵. 但是在技术层面, 事实上有一个部分大概 3/4 是用 LISP 来写的, 1/4 是用 C 来写的. 不过早些时候用 C 写的那部分一直在报错, 因为当你用 C 来写程序的时候, 你需要考虑一堆底层的细节. 尽管他们最终总能解决这些问题, 但是每次程序崩溃都会拖慢开发进度. 因为可能在你准备实验的时候, 突然崩溃了, 那么你可能就要重启所有东西, 这大概会花费你十分钟甚至更多的时间. 然后一天里多发生几次, 你的进度就落后了. Adam: 所以我猜大家学到的教训就是你不应该用 C. Ron: 嘛, 你可能觉得我们应当从中学到什么. 但是并没有. 现在的飞控程序, 我相信还是用 C 写的, 并且开发者需要非常小心, 并且使用一对测试和分析工具来保证可行. 尽管他们最终可以完成工作并保证他们的工作是可靠的, 但是这需要大量的精力. 并且不幸的是, 当时我并不擅长交涉 (politics), 所以我并没有那么强势. I ended up off a lot of people and I think that had probably as much to do with the ultimate failure of the project as anything else because all these old timers who knew how to run spacecraft just didn’t like me and didn’t want to have this obnoxious brat around. Adam: 是的, Ron 可能确实搞砸了 JPL 的一些人际关系 (ruffled some feathers at JPL). 但是在整合四个系统的时候, 这样的问题的确拖累了自动化开发进度, 并且导致了项目被降级为飞行试验 (flight experiment), 从在 Deep Space 1 的整个航行过程中进行控制, 变成了只控制 3 天时间. 但是哪怕只有三天, 控制飞行器也不是一个简单的事情. 各种队伍在一起工作来保证它能像预期一样可靠. The Executive Deep Space 1 being assembled (Credit: Nasa) Adam: Ron’s portion was called the executive. (负责的软件部分为决策/执行). Ron: 我们的软件大概做的事情就是进行决策: 根据输入的数据和一堆可能的突发事件, 接下来应该做什么事情, 大概这就是航空飞行器做的事情. 这段程序我们是用一个由 LISP 自定义的语言来实现的. 不过奇怪的是, 我几乎不记得这个语言的名字了, 尽管它就像我的孩子一样. 怎么会事呢. 读到这里也感觉 LISP 为啥这么臭名昭著了. 因为每个人都可以自由地创造自己的 DSL. 这对从零手搓是很方便的, 但是对于工程上来说, 就缺乏强势的统治能力. 哪怕 XXX 非常难用, 你也得接受, 因为它就是事实意义上的标准之一. 这门语言在一定程度上和 LISP 很像, 我们构造的语言结构可以阻止你写出可能导致问题的代码. 其中一个特点就是它可以帮助你在多线程的程序里面写出不会出错的代码. 一个主要例子就是在众所周知的很难管理的多线程的代码里面防止出现错误. 这感觉就像是 Rust 一样, 通过编译器强制检查拒绝危险代码. 不过相比以前, 现在关于多线程的分配问题已经有了非常成体系的解决方法了. 其中有一堆的隐藏问题, 比如说竞争和死锁之类的问题. 所以我们的语言的结构设计得可以阻止你写可能导致类似问题的代码. 并且我们的代码也可以被用于形式分析 (formal analysis), 我们有一个形式证明 (formal proof) 来验证我们设计的语言的正确性. 这真的帅啊&#8230; 关于形式证明, 我倒是很想了解一下 ACL 2&#8230; 以后再说吧. Adam: Oh, wow. Ron: 除了形式证明, 我们还有一遍又一遍的地面测试. 我们会在地面上有一个飞行器的复制品, 然后基本上除了它不是真的在太空之外, 我们的硬件模拟和太空中几乎一样. 所以我们有形式证明的正确性, 也通过了一系列的地面测试. 所以我们对它非常有信心并且相信它一定能正常工作, 但是它并没有. Deep Space Failure Deep Space Network Dishes in Canberra, Australia (Credit Nasa) 大概是三天中的第二天, 这个时间大部分但是没有很多人在睡觉, 我关于这部分的记忆有些模糊. 因为当时设计的就是在地面有一个安全监控 (safeguard) 以防有突发事情发生, 比如 Remote Agents 搞砸了的情况, 所以当时所有人都在待命 (all hands on deck situation). 但是事实是它真的搞砸了, 不过还是橙色警报而不是红色警报. Adam: 它停止决策还是死机了呢? Ron: 到了它本应做某事的时候, 但是它并没有按照预期执行任务, 所以警报响了. Adam: 它当时在哪里? Ron: 在外太空, 大概 150 million miles (\(2.414 &times; 10^{11} \mathrm{km}\)) 外. It was an hour around trip lifetime. Debugging Code in Space Adam: Whoa. So now it’s time to debug a production incident, but this isn’t code running on a server in the cloud, this code is one light hour round trip time away. This is code running in deep space and to fix the problem, there’s Ron who wrote the programming language, and then there’s this guy that he hired to help him do the spacecraft code. Ron: So I hired the guy in part so that I could push the coding responsibilities off onto him and kind of back away from the process because I could tell that I wasn’t really being very effective. And I was young and foolish and a very, very bad manager at that point. And I did not do a very good job of handing this task off to him. I basically just said, here’s what needs to be done. Go do it. Adam: And he did do it. He got things built, but now this code that’s been proven deadlock free seems to be frozen 150 million miles from home. And so it’s time for Ron to jump back in and take control. Ron: This guy was frustrated with me. He’d really been in the trenches for months doing my dirty work for me. That was all hands on deck and so I was swooping back in as a white knight to try and fix the situation again the way I had so skillfully done so many times before. The guy told me to go F myself, which came as a surprise to me because I didn’t realize that things had reached that level of tension. And so I think in retrospect, his reaction was very understandable, but at the time it took me completely by surprise. Adam: Emotions are running high and it’s time to debug this issue. The more time passes, the more off target Deep Space 1 is. 概要: 雇了个人来干的活因为沟通和交接的问题导致了问题. Sending S-Expressions Ron: 我们一开始完全没有概念哪里出错了. 我们只知道本该传回的遥测数据 (telemetry) 没有被接收到, 所以我们需要决定接下去做什么. 但是问题是, 我们能做的任何事情, 都需要等上大概一个小时左右才能直到执行的结果如何. Adam: 所以在你们知道除了问题的时候, 实际已经过去了一个多小时了. Ron: 实际上是一个半小时, 半个小时收到信号, 一个小时进行反馈. 当你去思考这些时间的时候其实还挺奇怪的, 是吧? 不过差不多就是一个小时. 这里应该是出事发生信号, 经过半个小时传回地球; 假如立刻进行处理, 发送决策信号, 到达 DS1 然后返回结果经过了一个小时. Adam: 这是如何实现的呢? 你们是如何和它进行通信的? Ron: 好问题. 我想你大概比较熟悉 Python 吧. Adam: 是的. Ron: 当你在使用 Python 编程的时候, 你有一个 REPL (read-eval-print-loop). 所以你就可以交互式地拓展程序的功能, 就像是增加一块代码, 然后像普通的程序一样运行. LISP 是这样的先驱者, 你想要和 LISP 进行交互, 一般的方法就是使用 REPL, LISP 也是第一个有这样的特性的语言, 或者说它是接下来十几年里唯一有这种特性的语言. 你可以去参考我之前写的 REPL 体验 Charming Common Lisp Debugging Experience. And that’s one of the reasons why it was such a big lever back in the early days, but this was REPL so we had a REPL running on the spacecraft and we could interact with the spacecraft through that REPL. 相当于给航天器提供了 REPL 的特性. 所以想要和航天器经行沟通, 你只需要做到终端前面往 REPL 里面输入指令即可, 你只需要通过 Deep Space Network 然后等上个一小时左右的时延. 实际上的过程是我们坐在会议室里, 然后想破脑袋来思考该发送什么指令给飞行器. 然后最终决定我们需要发送指令, 然后经过一堆管理层的 review 和签字, 然后最后交给培训后的 Deep Space network 的操作员, 然后他们才会坐在控制台发送指令. 指令会通过专用的网络链接到 Deep Space 的网络天线上. And there are three of these around the world so that you have coverage of the entire sky. Deep Space network 的天线是 70 米大小的巨物. 我并不知道其中的细节. 我不知道那里有没有一个人来做打印信息的工作, 或者是全部自动化了的工作, 总之信号传到了这个 70 米天线上然后以光速发往飞行器. 然后经过精密的天线的接受和解码并最终就像是你在物理终端上直接输入一样地输入到 LISP 的系统中. And it was a very elaborate and formal process that involved people wearing these headsets that you see like in the movies, going through this very formal process, that we are now going to send this command to the spacecraft and somebody else saying, yes, you are go to send the command to the spacecraft. And then finally the guy who was sitting at the console would push the big red button and then we’d sit around and wait for the results. And then we’d look at the results and do the whole thing over again. 大概就是说, 其实并没有想象得那么容易, 不是坐在终端前和现在用 SSH 连接远程服务器一样, 而是每个输入的指令都要进行审核, 还要传一长串的指令执行过程. 最后还得等一个小时, 看最终的结果是否能行. Adam: That&#39;s crazy. 那么你像是发送一个巨大的 LISP 表达式的树还是&#8230; Ron: 是的, 我们发送的是 S-Expression. Adam: 你们是如何做到这一点的? 你们如何让它重载的, 毕竟它是在实时运行的. Ron: 首先我们会让它返回一个递归栈跟踪 (back trace), 一个当前系统中所有运行进程状态的 dump. 我们发现进程在等待某些事情来触发它, 但是它到底在等待什么? 所以我们做的第一件事情就是根据传回数据, 可以几乎一下子发现问题: 其中有一个进程在等待一个早就应该发生过的事件. 所以这很可能就是为什么出错的原因. 事实证明这确实是这样的: 一个极不可能的事件发生了. The Proof and the Assumptions Adam: 我记得这不是被证明不可能发生吗? Ron: 是这样的. 但是这个证明依赖于一个假设: 当你在给一个东西编程的时候, 你只使用我们定义的语言中的结构体 (constructs). 所以严格上说, 如果你只是用我们 DSL 的结构体, 那么你将不会陷入死锁. 这就像现在 Rust 语言中的 safe 和 unsafe 的部分, 我们基本上做的就是这么个事情, 只是我们并没有明确地对其进行区分. 然后我们也没有预料到写这段代码的人恰好用了这样的代码. Adam: This is the F off guy that Ron hired to build the software using his language. 草, 什么临时工笑话 (bushi). 不过也确实, 如果我用 LISP 搓了一个 DSL, 那么我该如何对这个 DSL 进行 debug? 这个 DSL 是否有语法提示之类的编程辅助? 等等之类的. Ron: 并且因为他需要做某些特定的操作, 但是他并没有找到一个合适的方法在我们的 DSL 中使用结构体. 所以他最终选择调用在 LISP 中的结构体的底层来实现这个功能, 这导致了超出我们 DSL 的安全检测的范围. 实际上这是我的失误. 我并没有清晰地向我雇来的人解释清楚我们的工作 (work under supervision), 我只是说: &#8220;你需要做这些, 去做到它&#8221;. 然后他去做了, 但是因为我并没有向他强调这一点&#8230; 如果要我为自己辩护的话, 我可能当时并不觉得这是件值得强调的重要的事情. 我没有讲清楚他不应该怎么做, 但是他这么做了, 这并不是他的过错, 是我的锅. 这就是那个 bug 的原因. Fixing it Adam: 你们需要杀死什么进程或者重启什么东西吗? Ron: 我们当时在讨论是否能够通过往进程中注入一些事件来分离这个过程来抢救这个问题. 我们实际上也是这么做的, 所以我们最终成功地分离了这个 bug 并且让它回到正轨. Adam: 所以多亏了 LISP 和给航天器提供一个 REPL, 手动处理事件的方法成功了. 我觉得你可能会觉得很奇怪, 之前已经经过了大量的测试, 从未产生死锁. 如果你执行这个项目一百次, 可能只会发生在第一次发生死锁, 而之后从来不会. 实际上故障率非常的低, 但是因为我们只执行一次项目, 所以一旦它出现了死锁, 在其他人来看这个项目只发生一次就死锁实在称不上是一个成功. The Impact of the Deadlock Ron: 我们并没有失去飞行器, 并且我们的确完成了所有的项目观测. 所以技术上来说, 这算是成功的. 但是开发过程是很痛苦并且再一次充满了政治斗争. 所以尽管我们的确完成了目标, 但是自动飞行计划最终被取消了, 并且再也没有飞过一次. Adam: 整个过程对 Ron 来说应该是非常折磨的. Ron: 说折磨已经有点保守了. 那可以说是极其痛苦, 所以我在那之后退出了. 我的角色逐渐边缘化并且越来越少的人愿意和我共事, 所以合作的压力越来越大了. Enter Google Adam: 那段时间当 Ron 在职业低谷时, 他发现了一个叫作 Google 的新的搜索搜索引擎. Ron: 我当时在 Usenet 的新闻组里面, 或者说, 是 comp line LISP. 其中有一个人回复了一个复杂的技术问题, 我不记得具体的问题是什么了, 总之最后一句话就是 &#8220;thank God for Google&#8221;. 然后我就很好奇, Google 是啥? 所以我做了当时人们普遍会干的事情: 打开我的 Netscape navigator, 然后输入 Google. 当然了, 就是一个类似于 AltaVista 的搜索引擎, except that after just five minutes of noodling around with it was (大意就是 Google 就是快, AltaVista 慢). 我认为很明显, 这绝对领先当时类似的东西好几条街 (was light years ahead of anything else). 所以我很好奇他们是怎么做到这么快的. 在网页的底下我看见他们正在招人, 所以正如 Alan Greenspan 可能会说的 irrational exuberance (冲动的激情) 一样, 我发送了我的简历, 然后 15 分钟后我的电话响了. 卧槽, 以前的科研人员真是牛逼啊. Is LISP Worth It? Adam: 所以 Ron 离开了 JPL 并加入了当时还是一家小公司的 Google. 不过这里是 CoRecursive (story behind the code) 而不是一个太空探索播客. 所以我好奇的是, 在过去了这么多年, Ron 是否还是一个 LISP 布道者呢? Ron: 我从 LISP 上学到的一件事情就是它恰好和我的思考方式 (mindset) 相符合. 一个原因就是我从高中开始就使用它了, 所以我差不多进入 LISP 的世界大概 40 多年了. 尽管对于其他人来说, LISP 的语法可能有些奇怪: 各种括号以及奇怪的前置表达式, 这可能会让一般人比较抗拒. 尤其是 Common Lisp, 因为各种历史包袱, 以及一些奇怪的边缘用例可能会导致一些意想不到的惊喜. 不过实际上创造性更多的还是和你的工具是否和你的思路相符合, 而不是想要去找一个适用一切的究极工具, 毕竟不同的人应该有不同的思考方式, 对问题也应该有自己的解决方法, 应当去选择适合自己的工具. 对于 LISP 来说, 它可以给你一种对问题的核心更好的一个认识. 有了这样的认识, 就可以更容易学会其他的东西. 但是实际的情况则需要考虑和思路以及工具价值的关联程度. Outro Adam: A big thank you to Ron Garrett for being on the show. A link to his website is in the show notes. And if you want to hear more about Ron’s time at Google during the dot-com boom, then you’re in luck. I’ve released it as a bonus episode. So if you go to the supporters link in the show notes at corecursive.com/supporters, you can access the episode right now. Will this little startup, Google, make it through the dot-com crash of the 2000s. Will Ron convince them about the beauty of LISP? You don’t have to wait to find out. It’s right now available for supporters. And until next time, thank you so much for listening. Bonus Content From Ron 后面还有一堆照片, 建议去 原文 查看. 后记 Ron Garret 在 Google TechTalks 还有一个演讲视频: The Remote Agent Experiment (Youtube), 在 bilibili 也有人搬运. 视频最后有惊喜 最后被问到现在如何选择开发语言的时候, Ron 回答到如果条件一致的话, LISP. 可惜现在的条件并不一致, 而现代软件开发更多是一个团队工作. 所以估计还是 Python. 也就是说, 从零手搓已经不太现实了, 未来的开发还得是靠工程上的积累和团队合作么. 还有一个更加短的回忆录: Lisp in JPL. 以及一个 reddit 上的帖子: Lisp and the remote agent. 这些故事听得我都想去玩 KSP 了." />
+<link rel="canonical" href="/misc/lisp-in-space/" />
+<meta property="og:url" content="/misc/lisp-in-space/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-04-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="LISP in Space" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-04-24T00:00:00+00:00","datePublished":"2024-04-24T00:00:00+00:00","description":"About 这是对 LISP in Space with Ron Garret 的中文翻译, 原始文章 (或者说播客) 是对 Ron Garret 的一个访谈. 更加推荐听原始的播客或者是看原文, 我并不是一个很好的翻译者. 其他: 文中的图片全部下载自原始网站 并不会完全翻译, 一些客套话之类的就会选择直接摘抄, 但是会尽量做到不会删除/遗漏. 本人注释/吐槽将会以 quote 的形式或者折叠的形式加入 原文中并无超链接, 我会对一些字词加入超链接, 主要是为了补充语境和背景知识, 主要以 Wikipedia 为主. 省流总结 模拟硬件 (机器人/火星车) 以加速开发 (减少实机调试的时间) DSL 以对底层进行抽象封装 Introduction Adam: Hi, this is CoRecursive, and I&#39;m Adam Gordon Bell. Each episode is the story of a piece of software being built. 你是否有过想到了一种极棒的独特解决问题的方法, 但是你却受到了他人的质疑. 这就是今天的故事: 你带着对某种方法的热情来到了新的地方, 然而这种方法并不被普遍地接受 &#8211; 这大概就是今天的 LISP in Space 的故事. 你大概知道 LISP 这个充满了括号和宏 (marco), 把代码 (code) 当作数据 (data) 的特殊编程语言吧. 今天我们的嘉宾 Ron Garret 就是 Lisp 的一个超级粉丝. 故事的开始, 他取得了机器人和 AI 方面的博士学位. 不过这里的 AI 并不是 Machine Learning (机器学习) 的 AI, 而是类似于自动驾驶的自动化机器人的 AI. 这里的 &#8220;自动驾驶&#8221; 的 AI 其实也有点不太对了, 因为现在的自动驾驶的很多识别算法, 已经不再是简单的逻辑推导的那种专家系统了. 或者说应该更加像自动控制之类的 AI? 并不了解这方面背后具体的技术. Mars Rover Prototypes FANG, the Futuristic Autonomous Navigation Gizmo. &#8220;He was actually a Cybermotion K2A.&#8221; - Ron (Courtesy of Ron Garret) 让我们把时间拨回 1988 年. 那一年苏联 (USSR) 还没有解体, Ronald Reagon (里根) 还是美国的总统, Ron 和他的博士论文导师 (thesis advisor) 在 NASA 的项目下进行原型机设计. Ron: My name is Ron Garret. 我们的目标是开发一套软件来帮助 NASA 把自动火星车 (autonomous rover) 送到火星上. 为了能够在火星上控制火星车, 有一堆的问题需要解决, 其中一个就是大概 40 分钟的延时: 你发送了一个控制指令, 大概 40 分钟后, 你得到了这个指令执行的结果. 因为延时实在是太长了, 所以你不能直接远程操作火星车, 而是需要让火星车有一定程度的自动化, 能够自动在这 40 分钟的间隔里面做应该做的事情. 所以我们的目标就是让它更加自动化, 让它能够在这 40 分钟间隔里做更多的事情. Adam: 当时是在 Los Angeles 的 Jet Propusion Lab (JPL (NASA)), Ron 在那里有一个小隔间作为办公室. Ron: 在角落 (around the corner, 应该是指自己的办公室边上) 有一个电子元件商店. 我会时不时去那里买一些我们需要做硬件的材料. 在那个时候, 我们还经常需要自己搭建一些自制的硬件. 我们做的许多机器人都是室内机器人, 所以我们常常直接让它们在办公室里面乱跑. 在实验室边上有一个干掉的河床叫作 Arroyo Seco (应该是 Arroyo Seco (Los Angeles Country)), 大多数情况下我们会带着我们的机器人去那, 因为那里的环境和火星上的实际上非常类似. 只有少数情况下, 我们会真的去 Death Valley (Death Valley Park Service) 做实验. 那时候真的非常有趣. The Robots Tooth. &#8220;Fun fact: Tooth was built by Collin Angle who went on to become the founder and CEO of iRobot corporation, makers of the Roomba.&#8221; - Ron (Courtesy of Ron Garret) Adam: 这些机器人大概都有多大? Ron: 我记得大概最小的有鞋盒大小左右? 我应该先介绍我们中等大小的机器人, 它们大概是一个标准冰箱 (standard refrigerator) 的一半大小, 又大又重. 这个标准冰箱大小貌似有些模糊? 在 Google 上搜索 standard refrigerator size, 你应该得到的是 24~40x62~72x29~36 inches. 并且如果它们真的撞到什么东西, 那可能会导致一些严重的损坏. 所以我们叫它们 FANG, 就是 Futuristic Autonomous Navigation Gizmo (超酷超鱿型自动探索小东西). 对于那些鞋盒大小的机器人, 我们叫它们 Tooth. Adam: Oh, I see. Ron: 然后我们做了一组用于室外的机器人. 第一个是一个使用货车轮胎的超大六轮巨物. 它大概有一辆 SUV 大小, 所以我们叫它 Robbie. 不知道这个名字有啥关系, 找到了一个 Robby the Robot. 接下来就是一系列的小型漫游车, 最后得到了第一个可用的火星车: Sojourner. 所以之后那一系列的火星车的原型机就叫作 Rocky, Rocky 1, 2, 3, 4. (Rocky 系列, Rocky 8 Rover, Rocky 7 Rover). Robbie The Robot (Credit: NASA) Using LISP Rocky IV, the last prototype before the Sojourner mission, seen here in the Arroyo Seco next to JPL. (Courtesy of Ron Garret) Adam: Sojourner 是第一个火星车, 并且我们都知道它在 1997 年登上了火星并取得了一系列成功. 但是在那九年前 1988 年, 火星车还只是一个研究性质的项目. 他们还只是在做可行性探索, Ron 的团队在当时选择了使用 Lisp 作为他们的编程语言. Lisp 来自于他们所做的学术性研究. (it came right out of the academic research they were doing) 这里应该是指当时 Lisp 被用于机器人自动化控制算法研究之类的方面吧? 只有一个问题, LISP 并不是 NASA 写软件的方法. Ron: 当时有不少对 LISP 的偏见, 应为它长得比较奇怪并且大家都不太熟悉它. 并且因为它的垃圾回收技术导致你不知道它什么时候会停下来你的程序进行垃圾回收, 所以对于实时性要求极高的嵌入式环境来说, 这是比较灾难性的问题. 并且大多数人认为 LISP 需要很多的内存占用. 在当时, 哪怕是 8 metabytes 的机器也算是大内存 RAM, 所以经常会有人来质疑: 哟, 也许你确定你做研究用的机器有这么大的内存, 但是你根本没法把那样的机器飞上天. 当然, 在航天规格的硬件上也同样满足 Moore 定律, 所以这不过是落后几年的问题. 但是我仍然觉得这比较困扰. Adam: 我能理解. 我也有过这种认为自己有解决问题的巧妙办法, 但是很难说服别人接受这个方法的经历. 但是 Ron 是介绍在嵌入式机器人上运行 LISP 的经历的, 所以我猜你需要做一些 tick 来实现这个目标. Ron: 在缺乏足够 RAM 的大型机器人上, 我们实际上是直接在机器上运行 LISP. 也就是说, 实际控制机器人的代码是使用 LISP 进行编写的. 而另一种使用 LISP 的方法则是设计用于给小型机器人编程特殊语言, 然后将这些语言编译到在小机器人上运行的嵌入式代码. 这里更像是 DSL 的设计. Adam: 作为一个非相关领域的人, 这听起来非常有意思. 尽管你可以从底层开始编写自动化控制代码, 但是 Ron 的方法提供了高阶的抽象. 通过设计针对问题的特殊语言来把问题转变为一个编译器设计的问题. 在其他语言里面可能需要做非常多的工作, 而 LISP 在 80 年代中期开始就被用于这样的问题了. Ron: 并且你还要注意到, 那个时候并没有 Java, 没有 Python, 也没有 JavaScript 和 C++. 只有 Pascal, C 和最基础的机器码. 那些才是当时的流行语言. 但是用那些语言来解决问题, 是非常非常麻烦的. 相比之下, 你能够有一个不需要担心具体细节的高阶抽象层, 不需要担心内存管理, 不需要担心悬空的指针. 这样的高阶抽象层对开发者来说是又快又容易. 并且当时能做到的只有 LISP. 在那个时候 LISP 就像是有超能力一样, 其他的东西根本没法比. 真是遗憾, 因为现在的比拼已经不再是 User Friendly 了, 而是环境的生态完整度了. 不过也估计是因为一开始的 LISP 相关的开发者都是自己手搓, 缺乏一个很好的环境交流分享, 才导致很难形成一个足够好的生态圈吧&#8230; Testing Robbie Ron Garret, Robbie and Rocky III at an event in Washington DC. (More from event in Bonus Section.) (Courtesy of Ron Garret) Adam: Ron 不仅是个忠实信徒, 也同时是个有天赋的开发者, 因为当时 NASA 的火星车原型机项目还有另外一个竞争队伍, 所以在使用 LISP 这个决策上算是一个很大的赌注. 想要让他们的火星车被真正采纳用于火星项目, Ron 的团队需要让 Robbie 和 FANG 可以进行自动驾驶. Ron: 为了实现这个目标, 我们构建了一个开发环境: 我们在 Macintoshes 上搭建了一个模拟环境来模拟机器人, 我们会先在这个模拟器里开发我们的程序, 然后在机器人上运行相同的代码来查看这些代码是否能够在真实的机器上运行. 这么做的原因是因为在真实机器上, 尤其是 Robbie 上运行代码非常耗时: 我们需要把 Robbie 装到一台平板卡车上, 再运到 Arroyo (见前文), 然后再搭建好对应的测试仪器来进行对应的测试. 这一过程大概要花费好几个小时准备, 然后花费剩下的一整天运行实验, 最后结束的时候还得把一切打包带回去. 所以能够运行模拟代码对我们来说真的是非常节约时间的一件事情. Adam: Ron 的团队的工作在当时可以说是各方面的开创性的工作. 说实话, 读到这里的时候我一开始还觉得有些不可思议, 毕竟计算机模拟的思路, 竟然在当时还是非常新的一个概念&#8230; 这么想来在物理这边想到计算机模拟辅助设计, Geant4 和 Corsika 的这几个软件包在当时也真是牛逼. 诶, 要是早生几年&#8230; Ron: 我们的目标是让火星车能够在自然的环境下可以完全自主运动. 比方说, 你想要让它移动到某处. Robbie 有一对立体摄像头 (stereo camera), 事实上, Robbie 是实际上第一个通过立体视觉进行观察的机器人. 某种程度上来说, Robbie 是现在许多自动驾驶汽车的前身. 尽管它们可能并不使用立体视觉, 而是使用 LIDAR, 但是他们的其中一部分使用视觉处理来进行避障. 因为 Robbie 是第一个做这件事的机器人. And then there was the actual navigation code (这里应该是指当时并没有实际的分析代码吧?), 实际的分析代码将 3D 立体的图像数据和目标移动地点作为输入, 然后规划一条路线并移动到目标地点. 这是我所做的工作. Adam: 所以你做的事情类似于把它放到任何地方, 然后设置好目标地点, 接下来看它会如何执行&#8230; Ron: 是这样的. 但是同时需要注意的是 Robbie 移动的速度非常慢. 是的, 它又大又慢, 大概每小时不到一英里 (\\(&sim; 0.4 \\mathrm{m/s}\\)). Adam: Okay. Ron: 所以它并不是那么危险. 假如它开始做一些不正常的动作, 我们有充足的时间去按下急停按钮. 但是这样你就需要一直盯着它看, 因为它是个昂贵的实验用的大家伙, 并且如果开到石头上面, 它很容易把自己弄翻车, 这估计会把它弄坏. 不过幸运的是, 这并没有发生过. 不过我们的确需要一直盯着它, 不过你不必担心它失控然后伤到别人之类的. Adam: 在 1980 年代给机器人开发实时软件 (real-time software) 确实是个困难重重的事情. Ron: 因为当时的代码都是最新的研究用代码 (cutting edge research code), 所以它们充满的 bug 并且很容易出错和崩溃. 不过好在我们还没有过任何灾难性的事件. 我记得只有一次 FANG 失控在办公室的墙 (drywall) 上撞出了一个洞. 不过这是因为 FANG 被设计得需要能够跑得足够得快. 不过它从来没有伤到任何人. Politics Rocky III. &#8220;The white thing on the mast is an electronic compass. The NCC-366R is an inside joke. Our group number was 366. Putting that number in a prominent location was a way of flaunting the fact that this robot belonged to us and not the group we were competing with.&#8221; - Ron (Courtesy of Ron Garret) Adam: Robbie, Rocky, Tooth 和 FANG, 这些都是在当时最先进的自动驾驶机器人. 在开发中产生了许多的自动寻路代码. 尽管当时 Ron 埋头在代码的工作里面, 但是团队中产生了其他的分歧. Ron: 讲述这个故事可能有些恼人, 因为它们在一定程度上和政治 (political) 相关. 当时我还很年轻, 完全只关心编程的问题, 只是略微了解周围的政治斗争. 但是我并不知道具体的细节, 也并不理解斗争的内容. 我当时并未察觉那么多, 这些大部分都是我之后了解到的事情. Adam: 在当时 Ron 的机器人团队和另一个机器人队伍在自动化上有一个地盘争夺. Ron: 与我们的指定目标地点并让火星车自动计算移动的路径, 另一个队伍的方案则是通过操作员手动描述移动的路径, 然后让火星车自己去执行. 两种方案都提供了一定程度的自动化, 但是对方的方案需要一个操作员在一个提供 周围 3D 环境信息的终端面前描述漫游车每个 40 分钟间隔 (指令循环) 内移动的路径. Adam: 我相信不论搭建什么种类的火星车原型机都是非常困难的. 但是另一个队伍通过描述特定指令来规划路线的方案, 类似于一个较小的设置终点 (设置的目标终点较近), 然后让机器人规划路线的问题. 这固然很好, 但是在开发的时候可能会有一些困难. Ron: 因为在你发送指令后的一个小时内你并不知道指令是否成功了. 所以你只能坐在那里咬着手指头希望你没有搞砸什么事情. Adam: 这个方法对操作上的负担是很大的, 相反的, 自动驾驶的方案在操作上是轻松的. 如果机器人可以自动驾驶的话, 那么就可以发送更多更小的机器人. 我是指, 假如每个机器人都可以可靠工作的话, 那么每个小机器人可以自行探索一片区域, 相对可以探索更多的空间. 但是这里有一个政治问题. Ron: 在直接操作上有数十年的经验积累. 并且如果引入自动驾驶, 那么这将减去大量操作员赖以生活的工作. 有许多人就指望着这项技术不存在吃饭的. 卧槽, 竟然是因为这么朴素的理由? 不过哪怕直到现在自动驾驶技术也是个不太能解决的问题, 尽管需要处理的问题的规模并不相同, 但是我很好奇当时的自动驾驶技术发展到了什么样的程度. 以及是否真的就只是技术竞争导致的不被采用. Sojourner on Mars Adam: 不过不要灰心, 故事还在继续发展. 尽管 LISP 代码并没有在第一次火星车上应用, 但是它们总会走向太空. 低自动化的操作方案在当时胜出了, 尽管这也不算什么坏事. Ron: 直到现在, 基于我看到他们实际实现的工作, 我也不认为 NASA 的决定是错误的. 我看到了那些火星车传回的图片以及基于火星车的科学研究, 这让我非常兴奋和震惊, 我几乎都找不到什么能够说明的文字了. 我现在可以坐在我家里的桌前, 看到这些来自另一个星球的高分辨率的彩色照片. 这真的是活着可以看到的写入人类历史的事情啊. Adam: Do you feel like it makes it real, like seeing these pictures? Does it seem more like a real place? Ron: 当然. 这些传回的清晰的照片可以给你对这个地方的一个直观的感觉. 最让我震惊的一件事就是这和我们地球上的地方, 比如我们做了很多次模拟测试的 Death Valley 是多么的相似. 特别的, 这也可以让我对走在火星上会是什么样的感觉有一个简单认识. 我很确信我不太会想去那里. 我在 Death Valley 以及其他地方呆了很多次了, 唯一的区别就是相比火星, 那里更加舒适, 你不需要真的穿上宇航服也能活着. 从这样的半第一手资料里, 我可以告诉你殖民火星是个幻想. 这就有点消极了吧. 感觉这位大佬对人类技术迭代有些消极了. 虽然现在登陆也是个问题, 并且也没有了冷战这种加速剂&#8230; Adam: Really? Ron: 是的. 我们真的需要保护好塑造我们的这颗星球. 因为不管发生什么坏事, 总会变得更好的. 地球化地球也总会比地球化火星更加容易. Adam: 所以 Sojourner 成功了, 并没有使用 LISP. 其控制代码由 C 编写, 并且其自动化程度相当有限. Ron 的团队解散了, 并且大部分离开了 JPL. 但 Ron 留下来了. 并且几年之后, 看起来有一个新的机会. NASA&#39;s New Millennium Program Website for Deep Space 1 Ron: 有一些人认为自动化技术可以被用于宇宙飞船 (spacecraft) 在宇宙空间中的飞行. 并且一些关于规模经济的理论 (some of the theories of economies of scale) 可以基于此应用. 并且 NASA 那个时候来了一个新的 director. 他主张跟踪记录规模经济以缩减任务开支. 呃, 提高自动化, 减少操作人员开支, 缩减任务成本? 估计是因为冷战结束, 太空军备竞赛的结束的缘故? 他启动了一系列称为 New Millennium 系列的先驱项目 (pilot program). 这一系列项目有着明确的目标: 通过在一定程度上应用可以缩减运行成本的新技术作为示范. 所以我们开发的用于火星车的自动化技术则在和 Ames Research Center (AMES (NASA)) 的 Remote Agent 项目中被重新提出以作为规划和分析系统. 其中大概 3/4 (根据你如何计算) 主要的工作是由 JPL 和 Ames 开发的; 其中 1/4 来自 Carnegie Mellon (CMU) 等等, 这些工作组成了 Remote Agent. 没错, 就是那个 CMU AI REPO 的 CMU. Deep Space 1 and The Remote Agent JPL Deep Space 1 Promotional Image Adam: It was called the Remote Agent because it was going to have agency. (应该是代理控制功能). 就像是火星车原型一样, Remote Agent 也有一个目标任务, 和火星车不同的是, 这一次是一个飞行控制器. Ron: 所以 New Millenium 计划被分成了两个类型: 地球轨道外的深空计划 (deep space), 以及地球轨道上的 EO 计划. 我们被作为第一个深空计划 DS1 (Deep Space 1) 的候选. DS1 预计将会和彗星和小行星会面. 他们有一组的尖端科技将会被用于这个项目, 然后这个项目将会作为示范用于其他的一系列类似的任务. Remote Agent 最开始被候选为整个项目的控制程序. Project Management Problems Adam: 但是不幸的是, 计划开始没多久就发生了问题. Ron: 这个故事也同样有些恼人. 我需要非常小心因为我不想冒犯团队里的其他人. 团队里的其他人都非常的好也工作得非常努力. 所以这个问题更像是管理上的而不是技术上的. 当时我们有四个来自三个不同机构的队伍来做这个系统, 但是整个过程被放任自然, 没有人来负责设计和整合最终的系统. 有一堆的谈判, 劝说甚至是内讧和争吵. 但是在技术层面, 事实上有一个部分大概 3/4 是用 LISP 来写的, 1/4 是用 C 来写的. 不过早些时候用 C 写的那部分一直在报错, 因为当你用 C 来写程序的时候, 你需要考虑一堆底层的细节. 尽管他们最终总能解决这些问题, 但是每次程序崩溃都会拖慢开发进度. 因为可能在你准备实验的时候, 突然崩溃了, 那么你可能就要重启所有东西, 这大概会花费你十分钟甚至更多的时间. 然后一天里多发生几次, 你的进度就落后了. Adam: 所以我猜大家学到的教训就是你不应该用 C. Ron: 嘛, 你可能觉得我们应当从中学到什么. 但是并没有. 现在的飞控程序, 我相信还是用 C 写的, 并且开发者需要非常小心, 并且使用一对测试和分析工具来保证可行. 尽管他们最终可以完成工作并保证他们的工作是可靠的, 但是这需要大量的精力. 并且不幸的是, 当时我并不擅长交涉 (politics), 所以我并没有那么强势. I ended up off a lot of people and I think that had probably as much to do with the ultimate failure of the project as anything else because all these old timers who knew how to run spacecraft just didn’t like me and didn’t want to have this obnoxious brat around. Adam: 是的, Ron 可能确实搞砸了 JPL 的一些人际关系 (ruffled some feathers at JPL). 但是在整合四个系统的时候, 这样的问题的确拖累了自动化开发进度, 并且导致了项目被降级为飞行试验 (flight experiment), 从在 Deep Space 1 的整个航行过程中进行控制, 变成了只控制 3 天时间. 但是哪怕只有三天, 控制飞行器也不是一个简单的事情. 各种队伍在一起工作来保证它能像预期一样可靠. The Executive Deep Space 1 being assembled (Credit: Nasa) Adam: Ron’s portion was called the executive. (负责的软件部分为决策/执行). Ron: 我们的软件大概做的事情就是进行决策: 根据输入的数据和一堆可能的突发事件, 接下来应该做什么事情, 大概这就是航空飞行器做的事情. 这段程序我们是用一个由 LISP 自定义的语言来实现的. 不过奇怪的是, 我几乎不记得这个语言的名字了, 尽管它就像我的孩子一样. 怎么会事呢. 读到这里也感觉 LISP 为啥这么臭名昭著了. 因为每个人都可以自由地创造自己的 DSL. 这对从零手搓是很方便的, 但是对于工程上来说, 就缺乏强势的统治能力. 哪怕 XXX 非常难用, 你也得接受, 因为它就是事实意义上的标准之一. 这门语言在一定程度上和 LISP 很像, 我们构造的语言结构可以阻止你写出可能导致问题的代码. 其中一个特点就是它可以帮助你在多线程的程序里面写出不会出错的代码. 一个主要例子就是在众所周知的很难管理的多线程的代码里面防止出现错误. 这感觉就像是 Rust 一样, 通过编译器强制检查拒绝危险代码. 不过相比以前, 现在关于多线程的分配问题已经有了非常成体系的解决方法了. 其中有一堆的隐藏问题, 比如说竞争和死锁之类的问题. 所以我们的语言的结构设计得可以阻止你写可能导致类似问题的代码. 并且我们的代码也可以被用于形式分析 (formal analysis), 我们有一个形式证明 (formal proof) 来验证我们设计的语言的正确性. 这真的帅啊&#8230; 关于形式证明, 我倒是很想了解一下 ACL 2&#8230; 以后再说吧. Adam: Oh, wow. Ron: 除了形式证明, 我们还有一遍又一遍的地面测试. 我们会在地面上有一个飞行器的复制品, 然后基本上除了它不是真的在太空之外, 我们的硬件模拟和太空中几乎一样. 所以我们有形式证明的正确性, 也通过了一系列的地面测试. 所以我们对它非常有信心并且相信它一定能正常工作, 但是它并没有. Deep Space Failure Deep Space Network Dishes in Canberra, Australia (Credit Nasa) 大概是三天中的第二天, 这个时间大部分但是没有很多人在睡觉, 我关于这部分的记忆有些模糊. 因为当时设计的就是在地面有一个安全监控 (safeguard) 以防有突发事情发生, 比如 Remote Agents 搞砸了的情况, 所以当时所有人都在待命 (all hands on deck situation). 但是事实是它真的搞砸了, 不过还是橙色警报而不是红色警报. Adam: 它停止决策还是死机了呢? Ron: 到了它本应做某事的时候, 但是它并没有按照预期执行任务, 所以警报响了. Adam: 它当时在哪里? Ron: 在外太空, 大概 150 million miles (\\(2.414 &times; 10^{11} \\mathrm{km}\\)) 外. It was an hour around trip lifetime. Debugging Code in Space Adam: Whoa. So now it’s time to debug a production incident, but this isn’t code running on a server in the cloud, this code is one light hour round trip time away. This is code running in deep space and to fix the problem, there’s Ron who wrote the programming language, and then there’s this guy that he hired to help him do the spacecraft code. Ron: So I hired the guy in part so that I could push the coding responsibilities off onto him and kind of back away from the process because I could tell that I wasn’t really being very effective. And I was young and foolish and a very, very bad manager at that point. And I did not do a very good job of handing this task off to him. I basically just said, here’s what needs to be done. Go do it. Adam: And he did do it. He got things built, but now this code that’s been proven deadlock free seems to be frozen 150 million miles from home. And so it’s time for Ron to jump back in and take control. Ron: This guy was frustrated with me. He’d really been in the trenches for months doing my dirty work for me. That was all hands on deck and so I was swooping back in as a white knight to try and fix the situation again the way I had so skillfully done so many times before. The guy told me to go F myself, which came as a surprise to me because I didn’t realize that things had reached that level of tension. And so I think in retrospect, his reaction was very understandable, but at the time it took me completely by surprise. Adam: Emotions are running high and it’s time to debug this issue. The more time passes, the more off target Deep Space 1 is. 概要: 雇了个人来干的活因为沟通和交接的问题导致了问题. Sending S-Expressions Ron: 我们一开始完全没有概念哪里出错了. 我们只知道本该传回的遥测数据 (telemetry) 没有被接收到, 所以我们需要决定接下去做什么. 但是问题是, 我们能做的任何事情, 都需要等上大概一个小时左右才能直到执行的结果如何. Adam: 所以在你们知道除了问题的时候, 实际已经过去了一个多小时了. Ron: 实际上是一个半小时, 半个小时收到信号, 一个小时进行反馈. 当你去思考这些时间的时候其实还挺奇怪的, 是吧? 不过差不多就是一个小时. 这里应该是出事发生信号, 经过半个小时传回地球; 假如立刻进行处理, 发送决策信号, 到达 DS1 然后返回结果经过了一个小时. Adam: 这是如何实现的呢? 你们是如何和它进行通信的? Ron: 好问题. 我想你大概比较熟悉 Python 吧. Adam: 是的. Ron: 当你在使用 Python 编程的时候, 你有一个 REPL (read-eval-print-loop). 所以你就可以交互式地拓展程序的功能, 就像是增加一块代码, 然后像普通的程序一样运行. LISP 是这样的先驱者, 你想要和 LISP 进行交互, 一般的方法就是使用 REPL, LISP 也是第一个有这样的特性的语言, 或者说它是接下来十几年里唯一有这种特性的语言. 你可以去参考我之前写的 REPL 体验 Charming Common Lisp Debugging Experience. And that’s one of the reasons why it was such a big lever back in the early days, but this was REPL so we had a REPL running on the spacecraft and we could interact with the spacecraft through that REPL. 相当于给航天器提供了 REPL 的特性. 所以想要和航天器经行沟通, 你只需要做到终端前面往 REPL 里面输入指令即可, 你只需要通过 Deep Space Network 然后等上个一小时左右的时延. 实际上的过程是我们坐在会议室里, 然后想破脑袋来思考该发送什么指令给飞行器. 然后最终决定我们需要发送指令, 然后经过一堆管理层的 review 和签字, 然后最后交给培训后的 Deep Space network 的操作员, 然后他们才会坐在控制台发送指令. 指令会通过专用的网络链接到 Deep Space 的网络天线上. And there are three of these around the world so that you have coverage of the entire sky. Deep Space network 的天线是 70 米大小的巨物. 我并不知道其中的细节. 我不知道那里有没有一个人来做打印信息的工作, 或者是全部自动化了的工作, 总之信号传到了这个 70 米天线上然后以光速发往飞行器. 然后经过精密的天线的接受和解码并最终就像是你在物理终端上直接输入一样地输入到 LISP 的系统中. And it was a very elaborate and formal process that involved people wearing these headsets that you see like in the movies, going through this very formal process, that we are now going to send this command to the spacecraft and somebody else saying, yes, you are go to send the command to the spacecraft. And then finally the guy who was sitting at the console would push the big red button and then we’d sit around and wait for the results. And then we’d look at the results and do the whole thing over again. 大概就是说, 其实并没有想象得那么容易, 不是坐在终端前和现在用 SSH 连接远程服务器一样, 而是每个输入的指令都要进行审核, 还要传一长串的指令执行过程. 最后还得等一个小时, 看最终的结果是否能行. Adam: That&#39;s crazy. 那么你像是发送一个巨大的 LISP 表达式的树还是&#8230; Ron: 是的, 我们发送的是 S-Expression. Adam: 你们是如何做到这一点的? 你们如何让它重载的, 毕竟它是在实时运行的. Ron: 首先我们会让它返回一个递归栈跟踪 (back trace), 一个当前系统中所有运行进程状态的 dump. 我们发现进程在等待某些事情来触发它, 但是它到底在等待什么? 所以我们做的第一件事情就是根据传回数据, 可以几乎一下子发现问题: 其中有一个进程在等待一个早就应该发生过的事件. 所以这很可能就是为什么出错的原因. 事实证明这确实是这样的: 一个极不可能的事件发生了. The Proof and the Assumptions Adam: 我记得这不是被证明不可能发生吗? Ron: 是这样的. 但是这个证明依赖于一个假设: 当你在给一个东西编程的时候, 你只使用我们定义的语言中的结构体 (constructs). 所以严格上说, 如果你只是用我们 DSL 的结构体, 那么你将不会陷入死锁. 这就像现在 Rust 语言中的 safe 和 unsafe 的部分, 我们基本上做的就是这么个事情, 只是我们并没有明确地对其进行区分. 然后我们也没有预料到写这段代码的人恰好用了这样的代码. Adam: This is the F off guy that Ron hired to build the software using his language. 草, 什么临时工笑话 (bushi). 不过也确实, 如果我用 LISP 搓了一个 DSL, 那么我该如何对这个 DSL 进行 debug? 这个 DSL 是否有语法提示之类的编程辅助? 等等之类的. Ron: 并且因为他需要做某些特定的操作, 但是他并没有找到一个合适的方法在我们的 DSL 中使用结构体. 所以他最终选择调用在 LISP 中的结构体的底层来实现这个功能, 这导致了超出我们 DSL 的安全检测的范围. 实际上这是我的失误. 我并没有清晰地向我雇来的人解释清楚我们的工作 (work under supervision), 我只是说: &#8220;你需要做这些, 去做到它&#8221;. 然后他去做了, 但是因为我并没有向他强调这一点&#8230; 如果要我为自己辩护的话, 我可能当时并不觉得这是件值得强调的重要的事情. 我没有讲清楚他不应该怎么做, 但是他这么做了, 这并不是他的过错, 是我的锅. 这就是那个 bug 的原因. Fixing it Adam: 你们需要杀死什么进程或者重启什么东西吗? Ron: 我们当时在讨论是否能够通过往进程中注入一些事件来分离这个过程来抢救这个问题. 我们实际上也是这么做的, 所以我们最终成功地分离了这个 bug 并且让它回到正轨. Adam: 所以多亏了 LISP 和给航天器提供一个 REPL, 手动处理事件的方法成功了. 我觉得你可能会觉得很奇怪, 之前已经经过了大量的测试, 从未产生死锁. 如果你执行这个项目一百次, 可能只会发生在第一次发生死锁, 而之后从来不会. 实际上故障率非常的低, 但是因为我们只执行一次项目, 所以一旦它出现了死锁, 在其他人来看这个项目只发生一次就死锁实在称不上是一个成功. The Impact of the Deadlock Ron: 我们并没有失去飞行器, 并且我们的确完成了所有的项目观测. 所以技术上来说, 这算是成功的. 但是开发过程是很痛苦并且再一次充满了政治斗争. 所以尽管我们的确完成了目标, 但是自动飞行计划最终被取消了, 并且再也没有飞过一次. Adam: 整个过程对 Ron 来说应该是非常折磨的. Ron: 说折磨已经有点保守了. 那可以说是极其痛苦, 所以我在那之后退出了. 我的角色逐渐边缘化并且越来越少的人愿意和我共事, 所以合作的压力越来越大了. Enter Google Adam: 那段时间当 Ron 在职业低谷时, 他发现了一个叫作 Google 的新的搜索搜索引擎. Ron: 我当时在 Usenet 的新闻组里面, 或者说, 是 comp line LISP. 其中有一个人回复了一个复杂的技术问题, 我不记得具体的问题是什么了, 总之最后一句话就是 &#8220;thank God for Google&#8221;. 然后我就很好奇, Google 是啥? 所以我做了当时人们普遍会干的事情: 打开我的 Netscape navigator, 然后输入 Google. 当然了, 就是一个类似于 AltaVista 的搜索引擎, except that after just five minutes of noodling around with it was (大意就是 Google 就是快, AltaVista 慢). 我认为很明显, 这绝对领先当时类似的东西好几条街 (was light years ahead of anything else). 所以我很好奇他们是怎么做到这么快的. 在网页的底下我看见他们正在招人, 所以正如 Alan Greenspan 可能会说的 irrational exuberance (冲动的激情) 一样, 我发送了我的简历, 然后 15 分钟后我的电话响了. 卧槽, 以前的科研人员真是牛逼啊. Is LISP Worth It? Adam: 所以 Ron 离开了 JPL 并加入了当时还是一家小公司的 Google. 不过这里是 CoRecursive (story behind the code) 而不是一个太空探索播客. 所以我好奇的是, 在过去了这么多年, Ron 是否还是一个 LISP 布道者呢? Ron: 我从 LISP 上学到的一件事情就是它恰好和我的思考方式 (mindset) 相符合. 一个原因就是我从高中开始就使用它了, 所以我差不多进入 LISP 的世界大概 40 多年了. 尽管对于其他人来说, LISP 的语法可能有些奇怪: 各种括号以及奇怪的前置表达式, 这可能会让一般人比较抗拒. 尤其是 Common Lisp, 因为各种历史包袱, 以及一些奇怪的边缘用例可能会导致一些意想不到的惊喜. 不过实际上创造性更多的还是和你的工具是否和你的思路相符合, 而不是想要去找一个适用一切的究极工具, 毕竟不同的人应该有不同的思考方式, 对问题也应该有自己的解决方法, 应当去选择适合自己的工具. 对于 LISP 来说, 它可以给你一种对问题的核心更好的一个认识. 有了这样的认识, 就可以更容易学会其他的东西. 但是实际的情况则需要考虑和思路以及工具价值的关联程度. Outro Adam: A big thank you to Ron Garrett for being on the show. A link to his website is in the show notes. And if you want to hear more about Ron’s time at Google during the dot-com boom, then you’re in luck. I’ve released it as a bonus episode. So if you go to the supporters link in the show notes at corecursive.com/supporters, you can access the episode right now. Will this little startup, Google, make it through the dot-com crash of the 2000s. Will Ron convince them about the beauty of LISP? You don’t have to wait to find out. It’s right now available for supporters. And until next time, thank you so much for listening. Bonus Content From Ron 后面还有一堆照片, 建议去 原文 查看. 后记 Ron Garret 在 Google TechTalks 还有一个演讲视频: The Remote Agent Experiment (Youtube), 在 bilibili 也有人搬运. 视频最后有惊喜 最后被问到现在如何选择开发语言的时候, Ron 回答到如果条件一致的话, LISP. 可惜现在的条件并不一致, 而现代软件开发更多是一个团队工作. 所以估计还是 Python. 也就是说, 从零手搓已经不太现实了, 未来的开发还得是靠工程上的积累和团队合作么. 还有一个更加短的回忆录: Lisp in JPL. 以及一个 reddit 上的帖子: Lisp and the remote agent. 这些故事听得我都想去玩 KSP 了.","headline":"LISP in Space","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/lisp-in-space/"},"url":"/misc/lisp-in-space/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">LISP in Space</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-04-24T00:00:00+00:00" itemprop="datePublished">Apr 24, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>这是对 <a href="https://corecursive.com/lisp-in-space-with-ron-garret/">LISP in Space with Ron Garret</a> 的中文翻译,
+  原始文章 (或者说播客) 是对 Ron Garret 的一个访谈.</p>
+<p>更加推荐听原始的播客或者是看原文, 我并不是一个很好的翻译者.</p>
+<p>其他:</p>
+<ul>
+  <li>文中的图片全部下载自原始网站</li>
+  <li>并不会完全翻译, 一些客套话之类的就会选择直接摘抄,
+    但是会尽量做到不会删除/遗漏.</li>
+  <li>本人注释/吐槽将会以 <code>quote</code> 的形式或者折叠的形式加入</li>
+  <li>原文中并无超链接, 我会对一些字词加入超链接,
+    主要是为了补充语境和背景知识, 主要以 Wikipedia 为主.</li>
+</ul>
+<details><summary> 省流总结 </summary>
+<ul>
+  <li>模拟硬件 (机器人/火星车) 以加速开发 (减少实机调试的时间)</li>
+  <li>DSL 以对底层进行抽象封装</li>
+</ul>
+</details>
+<h1>Introduction</h1>
+<p><b>Adam</b>: Hi, this is CoRecursive, and I'm Adam Gordon Bell.
+  Each episode is the story of a piece of software being
+  built.</p>
+<p>你是否有过想到了一种极棒的独特解决问题的方法, 但是你却受到了他人的质疑.
+  这就是今天的故事: 你带着对某种方法的热情来到了新的地方,
+  然而这种方法并不被普遍地接受 &#8211; 这大概就是今天的 LISP in Space 的故事.</p>
+<p>你大概知道 <a href="https://en.wikipedia.org/wiki/Lisp_(programming_language)">LISP</a> 这个充满了括号和宏 (<code>marco</code>), 把代码 (code) 当作数据 (data)
+  的特殊编程语言吧. 今天我们的嘉宾 Ron Garret 就是 Lisp 的一个超级粉丝.
+  故事的开始, 他取得了机器人和 AI 方面的博士学位. 不过这里的 AI 并不是
+  Machine Learning (机器学习) 的 AI, 而是类似于自动驾驶的自动化机器人的 AI.</p>
+<blockquote>
+  <p>这里的 &#8220;自动驾驶&#8221; 的 AI 其实也有点不太对了, 因为现在的自动驾驶的很多识别算法,
+    已经不再是简单的逻辑推导的那种专家系统了. 或者说应该更加像自动控制之类的 AI?
+    并不了解这方面背后具体的技术.</p>
+</blockquote>
+<h1>Mars Rover Prototypes</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/Pic012-1000-f6aa44c46.jpg" alt="/_img/lisp/misc/lisp-in-space/Pic012-1000-f6aa44c46.jpg" /></p>
+<div style="text-align: center">
+  <p>FANG, the Futuristic Autonomous Navigation Gizmo.</p>
+  <p>&#8220;He was actually a Cybermotion K2A.&#8221; - Ron (Courtesy of Ron Garret)</p>
+</div>
+<p>让我们把时间拨回 1988 年. 那一年苏联 (<a href="https://en.wikipedia.org/wiki/Soviet_Union">USSR</a>) 还没有解体,
+  <a href="https://en.wikipedia.org/wiki/Ronald_Reagan">Ronald Reagon</a> (里根) 还是美国的总统, Ron 和他的博士论文导师 (<a href="https://en.wikipedia.org/wiki/Doctoral_advisor">thesis advisor</a>)
+  在 NASA 的项目下进行原型机设计.</p>
+<p><b>Ron</b>: My name is Ron Garret.</p>
+<p>我们的目标是开发一套软件来帮助 NASA 把自动火星车 (autonomous rover) 送到火星上.</p>
+<p>为了能够在火星上控制火星车, 有一堆的问题需要解决, 其中一个就是大概 40 分钟的延时:
+  你发送了一个控制指令, 大概 40 分钟后, 你得到了这个指令执行的结果.
+  因为延时实在是太长了, 所以你不能直接远程操作火星车,
+  而是需要让火星车有一定程度的自动化, 能够自动在这 40 分钟的间隔里面做应该做的事情.</p>
+<p>所以我们的目标就是让它更加自动化, 让它能够在这 40 分钟间隔里做更多的事情.</p>
+<p><b>Adam</b>: 当时是在 Los Angeles 的 <a href="https://en.wikipedia.org/wiki/Jet_Propulsion_Laboratory">Jet Propusion Lab</a> (<a href="https://www.jpl.nasa.gov/">JPL (NASA)</a>),
+  Ron 在那里有一个小隔间作为办公室.</p>
+<p><b>Ron</b>: 在角落 (around the corner, 应该是指自己的办公室边上) 有一个电子元件商店.
+  我会时不时去那里买一些我们需要做硬件的材料. 在那个时候,
+  我们还经常需要自己搭建一些自制的硬件. 我们做的许多机器人都是室内机器人,
+  所以我们常常直接让它们在办公室里面乱跑.</p>
+<p>在实验室边上有一个干掉的河床叫作 Arroyo Seco
+  (应该是 <a href="https://en.wikipedia.org/wiki/Arroyo_Seco_(Los_Angeles_County)">Arroyo Seco (Los Angeles Country)</a>), 大多数情况下我们会带着我们的机器人去那,
+  因为那里的环境和火星上的实际上非常类似. 只有少数情况下,
+  我们会真的去 <a href="https://en.wikipedia.org/wiki/Death_Valley">Death Valley</a> (<a href="https://www.nps.gov/deva/index.htm">Death Valley Park Service</a>) 做实验.</p>
+<p>那时候真的非常有趣.</p>
+<h1>The Robots</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/Pic011-800-2e8b520ae.jpg" alt="/_img/lisp/misc/lisp-in-space/Pic011-800-2e8b520ae.jpg" /></p>
+<div style="text-align: center">
+  <p>Tooth.</p>
+  <p>&#8220;Fun fact: Tooth was built by Collin Angle who went on to become
+    the founder and CEO of iRobot corporation, makers of the Roomba.&#8221; - Ron
+    (Courtesy of Ron Garret)</p>
+</div>
+<p><b>Adam</b>: 这些机器人大概都有多大?</p>
+<p><b>Ron</b>: 我记得大概最小的有鞋盒大小左右? 我应该先介绍我们中等大小的机器人,
+  它们大概是一个标准冰箱 (standard refrigerator) 的一半大小, 又大又重.</p>
+<blockquote>
+  <p>这个标准冰箱大小貌似有些模糊? 在 Google 上搜索 <code>standard refrigerator size</code>,
+    你应该得到的是 <code>24~40x62~72x29~36 inches</code>.</p>
+</blockquote>
+<p>并且如果它们真的撞到什么东西, 那可能会导致一些严重的损坏. 所以我们叫它们
+  FANG, 就是 Futuristic Autonomous Navigation Gizmo (超酷超鱿型自动探索小东西).
+  对于那些鞋盒大小的机器人, 我们叫它们 Tooth.</p>
+<p><b>Adam</b>: Oh, I see.</p>
+<p><b>Ron</b>: 然后我们做了一组用于室外的机器人. 第一个是一个使用货车轮胎的超大六轮巨物.
+  它大概有一辆 <a href="https://en.wikipedia.org/wiki/SUV">SUV</a> 大小, 所以我们叫它 Robbie.</p>
+<blockquote>
+  <p>不知道这个名字有啥关系, 找到了一个 <a href="https://en.wikipedia.org/wiki/Robby_the_Robot">Robby the Robot</a>.</p>
+</blockquote>
+<p>接下来就是一系列的小型漫游车, 最后得到了第一个可用的火星车: <a href="https://en.wikipedia.org/wiki/Sojourner_(rover)">Sojourner</a>.
+  所以之后那一系列的火星车的原型机就叫作 Rocky, Rocky 1, 2, 3, 4.
+  (Rocky 系列, <a href="https://www-robotics.jpl.nasa.gov/how-we-do-it/systems/the-rocky-8-rover/">Rocky 8 Rover</a>, <a href="https://www-robotics.jpl.nasa.gov/how-we-do-it/systems/the-rocky-7-rover/">Rocky 7 Rover</a>).</p>
+<p><img src="/_img/lisp/misc/lisp-in-space/4030-1000-33b3b90cb.png" alt="/_img/lisp/misc/lisp-in-space/4030-1000-33b3b90cb.png" /></p>
+<div style="text-align: center">
+  <p>Robbie The Robot (Credit: NASA)</p>
+</div>
+<h1>Using LISP</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/Pic016-800-2749f6fe0.jpg" alt="/_img/lisp/misc/lisp-in-space/Pic016-800-2749f6fe0.jpg" /></p>
+<div style="text-align: center">
+  <p>Rocky IV, the last prototype before the Sojourner mission,
+    seen here in the Arroyo Seco next to JPL.
+    (Courtesy of Ron Garret)</p>
+</div>
+<p><b>Adam</b>: Sojourner 是第一个火星车, 并且我们都知道它在 1997
+  年登上了火星并取得了一系列成功. 但是在那九年前 1988 年,
+  火星车还只是一个研究性质的项目. 他们还只是在做可行性探索,
+  Ron 的团队在当时选择了使用 Lisp 作为他们的编程语言.
+  Lisp 来自于他们所做的学术性研究. (it came right out of the
+  academic research they were doing)</p>
+<blockquote>
+  <p>这里应该是指当时 Lisp 被用于机器人自动化控制算法研究之类的方面吧?</p>
+</blockquote>
+<p>只有一个问题, LISP 并不是 NASA 写软件的方法.</p>
+<p><b>Ron</b>: 当时有不少对 LISP 的偏见, 应为它长得比较奇怪并且大家都不太熟悉它.
+  并且因为它的垃圾回收技术导致你不知道它什么时候会停下来你的程序进行垃圾回收,
+  所以对于实时性要求极高的嵌入式环境来说, 这是比较灾难性的问题.
+  并且大多数人认为 LISP 需要很多的内存占用. 在当时,
+  哪怕是 8 metabytes 的机器也算是大内存 RAM, 所以经常会有人来质疑:
+  哟, 也许你确定你做研究用的机器有这么大的内存, 但是你根本没法把那样的机器飞上天.</p>
+<p>当然, 在航天规格的硬件上也同样满足 Moore 定律, 所以这不过是落后几年的问题.
+  但是我仍然觉得这比较困扰.</p>
+<p><b>Adam</b>: 我能理解. 我也有过这种认为自己有解决问题的巧妙办法,
+  但是很难说服别人接受这个方法的经历. 但是 Ron 是介绍在嵌入式机器人上运行 LISP 的经历的,
+  所以我猜你需要做一些 tick 来实现这个目标.</p>
+<p><b>Ron</b>: 在缺乏足够 RAM 的大型机器人上, 我们实际上是直接在机器上运行 LISP.
+  也就是说, 实际控制机器人的代码是使用 LISP 进行编写的.
+  而另一种使用 LISP 的方法则是设计用于给小型机器人编程特殊语言,
+  然后将这些语言编译到在小机器人上运行的嵌入式代码.</p>
+<blockquote>
+  <p>这里更像是 DSL 的设计.</p>
+</blockquote>
+<p><b>Adam</b>: 作为一个非相关领域的人, 这听起来非常有意思.
+  尽管你可以从底层开始编写自动化控制代码, 但是 Ron 的方法提供了高阶的抽象.
+  通过设计针对问题的特殊语言来把问题转变为一个编译器设计的问题.
+  在其他语言里面可能需要做非常多的工作, 而 LISP 在 80 年代中期开始就被用于这样的问题了.</p>
+<p><b>Ron</b>: 并且你还要注意到, 那个时候并没有 Java, 没有 Python, 也没有 JavaScript 和 C++.
+  只有 Pascal, C 和最基础的机器码. 那些才是当时的流行语言. 但是用那些语言来解决问题,
+  是非常非常麻烦的. 相比之下, 你能够有一个不需要担心具体细节的高阶抽象层,
+  不需要担心内存管理, 不需要担心悬空的指针. 这样的高阶抽象层对开发者来说是又快又容易.
+  并且当时能做到的只有 LISP. 在那个时候 LISP 就像是有超能力一样, 其他的东西根本没法比.</p>
+<blockquote>
+  <p>真是遗憾, 因为现在的比拼已经不再是 User Friendly 了, 而是环境的生态完整度了.
+    不过也估计是因为一开始的 LISP 相关的开发者都是自己手搓, 缺乏一个很好的环境交流分享,
+    才导致很难形成一个足够好的生态圈吧&#8230;</p>
+</blockquote>
+<h1>Testing Robbie</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/Pic002-800-b5b2822db.jpg" alt="/_img/lisp/misc/lisp-in-space/Pic002-800-b5b2822db.jpg" /></p>
+<div style="text-align: center">
+  <p>Ron Garret, Robbie and Rocky III at an event in Washington DC.
+    (More from event in Bonus Section.) (Courtesy of Ron Garret)</p>
+</div>
+<p><b>Adam</b>: Ron 不仅是个忠实信徒, 也同时是个有天赋的开发者,
+  因为当时 NASA 的火星车原型机项目还有另外一个竞争队伍,
+  所以在使用 LISP 这个决策上算是一个很大的赌注.
+  想要让他们的火星车被真正采纳用于火星项目,
+  Ron 的团队需要让 Robbie 和 FANG 可以进行自动驾驶.</p>
+<p><b>Ron</b>: 为了实现这个目标, 我们构建了一个开发环境:
+  我们在 Macintoshes 上搭建了一个模拟环境来模拟机器人,
+  我们会先在这个模拟器里开发我们的程序,
+  然后在机器人上运行相同的代码来查看这些代码是否能够在真实的机器上运行.</p>
+<p>这么做的原因是因为在真实机器上, 尤其是 Robbie 上运行代码非常耗时:
+  我们需要把 Robbie 装到一台平板卡车上, 再运到 Arroyo (见前文),
+  然后再搭建好对应的测试仪器来进行对应的测试. 这一过程大概要花费好几个小时准备,
+  然后花费剩下的一整天运行实验, 最后结束的时候还得把一切打包带回去.</p>
+<p>所以能够运行模拟代码对我们来说真的是非常节约时间的一件事情.</p>
+<p><b>Adam</b>: Ron 的团队的工作在当时可以说是各方面的开创性的工作.</p>
+<blockquote>
+  <p>说实话, 读到这里的时候我一开始还觉得有些不可思议, 毕竟计算机模拟的思路,
+    竟然在当时还是非常新的一个概念&#8230; 这么想来在物理这边想到计算机模拟辅助设计,
+    Geant4 和 Corsika 的这几个软件包在当时也真是牛逼.</p>
+  <p>诶, 要是早生几年&#8230;</p>
+</blockquote>
+<p><b>Ron</b>: 我们的目标是让火星车能够在自然的环境下可以完全自主运动. 比方说,
+  你想要让它移动到某处. Robbie 有一对立体摄像头 (stereo camera), 事实上,
+  Robbie 是实际上第一个通过立体视觉进行观察的机器人. 某种程度上来说,
+  Robbie 是现在许多自动驾驶汽车的前身. 尽管它们可能并不使用立体视觉,
+  而是使用 <a href="https://en.wikipedia.org/wiki/Lidar">LIDAR</a>, 但是他们的其中一部分使用视觉处理来进行避障.</p>
+<p>因为 Robbie 是第一个做这件事的机器人. And then there was the actual
+  navigation code (这里应该是指当时并没有实际的分析代码吧?),
+  实际的分析代码将 3D 立体的图像数据和目标移动地点作为输入,
+  然后规划一条路线并移动到目标地点. 这是我所做的工作.</p>
+<p><b>Adam</b>: 所以你做的事情类似于把它放到任何地方, 然后设置好目标地点,
+  接下来看它会如何执行&#8230;</p>
+<p><b>Ron</b>: 是这样的. 但是同时需要注意的是 Robbie 移动的速度非常慢.
+  是的, 它又大又慢, 大概每小时不到一英里 (\(&sim; 0.4 \mathrm{m/s}\)).</p>
+<p><b>Adam</b>: Okay.</p>
+<p><b>Ron</b>: 所以它并不是那么危险. 假如它开始做一些不正常的动作,
+  我们有充足的时间去按下急停按钮. 但是这样你就需要一直盯着它看,
+  因为它是个昂贵的实验用的大家伙, 并且如果开到石头上面, 它很容易把自己弄翻车,
+  这估计会把它弄坏. 不过幸运的是, 这并没有发生过. 不过我们的确需要一直盯着它,
+  不过你不必担心它失控然后伤到别人之类的.</p>
+<p><b>Adam</b>: 在 1980 年代给机器人开发实时软件 (real-time software) 确实是个困难重重的事情.</p>
+<p><b>Ron</b>: 因为当时的代码都是最新的研究用代码 (cutting edge research code),
+  所以它们充满的 bug 并且很容易出错和崩溃. 不过好在我们还没有过任何灾难性的事件.
+  我记得只有一次 FANG 失控在办公室的墙 (drywall) 上撞出了一个洞.
+  不过这是因为 FANG 被设计得需要能够跑得足够得快. 不过它从来没有伤到任何人.</p>
+<h1>Politics</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/Pic013-800-f2cefc9ec.jpg" alt="/_img/lisp/misc/lisp-in-space/Pic013-800-f2cefc9ec.jpg" /></p>
+<div style="text-align: center">
+  <p>Rocky III.</p>
+  <p>&#8220;The white thing on the mast is an electronic compass.
+    The NCC-366R is an inside joke. Our group number was 366.
+    Putting that number in a prominent location was a way of
+    flaunting the fact that this robot belonged to us and not
+    the group we were competing with.&#8221; - Ron
+    (Courtesy of Ron Garret)</p>
+</div>
+<p><b>Adam</b>: Robbie, Rocky, Tooth 和 FANG, 这些都是在当时最先进的自动驾驶机器人.
+  在开发中产生了许多的自动寻路代码. 尽管当时 Ron 埋头在代码的工作里面,
+  但是团队中产生了其他的分歧.</p>
+<p><b>Ron</b>: 讲述这个故事可能有些恼人, 因为它们在一定程度上和政治 (political) 相关.
+  当时我还很年轻, 完全只关心编程的问题, 只是略微了解周围的政治斗争.
+  但是我并不知道具体的细节, 也并不理解斗争的内容. 我当时并未察觉那么多,
+  这些大部分都是我之后了解到的事情.</p>
+<p><b>Adam</b>: 在当时 Ron 的机器人团队和另一个机器人队伍在自动化上有一个地盘争夺.</p>
+<p><b>Ron</b>: 与我们的指定目标地点并让火星车自动计算移动的路径,
+  另一个队伍的方案则是通过操作员手动描述移动的路径, 然后让火星车自己去执行.
+  两种方案都提供了一定程度的自动化, 但是对方的方案需要一个操作员在一个提供
+  周围 3D 环境信息的终端面前描述漫游车每个 40 分钟间隔 (指令循环) 内移动的路径.</p>
+<p><b>Adam</b>: 我相信不论搭建什么种类的火星车原型机都是非常困难的.
+  但是另一个队伍通过描述特定指令来规划路线的方案,
+  类似于一个较小的设置终点 (设置的目标终点较近), 然后让机器人规划路线的问题.
+  这固然很好, 但是在开发的时候可能会有一些困难.</p>
+<p><b>Ron</b>: 因为在你发送指令后的一个小时内你并不知道指令是否成功了.
+  所以你只能坐在那里咬着手指头希望你没有搞砸什么事情.</p>
+<p><b>Adam</b>: 这个方法对操作上的负担是很大的, 相反的, 自动驾驶的方案在操作上是轻松的.
+  如果机器人可以自动驾驶的话, 那么就可以发送更多更小的机器人. 我是指,
+  假如每个机器人都可以可靠工作的话, 那么每个小机器人可以自行探索一片区域,
+  相对可以探索更多的空间. 但是这里有一个政治问题.</p>
+<p><b>Ron</b>: 在直接操作上有数十年的经验积累. 并且如果引入自动驾驶,
+  那么这将减去大量操作员赖以生活的工作. 有许多人就指望着这项技术不存在吃饭的.</p>
+<blockquote>
+  <p>卧槽, 竟然是因为这么朴素的理由? 不过哪怕直到现在自动驾驶技术也是个不太能解决的问题,
+    尽管需要处理的问题的规模并不相同, 但是我很好奇当时的自动驾驶技术发展到了什么样的程度.
+    以及是否真的就只是技术竞争导致的不被采用.</p>
+</blockquote>
+<h1>Sojourner on Mars</h1>
+<p><b>Adam</b>: 不过不要灰心, 故事还在继续发展. 尽管 LISP 代码并没有在第一次火星车上应用,
+  但是它们总会走向太空. 低自动化的操作方案在当时胜出了, 尽管这也不算什么坏事.</p>
+<p><b>Ron</b>: 直到现在, 基于我看到他们实际实现的工作, 我也不认为 NASA 的决定是错误的.
+  我看到了那些火星车传回的图片以及基于火星车的科学研究, 这让我非常兴奋和震惊,
+  我几乎都找不到什么能够说明的文字了. 我现在可以坐在我家里的桌前,
+  看到这些来自另一个星球的高分辨率的彩色照片.
+  这真的是活着可以看到的写入人类历史的事情啊.</p>
+<p><b>Adam</b>: Do you feel like it makes it real, like seeing these pictures?
+  Does it seem more like a real place?</p>
+<p><b>Ron</b>: 当然. 这些传回的清晰的照片可以给你对这个地方的一个直观的感觉.
+  最让我震惊的一件事就是这和我们地球上的地方,
+  比如我们做了很多次模拟测试的 Death Valley 是多么的相似.
+  特别的, 这也可以让我对走在火星上会是什么样的感觉有一个简单认识.
+  我很确信我不太会想去那里. 我在 Death Valley 以及其他地方呆了很多次了,
+  唯一的区别就是相比火星, 那里更加舒适, 你不需要真的穿上宇航服也能活着.
+  从这样的半第一手资料里, 我可以告诉你殖民火星是个幻想.</p>
+<blockquote>
+  <p>这就有点消极了吧. 感觉这位大佬对人类技术迭代有些消极了.
+    虽然现在登陆也是个问题, 并且也没有了冷战这种加速剂&#8230;</p>
+</blockquote>
+<p><b>Adam</b>: Really?</p>
+<p><b>Ron</b>: 是的. 我们真的需要保护好塑造我们的这颗星球. 因为不管发生什么坏事,
+  总会变得更好的. 地球化地球也总会比地球化火星更加容易.</p>
+<p><b>Adam</b>: 所以 Sojourner 成功了, 并没有使用 LISP. 其控制代码由 C 编写,
+  并且其自动化程度相当有限. Ron 的团队解散了, 并且大部分离开了 JPL.
+  但 Ron 留下来了. 并且几年之后, 看起来有一个新的机会.</p>
+<h1>NASA's New Millennium Program</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/3070-800-b2a22e0f4.jpg" alt="/_img/lisp/misc/lisp-in-space/3070-800-b2a22e0f4.jpg" /></p>
+<div style="text-align: center">
+  <p>Website for Deep Space 1</p>
+</div>
+<p><b>Ron</b>: 有一些人认为自动化技术可以被用于宇宙飞船 (spacecraft) 在宇宙空间中的飞行.
+  并且一些关于规模经济的理论 (some of the theories of <a href="https://en.wikipedia.org/wiki/Economies_of_scale">economies of scale</a>)
+  可以基于此应用. 并且 NASA 那个时候来了一个新的 director.
+  他主张跟踪记录规模经济以缩减任务开支.</p>
+<blockquote>
+  <p>呃, 提高自动化, 减少操作人员开支, 缩减任务成本? 估计是因为冷战结束,
+    太空军备竞赛的结束的缘故?</p>
+</blockquote>
+<p>他启动了一系列称为 <a href="https://www.jpl.nasa.gov/nmp/">New Millennium</a> 系列的先驱项目 (pilot program).
+  这一系列项目有着明确的目标: 通过在一定程度上应用可以缩减运行成本的新技术作为示范.
+  所以我们开发的用于火星车的自动化技术则在和 <a href="https://en.wikipedia.org/wiki/Ames_Research_Center">Ames Research Center</a> (<a href="https://www.nasa.gov/ames/">AMES (NASA)</a>)
+  的 Remote Agent 项目中被重新提出以作为规划和分析系统.</p>
+<p>其中大概 3/4 (根据你如何计算) 主要的工作是由 JPL 和 Ames 开发的;
+  其中 1/4 来自 <a href="https://en.wikipedia.org/wiki/Carnegie_Mellon_University">Carnegie Mellon</a> (<a href="https://www.cmu.edu">CMU</a>) 等等, 这些工作组成了 <a href="https://web.archive.org/web/20020615204433/http://ic.arc.nasa.gov/projects/remote-agent/index.html">Remote Agent</a>.</p>
+<blockquote>
+  <p>没错, 就是那个 <a href="https://www.cs.cmu.edu/Groups/AI/0.html">CMU AI REPO</a> 的 CMU.</p>
+</blockquote>
+<h1>Deep Space 1 and The Remote Agent</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/3220-800-7e9083910.jpg" alt="/_img/lisp/misc/lisp-in-space/3220-800-7e9083910.jpg" /></p>
+<div style="text-align: center">
+  <p>JPL Deep Space 1 Promotional Image</p>
+</div>
+<p><b>Adam</b>: It was called the Remote Agent because it was going to have agency.
+  (应该是代理控制功能). 就像是火星车原型一样, Remote Agent 也有一个目标任务,
+  和火星车不同的是, 这一次是一个飞行控制器.</p>
+<p><b>Ron</b>: 所以 New Millenium 计划被分成了两个类型: 地球轨道外的深空计划 (deep space),
+  以及地球轨道上的 EO 计划. 我们被作为第一个深空计划 DS1 (<a href="https://en.wikipedia.org/wiki/Deep_Space_1">Deep Space 1</a>) 的候选.
+  DS1 预计将会和彗星和小行星会面. 他们有一组的尖端科技将会被用于这个项目,
+  然后这个项目将会作为示范用于其他的一系列类似的任务. Remote Agent
+  最开始被候选为整个项目的控制程序.</p>
+<h1>Project Management Problems</h1>
+<p><b>Adam</b>: 但是不幸的是, 计划开始没多久就发生了问题.</p>
+<p><b>Ron</b>: 这个故事也同样有些恼人. 我需要非常小心因为我不想冒犯团队里的其他人.
+  团队里的其他人都非常的好也工作得非常努力. 所以这个问题更像是管理上的而不是技术上的.
+  当时我们有四个来自三个不同机构的队伍来做这个系统,
+  但是整个过程被放任自然, 没有人来负责设计和整合最终的系统.
+  有一堆的谈判, 劝说甚至是内讧和争吵. 但是在技术层面, 事实上有一个部分大概
+  3/4 是用 LISP 来写的, 1/4 是用 C 来写的. 不过早些时候用 C 写的那部分一直在报错,
+  因为当你用 C 来写程序的时候, 你需要考虑一堆底层的细节.</p>
+<p>尽管他们最终总能解决这些问题, 但是每次程序崩溃都会拖慢开发进度.
+  因为可能在你准备实验的时候, 突然崩溃了, 那么你可能就要重启所有东西,
+  这大概会花费你十分钟甚至更多的时间. 然后一天里多发生几次, 你的进度就落后了.</p>
+<p><b>Adam</b>: 所以我猜大家学到的教训就是你不应该用 C.</p>
+<p><b>Ron</b>: 嘛, 你可能觉得我们应当从中学到什么. 但是并没有. 现在的飞控程序,
+  我相信还是用 C 写的, 并且开发者需要非常小心, 并且使用一对测试和分析工具来保证可行.
+  尽管他们最终可以完成工作并保证他们的工作是可靠的, 但是这需要大量的精力.
+  并且不幸的是, 当时我并不擅长交涉 (politics), 所以我并没有那么强势.</p>
+<p>I ended up off a lot of people and I think that had probably as much to do
+  with the ultimate failure of the project as anything else because all these old
+  timers who knew how to run spacecraft just didn’t like me and didn’t want to
+  have this obnoxious brat around.</p>
+<p><b>Adam</b>: 是的, Ron 可能确实搞砸了 JPL 的一些人际关系 (ruffled some feathers at JPL).
+  但是在整合四个系统的时候, 这样的问题的确拖累了自动化开发进度,
+  并且导致了项目被降级为飞行试验 (flight experiment), 从在 Deep Space 1
+  的整个航行过程中进行控制, 变成了只控制 3 天时间. 但是哪怕只有三天,
+  控制飞行器也不是一个简单的事情. 各种队伍在一起工作来保证它能像预期一样可靠.</p>
+<h1>The Executive</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/3870-1000-306610493.png" alt="/_img/lisp/misc/lisp-in-space/3870-1000-306610493.png" /></p>
+<div style="text-align: center">
+  <p>Deep Space 1 being assembled (Credit: Nasa)</p>
+</div>
+<p><b>Adam</b>: Ron’s portion was called the executive. (负责的软件部分为决策/执行).</p>
+<p><b>Ron</b>: 我们的软件大概做的事情就是进行决策: 根据输入的数据和一堆可能的突发事件,
+  接下来应该做什么事情, 大概这就是航空飞行器做的事情.
+  这段程序我们是用一个由 LISP 自定义的语言来实现的. 不过奇怪的是,
+  我几乎不记得这个语言的名字了, 尽管它就像我的孩子一样. 怎么会事呢.</p>
+<blockquote>
+  <p>读到这里也感觉 LISP 为啥这么臭名昭著了. 因为每个人都可以自由地创造自己的 DSL.
+    这对从零手搓是很方便的, 但是对于工程上来说, 就缺乏强势的统治能力.
+    哪怕 XXX 非常难用, 你也得接受, 因为它就是事实意义上的标准之一.</p>
+</blockquote>
+<p>这门语言在一定程度上和 LISP 很像, 我们构造的语言结构可以阻止你写出可能导致问题的代码.
+  其中一个特点就是它可以帮助你在多线程的程序里面写出不会出错的代码.
+  一个主要例子就是在众所周知的很难管理的多线程的代码里面防止出现错误.</p>
+<blockquote>
+  <p>这感觉就像是 Rust 一样, 通过编译器强制检查拒绝危险代码.
+    不过相比以前, 现在关于多线程的分配问题已经有了非常成体系的解决方法了.</p>
+</blockquote>
+<p>其中有一堆的隐藏问题, 比如说竞争和死锁之类的问题.
+  所以我们的语言的结构设计得可以阻止你写可能导致类似问题的代码.
+  并且我们的代码也可以被用于形式分析 (formal analysis),
+  我们有一个形式证明 (formal proof) 来验证我们设计的语言的正确性.</p>
+<blockquote>
+  <p>这真的帅啊&#8230; 关于形式证明, 我倒是很想了解一下 <a href="https://en.wikipedia.org/wiki/ACL2">ACL 2</a>&#8230; 以后再说吧.</p>
+</blockquote>
+<p><b>Adam</b>: Oh, wow.</p>
+<p><b>Ron</b>: 除了形式证明, 我们还有一遍又一遍的地面测试. 我们会在地面上有一个飞行器的复制品,
+  然后基本上除了它不是真的在太空之外, 我们的硬件模拟和太空中几乎一样.
+  所以我们有形式证明的正确性, 也通过了一系列的地面测试.</p>
+<p>所以我们对它非常有信心并且相信它一定能正常工作, 但是它并没有.</p>
+<h1>Deep Space Failure</h1>
+<p><img src="/_img/lisp/misc/lisp-in-space/3500-800-5e3717aca.jpg" alt="/_img/lisp/misc/lisp-in-space/3500-800-5e3717aca.jpg" /></p>
+<div style="text-align: center">
+  <p>Deep Space Network Dishes in Canberra, Australia (Credit Nasa)</p>
+</div>
+<p>大概是三天中的第二天, 这个时间大部分但是没有很多人在睡觉, 我关于这部分的记忆有些模糊.
+  因为当时设计的就是在地面有一个安全监控 (safeguard) 以防有突发事情发生,
+  比如 Remote Agents 搞砸了的情况,
+  所以当时所有人都在待命 (all hands on deck situation).</p>
+<p>但是事实是它真的搞砸了, 不过还是橙色警报而不是红色警报.</p>
+<p><b>Adam</b>: 它停止决策还是死机了呢?</p>
+<p><b>Ron</b>: 到了它本应做某事的时候, 但是它并没有按照预期执行任务, 所以警报响了.</p>
+<p><b>Adam</b>: 它当时在哪里?</p>
+<p><b>Ron</b>: 在外太空, 大概 150 million miles (\(2.414 &times; 10^{11} \mathrm{km}\)) 外.
+  It was an hour around trip lifetime.</p>
+<h1>Debugging Code in Space</h1>
+<p><b>Adam</b>: Whoa. So now it’s time to debug a production incident,
+  but this isn’t code running on a server in the cloud, this code
+  is one light hour round trip time away. This is code running in
+  deep space and to fix the problem, there’s Ron who wrote the
+  programming language, and then there’s this guy that he hired
+  to help him do the spacecraft code.</p>
+<p><b>Ron</b>: So I hired the guy in part so that I could push the coding
+  responsibilities off onto him and kind of back away from the
+  process because I could tell that I wasn’t really being very
+  effective. And I was young and foolish and a very, very bad
+  manager at that point. And I did not do a very good job of handing
+  this task off to him. I basically just said, here’s what needs to
+  be done. Go do it.</p>
+<p><b>Adam</b>: And he did do it. He got things built, but now this code
+  that’s been proven deadlock free seems to be frozen 150 million
+  miles from home. And so it’s time for Ron to jump back in and take control.</p>
+<p><b>Ron</b>: This guy was frustrated with me. He’d really been in the
+  trenches for months doing my dirty work for me. That was all hands
+  on deck and so I was swooping back in as a white knight to try and fix
+  the situation again the way I had so skillfully done so many times
+  before. The guy told me to go F myself, which came as a surprise to
+  me because I didn’t realize that things had reached that level of tension.
+  And so I think in retrospect, his reaction was very understandable, but at
+  the time it took me completely by surprise.</p>
+<p><b>Adam</b>: Emotions are running high and it’s time to debug this issue. The more
+  time passes, the more off target Deep Space 1 is.</p>
+<blockquote>
+  <p>概要: 雇了个人来干的活因为沟通和交接的问题导致了问题.</p>
+</blockquote>
+<h1>Sending S-Expressions</h1>
+<p><b>Ron</b>: 我们一开始完全没有概念哪里出错了. 我们只知道本该传回的遥测数据
+  (telemetry) 没有被接收到, 所以我们需要决定接下去做什么. 但是问题是,
+  我们能做的任何事情, 都需要等上大概一个小时左右才能直到执行的结果如何.</p>
+<p><b>Adam</b>: 所以在你们知道除了问题的时候, 实际已经过去了一个多小时了.</p>
+<p><b>Ron</b>: 实际上是一个半小时, 半个小时收到信号, 一个小时进行反馈.
+  当你去思考这些时间的时候其实还挺奇怪的, 是吧? 不过差不多就是一个小时.</p>
+<blockquote>
+  <p>这里应该是出事发生信号, 经过半个小时传回地球; 假如立刻进行处理, 发送决策信号,
+    到达 DS1 然后返回结果经过了一个小时.</p>
+</blockquote>
+<p><b>Adam</b>: 这是如何实现的呢? 你们是如何和它进行通信的?</p>
+<p><b>Ron</b>: 好问题. 我想你大概比较熟悉 Python 吧.</p>
+<p><b>Adam</b>: 是的.</p>
+<p><b>Ron</b>: 当你在使用 Python 编程的时候, 你有一个 REPL (<a href="https://en.wikipedia.org/wiki/Read–eval–print_loop">read-eval-print-loop</a>).
+  所以你就可以交互式地拓展程序的功能, 就像是增加一块代码, 然后像普通的程序一样运行.
+  LISP 是这样的先驱者, 你想要和 LISP 进行交互, 一般的方法就是使用 REPL,
+  LISP 也是第一个有这样的特性的语言, 或者说它是接下来十几年里唯一有这种特性的语言.</p>
+<blockquote>
+  <p>你可以去参考我之前写的 REPL 体验 <a href="/lisp/charming-common-lisp-debug/">Charming Common Lisp Debugging Experience</a>.</p>
+</blockquote>
+<p>And that’s one of the reasons why it was such a big lever back in the early days,
+  but this was REPL so we had a REPL running on the spacecraft and we could interact
+  with the spacecraft through that REPL.</p>
+<blockquote>
+  <p>相当于给航天器提供了 REPL 的特性.</p>
+</blockquote>
+<p>所以想要和航天器经行沟通, 你只需要做到终端前面往 REPL 里面输入指令即可,
+  你只需要通过 Deep Space Network 然后等上个一小时左右的时延.</p>
+<p>实际上的过程是我们坐在会议室里, 然后想破脑袋来思考该发送什么指令给飞行器.
+  然后最终决定我们需要发送指令, 然后经过一堆管理层的 review 和签字,
+  然后最后交给培训后的 Deep Space network 的操作员, 然后他们才会坐在控制台发送指令.
+  指令会通过专用的网络链接到 Deep Space 的网络天线上.</p>
+<p>And there are three of these around the world so that you have coverage
+  of the entire sky.</p>
+<p>Deep Space network 的天线是 70 米大小的巨物. 我并不知道其中的细节.
+  我不知道那里有没有一个人来做打印信息的工作, 或者是全部自动化了的工作,
+  总之信号传到了这个 70 米天线上然后以光速发往飞行器.
+  然后经过精密的天线的接受和解码并最终就像是你在物理终端上直接输入一样地输入到
+  LISP 的系统中.</p>
+<p>And it was a very elaborate and formal process that involved people wearing
+  these headsets that you see like in the movies, going through this very formal
+  process, that we are now going to send this command to the spacecraft and
+  somebody else saying, yes, you are go to send the command to the spacecraft.</p>
+<p>And then finally the guy who was sitting at the console would push the big
+  red button and then we’d sit around and wait for the results. And then we’d
+  look at the results and do the whole thing over again.</p>
+<blockquote>
+  <p>大概就是说, 其实并没有想象得那么容易, 不是坐在终端前和现在用 SSH 连接远程服务器一样,
+    而是每个输入的指令都要进行审核, 还要传一长串的指令执行过程. 最后还得等一个小时,
+    看最终的结果是否能行.</p>
+</blockquote>
+<p><b>Adam</b>: That's crazy. 那么你像是发送一个巨大的 LISP 表达式的树还是&#8230;</p>
+<p><b>Ron</b>: 是的, 我们发送的是 S-Expression.</p>
+<p><b>Adam</b>: 你们是如何做到这一点的? 你们如何让它重载的, 毕竟它是在实时运行的.</p>
+<p><b>Ron</b>: 首先我们会让它返回一个递归栈跟踪 (back trace),
+  一个当前系统中所有运行进程状态的 dump. 我们发现进程在等待某些事情来触发它,
+  但是它到底在等待什么? 所以我们做的第一件事情就是根据传回数据,
+  可以几乎一下子发现问题: 其中有一个进程在等待一个早就应该发生过的事件.
+  所以这很可能就是为什么出错的原因. 事实证明这确实是这样的: 一个极不可能的事件发生了.</p>
+<h1>The Proof and the Assumptions</h1>
+<p><b>Adam</b>: 我记得这不是被证明不可能发生吗?</p>
+<p><b>Ron</b>: 是这样的. 但是这个证明依赖于一个假设: 当你在给一个东西编程的时候,
+  你只使用我们定义的语言中的结构体 (constructs). 所以严格上说,
+  如果你只是用我们 DSL 的结构体, 那么你将不会陷入死锁.
+  这就像现在 Rust 语言中的 safe 和 unsafe 的部分, 我们基本上做的就是这么个事情,
+  只是我们并没有明确地对其进行区分.
+  然后我们也没有预料到写这段代码的人恰好用了这样的代码.</p>
+<p><b>Adam</b>: This is the F off guy that Ron hired to build the software using his language.</p>
+<blockquote>
+  <p>草, 什么临时工笑话 (bushi). 不过也确实, 如果我用 LISP 搓了一个 DSL,
+    那么我该如何对这个 DSL 进行 debug? 这个 DSL 是否有语法提示之类的编程辅助?
+    等等之类的.</p>
+</blockquote>
+<p><b>Ron</b>: 并且因为他需要做某些特定的操作, 但是他并没有找到一个合适的方法在我们的 DSL
+  中使用结构体. 所以他最终选择调用在 LISP 中的结构体的底层来实现这个功能,
+  这导致了超出我们 DSL 的安全检测的范围.</p>
+<p>实际上这是我的失误. 我并没有清晰地向我雇来的人解释清楚我们的工作 (work under
+  supervision), 我只是说: &#8220;你需要做这些, 去做到它&#8221;. 然后他去做了,
+  但是因为我并没有向他强调这一点&#8230; 如果要我为自己辩护的话,
+  我可能当时并不觉得这是件值得强调的重要的事情. 我没有讲清楚他不应该怎么做,
+  但是他这么做了, 这并不是他的过错, 是我的锅.</p>
+<p>这就是那个 bug 的原因.</p>
+<h1>Fixing it</h1>
+<p><b>Adam</b>: 你们需要杀死什么进程或者重启什么东西吗?</p>
+<p><b>Ron</b>: 我们当时在讨论是否能够通过往进程中注入一些事件来分离这个过程来抢救这个问题.
+  我们实际上也是这么做的, 所以我们最终成功地分离了这个 bug 并且让它回到正轨.</p>
+<p><b>Adam</b>: 所以多亏了 LISP 和给航天器提供一个 REPL, 手动处理事件的方法成功了.
+  我觉得你可能会觉得很奇怪, 之前已经经过了大量的测试, 从未产生死锁.
+  如果你执行这个项目一百次, 可能只会发生在第一次发生死锁, 而之后从来不会.
+  实际上故障率非常的低, 但是因为我们只执行一次项目, 所以一旦它出现了死锁,
+  在其他人来看这个项目只发生一次就死锁实在称不上是一个成功.</p>
+<h1>The Impact of the Deadlock</h1>
+<p><b>Ron</b>: 我们并没有失去飞行器, 并且我们的确完成了所有的项目观测.
+  所以技术上来说, 这算是成功的. 但是开发过程是很痛苦并且再一次充满了政治斗争.
+  所以尽管我们的确完成了目标, 但是自动飞行计划最终被取消了, 并且再也没有飞过一次.</p>
+<p><b>Adam</b>: 整个过程对 Ron 来说应该是非常折磨的.</p>
+<p><b>Ron</b>: 说折磨已经有点保守了. 那可以说是极其痛苦, 所以我在那之后退出了.
+  我的角色逐渐边缘化并且越来越少的人愿意和我共事, 所以合作的压力越来越大了.</p>
+<h1>Enter Google</h1>
+<p><b>Adam</b>: 那段时间当 Ron 在职业低谷时, 他发现了一个叫作 Google 的新的搜索搜索引擎.</p>
+<p><b>Ron</b>: 我当时在 <a href="https://en.wikipedia.org/wiki/Usenet_newsgroup">Usenet</a> 的新闻组里面, 或者说, 是 comp line LISP.
+  其中有一个人回复了一个复杂的技术问题, 我不记得具体的问题是什么了,
+  总之最后一句话就是 &#8220;thank God for Google&#8221;. 然后我就很好奇, Google 是啥?
+  所以我做了当时人们普遍会干的事情: 打开我的 <a href="https://en.wikipedia.org/wiki/Netscape">Netscape</a> <a href="https://en.wikipedia.org/wiki/Netscape_Navigator">navigator</a>, 然后输入 Google.
+  当然了, 就是一个类似于 <a href="https://en.wikipedia.org/wiki/AltaVista">AltaVista</a> 的搜索引擎, except that after just five
+  minutes of noodling around with it was (大意就是 Google 就是快, AltaVista 慢).
+  我认为很明显, 这绝对领先当时类似的东西好几条街 (was light years ahead of
+  anything else). 所以我很好奇他们是怎么做到这么快的.</p>
+<p>在网页的底下我看见他们正在招人, 所以正如 Alan Greenspan 可能会说的 irrational
+  exuberance (冲动的激情) 一样, 我发送了我的简历, 然后 15 分钟后我的电话响了.</p>
+<blockquote>
+  <p>卧槽, 以前的科研人员真是牛逼啊.</p>
+</blockquote>
+<h1>Is LISP Worth It?</h1>
+<p><b>Adam</b>: 所以 Ron 离开了 JPL 并加入了当时还是一家小公司的 Google.
+  不过这里是 <a href="https://corecursive.com">CoRecursive</a> (story behind the code) 而不是一个太空探索播客.
+  所以我好奇的是, 在过去了这么多年, Ron 是否还是一个 LISP 布道者呢?</p>
+<p><b>Ron</b>: 我从 LISP 上学到的一件事情就是它恰好和我的思考方式 (mindset) 相符合.
+  一个原因就是我从高中开始就使用它了, 所以我差不多进入 LISP 的世界大概 40 多年了.
+  尽管对于其他人来说, LISP 的语法可能有些奇怪: 各种括号以及奇怪的前置表达式,
+  这可能会让一般人比较抗拒. 尤其是 Common Lisp, 因为各种历史包袱,
+  以及一些奇怪的边缘用例可能会导致一些意想不到的惊喜.</p>
+<p>不过实际上创造性更多的还是和你的工具是否和你的思路相符合,
+  而不是想要去找一个适用一切的究极工具, 毕竟不同的人应该有不同的思考方式,
+  对问题也应该有自己的解决方法, 应当去选择适合自己的工具.</p>
+<p>对于 LISP 来说, 它可以给你一种对问题的核心更好的一个认识. 有了这样的认识,
+  就可以更容易学会其他的东西. 但是实际的情况则需要考虑和思路以及工具价值的关联程度.</p>
+<h1>Outro</h1>
+<p><b>Adam</b>: A big thank you to Ron Garrett for being on the show. A link to his
+  website is in the show notes. And if you want to hear more about Ron’s time
+  at Google during the dot-com boom, then you’re in luck. I’ve released it as
+  a bonus episode. So if you go to the supporters link in the show notes at
+  corecursive.com/supporters, you can access the episode right now. Will
+  this little startup, Google, make it through the dot-com crash of the 2000s.
+  Will Ron convince them about the beauty of LISP? You don’t have to wait to
+  find out. It’s right now available for supporters. And until next time,
+  thank you so much for listening.</p>
+<h1>Bonus Content From Ron</h1>
+<p>后面还有一堆照片, 建议去 <a href="https://corecursive.com/lisp-in-space-with-ron-garret/">原文</a> 查看.</p>
+<h1>后记</h1>
+<p>Ron Garret 在 Google TechTalks 还有一个演讲视频:
+  <a href="https://www.youtube.com/watch?v=_gZK0tW8EhQ">The Remote Agent Experiment (Youtube)</a>, 在 bilibili 也有人搬运.</p>
+<details><summary> 视频最后有惊喜 </summary>
+<p>最后被问到现在如何选择开发语言的时候, Ron 回答到如果条件一致的话,
+  LISP. 可惜现在的条件并不一致, 而现代软件开发更多是一个团队工作.
+  所以估计还是 Python.</p>
+<p>也就是说, 从零手搓已经不太现实了, 未来的开发还得是靠工程上的积累和团队合作么.</p>
+</details>
+<p>还有一个更加短的回忆录: <a href="https://flownet.com/gat/jpl-lisp.html">Lisp in JPL</a>.</p>
+<p>以及一个 reddit 上的帖子: <a href="https://www.reddit.com/r/lisp/comments/a7156w/lisp_and_the_remote_agent/">Lisp and the remote agent</a>.</p>
+<p>这些故事听得我都想去玩 <a href="https://en.wikipedia.org/wiki/Kerbal_Space_Program">KSP</a> 了.</p>
+
+  </div><a class="u-url" href="/misc/lisp-in-space/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
