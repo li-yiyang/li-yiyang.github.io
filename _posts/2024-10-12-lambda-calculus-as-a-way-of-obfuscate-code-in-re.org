@@ -1,0 +1,369 @@
+#+title: [RE] Lambda Calculus as a way to obfuscate code
+#+date: 2024-10-12
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: ctf
+* About
+给学校 CTF 出题, 方向是逆向 + 虚拟机, 正好最近在看
+Peter Kogge, The Architecture of Symbolic Computers,
+那么就不妨换掉之前的那套 "汇编风格" 的虚拟机,
+而是使用 Lambda 算子来实现一套自洽的 "纯函数式虚拟机"?
+
+本篇可以看作是: [[{{ site.github.url }}/reading/calculi-of-lambda-conversion/][[Reading] The Calculi of Lambda Conversion]]
+这篇阅读笔记的更加实际的一个实现以及具体应用的一个思考.
+
+为了方便大家阅读源码进行一个逆向, 所以我选择使用 Python
+来进行书写.
+
+#+begin_html
+<details><summary>Python, 那么体验如何? </summary>
+#+end_html
+
+感觉一般... 虽然有类型提示, 但是可能是我的 LSP (ruff) 不够智能?
+也有可能是我的数据结构并没有用类的形式 (用的 =list=, 可能还得手动加类型标记?
+不是很清楚), 总之在多次之后就没法正确识别类型并进行补全提示了.
+
+(所以不如不带任何类型提示地瞎写? 虽然这么想到, 但是还是写了类型提示,
+可能到了后面有点懒得写了, 有一些会缺少类型标记. )
+
+然后就是代码风格, 不是说游标卡尺的缩进, 其实实际上除了乱写的那部分代码,
+感觉很少有非常长的游标卡尺, 并且就算有, 你也不是不能在编辑器里面加美化.
+
+而是感觉不太建议使用递归? 例:
+
+#+begin_src python
+  def dotimes(n : int, block : callable) -> None:
+      if n > 0:
+          block(n)
+          dotimes(n - 1, block)
+
+  dotimes(23333, lambda x : x) # => RecursionError: maximum recursion depth exceeded
+#+end_src
+
+emm... 虽然这个代码写得很明显是有问题的 (因为完全可以变成循环),
+但是对于更加复杂的代码, 这种递归优化感觉还是很需要诶...
+
+什么? 你说能不能调包来实现? 我觉得是可以的吧? 比如 [[https://github.com/orsinium-labs/python-lambda-calculus/][python-lambda-calculus]]
+(随便网上找的). 但是这样感觉就不好玩了. (还是自己作死导致的)
+
+感觉 Python 的真谛还得是调包, 自己写复杂代码还是有点痛苦的.
+
+#+begin_html
+</details>
+#+end_html
+
+详细的代码我会放到仓库里面, 这篇博客里面就不展开写了
+(当然, 也不会吃饱了撑的用 Lisp 重写, 虽然如果有时间的话,
+我觉得可以用来作为教学用途来用 Lisp 重写一遍. )
+
+#+begin_html
+<details><summary>如果真的用 Lisp 来重写, 或者你喜欢的语言, 你应该做什么? </summary>
+#+end_html
+
+最偷懒的方式: 如果你用的编程语言里面支持 Lambda 匿名函数,
+直接用它来实现.
+
+稍微不那么偷懒的方式: 调用一个 parser 库,
+解析 lambda 算子表达式到 ast, 然后从 ast 按照规则进行约化.
+
+更加不偷懒的方式: 实现一个 parser 库 (我想的方式)
+
+首先实现 BNF 语法的解析, 这个部分可以先写一个非常简单的固定语法,
+然后实现 BNF 到 BNF AST 的过程. 提取所有的终结符 (terminator),
+(假设终结符以正则表达式的形式进行). 那么词法转换器 (tokenrizer)
+应当为这些正则表达式的或. 大概的一个伪代码如下:
+
+#+begin_src lisp
+  (let ((bnf-ast (parse-bnf *bnf-definition-for-some-language*))
+        (regexp  (regexp:or-by-list (terminators bnf-ast))))
+    (regexp:scan regexp input-code)) ;; => tokens
+#+end_src
+
+这里的 REGEXP 可以参考 [[{{ site.github.url }}/misc/simple-regexp-for-parser/][A Simple Regexp for Parser]] 一文.
+不过会不会出现简单的 =or= 使得正则匹配出现问题? (懒得管了, 到时候再说).
+
+然后在得到 =token-list= 之后, 就可以自动根据规则构造递归解析的函数.
+
+以上, 相当于实现了一个 CC (compiler compiler) 的工作,
+任务量并不复杂, 并且可以实现自举, 适合作为编译原理前端入门.
+在这之后可以考虑剪枝优化, 前端检查之类的工作?
+或者可以到后端考虑实现除了递归之外的解析方法.
+
+然后实现了这个小编译器的工作, 就可以去实现 lambda calculus
+的计算规则 (正则序和应用序), 很适合作为宏和一般函数调用的入门,
+并且从中也可以进一步展开正则序, 来介绍一些计算图的编译期优化,
+从而实现计算程序的自动并行化.
+
+最后, 在 lambda calculus 讲解完后, 开始构造一个小 DSL,
+从这个 DSL 到 lambda calclus 表达式, 然后可以去尝试自举.
+或者可以考虑在各种平台上的编译都行, 感觉到了这步可以布置那种大作业,
+让学生自己整活了. 比如让大家用 lambda calculus 写点小程序,
+或者给自己的 DSL 增加一些其他的功能 (比如 IO 之类的).
+
+如果还有时间, 没准可以考虑针对 lambda calculus 进行硬件上的设计.
+(虽然这一块我还没怎么仔细折腾).
+
+#+begin_html
+</details>
+#+end_html
+
+仓库见 [[https://github.com/li-yiyang/lambda-calculus-vm][li-yiyang/lambda-calculus-vm]].
+
+* 为什么考虑 Lambda Calculus 作为虚拟机?
+当我们在考虑对代码进行混淆的时候, 理论上的目标是尽可能提高逆向的难度,
+同时尽量保证原本程序的运行效率.
+
+** 逆向的难度
+前者用下面的一个例子估计就非常容易理解了:
+
+#+begin_html
+<details><summary>代码太长了, 折叠掉</summary>
+#+end_html
+
+#+begin_src text
+      (λA|(λB|(λC|(λD|(λE|(λF|(λG|(λH|(λI|(λJ|(λK|(λL|((((λw|((w(λ\
+      x|(λy|y)))(λx|(λy|x))))(((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))\
+      ))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|\
+      (λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|\
+      z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|\
+      y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x\
+      (λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(\
+      λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))\
+      b)(λs|(λz|(sz)))))(λs|(λz|(s(s(sz)))))))(λs|(λz|(s(s(s(s(sz)\
+      ))))))))K))(λx|(λy|y)))((((λw|((w(λx|(λy|y)))(λx|(λy|x))))((\
+      (λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λ\
+      w|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx\
+      |(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))(\
+      (λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy\
+      |y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))\
+      (λu|u))))))x)))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)\
+      z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz)))))(λs|(λz\
+      |(s(s(s(sz))))))))(λs|(λz|(s(s(s(s(s(s(s(s(sz)))))))))))))C)\
+      )(λx|(λy|y)))((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb|((\
+      (λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(\
+      λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(\
+      ((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λ\
+      x|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λ\
+      x|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u)))))\
+      )x)))b)a)))))((λb|(λs|(λz|(s(s(s(s(s(s(sz))))))))))(λs|(λz|(\
+      s(s(s(s(s(s(s(s(sz)))))))))))))J))(λx|(λy|y)))(((((λa|(λb|((\
+      (λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(\
+      λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(\
+      ((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λ\
+      x|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λ\
+      x|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u)))))\
+      )x)))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x))\
+      )(λs|(λz|(s(s(sz))))))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz)\
+      )))))(λs|(λz|(s(s(s(s(s(sz))))))))))I)(((((λa|(λb|(((λw|(λz|\
+      ((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+      λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+      λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)\
+      ))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((\
+      y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a\
+      )))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(\
+      λy|(λs|(x(ys)))))b)(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)\
+      ))(λs|(λz|(sz))))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz))))))\
+      )(λs|(λz|(s(sz))))))(λs|(λz|(s(s(sz)))))))H)(((((λa|(λb|(((λ\
+      w|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy\
+      |y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((\
+      x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|\
+      (λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|\
+      (λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x\
+      )))b)a)))))((λb|(λs|(λz|(s(s(s(sz)))))))(λs|(λz|(s(s(s(s(s(s\
+      (sz)))))))))))E)((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb\
+      |(((λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λ\
+      x|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λ\
+      z|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((\
+      x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(\
+      ((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))\
+      ))))x)))b)a)))))((λb|(λs|(λz|(sz))))(λs|(λz|(s(s(s(sz)))))))\
+      )B))(λx|(λy|y)))(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λ\
+      x|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y\
+      ))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λ\
+      u|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+      λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+      λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(λy|((\
+      y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(λs\
+      |(λz|(s(s(sz)))))))(λs|(λz|(s(sz))))))(λs|(λz|(s(s(s(s(s(sz)\
+      )))))))))L)((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb|(((λ\
+      w|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy\
+      |y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((\
+      x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|\
+      (λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|\
+      (λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x\
+      )))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(\
+      ((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(s(sz))))))(λs|(λz|z))))(λs\
+      |(λz|(s(s(s(s(s(sz))))))))))A))(λx|(λy|y)))(((((λa|(λb|(((λw\
+      |(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|\
+      y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x\
+      (λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(\
+      λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(\
+      λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)\
+      ))b)a)))))((λb|(λs|(λz|(s(sz)))))(λs|(λz|(s(s(s(s(s(s(s(s(s(\
+      sz))))))))))))))D)(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))(\
+      (λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy\
+      |y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))\
+      (λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y))\
+      )(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg\
+      |(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(λy|\
+      ((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(\
+      λs|(λz|(sz)))))(λs|(λz|(sz)))))(λs|(λz|(s(s(s(s(s(s(s(s(s(sz\
+      ))))))))))))))G)(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λ\
+      x|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y\
+      ))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λ\
+      u|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+      λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+      λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(λs|(λz|(sz)\
+      )))(λs|(λz|(s(s(s(sz))))))))F)(λx|(λy|x)))(λx|(λy|y))))(λx|(\
+      λy|y))))(λx|(λy|y)))))(λx|(λy|y)))))(λx|(λy|y))))(λx|(λy|y))\
+      ))(λx|(λy|y))))))))))))))))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+对应的逻辑大概如下所示:
+
+#+begin_src lisp
+  (lambda (a b c d ...)
+    (if (eq b flag-b)
+        (if (not (eq c flag-b))
+            nil
+            (if ...))
+        nil))
+#+end_src
+
+原本的逻辑非常简单吧? 但是却可以被展开混淆为 Lambda 算子表示.
+
+#+begin_html
+<details><summary>当然不是牢不可破的</summary>
+#+end_html
+
+因为这个逻辑是一个一一匹配 (虽然不是正序),
+所以完全是可能逐位爆破的. 并且为了防止这个计算过程中爆了 Python
+的递归限制, 输入的 flag 只有 =a-z= 这 26 个字母,
+可以说爆破难度很小了.
+
+(不过我在 task 的 tip 里面应该留了足够详细的提示了)
+
+不过这种应该怪混淆器吗? 这很明显是代码逻辑层的问题吧 (笑)
+
+#+begin_html
+</details>
+#+end_html
+
+** 程序运行效率
+虽然看起来程序是解释运行的, 这样的运行效率是非常低下的. 诚然,
+效率上如果没有专门设计的硬件的话, 应该是会有一定的损耗的.
+
+* Lambda Calculus 的表示
+理论上来说, 我们可以用 Lambda Calculus 等效任意的程序,
+但这是如何实现的? (详细请参考 manual 从 =.m(5)= 到 =.m(7)= 的内容)
+
+如果你不想仔细阅读, 或者想要直接用自己熟悉的编程语言来进行测试,
+这里有一个非常快速的介绍: =.m(10)=.
+
+#+begin_html
+<details><summary>折叠了</summary>
+#+end_html
+
+#+begin_src lisp
+  (defpackage #:lambda-machine
+    (:use :cl))
+
+  (in-package :lambda-machine)
+
+  ;; Macro helper
+
+  (defun <- (fn arg)
+    "Function application. "
+    (if (functionp fn)
+        (funcall fn arg)
+        `(<- ,fn ,arg)))
+
+  (defmacro <-* (expr &rest exprs)
+    (if (endp exprs) expr
+        `(<-* (<- ,expr ,(first exprs)) ,@(rest exprs))))
+
+  (defmacro λ (lambda-list body)
+    "Quick wrapper for the lambda calculus. "
+    (if (endp lambda-list)
+        body
+        `(lambda (,(first lambda-list))
+           (declare (ignorable ,(first lambda-list)))
+           (λ ,(rest lambda-list) ,body))))
+
+  ;; Basic Components
+
+  (defparameter +zero+ (λ (s z) z)
+    "Church number zero. ")
+
+  (defparameter +successor+ (λ (x y z) (<- y (<-* x y z)))
+    "Inc lambda church number. ")
+
+  (defparameter +addition+  (λ (j k) (<-* k +successor+ j))
+    "Add number j and k. ")
+
+  (defparameter +multiplication+ (λ (x y) (λ (s) (<- x (<- y s))))
+    "Multiply number x and y. ")
+
+  (defparameter +predecessor+ (λ (x) (λ (s z) (<-* x (λ (g h) (<- h (<- g s))) (λ (u) z) (λ (u) u))))
+    "Dec number x")
+
+  (defparameter +subtraction+ (λ (x y) (<-* y +predecessor+ x))
+    "x - y")
+
+  (defparameter +true+  (λ (x y) x))
+  (defparameter +false+ (λ (x y) y))
+  (defparameter +not+   (λ (w) (<-* w +false+ +true+)))
+  (defparameter +zerop+ (λ (x) (<-* x +false+ +not+ +false+)))
+
+  (defparameter +y-combinator+
+    (λ (y) (<- (λ (x) (<- y (<- x x))) (λ (x) (<- y (<- x x))))))
+
+  (defparameter +cons+  (λ (a b) (λ (x) (<-* x a b))))
+  (defparameter +car+   (λ (x) (<- x (λ (a b) a))))
+  (defparameter +cdr+   (λ (x) (<- x (λ (a b) b))))
+  (defparameter +nil+   (λ (x a b) a))
+  (defparameter +nilp+  (λ (n) (<- n (λ (a b) +false+))))
+
+  ;; DSL on Lambda Calculus
+
+  (defun ->church-number (num)
+    (if (<= num 0) +zero+ (<- +successor+ (->church-number (1- num)))))
+
+  (defun church-number-> (church-number)
+    (<-* church-number #'1+ 0))
+
+  (defun true-false-> (bool)
+    (<-* bool t nil))
+
+  (defun ->true-false (bool)
+    (if bool +true+ +false+))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+从这几个基本的元素, 理论上就可以实现任意的函数与程序了.
+
+* Lambda Calculus 的性能与优化
+虽然现在还是可以接受的慢, 但是如果程序更加复杂和庞大,
+那么这慢一点估计就不是那么能够接受了.
+
+那么该如何提高性能? 一个做法就是进行并行化的计算,
+因为可以发现, 在分支的化简上, 如果一次只化简一部分,
+但是另外一部分仍然还是可以单独化简而不需要等到下次再化简
+(因为完全没有影响, 所有的函数作用域都是有限的. )
+
+另一个做法就是按照 The Architecture of Symbolic Computers
+中提到的那样用专用设计的芯片来进行加速 (这部分还没有读),
+感觉会很有意思.
+
+* 后记
+虽然但是, 我觉得 LVM REPL 是一个比较失败的代码练习,
+因为我把里面的代码基本上写死了, 没啥拓展性也不是很灵活.
+并且主要是没有一个比较实际的目标, 导致写的时候很坐牢. 

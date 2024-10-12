@@ -178,6 +178,36 @@
 
 所以结论就是暂时还用不了.
 
+** [update] 2024/9/15
+SSL 的 Bug, 呃, 我怀疑是 =ca-certificate= 这个包的问题,
+由于在 QEMU 上跑的版本和 iSH 的版本不同, 所以导致了出现了一些小小的问题.
+
+但是很显然, 如果我不让 QEMU 和 iSH 的版本进行一个对应, 我就必须用源里提供的软件,
+因为在 iSH 上编译程序太慢了. (也许 M 系列的芯片会好一些? 但是与我无关就是了)
+
+不过好消息是, 源里面的 ECL 不能使用的原因倒是发现了:
+
+#+begin_src shell
+  apk add ecl
+#+end_src
+
+这个命令装的依赖不全, 只能说完全没法用 ECL 编一些稍大的项目. 正确的安装姿势应该是:
+
+#+begin_src shell
+  apk add curl curl-dev \
+      gmp gmp-dev \
+      ncurses ncurses-dev \
+      gc-dev gcc g++ make \
+      ecl ecl-dev \
+      libffi-dev
+#+end_src
+
+然后载入 Quicklisp 即可. 不过不得不说, ECL 是真的慢... (虽然 iSH 也有锅,
+但是如果是 SBCL 的话就好了... )
+
+(但是编译完了之后发现没有声音输出的能力, 所以就寄了, 感觉估计还得是 Swift
+去写原生的程序会更加靠谱一些. )
+
 * 后记
 至少目前电脑上可以用了, 就没有那么多动力去修改了, 之后有时间的话,
 会考虑重新写一个更加通用的 TUI 框架, 然后修一下电台和 client
