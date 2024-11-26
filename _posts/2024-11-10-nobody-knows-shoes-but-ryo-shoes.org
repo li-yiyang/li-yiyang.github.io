@@ -1,0 +1,426 @@
+#+title: Nobody Knows Shoes (but RYO.SHOES)
+#+date: 2024-11-26
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+When I first learn programming, there's guy called _why.
+He wrote a marvellous book called [[https://poignant.guide][Why's Guide To Ruby]],
+together with a easy to use GUI framework [[http://shoesrb.com][Shoes]].
+
+So I was really missing the Shoes DSL for the GUI creation.
+That's why I made =ryo.shoes= ([[https://github.com/li-yiyang/ryo][repo]], see =ryo.shoes= module),
+the Shoes-like DSL on [[https://github.com/rabbibotton/clog][CLOG]].
+
+Please note that =ryo.shoes= is under early development and
+the API may change in the future and its not about to make
+a GUI with every thing in fancy, but make a GUI library
+with ease to use.
+
+And final note: RYO.SHOES is not Shoes. It's in Common Lisp
+and based on CLOG, rather than Ruby Shoes (native (3) or
+Swing (4)).
+
+This post is a mimic to the original NKS (Nobody knows shoes).
+As a short introduce to RYO.SHOES, while as the test of the
+RYO.SHOES. If I found something missing while writing this
+post, I will try to add them into RYO.SHOES.
+
+* To Install the THING
+You need a Common Lisp environment ([[http://sbcl.org][SBCL]] is recommanded),
+[[https://www.quicklisp.org][quicklisp]] and clone the [[https://github.com/li-yiyang/ryo][ryo]] repo.
+
+#+begin_html
+<details><summary>if you're using macOS, with brew</summary>
+#+end_html
+
+On macOS, with [[https://brew.sh][homebrew]]:
+
+#+begin_src shell
+  > brew install sbcl
+  > curl -L -O https://beta.quicklisp.org/quicklisp.lisp
+  > sbcl --load quicklisp.lisp
+  ;;; ...
+  ,* (quicklisp-quickstart:install)
+  ,* (ql:add-to-init-file)
+  ,* (quit)
+  > cd ~/quicklisp/local-projects/
+  > git clone https://github.com/li-yiyang/ryo.git
+  > sbcl
+  ;;; ...
+  ,* (ql:quickload :ryo)
+  ,* (defpackage :shoes-user
+      (:use :cl :ryo.shoes))
+  ,* (in-package :shoes-user)
+  ,* (window ()
+      (title "Hello Shoes"))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+Setting up the environment is somewhat painful and can
+vary from person to person. So please forgive me for
+such a short sketch on how to install the thing.
+
+* Shoes in front and Shoes at back
+** You live in the interactive Lisp Machine REPL
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/trurl-klapaucius.png]]
+
+So: in front, windows. With buttons and words and colors.
+(Note: in order to reduce the image size, I'v done some dithering
+on the screen short. Just to make it stylish)
+
+That's a quite simple code behind the scene:
+
+#+name: trurl-klapaucius-example
+#+begin_src lisp
+  (window ()
+    (button "Trurl? "
+      (alert "Klapaucius! ")))
+#+end_src
+
+So, in your REPL (Terminal, SLIME, SLY or something else, I'll
+consider making a interactive one in the future), switch to
+to =ryo.shoes= package and type and evaluate the above piece of
+code, that should bring you a simple GUI window pop up.
+
+#+begin_html
+<details><summary>Note: if something unexpected happens</summary>
+#+end_html
+
+Normally, you can count on Lisp's charming error handling
+and restarting features (together with a powerful debugger
+like SLIME or SLY, life will be much easier).
+
+For example, if you haven't start the Shoes Server,
+choosing =try= option in restart prompts will starting
+the Shoes Server. If you haven't open any connection
+(browser visiting the Shoes Server, in this context),
+choosing =try= option in restart prompts will open
+your browser and visiting it.
+
+However, if you really happened to met up something
+unexpected (I think it's common in GUI world). Please
+raise an issue on the [[https://github.com/li-yiyang/ryo/issues/new][repo]].
+
+P.S. but in any words, this blog post is done when
+=ryo.shoes= was at very early stage. So things may vary.
+
+#+begin_html
+</details>
+#+end_html
+
+** A Poem in Four Boxes
+Another more example, shoes in front:
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/a-poem.png]]
+
+#+begin_html
+<details><summary>So, if you cannot readout code from the above image...</summary>
+#+end_html
+
+Sorry for the dithering, but I really need to cut down the git repo
+binary file sizes. These binaries getting heavier.
+
+#+name: a-poem-example
+#+begin_src lisp
+  (window (:width 280 :height 350)
+    (flow (:width 280 :margin 10)
+      (stack (:width "100%")
+        (title "A POEM"))
+      (stack (:width 80)                  ; px
+        (para "Goes like: "))
+      (stack (:width -90)                 ; px
+        (para
+          "the sun. "
+          "a lemon. "
+          "the goalie. "
+          "a fireplace. "
+          ""
+          "i want to write"
+          "kids who haven't"
+          "even heard one yet."
+          ""
+          "and the goalie guards"
+          "the fireplace"
+          :join :newline))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+okay, you ran it, you got it.
+
+The code is little longer, but I bet it sure does if you're
+adding tons of widgets into you GUI panel.
+
+Note: the default CSS may not seemed to be very nice, I
+think, but I'm poor in CSS styling so I guess I'll just
+leave it be and fix it in the possible future.
+
+#+begin_html
+<details><summary>What's happening behind the scene? </summary>
+#+end_html
+
+It's actually a box with three inside:
+
+#+begin_example
+  ######################################
+  #                                    #
+  ######################################
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  #         #                          #
+  ######################################
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+** So, let's start with =para= because it's easy and you'll use it all over
+=para=, short for "paragraph". Like this paragraph below:
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/para-example.png]]
+
+#+begin_src lisp
+  (window ()
+    (para "Testing test test. "
+      "Breadsticks. "
+      "Breadsticks. "
+      "Breadsticks. "
+      "Very good. "))
+#+end_src
+
+By default, the content of =para= will automatically fill up
+to the edges of any box it is placed inside. One subelement
+next to another subelement with no space, as if gluing them
+together as a long string of sentences.
+
+And you can just enjoy other styles like below:
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/para-styles.png]]
+
+#+begin_src lisp
+  (window ()
+    (para "Testing test test. "
+      (strong "Breadsticks. ")
+      (em "Breadsticks. ")
+      (ins "Very good. ")))
+#+end_src
+
+Note: if you've read the NKS, you may found something missing
+here. This because =RYO.SHOES= now is not good at them yet.
+
+#+begin_html
+<details><summary>a list of missing features</summary>
+#+end_html
+
+1. shapes and displacements (I'm not using it yet)
+2. styles and styles of the widgets, tons of styles
+   are missing
+3. backgrounds and so on
+
+the original Shoes is kinda like drawing widgets on the
+Canvas, but on HTML, I think I'm not experienced about it.
+So later or if I really has to...
+
+Anyway, 逃げるは恥だが役に立つ.
+
+#+begin_html
+</details>
+#+end_html
+
+* All the widgets
+** Button
+So a button is like:
+
+#+begin_src lisp
+  (window ()
+    (button "Click Me! "
+      (alert "Yes! ")))
+#+end_src
+
+You pushes the button and it runs the code.
+Simple, but useful.
+
+** Edit Line and Edit Box
+So you may want some interaction between user and the program.
+A simple way to +interrogate+ ask user for input is:
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/edit-line.png]]
+
+#+begin_src lisp
+  (window (:width 400 :height 400)
+    (flow ()
+      (flow (:width 60) (para "Name: "))
+      (flow (:width 200)
+        (@ ask (edit-line (:width 100)))))
+    (stack ()
+      (button "Greet"
+        (alert (fmt "Hello: ~A. " (text (@ ask))))))
+    (fmt! "~A" (clog:text-value (@ ask))))
+#+end_src
+
+#+begin_html
+<details><summary>Closures and App Local Variables</summary>
+#+end_html
+
+Different like Ruby Shoes, which uses the instance variables to
+store states and blocks passes as lambda functions (slope, I mean).
+
+I made =RYO.SHOES= by closure variables and app local variables.
+There are several global variables that would rebinded locally:
++ =ryo.shoes::*clog*=: current working connection (dev only)
++ =*app*=: current app window
++ =*slot*=: current slot (stack or flow)
++ =*self*=: used mostly for event calling
+
+The =(@ var)= is the app local variable.
+for example:
++ the above =(@ ask (edit-line (:width 100)))= defines a local
+  variable named =ask= referring to the =edit-line= element
++ use =(@ ask)= to query the stored local variable
++ it is much like the instance variable =@var= in Ruby
+
+#+begin_html
+</details>
+#+end_html
+
+Samely, you got =edit-box=.
+
+** Animation, Every, and Timer
+So you want some animation? Sure:
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/every-sec.png]]
+
+#+begin_src lisp
+  (window ()
+    (title "Every (Timer Class)")
+    (flow (:margin 10)
+      (@ cnt      0)
+      (@ present  (para (fmt "~D%" (@ cnt))))
+      ;; fraction should be 0.0~1.0 or 0-100
+      (@ progress (progress :fraction (@ cnt))))
+    (@ update
+       (every-sec 1
+         (incf (@ cnt) 10)
+         (setf (text (@ present))      (fmt "~D%" (@ cnt))
+               (fraction (@ progress)) (@ cnt))
+         (when (>= (@ cnt) 100)
+           (stop (@ update))
+           (alert "Finished! ")))))
+#+end_src
+
+** Finally, the Image
+Well, I was not sure if I'm doing this correct.
+But anyway, it works right now:
+
+#+begin_src lisp
+  (window ()
+    (title "Image Example")
+    (flow ()
+      (para "Load from URL")
+      ;; load from URL
+      (image "https://avatars.githubusercontent.com/u/56211811" :width 50))
+    (flow ()
+      (para "Load Locally")
+      ;; or load locally
+      (image #P"./image.png" :width "80%")))
+#+end_src
+
+Note: I run multpile times of this application so you could
+see it nested as if the =image.png= itself is infinitely
+self included.
+
+** Others more?
+The idea is to add a DSL wrapper for orginal CLOG.
+By any means I think it would be easy to extend =RYO.SHOES=.
+
+An example would be the usage of [[https://github.com/li-yiyang/clog-c3][CLOG-C3]]:
+
+#+begin_src lisp
+  ;; see ryo;lisp;shoes;c3-plot.lisp for details
+  (in-package :ryo.shoes)
+
+  (defclass c3-plot (clog-c3:clog-c3 element) (id))
+
+  ;; NOTE:
+  (defun %c3-plot (&key width height &allow-other-keys)
+    "Create a CLOG-C3 plot. "
+    (let ((id (gensym "C3-PLOT")))
+      ;; init with a dummy data
+      (with-wrap-as-shoes
+          (c3-plot c3-plot
+            (clog-c3:create-clog-c3-plot *slot* ()
+                                         :width  (or width  300)
+                                         :height (or height 300)
+                                         :id     id))
+        (setf (slot-value c3-plot 'id) id)
+        ;; the dummy data should be hide
+        (clog-c3:c3-hide c3-plot id :with-legend nil))))
+
+  (defmacro c3-plot ((&rest styles &key width height &allow-other-keys)
+                     &body body)
+    "Make a CLOG-C3 plot element. "
+    (declare (ignore width height))
+    `(with-wrap (*self* (%c3-plot ,@styles))
+       (flet ((plot (data &key color
+                          (id   (clog-c3:c3-data-id data))
+                          (type (clog-c3:c3-data-type data)))
+                (clog-c3:c3-load *self* data
+                                 :color color
+                                 :id id :type type)))
+         ,@body)))
+#+end_src
+
+So you could just add the plot like:
+
+#+begin_src lisp
+  (window (:width 400 :height 400)
+    ;; see `ryo.stat' and `ryo.macros' package
+    (@ hist (make-histogram (dotimes-collect (i 100)
+                              (random 1.0))))
+    (c3-plot (:width 300 :height 300)
+      (plot (@ hist))))
+#+end_src
+
+[[{{ site.github.url }}/_img/lisp/ryo-shoes-nks/c3-plot.png]]
+
+* So what's next and the future plan?
+I think I would slow down the development of =RYO.SHOES=
+(since I'm not majored in CS but actually Physics).
+
+The main point I may considering would now be the
+data visualization and analyzing. (for example, a
+better data viewer JS library other than [[https://c3js.org][C3]], hopefully,
+something that could meet the science plotting needs.
+Yes, I could use [[https://github.com/li-yiyang/gurafu][gurafu]], but I think it needs a lot of
+modification to add interaction and beautiful styles...
+This could be done if I have more free time. )
+
+Also, as you may noticed from the [[https://github.com/li-yiyang/ryo][source code]], =RYO.SHOES=
+is just a "small" submodule of my personal code base =RYO=,
+which I think is a messy place to place my experimental
+pieces of code. So I think I'll separate =RYO.SHOES= as
+a standalone package for GUI DSL in the future.
+
+Emmm... I think I'll rewrite this introduction to =RYO.SHOES=
+after it got stable. I'm totally not satisfied with current
+version: missing alot features from original Ruby Shoes and
+most of all, not fancy and beautiful.
+
+But anyway, it works and I have to do some other stuffs.
+Hope you would enjoy =RYO.SHOES=. Also, contributions and
+advices are welcomed.
