@@ -1,0 +1,249 @@
+#+title: Let's Learn Some (basic) Docker
+#+date: 2024-12-04
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: ctf
+* About
+本文用于介绍简单的 Docker 入门.
+
+本文参考的是:
++ [[https://docs.docker.com/manuals/][Docker Manuals]]
+
+** Docker Setup
+#+begin_html
+<details><summary>假如你还没有配置好 Docker, 请点击展开查看细节</summary>
+#+end_html
+
++ Network
+
+  也许可能需要用到类似的配置 JSON:
+
+  #+name: docker-network-config
+  #+begin_src json
+    {
+      "proxies" : {
+        "http-proxy"  : "...",
+        "https-proxy" : "..."
+      },
+      // ...
+    }
+  #+end_src
++ *Windows*, *macOS*, *Linux* [[https://www.docker.com/products/docker-desktop/][Docker Desktop]]
++ *macOS* (optional, but recommanded) [[https://orbstack.dev][OrbStack]] (但是有潜在的 bug)
+
+#+begin_html
+</details>
+#+end_html
+
+* Docker
+#+name: docker-help
+#+begin_src shell :results verbatim :exports both
+  docker help | head -n 20
+#+end_src
+
+#+RESULTS: docker-help
+#+begin_example
+
+Usage:  docker [OPTIONS] COMMAND
+
+A self-sufficient runtime for containers
+
+Common Commands:
+  run         Create and run a new container from an image
+  exec        Execute a command in a running container
+  ps          List containers
+  build       Build an image from a Dockerfile
+  pull        Download an image from a registry
+  push        Upload an image to a registry
+  images      List images
+  login       Log in to a registry
+  logout      Log out from a registry
+  search      Search Docker Hub for images
+  version     Show the Docker version information
+  info        Display system-wide information
+
+Management Commands:
+#+end_example
+
+** Run
+#+name: docker-getting-started
+#+begin_src shell :eval no
+  docker run -it -p 4000:80 docker/getting-started
+#+end_src
+
+此时拆解上面的命令:
++ =run=: Create and run a new container from an image
++ =-it=:
+
+  #+name: docker-run-it-help
+  #+begin_src shell :exports both :results verbatim
+    docker help run | grep '[it],'
+  #+end_src
+
+  #+RESULTS: docker-run-it-help
+  :   -i, --interactive                      Keep STDIN open even if not attached
+  :   -t, --tty                              Allocate a pseudo-TTY
+
+  表示新建一个 pseudo-TTY 来交互式地运行 Docker 镜像.
+  当然, 你也可以使用 =-d= 参数 (daemon) 在后台运行.
++ =-p <host-port>:<container-port>=:
+
+  #+name: docker-run-p-help
+  #+begin_src shell :exports both :results verbatim
+    docker help run | grep -A 1 '[p],'
+  #+end_src
+
+  #+RESULTS: docker-run-p-help
+  :   -p, --publish list                     Publish a container's port(s) to
+  :                                          the host
+
+  这里将 container 的 =80= 端口映射到了 =4000=.
++ =docker/getting-started=
+
+  #+name: docker-search
+  #+begin_src shell :exports both
+    docker search docker/getting-started | head -n 3
+  #+end_src
+
+  #+RESULTS: docker-search
+  : NAME                                            DESCRIPTION                                     STARS     OFFICIAL
+  : docker/getting-started                          Getting Started tutorial for Docker             94
+  : docker/dockerfile                               Official Dockerfile frontend images that ena…   105
+
+  这里抓取的是 [[https://github.com/docker/getting-started][docker/getting-started]] 的镜像.
+
+在运行后, 你可以使用:
+
+#+name: docker-ps
+#+begin_src shell :exports both :results verbatim
+  docker ps
+#+end_src
+
+#+RESULTS: docker-ps
+: CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS          PORTS                                     NAMES
+: a5b981d074db   docker/getting-started   "/docker-entrypoint.…"   10 seconds ago   Up 10 seconds   0.0.0.0:4000->80/tcp, [::]:4000->80/tcp   festive_ishizaka
+
+来列出当前正在运行的 container 列表. (就像是 =ps= 命令干的事情一样)
+
+注: 这一步的背后其实还做了 =docker pull docker/getting-started= 的操作.
+因为默认本地 (local) 中并没有容器 (container) 的镜像 (image).
+
+** Exec
+假设我们已经拉取 (pull) 了一个镜像并制作了一个容器 (container),
+但是你可能想要稍微修改一下这个容器以让这个容器更加适合你的使用,
+此时就可以使用 =exec= 命令:
+
+#+name: docker-exec-example
+#+begin_src shell :eval no
+  docker exec -it <container-name> sh
+#+end_src
+
+注: 此处的 =<container-name>= 可以通过 =docker ps= 来列出.
+
+** Build
+但是如果我们想要基于已有的容器进行修改并保存我们的修改后的容器,
+每次都使用 =exec= 也太麻烦了, 于是我们可以通过编写 =Dockerfile=
+来配置和固定我们自己的 Docker 镜像.
+
+*** Example: so simple like =ls=
+我们的基本镜像是 =alpine=
+
+#+name: docker-ls
+#+begin_src docker
+  # dockerfile
+  FROM alpine:latest
+  ENTRYPOINT ["ls"]
+#+end_src
+
+这里干的事情就是: 在基本镜像 =alpine:latest= 的基础上,
+设置 =docker run= 的时候的入口 (entrypoint) 命令.
+
+#+name: docker-build-ls
+#+begin_src shell :eval no
+  docker build -t so-simple-like-ls:latest .
+#+end_src
+
+还是拆解命令:
++ =build=: Build an image from a Dockerfile
++ =-t=:
+
+  #+name: docker-build-t
+  #+begin_src shell :exports both :results verbatim
+    docker help build | grep -A 1 "t,"
+  #+end_src
+
+  #+RESULTS: docker-build-t
+  :   -t, --tag list                Name and optionally a tag in the
+  :                                 "name:tag" format
+
+  为我们打包的镜像创建一个名字
++ =.=: 表示在当前的目录下进行镜像的打包,
+  我们当前的目录应当有类似如下的文件结构:
+
+  #+begin_example
+    .
+    └── Dockerfile
+  #+end_example
+
+*** Example: a Python Server
+这里以 [[https://docs.docker.com/build/concepts/dockerfile/][Dockerfile overview]] 为例.
+
++ 最后应当有如下的文件结构:
+
+  #+begin_example
+    .
+    ├── Dockerfile
+    └── hello.py
+  #+end_example
+
+*** Example: nyxt-docker
+这里以 [[https://github.com/deddu/nyxt-docker/][nyxt-docker]] 为例, 这可是一个 "游览器" 级别复杂的项目呢.
+
+#+name: example-nyxt-docker
+#+begin_src shell
+  git clone https://github.com/deddu/nyxt-docker.git
+#+end_src
+
+请参考其 [[https://github.com/deddu/nyxt-docker/blob/master/Dockerfile][Dockerfile]].
+
+*** Example: rajiko
+这里以打包 [[https://github.com/li-yiyang/rajiko][rajiko]] 为例:
+
++ 这里以 =linuxcontainers/alpine:latest= 作为基础镜像
++ 编写配置文件
+
+  #+begin_src docker
+    FROM linuxcontainers/alpine:latest
+    RUN echo 'Setting up ENV...'
+    RUN apk add --no-cache curl curl-dev \
+        gmp gmp-dev unzip\
+        ffmpeg sbcl
+    RUN curl -L -O https://beta.quicklisp.org/quicklisp.lisp
+    RUN sbcl --load quicklisp.lisp \
+             --eval "(quicklisp-quickstart:install)"
+             --eval "(ql:add-to-init-file)"
+             --eval "(quit)"
+    RUN curl -L https://github.com/li-yiyang/rajiko/archive/refs/heads/main.zip \
+             -o quicklisp/local-projects/rajiko.zip
+    RUN cd quicklisp/local-projects && unzip rajiko.zip
+    RUN sbcl --eval "(ql:quickload :rajiko)" \
+             --eval "(sb-ext:save-lisp-and-die \"~/rajiko\" :compression t :executable t :toplevel #'rajiko:rajiko-cli)" \
+    ENTRYPOINT ["rajiko"]
+  #+end_src
++ run =docker build -t rajiko .=
+
+** Compose
+#+begin_quote
+Docker Compose is a tool for defining and running multi-container
+applications. It is the key to unlocking a streamlined and
+efficient development and deployment experience. ([[https://docs.docker.com/compose/][Docker compose]])
+#+end_quote
+
+大家可以理解为一种把各种容器合在一起运行的一种法子,
+超级调包大师了属于是.
+
+*** Example: docker manual
+请参考 [[https://docs.docker.com/compose/gettingstarted/][Docker Compose Quickstart]].
+
+
