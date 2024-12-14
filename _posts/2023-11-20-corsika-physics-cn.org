@@ -1,0 +1,206 @@
+#+title: Corsika 的物理部分
+#+date: 2023-11-20
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: corsika
+* About
+这是对 [[https://web.iap.kit.edu/corsika/physics_description/corsika_phys.pdf][CORSIKA: A Monte Carlo Code to Simulate Extensive Air Showers]]
+的阅读笔记与简单翻译.
+
+* Chapter 1 介绍
+** CORSIKA 的作用
++ 对 EAS (广延大气簇射, Extensive Air Showers) 过程进行 MC (Monte Carlo) 模拟.
++ 对地面探测阵列的设计给予模拟上的支持
+
+** CORSIKA 的最初组成
+CORSIKA 最初建立在三个程序上:
++ Grieder (1970s) 的 (低能) 强相互作用模型 (hadronic interaction model at low
+  energies), 被用于 ISOBAR 过程中
++ Capdevielle interaction generator HDPM (受到 Dual Parton Model 启发)
++ EGS, 被用于电磁过程 (electromagnetic part)
+
+但是 CORSIKA 还是有一些问题, 比如:
++ 高能强子相互作用模型 (hadronic interaction to higher energy) 缺乏实验上的证据
+  + 宇宙线能量远高于当前的对撞机的实验能量
+  + 可用的高能强子相互作用模型是假设的理论模型:
+    + 非弹性强相互作用模型 (inelastic hadronic interaction):
+      + VENUS, QGSJET, DPMJET (Gribov-Regge formalism)
+      + SIBYLL (minijet model)
+    + HDPM
+  + GHEISHA, 用于替代 ISOBAR 过程来取得对低能强子相互作用的计算
+  + VENUS
+
+* Chapter 2: Program frame
+** Control and run
+在模拟最开始时, 定义原初宇宙线粒子 (primary particle) 的:
++ 粒子种类 (primary particle type)
++ 粒子能量 (energy)
+  + 直接定义
+  + 根据能谱 (随机) 生成
++ 入射方向 (primary angle)
+  + 直接定义
+  + 选定一个范围进行 (随机) 生成, 可以根据探测器对宇宙线流强的角灵敏度来实现
+
+定义模拟环境的:
++ 大气参数 (atmospheric parameters)
+
+  可以用于研究不同大气参数 (不同季节, 天气) 对观测的影响
++ 观测平面 (observation levels)
+
+  最多 10 个观测平面, 用于统计穿过该平面的高于阈值 (cut off) 的强子, \(\mu\) 子,
+  电子和光子.
+
+以及相互作用模型:
++ 高能强子模型参数
++ 电磁级联 (electronmagnetic cascades) 参数
+
+是否进行仿真压缩: (可以用来加速仿真速度, 利用对称性)
++ thin 参数
+
+** Particles
+CORSIKA 程序记录了 50 个基本粒子:
+
++ \(\gamma, e^{\pm}, \mu^{\pm}, \pi^{0, \pm}, K^{\pm}, K^0_{S/L}, \eta\)
++ baryons \(p, n, \Lambda, \Sigma^{0, \pm}, \Xi^{0, -}, \Omega^-\) 以及 anti-baryons
++ resonance states
++ ...
+
+** 坐标系统
++ 笛卡尔坐标系 (Cartesian corrdinate system), x 正方向为地磁 N 极 (指北),
+  y 正方向为西, z 正方向向上 (默认水平面, \(49^{\circ} N, 8^{\circ} E\)).
+
+  地磁场随坐标原点相关.
++ 粒子轨迹通过其动量矢量和坐标轴之间的关系来描述
+
+** 大气参数
+对于一般入射粒子, CORSIKA 将大气模型看作是均匀模型 (flat).
+
+对于接近水平入射的情况 (\(\theta \geq 75^{\circ}\), 认为 \(\theta = 0\)), 考虑如下分段大气模型:
+
+\[T(h) = a_i + b_i e^{-h/c_i}, i = 1, \cdots, 4\]
+\[T(h) = a_5 - b_5 \frac{h}{c_5}\]
+
+其中 \(T(h)\) 为大气 mass overburden (在 \(h\) 高度上方的大气质量).
+是一个分段函数 (\(i = 1, \cdots, 5\)), 且在最后一段 (\(i = 5\)) \(h = 112.8 \mathrm{km}\) 处为零.
+
+CORSIKA 会将 first interaction 的位置记为 \((0, 0, z_0)\).
+
+注: 这里的 flat 应该不是指均匀大气, 而是忽略大气距离和粒子入射角度关系的,
+认为大气距离就是进入深度的平直 (flat) 的意思?
+
+** 随机数生成器
+...
+
+* Chapter 3: Particle Tracking
+在广延大气簇射的过程中, 粒子两次相互作用的过程中需要更新其时空信息和能量信息.
++ 对于带电粒子和光子, 其主要的过程由 EGS4 来描述:
+  + 其能量主要通过电离过程 (电中性粒子不参与) 损失能量
+  + 但是因为 \(\mu^{\pm}\) 的穿透深度很大, 所以电离过程对于带电强子 (charged hardon) 会被忽略
+  + 所有的带电粒子都会在地球磁场作用下偏折
++ 所有粒子的时间信息都是通过相同的方式进行处理的
++ 在输出文件中将会包含空间, 动量, 时间的坐标信息 (以及观测平面的信息)
+
+** 电离能损 (Ionization energy loss)
+Bethe-Bloch 公式:
+
+\[\mathrm{d} E_i = \frac{\lambda z^2}{\beta^2} \kappa_1 (\ln (\gamma^2 - 1) - \beta^2 + \kappa_2)\]
+
+** 多重库伦散射 (Coulomb multiple scattering)
+这里的近似如下:
++ 因为被撞的粒子质量相比被散射的粒子质量更大, 所以近似认为是只改变方向,
+  不改变能量.
+
+  #+begin_quote
+  As these nuclei are generally much more massive than the scattered particles,
+  the direction of flight might be altered, but not the energy.
+  #+end_quote
++ CORSIKA 仅处理对 \(\mu\) 的多重库伦散射且在每一次 track step (仿真步数) 中,
+  仅认为在 tracking distance 中间发生一次.
+
+  #+begin_quote
+  In CORSIKA the process of Coulomb multiple scattering is considered only for
+  muons and only once for each tracking step in the middle of the tracking
+  distance.
+  #+end_quote
+  + 角分布通过 Moliere 公式得到 (或者通过高斯函数近似),
+    对于高斯函数近似的结果, 约有 \(2\%\) 的大角度散射的实际发生概率会比高斯函数概率更高.
+  + 散射角度选择的代码来自 GEANT4
++ 对重粒子, 散射过程可以忽略 (not important)
++ 对电子的多重散射在 EGS4 过程中会更加细致地按照 Moliere 公式进行处理
+
+*** Moliere scattering
+*** Plural Coulomb Scattering
+*** Gaussian Approximation
+
+** 地磁场偏转
+角度上的偏转 \(\alpha\) 近似有公式:
+
+\[\alpha \approx l Z \frac{\boldsymbol{p} \times \boldsymbol{B}}{p^2}\]
+
+** 飞行时间
+飞行时间的估计近似有公式:
+
+\[\mathrm{d} t = \frac{l}{c \beta_{\mathrm{ave}}}\]
+
+其中 \(\beta_{\mathrm{ave}}\) 为平均粒子速度.
+
+** Longitudinal 演化
+
+** Thin sampling
+对于能量较大的原初粒子模拟, Monte Carlo 程序速度会稍微比较慢一些.
+解决的办法就是通过 thin 的方法, 通过消元 (variance reduction) 来加速计算.
+
+* Chapter 4: 平均自由程 Mean free path
+* Chapter 5: 强子相互作用 Hadronic interactions
+CORSIKA 中的强子相互作用模型根据反应能量进行区分:
++ 高能量:
+  + VENUS
+  + QGSJET
+  + DPMJET
+  + SIBYLL
+  + HDPM
++ 低能量: (below transition energies)
+  + GHEISHA (来自 GEANT3, transition energy \(12 \mathrm{GeV}\))
+  + ISOBAR (transition energy \(10 \mathrm{GeV}\))
+
+** 高能量强子相互作用模型
+*** VENUS
+VENUS (Very Energetic NUclear Scattering, 直译就是能量很高的核散射模型)
+主要用于处理 核子-核子 (nucleon-nucleon), 核子-原子核 (nucleon-nucleus),
+原子核-原子核 (nucleus-nucleus) 在非常高能量 (ultrarelativistic, 极强相对论)
+下的散射.
+
+*** QGSJET
+QGSJET (Quark Gluon String model with JETs, 直译就是带 JET 的夸克胶子弦模型).
+是对 QGS 模型的一个拓展.
+
+#+begin_html
+<details><summary>JET</summary>
+#+end_html
+#+begin_quote
+A jet is a narrow cone of hadrons and other particles produced by
+the hadronization of a quark or gluon in a particle physics or
+heavy ion experiment.
+#+end_quote
+
+22大概感觉就是在粒子实验里面, 向外会产生的喷流.
+
+#+begin_html
+</details>
+#+end_html
+
+*** DPMJET
+DPMJET (Dual Parton Model with JETs, 直译就是带 JET 的部分子模型).
+
+*** SIBYLL
+
+*** HDPM
+
+** 低能量强子相互作用模型
+*** GHEISHA
+
+*** ISOBAR
+
+* Chapter 6: Particle decays
+* Chapter 7:

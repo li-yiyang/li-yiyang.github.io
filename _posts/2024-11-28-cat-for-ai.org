@@ -1,0 +1,1214 @@
+:PROPERTIES:
+:header-args:dot: :noweb yes :eval yes
+:END:
+#+title: [Notes] Cat for AI
+#+date: 2024-12-14
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: reading
+* About
+这是一个 [[https://cats.for.ai/program/][Categories for AI]] 的快速阅读笔记,
+目标是写一个简单的实现以检验我自己真的学会了.
+
+注: 为了快速了解, 我没有选择看视频而是看 Slides
+与对应的 paper. 可能会有部分内容有缺漏或者不正确.
+
+免责声明: 不是数学系的, 也不是计算机系的,
+所以数学证明或者相关的部分讲究一个差不多得了和一眼 obvious,
+计算机部分讲究一个能跑就行别问太多.
+
+* 全文省流版
+1. Theory
+   + Category = Object + Morphism \(\rightarrow\) 提供高层的抽象
+   + Fuctor: Cat \(\rightarrow\) Cat
+   + Monoidal: abstract for parallel process
+2.
+3.
+
+* Essential Building Blocks
+** Category Therory
+省流版:
+1. 范畴 = 对象 + 对象间的映射关系 (morphism)
+
+   *四要素*: [identity, compose, id compose, (h * (g * f)) = (h * g) * f]
+   + 不同种类的 object
+     + initial object =I -> {a1, a2, a3}=
+     + terminal object ={a1, a2, a3} -> T=
+   + 不同种类的 morphism
+     + epimorphism (满射)
+     + monomorphism (单射)
+2. 函子: 范畴间的映射
+
+#+begin_html
+<details><summary>小节</summary>
+#+end_html
+哦, 对了, 这学期开始的时候貌似还想要​[[{{ site.github.url }}/reading/basic-category-theory/][读点范畴论的数学书]]?
+虽然最后鸽了... 不过这就当作我已经差不多读完了范畴论的书了吧.
+#+begin_html
+</details>
+#+end_html
+
+*** Category = Objects + Morphisms
+b首先是一个范畴论的快速入门?
+
+**** Category
++ *Definition*: a category is a /universe/ of *objects*, and *morphisms* between them,
+  s.t.:
+
+  所谓的​_范畴_​包含了​*对象*​以及对象间的​*映射(态射)*​关系, 其满足:
+  + \(\forall A\) (\(A\) is an object),
+    there is a unique *identity* morphism \(\mathrm{id}_A : A \rightarrow A\)
+  + \(\forall f : A \rightarrow B, g : B \rightarrow C\) (\(f\) and \(g\) is morphism),
+    there is a *composition* \(g \circ f : A \rightarrow C\)
+  + \(\forall f : A \rightarrow B\),
+    it holds that \(\mathrm{id}_B \circ f = f \circ \mathrm{id}_A = f\)
+  + \(\forall f, g, h\),
+    we have \(h \circ (g \circ f) = (h \circ g) \circ f\) (结合律)
+
+  #+begin_html
+  <details><summary>不正确的简单解释</summary>
+  #+end_html
+  考虑这样的一个有向图:
+
+  #+name: dirgraph-of-category
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/digraph-of-category.svg
+    digraph {
+      <<dot-setup>>
+      A -> B [label="f"];
+      B -> C [label="g", constraint=false];
+      A -> C [label="h = f ○ g"];
+      A -> A [label=<id<sub>A</sub>>];
+      B -> B [label=<id<sub>B</sub>>];
+      C -> C [label=<id<sub>C</sub>>];
+    }
+  #+end_src
+
+  #+RESULTS: dirgraph-of-category
+  [[file:../_img/cat-for-ai/digraph-of-category.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/digraph-of-category.svg]]
+
+  + 所有的节点都有从自己出发回到自己的通路
+  + 若从一个节点出发可以到达另一个节点, 那么这两个节点就该被连在一起
+  #+begin_html
+  </details>
+  #+end_html
+
+了解, 咱研究的是对象间的关系而非对象本身.
+
++ *Definition*: the collection of morphisms between \(A\) and \(B\)
+  is often denoted \(\mathrm{Hom}(A, B)\) (read as _home-set_).
++ 通常使用交换图 (commutative diagrams) 描述
++ 研究的是结构的关系 (connections) 而非对象的性质 (do not assume knowledge
+  of what's in the objects)
++ *Definition*: the /opposite category/ \(C^{\mathrm{op}}\) for a given category \(C\) is:
+  + objects 相同
+  + \(\forall f : A \rightarrow B\) in \(C\), \(\exists f : B \rightarrow A\) in \(C^{\mathrm{op}}\)
+  + \(\forall g \circ f : A \rightarrow C\) in \(C\), \(\exists f \circ g : C \rightarrow A\) in \(C^{\mathrm{op}}\)
+
+  相当于是交换图上把箭头全部反向
+
+#+begin_html
+<details><summary>Example: set category and some implementation</summary>
+#+end_html
++ objects are sets
++ morphisms are functions between them
++ *Definition*: a _unit_ is a set with one element, denoted as \(()\)
+  + \(f : A_i \rightarrow ()\)
+  + \(g_i : () \rightarrow B\) (使得 \(()\) 的元素映射到 \(B\) 上,
+    类似于 \(\{ g_i () \} \simeq B\)).
+
+为什么用 set (集合) 来作为例子? 因为熟, 并且范畴和对象无关,
+所以用集合来理解完全没问题.
+
+那么我们可以用程序来进行一个类比:
++ objects are values sets of different types, for example,
+  in CL:
+  + =(unsigned-byte 32)=
+  + =double-float=
+  + =integer=
+  + =null= (Note: =(class-of nil)= got me =common-lisp:null= in SBCL)
+  + ...
++ morphisms are functions on objects, for example:
+
+  #+name: lisp-lambda-function-as-morphisms
+  #+begin_src lisp
+    (lambda (x) x)                          ; id morphism
+  #+end_src
++ morphism composition
+
+  #+name: lisp-composition
+  #+begin_src lisp
+    (defun compose (f g)                    ; morphism compose
+      (lambda (&rest args)
+        (funcall f (apply g args))))
+  #+end_src
++ example from cats4progs *compose*:
+
+  #+name: lisp-compose-example
+  #+begin_src lisp
+    (str:words "Lucky Me")                  ; => ("Lucky" "Me")
+
+    (defun concat (strings)
+      (str:join "" strings))
+    (concat '("Lucky" "Me"))                ; => "LuckyMe"
+
+    (funcall (compose #'concat #'str:words) "Lucky Me") ; "LuckyMe"
+    ;; equal to (concat (str:words "Lucky Me"))
+  #+end_src
+
+  虽然可能看起来非常的奇怪, 但是在 CLOS 中的 =:after= 方法就类似这样的操作:
+
+  #+name: lisp-clos-after
+  #+begin_src lisp :eval no
+    (defmethod print-object :after ((hist histogram) stream)
+      (format stream "Hello World will be print afer"))
+  #+end_src
+
+  或者你也可以用 =:around= 或者 Python 中的 decorator 来模拟类似的操作:
+
+  #+name: python-mimic-compose
+  #+begin_src python
+    def compose_with(f):
+        def compose(g):
+            def h(x):
+                return f(g(x))
+            return h
+        return compose
+
+    def one_plus(x):
+        return x + 1
+
+    @compose_with(one_plus)
+    def two_times(x):
+        return x * 2
+
+    two_times(2)                    # => 5
+  #+end_src
+#+begin_html
+</details>
+#+end_html
+
+**** Objects
++ *Definition*: \(T\) is a *terminal object* in category \(C\) if,
+  \(\forall A \in C, \exists! f : A \rightarrow T\), aka., \(|Hom(A, T)| = 1\).
+  + unit set is a terminal object in set
++ *Definition*: \(I\) is an *initial object* in category \(C\) if,
+  \(\forall A \in C, \exists! f : I \rightarrow A\), aka., \(|Hom(I, A)| = 1\).
+  + \(\emptyset \rightarrow A\) is a initial object in set, though it is not callable
+
+#+begin_html
+<details><summary>不一定正确的理解</summary>
+#+end_html
+从图上看, 大概所有点都汇聚 (指向) \(T\), 从 \(I\) 指向所有点, 但是只有一条.
+
+#+name: digraph-terminal-initial
+#+begin_src dot :exports none :file ../_img/cat-for-ai/digraph-terminal-initial.svg
+  digraph {
+    <<dot-setup>>
+
+    subgraph cluster_terminal {
+      label="terminal object";
+      { A1, A2, A3 } -> T;
+      T  -> T;
+      A1 -> A1;
+      A2 -> A2;
+      A3 -> A3;
+      A1 [label=<A<sub>1</sub>>];
+      A2 [label=<A<sub>2</sub>>];
+      A3 [label=<A<sub>3</sub>>];
+    }
+
+    subgraph cluster_initial {
+      label="initial object";
+      I -> { B1, B2, B3 };
+      I  -> I;
+      B1 -> B1;
+      B2 -> B2;
+      B3 -> B3;
+      B1 [label=<B<sub>1</sub>>];
+      B2 [label=<B<sub>2</sub>>];
+      B3 [label=<B<sub>3</sub>>];
+    }
+
+    B2 -> A2 [style=invis];
+  }
+#+end_src
+
+#+RESULTS: digraph-terminal-initial
+[[file:../_img/cat-for-ai/digraph-terminal-initial.svg]]
+
+[[{{ site.github.url }}/_img/cat-for-ai/digraph-terminal-initial.svg]]
+
+#+begin_html
+</details>
+#+end_html
+
++ *Definition*: object operations
+  + cartesian product (笛卡尔积) \(A, B \in \boldsymbol{C}, A \times B \in \boldsymbol{C}\)
+    + projection morphisms \(p_A : A \times B \rightarrow A, p_B : A \times B \rightarrow B\)
+    + coproduct \(A \coprod B\)
+
+    #+name: cartesian-product
+    #+begin_src dot :exports none :file ../_img/cat-for-ai/cartesian-product.svg
+      digraph {
+        <<dot-setup>>
+        node [shape="plain"];
+        rankdir=TB;
+        subgraph cluster_projection {
+          label="projection";
+          pX -> pA [label=<f<sub>A</sub>>];
+          pX -> pB [label=<f<sub>B</sub>>];
+          pX -> pAxB [label="f", style="dashed"];
+          pAxB -> pA [label=<p<sub>A</sub>>];
+          pAxB -> pB [label=<p<sub>B</sub>>];
+          pAxB [label="A × B"];
+          pX [label="X"];
+          pA [label="A"];
+          pB [label="B"];
+        }
+
+        subgraph cluster_coproduct {
+          label="coproduct";
+          edge[dir="back"];
+          cX -> cA [label=<f<sub>A</sub>>];
+          cX -> cB [label=<f<sub>B</sub>>];
+          cX -> cAxB [label="f", style="dashed"];
+          cAxB -> cA [label=<p<sub>A</sub>>];
+          cAxB -> cB [label=<p<sub>B</sub>>];
+          cAxB [label="A ⨿ B"];
+          cX [label="X"];
+          cA [label="A"];
+          cB [label="B"];
+        }
+      }
+    #+end_src
+
+    #+RESULTS: cartesian-product
+    [[file:../_img/cat-for-ai/cartesian-product.svg]]
+
+    [[{{ site.github.url }}/_img/cat-for-ai/cartesian-product.svg]]
+  + exponential object: \(B^A\)
+
+    #+name: exponential-objects
+    #+begin_src dot :exports none :file ../_img/cat-for-ai/exponential-objects.svg
+      digraph {
+        <<dot-setup>>
+        node [shape="plain"];
+
+        subgraph cluster_complex {
+          label="compact morphism";
+          XxA -> X [label=<p<sub>X</sub>>];
+          XxA -> B [label="e"];
+          XxA -> A [label=<p<sub>A</sub>>];
+
+          X -> BA [label="u", style=dashed];
+          B -> BAxA [label="v", dir="back"];
+          A -> BAxA [label=<p<sub>A</sub>>, dir="back"];
+          BA -> BAxA [label=<p<sub>Bᴬ</sub>>, dir="back"];
+
+          BAxA [label=<B<sup>A</sup> × A>];
+          BA [label=<B<sup>A</sup>>];
+          XxA [label="X × A"];
+        }
+
+        subgraph cluster_simplified {
+          label="simplified"
+          sXxA  -> sBAxA [label=<u × id<sub>A</sub>>];
+          sBAxA -> sB    [label="v"];
+          sXxA  -> sB    [label="e", constraint=false];
+
+          sXxA  [label="X × A"];
+          sBAxA [label=<B<sup>A</sup> × A>];
+          sB    [label="B"];
+        }
+
+        BAxA -> sXxA [style="invis"];
+      }
+    #+end_src
+
+    #+RESULTS: exponential-objects
+    [[file:../_img/cat-for-ai/exponential-objects.svg]]
+
+    [[{{ site.github.url }}/_img/cat-for-ai/exponential-objects.svg]]
+
+    where:
+    + \(v : B^A \times A \rightarrow B\)
+    + \(e : X \times A \rightarrow B\)
+    + unique morphism \(u : X \rightarrow B^A\)
+
+    example:
+    + Currying: \(f : X \times Y \rightarrow Z, f_c : X \rightarrow Z^Y\)
+
+      #+name: lisp-currying
+      #+begin_src lisp :exports both :results verbatim
+        (defun curry-rest-args (fn &rest args)
+          "Curry arguments with `args'.
+
+        Example:
+
+             ##################
+             #         +---+  #
+         arg ----------*   |  #
+             #         | f *------ result
+             # args ---*   |  #
+             #         +---+  #
+             ##################
+          (curry-rest-args f args)
+        "
+          (lambda (arg) (apply fn (cons arg args))))
+
+        ;; Example:
+        (let ((1+ (curry-rest-args #'+ 1))
+              (2* (curry-rest-args #'* 2)))
+          (list (funcall 1+ 1) (funcall 1+ 2)
+                (funcall 2* 1) (funcall 2* 2)))
+      #+end_src
+
+      #+RESULTS: lisp-currying
+      : (2 3 2 4)
+
+      #+begin_html
+      <details><summary>一个想法</summary>
+      #+end_html
+      所以应该是学会了数学再去学应用, 还是学会了应用再去学数学呢?
+      虽然我现在总有一种: 感觉不如先学点理论对应的实物再去接触理论.
+      比如在看了 SDF ([[https://mitpress.mit.edu/9780262045490/software-design-for-flexibility/][Software Designed for Flexibility]]) 的第一章后,
+      感觉对这个 curry 完全可以理解, 反而是直接看理论的说明看不懂...
+
+      可是难道不看这个理论, 我会想到有这种联系?
+      #+begin_html
+      </details>
+      #+end_html
+
+#+begin_html
+<details><summary>Examples</summary>
+#+end_html
+object (type) 的运算 (example from cats4progs):
+
++ tuple types
+
+  能让我想到的大概就两个:
+  + list of values
+  + multiple-values
++ sum types
+
+  能让我想到的:
+  + class and superclasses
+
+    #+name: lisp-classes
+    #+begin_src lisp :eval no
+      (defclass b (a1 a2 a3) ())
+    #+end_src
+  + type declaration
+
+    #+name: lisp-declare
+    #+begin_src lisp :eval no
+      (lambda (x)
+        (declare ((or symbol list) x))
+        ;; ...
+        x)
+    #+end_src
+
+    当然也可以用:
+
+    #+name: lisp-deftype
+    #+begin_src lisp :eval no
+      (deftype basic-component ()
+        '(or symbol list))
+    #+end_src
+
+不过虽然在 [[http://brendanfong.com/programmingcats_files/cats4progs-DRAFT.pdf][Programming with Categories]] 这本书里面用的是 Haskell,
+并且感觉里面注重的内容是强调 Haskell 的 type 是 object.
+实际上范畴的概念应该可以用到各种地方吧.
+
++ exponential objects
+  + 如上, 是 =carray=
+  + 同理, 有 =uncarray=
+
+    #+name: lisp-uncarray
+    #+begin_src lisp
+      (defun uncarray (fn)
+        "uncarray : (x -> (y -> z)) -> ((x, y) -> z)"
+        (lambda (a b)
+          (funcall (funcall fn a) b)))
+    #+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+**** Morphisms
++ *Definition*: A morphism \(f : A \rightarrow B\) is an *epimorphism* (epic morphism) if,
+  for any morphism pair \(g, h : B \rightarrow C\):
+
+  \[(h \circ f = g \circ f) \Rightarrow (h = g) \]
++ *Definition*: A morphism \(f : A \rightarrow B\) is an *monomorphism* if,
+  for any morphism pair \(g, h : B \rightarrow C\):
+
+  \[(f \circ h = f \circ g) \Rightarrow (h = g)\]
++ \(C\) 和 \(C^{op}\) 中, epimorphism 和 monomorphism 互相对应
+
+  #+begin_html
+  <details><summary>set category 中的例子</summary>
+  #+end_html
+  + epimorphism 就是满射 (surjections)
+  + monomorphism 就是单射 (injections)
+
+  #+name: set-surjections-and-injections
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/set-surjections-and-injections.svg
+    digraph {
+      <<dot-setup>>
+
+      subgraph cluster_surjections {
+        label="surjections\n(epic morphism)";
+        subgraph cluster_SX1 {
+          label="X"; style="rounded";
+          node [shape="plain"];
+          X1 [label="1"];
+          X2 [label="2"];
+          X3 [label="3"];
+        }
+
+        subgraph cluster_SY1 {
+          label="Y"; style="rounded";
+          node [shape="plain"];
+          Y1 [label="1"];
+          Y2 [label="2"];
+        }
+
+        X1 -> Y1;
+        X2 -> Y1;
+        X3 -> Y2;
+      }
+
+      subgraph cluster_injections {
+        label="injections\n(monomorphism)";
+        subgraph cluster_SX2 {
+          label="X"; style="rounded";
+          node [shape="plain"];
+          Z1 [label="1"];
+          Z2 [label="2"];
+        }
+
+        subgraph cluster_SY2 {
+          label="Y"; style="rounded";
+          node [shape="plain"];
+          T1 [label="1"];
+          T2 [label="2"];
+          T3 [label="3"];
+        }
+
+        Z1 -> T1;
+        Z2 -> T3;
+      }
+
+      Y1 -> Z1 [style="invis"];
+    }
+  #+end_src
+
+  #+RESULTS: set-surjections-and-injections
+  [[file:../_img/cat-for-ai/set-surjections-and-injections.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/set-surjections-and-injections.svg]]
+
+  所以这里的操作就相当于是在用范畴论的方式把集合范畴中的满射和单射一般化.
+  但是需要注意的是, 因为范畴, 或者关系图中的箭头是单方向有向的,
+  所以并不显然存在 "反" 向的箭头, 即不存在显然的 "一一映射" (isomorphism)
+  #+begin_html
+  </details>
+  #+end_html
+
+**** Examples
+#+begin_html
+<details><summary>Examples</summary>
+#+end_html
++ *Definition*: category *Rel*
+  + objects \(\leftarrow\) *sets*
+  + morphisms \(\leftarrow\) *relations* between sets
+  + \(\Rightarrow\) initial and terminal objects is \(\emptyset\)
++ *Definition*: category *Groups*
++ *Definition*: category *Vect*
+  + objects are sets \(V\) (*linear space*) of vectors \(\boldsymbol{v}\)
+  + morphisms are *linear transformations* between these spaces
+#+begin_html
+</details>
+#+end_html
+
+*** Functors
++ *Definition*: \(F : \boldsymbol{C} \rightarrow \boldsymbol{D}\) maps objects in \(\boldsymbol{C}\) to \(\boldsymbol{D}\).
+  + \(F(\mathrm{id}_A) = \mathrm{id}_{F(A)}\)
+  + \(F(g \circ f) = F(g) \circ F(f)\)
+
+  #+name: category-functor
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/category-functor.svg
+    digraph {
+      <<dot-setup>>
+      subgraph cluster_C {
+        style="dashed";
+        bgcolor="#A6D0DDCC";
+        edge [constraint=false];
+        A -> C [label="g ○ f", constraint=true];
+        A -> B [label="f"];
+        C -> B [label="g", dir=back, constraint=true];
+        A -> A [label=<id<sub>A</sub>>];
+        B -> B [label=<id<sub>B</sub>>];
+        C -> C [label=<id<sub>C</sub>>];
+      }
+
+      subgraph cluster_D {
+        style="dashed";
+        bgcolor="#FF6969CC";
+        edge [constraint=false];
+        FA [label="F(A)"];
+        FB [label="F(B)"];
+        FC [label="F(C)"];
+        FA -> FC [label="F(g) ○ F(f) = F(f ○ g)", constraint=true];
+        FA -> FB [label="F(f)"];
+        FC -> FB [label="F(g)", dir=back, constraint=true];
+        FA -> FA [label=<id<sub>F(A)</sub> = F(id<sub>A</sub>)>];
+        FB -> FB [label=<id<sub>F(B)</sub> = F(id<sub>B</sub>)>];
+        FC -> FC [label=<id<sub>F(C)</sub> = F(id<sub>C</sub>)>];
+      }
+
+      edge[style=dashed, minlen=2,constraint=false];
+      A -> FA [label="F"];
+      B -> FB [label="F"];
+      C -> FC [label="F"];
+    }
+  #+end_src
+
+  #+RESULTS: category-functor
+  [[file:../_img/cat-for-ai/category-functor.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/category-functor.svg]]
+
+#+begin_html
+<details><summary>Example: implementation in CL (from cats4prog)</summary>
+#+end_html
++ a functor maps types to types, and functions to functions
+
+  #+name: lisp-functor-example
+  #+begin_src lisp :eval no
+    ;; F: f -> F(f)
+    (defmethod F ((f function)) ...)
+
+    ;; F: integer -> F(integer)
+    (defmethod F ((x integer)) ...)
+
+    ;; which is equal to
+    (defun functor (x)
+      (typecase x
+        (function  ...)
+        (integer   ...)
+        ;; else
+        (otherwise ...)))
+  #+end_src
+  + *Definition*: bifunctor \(\mathcal{C} \times \mathcal{C} \rightarrow \mathcal{C}\) (假设对于 \(\mathcal{C}\) 中所有的对象都存在 product)
+
+    #+name: lisp-bifunctor
+    #+begin_src lisp
+      (defun bifunctor (product f g)
+        "Bifunctor:
+
+          ###########
+       a --- f -+   #
+          #     |   #
+          # product --->
+          #     |   #
+       b --- g -+   #
+          ###########
+      "
+        (lambda (a b)
+          (funcall product (funcall f a) (funcall g b))))
+
+      ;; equal to (+ (1+ 2) (2* 3))
+      (funcall (bifunctor #'+ #'1+ #'2*) 2 3) ; => 9
+    #+end_src
+
+    一个简单的例子:
+
+    #+name: bifunctor-example
+    #+begin_src dot :exports none :file  ../_img/cat-for-ai/bifunctor-example.svg
+      digraph {
+        <<dot-setup>>
+        rankdir=TB;
+
+        subgraph cluster_A {
+          label="(bifunctor #'cons #'f #'g)";
+          axb [label="a × b\n(cons a b)"];
+          AxB [label="a' × b'\n(cons a' b')"];
+          a   [label="a"];
+          b   [label="b"];
+          A   [label="a'"];
+          B   [label="b'"];
+          axb -> a [label="car"];
+          axb -> b [label="cdr"];
+          axb -> AxB [label="(bifunctor #'cons #'f #'g)", style=dashed];
+          a -> A [label="f"];
+          b -> B [label="g"];
+          AxB -> A [label="car"];
+          AxB -> B [label="cdr"];
+        }
+
+        subgraph cluster_Symmetry {
+          label="Symmetry";
+          cxd [label="a × b"];
+          dxc [label="b × a"];
+          c   [label="a"];
+          d   [label="b"];
+          cxd -> dxc [label="γ", style=dashed];
+          cxd -> c   [label=<π<sub>1</sub>>];
+          cxd -> d   [label=<π<sub>2</sub>>];
+          dxc -> c   [label=<π<sub>1</sub>>];
+          dxc -> d   [label=<π<sub>2</sub>>];
+        }
+
+        subgraph cluster_associativity {
+          label="Associativity";
+          Jxkxl [label="a × (b × c)"];
+          jxkxL [label="(a × b) × c"];
+          JxK   [label="a × b"];
+          KxL   [label="b × c"];
+          L     [label="c"];
+
+          Jxkxl -> jxkxL [label="α", style=dashed];
+          Jxkxl -> KxL   [label=<π<sub>2</sub>>];
+          Jxkxl -> JxK   [label=<id<sub>a</sub> × π<sub>1</sub>>];
+          jxkxL -> JxK   [label=<π<sub>1</sub>>];
+          jxkxL -> L     [label=<π<sub>2</sub>>];
+          KxL   -> L     [label=<π<sub>2</sub>>];
+        }
+
+        subgraph cluster_unit1 {
+          label="unit isomorphisms";
+          x  [label="a"];
+          xx [label="a"];
+          u  [label="1"];
+          ux [label="1 × a"];
+          x  -> ux [label=<λ<sup>-1</sup>>, style=dashed];
+          ux -> u  [label=<π<sub>1</sub>>];
+          ux -> xx [label=<π<sub>2</sub>>];
+          x  -> xx [label=<id<sub>a</sub>>];
+          x  -> u  [label="!"];
+        }
+
+        subgraph cluster_unit2 {
+          label="unit isomorphisms";
+          X  [label="a"];
+          XX [label="a"];
+          U  [label="1"];
+          UX [label="a × 1"];
+          X  -> UX [label=<ρ<sup>-1</sup>>, style=dashed];
+          UX -> U  [label=<π<sub>2</sub>>];
+          UX -> XX [label=<π<sub>1</sub>>];
+          X  -> XX [label=<id<sub>a</sub>>];
+          X  -> U  [label="!"];
+        }
+      }
+    #+end_src
+
+    #+RESULTS: bifunctor-example
+    [[file:../_img/cat-for-ai/bifunctor-example.svg]]
+
+    [[{{ site.github.url }}/_img/cat-for-ai/bifunctor-example.svg]]
+  + *Definition*: profunctors
+#+begin_html
+</details>
+#+end_html
+
+** Message passing, categorically \(\leftarrow\) Graph Neural Networks are Dynamic Programmers
+注: 这部分是 [[https://docs.google.com/presentation/d/1z8QmCWsImykggqrHt6pGoQ2pW1_qfHwdX1BnqqpnCdM/][Slide]] + [[https://arxiv.org/abs/2203.15544][Paper]] 的组合, 不过感觉在
+
+省流版:
+1. monoidal categories 用于描述 parallel process
+
+* Categorical Dataflow
+该部分是 [[https://cats.for.ai/assets/slides/MonoidalCatsLensesOptics.pdf][Slide]] + [[https://arxiv.org/abs/2103.01931][Paper]] + [[https://github.com/statusfailed/numeric-optics-python/][Implementation]] 的组合,
+我应该会着重 implementation 的复刻.
+
+注: 虽然但是, 为了能够看懂这个 Monoidal 确实很花时间.
+
+** Monoidal Theory
+注: 我到现在还是不太理解 Monoidal 的这个概念.
+是一个局域闭包用于状态/变量值的传递/储存?
+
+*** Monoial
++ *Definition*: string diagrams as category
+  + objects: *strings*
+  + morphisms: *boxes*
+
+#+begin_html
+<details><summary>Example: but for programming</summary>
+#+end_html
+
++ 将 *string* 视为输入的参数
++ 将 *boxes* 视为对参数进行运算的函数
++ 哦, 你说多返回值? =(values v1 v2 v3)=
+
+其他的一些 string 的类型:
++ string 不会缠绕 (就算缠在一起也视为直接连接两点)
++ split strings
+
+  #+name: lisp-split-string
+  #+begin_src lisp :eval no
+    (defun split-call (f g)
+      "Split string.
+
+         ########
+         #      #
+         # +- f --- out
+     in ---+    #
+         # +- g --- out
+         ########
+    "
+      (lambda (in)
+        (values (funcall f in) (funcall g in))))
+
+    (funcall (split-call #'1+ #'2*) 2)      ; => 3, 4
+  #+end_src
++ end strings
+
+  #+name: lisp-end-string
+  #+begin_src lisp :eval no
+    (defun string-terminate (input)
+      "End string.
+
+      input ----[*]"
+      (declare (ignore input)))
+  #+end_src
++ start strings
+
+  #+begin_example
+    in 1 ------+
+               +----- out
+    in 2 ------+
+  #+end_example
+
+#+begin_html
+</details>
+#+end_html
+
++ *Definition*: a monodial category is a tuple
+
+  \[(\boldsymbol{C}, \otimes, \boldsymbol{1}, \alpha, \lambda, \rho)\]
+
+  consisting of
+  + category \(\boldsymbol{C}\)
+  + functor \(\otimes\)
+  + object \(\boldsymbol{1} \in \boldsymbol{C}\) called /monoidal unit/
+  + *associativity isomorphism* \(\alpha\) :
+
+    \[(X \otimes Y) \otimes Z \xrightarrow[\simeq]{\alpha_{X,Y,Z}} X \otimes (Y \otimes Z)\]
+  + *left/right unit isomorphism* \(\lambda_X, \rho_X\)
+
+    \[\boldsymbol{1} \otimes X \xrightarrow[\simeq]{\lambda_x} X \ \mathrm{and} \ X \otimes \boldsymbol{1} \xrightarrow[\simeq]{\rho_X} X\]
+
+  s.t.:
+  + *Unity Axioms*:
+
+    #+name: monadial-unity-diagram
+    #+begin_src dot :exports none :file ../_img/cat-for-ai/unity-aximons.svg
+      digraph {
+        <<dot-setup>>
+        node [shape=plain];
+
+        Xx1xy [label="(X ⊗ 1) ⊗ Y"]
+        xx1xY [label="X ⊗ (1 ⊗ Y)"];
+        XxY1  [label="X ⊗ Y"];
+        XxY2  [label="X ⊗ Y"];
+
+        XxY1  -> XxY2  [dir=none,<<dot-double-arrow>>];
+        Xx1xy -> xx1xY [label=<α<sub>X, 1, Y</sub>>];
+
+        edge [constraint=false];
+        Xx1xy -> XxY1 [label=<ρ<sub>X</sub> ⊗ Y>];
+        xx1xY -> XxY2 [label=<X ⊗ λ<sub>X</sub>>];
+      }
+    #+end_src
+
+    #+RESULTS: monadial-unity-diagram
+    [[file:../_img/cat-for-ai/unity-aximons.svg]]
+
+    [[{{ site.github.url }}/_img/cat-for-ai/unity-aximons.svg]]
+
+    Note that \(\lambda_{\boldsymbol{1}} = \rho_{\boldsymbol{1}} : \boldsymbol{1} \otimes \boldsymbol{1} \xrightarrow{\simeq} \boldsymbol{1}\).
+
+    #+begin_html
+    <details><summary>Examples</summary>
+    #+end_html
+
+    一些图示:
+    + \((X \otimes Y) \otimes W \xrightarrow{f \otimes \boldsymbol{1}_W} Z \otimes W \xrightarrow{g} M\)
+
+      #+name: moncat-example
+      #+begin_src dot :exports none :file ../_img/cat-for-ai/moncat-example.svg
+        digraph {
+          <<dot-setup>>
+          node [shape=point];
+          in_x, in_y, in_w, out;
+
+          node [shape=rect];
+          f [label="f"];
+          g [label="g"];
+          in_x -> f [label="x"];
+          in_y -> f [label="y"];
+          f    -> g [label="Z"];
+          in_w -> g [label="W"];
+          g    -> out [label="M"];
+
+          edge [constraint=false, style=invis];
+          in_x -> in_y;
+          in_y -> in_w;
+        }
+      #+end_src
+
+      #+RESULTS: moncat-example
+      [[file:../_img/cat-for-ai/moncat-example.svg]]
+
+      [[{{ site.github.url }}/_img/cat-for-ai/moncat-example.svg]]
+    + \((f \circ g) \otimes (h \circ i) = (f \otimes h) \circ (g \otimes i)\)
+
+      #+name: moncat-is-functor
+      #+begin_src dot :exports none :file ../_img/cat-for-ai/moncat-is-functor.svg
+        digraph {
+          <<dot-setup>>
+          in1, in2, out1, out2 [shape=point];
+          node [shape=rect];
+          in2 -> h  [label="D"];
+          h -> i    [label="E"];
+          i -> out2 [label="F"];
+          in1 -> f  [label="A"];
+          f -> g    [label="B"];
+          g -> out1 [label="C"];
+        }
+      #+end_src
+
+      #+RESULTS: moncat-is-functor
+      [[file:../_img/cat-for-ai/moncat-is-functor.svg]]
+
+      [[{{ site.github.url }}/_img/cat-for-ai/moncat-is-functor.svg]]
+
+    #+begin_html
+    </details>
+    #+end_html
+  + *Pentagon Axiom*:
+
+    #+name: pentagon-diagram
+    #+begin_src dot :exports none :file ../_img/cat-for-ai/pentagon-digram.svg
+      digraph {
+        <<dot-setup>>
+        rankdir=TB;
+        nodesep=1.5;
+
+        node [shape=plain];
+        n1  [label="(W ⊗ X) ⊗ (Y ⊗ Z)"];
+        n21 [label="((W ⊗ X) ⊗ Y) ⊗ Z"];
+        n22 [label="W ⊗ (X ⊗ (Y ⊗ Z))"];
+        n31 [label="(W ⊗ (X ⊗ Y)) ⊗ Z"];
+        n32 [label="W ⊗ ((X ⊗ Y) ⊗ Z)"];
+
+        n1  -> n21 [dir=back, label=<α<sub>W ⊗ X, Y, Z</sub>>];
+        n1  -> n22 [label=<α<sub>W, X, Y ⊗ Z</sub>>];
+        n21 -> n31 [label=<α<sub>W, X, Y</sub> ⊗ Z>];
+        n22 -> n32 [dir=back, label=<W ⊗ α<sub>X, Y, Z</sub>>];
+        n31 -> n32 [constraint=false, label=<α<sub>W, X ⊗ Y, Z</sub>>];
+      }
+    #+end_src
+
+    #+RESULTS: pentagon-diagram
+    [[file:../_img/cat-for-ai/pentagon-digram.svg]]
+
+    [[{{ site.github.url }}/_img/cat-for-ai/pentagon-digram.svg]]
++ *Definition*: comonoid
+
+#+begin_html
+<details><summary>注 & Examples Graphs</summary>
+#+end_html
+
+这部分我感觉比 cat4prog 写得要好. 感觉学习 Haskell 的同学真难啊,
+既要学一门新语言的语法, 还要学范畴论, 真是不容易啊 (笑).
+
+Examples:
++ *List*
+  + \(\otimes : \mathrm{list} \times \mathrm{list} \rightarrow \mathrm{list}\) =append=
+  + \(\boldsymbol{1} : \mathrm{list}\) =()=
++ \((\mathbb{R}, +, 0)\) and \((\mathbb{R}, \times, 1)\) (实数域上的加法和乘法)
++ \((\mathbb{B}, \wedge, \mathrm{TRUE})\) (布尔代数)
++ \((\mathrm{Euc}, \times, \boldsymbol{1})\) (Euclid 空间) \(\mathbb{R}^N \times \mathbb{R}^K \xrightarrow{f \times g} \mathbb{R}^M \times \mathbb{R}^L\)
++ 范畴 FinStoch
+  + objects: finite sets
+  + morphisms: Markov kernels
+  + \((\mathrm{FinStoch}, \otimes, \boldsymbol{1})\)
+
+#+begin_html
+</details>
+#+end_html
+
+*** Lens Category
++ *Definition*: the category \(\mathrm{Len}(\mathcal{C})\)
+
+  #+name: lens-graph
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/lens-graph.svg
+    digraph {
+      <<dot-setup>>
+      "A", "B", "A'", "B'" [shape=plain];
+      subgraph cluster_join {
+        join [shape=point];
+        get  [shape=rect];
+        join -> get;
+      }
+      "A" -> join;
+      get -> "B";
+      put [shape=rect];
+      join -> put [constraint=false];
+      edge [dir=back];
+      "A'" -> put -> "B'";
+    }
+  #+end_src
+
+  #+RESULTS: lens-graph
+  [[file:../_img/cat-for-ai/lens-graph.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/lens-graph.svg]]
+
+  + *objects*: pairs \(\left( \begin{matrix}A \\ A'\end{matrix} \right)\) of objects in \(\mathcal{C}\)
+  + *morphism*: \(\left( \begin{matrix}A \\ A'\end{matrix} \right) \rightarrow \left( \begin{matrix}B \\ B'\end{matrix} \right)\) is a pair \(\left( \mathrm{view}, \mathrm{upd} \right)\) where:
+    \(\begin{matrix} \mathrm{view} : A \rightarrow B \\ \mathrm{and} \\ \mathrm{upd} : A \times B' \rightarrow A' \end{matrix}\) are morphisms in \(\mathcal{C}\).
+
+  将其记为 \(\left( \begin{matrix}A \\ A'\end{matrix} \right) \xrightarrow{\mathrm{view}, \mathrm{upd}} \left( \begin{matrix}B \\ B'\end{matrix} \right)\).
+
+  + *compositiion*: \(\left( \left( \begin{matrix}A \\ A'\end{matrix} \right) \xrightarrow{(v_1, u_1)} \left( \begin{matrix}B \\ B'\end{matrix} \right) \right) \circ \left( \left( \begin{matrix}B \\ B'\end{matrix} \right) \xrightarrow{(v_2, u_2)} \left( \begin{matrix}C \\ C'\end{matrix} \right) \right) = \left( \begin{matrix}A \\ A'\end{matrix} \right) \xrightarrow{(v, u)} \left( \begin{matrix}C \\ C'\end{matrix} \right)\)
+    + \(v = v_2 \circ v_1\)
+    + \(u(a, c) = u_1(a, u_2(v_1(a), c))\)
++ Lens category is a category where morphisms have a forward
+  and a backward component
+
+  差不多的感觉就是 Lens 包含前向和反向.
+
+好了, 理论到此为止, 来点实际应用的:
+
+X as Lens
++ *Derivatives* as Lens: \(\left( \begin{matrix} \mathbb{R}^2 \\ \mathbb{R}^2 \end{matrix} \right) \xrightarrow{(f, \nabla f)} \left( \begin{matrix} \mathbb{R} \\ \mathbb{R} \end{matrix} \right)\)
+  + *Chain Rule* as Lens composition
+  + *Backprop*: functor \(\mathrm{Euc} \rightarrow \mathrm{Lens}(\mathrm{Euc})\)
++ *Optimisers* as Lens: \(\left( \begin{matrix}\mathbb{R}^p \times \mathbb{R}^p \\ \mathbb{R}^p \times \mathbb{R}^p\end{matrix} \right) \xrightarrow{(v, u)} \left( \begin{matrix}\mathbb{R}^p \\ \mathbb{R}^p\end{matrix} \right)\)
+  + Gradient Descent
+    + \(v(w) = w\)
+    + \(u(w, \Delta w) = w - \alpha \Delta w\)
+  + Momentum
+    + \(\mathrm{view}(v_{t-1}, w_t) = w_t - \gamma v_{t - 1}\)
+    + \(\mathrm{upd}(v_{t-1}, w_t, \Delta w_t) = (v_t, w_{t+1})\)
+    + \(v_t = \gamma v_{t-1} + d \Delta w_t\)
+    + \(w_{t+1} = w_t - v_t\)
+
+#+begin_html
+<details><summary>If you want to implement Lens</summary>
+#+end_html
+
+感觉实现 Lens 并不是一个非常困难的事情, 虽然理论听起来很复杂,
+但是实现起来竟然异常的简单:
+
+#+begin_src lisp
+  (defclass lens ()
+    ((view :initarg :view
+           :initform (error "Missing :view")
+           :documentation "view : A → B")
+     (upd  :initarg :upd
+           :initform (error "Missing `:upd'")
+           :documentation "upd : A × B' → A'"))
+    (:documentation
+     "Monomorphic lenses, stored as a pair of maps. "))
+
+  (defun lens (view upd)
+    "Make a `lens' object. "
+    (declare (function view upd))
+    (make-instance 'lens :view view :upd upd))
+
+  (defmacro let-lens (bindings &body body)
+    "Bindings like (view upd lens). "
+    `(let ,(loop for (v u lens) in bindings
+                 collect `(,v (slot-value ,lens 'view))
+                 collect `(,u (slot-value ,lens 'upd)))
+       ,@body))
+
+  ;; f ○ g = f(g(x))
+  (defmethod compose ((f function) (g function))
+    (lambda (x) (funcall f (funcall g x))))
+
+  ;; Lens1 ○ Lens2 : v = v2 ○ v1; u(a, c') = u1(a, u2(v1(a), c))
+  (defmethod compose ((lens1 lens) (lens2 lens))
+    (let-lens ((v1 u1 lens1) (v2 u2 lens2))
+      (lens (compose v2 v1)
+            (lambda (x y) (funcall u1 x (funcall u2 (funcall v1 x) y))))))
+
+  (defmethod call ((lens lens) pair)
+    (let-lens ((v u lens))
+      (let ((a (car pair))
+            (b (cdr pair)))
+        (cons (funcall v a)
+              (funcall u a b)))))
+#+end_src
+
++ Derivatives as lens
+
+  #+name: derivatives-as-lens
+  #+begin_src lisp
+    (flet ((f (vec)
+             (apply (lambda (x1 x2) (+ (* 3 (* x1 x1)) (* 7 x2))) vec))
+           (df (vec dy)
+             (apply (lambda (x1 x2) (declare (ignore x2))
+                      (list (* 6 x1 dy) (* 7 dy)))
+                    vec)))
+      (call (lens #'f #'df) (cons (list 1 2) 0.1))) ; (17 . (0.7 0.1))
+  #+end_src
++ Chain rule as lens composition
+
+  #+name: chain-rule-lens-composition
+  #+begin_src lisp
+    (flet ((f (vec)
+             (apply (lambda (x1 x2) (+ (* 3 (* x1 x1)) (* 7 x2))) vec))
+           (df (vec dy)
+             (apply (lambda (x1 x2) (declare (ignore x2))
+                      (list (* 6 x1 dy) (* 7 dy)))
+                    vec))
+           (dcos (x dy)
+             (* (sin x) dy)))
+      (call (compose (lens #'f   #'df)
+                     (lens #'cos #'dcos))
+            (cons (list 1 2) 0.1))) ; (-0.27516335 . (-0.5768385 -0.6729783))
+  #+end_src
++ 即想要构造一个 backprop, 只需要构造:
+
+  #+name: backprop-and-lens
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/backprop-and-lens.svg
+    digraph {
+      <<dot-setup>>
+      node [shape=plain]; nodesep=0.5;
+
+      Euc -> "Lens(Euc)";
+
+      Rn [label=<R<sup>N</sup>>];
+      Rm [label=<R<sup>M</sup>>];
+      RnRn [label=<(R<sup>N</sup>, R<sup>N</sup>)>];
+      RmRm [label=<(R<sup>M</sup>, R<sup>M</sup>)>];
+
+      Rn -> RnRn;
+      Rm -> RmRm;
+
+      edge [constraint=false];
+      Euc -> Rn [style=invis,minlen=0,len=0.1];
+      "Lens(Euc)" -> RnRn [style=invis,minlen=0,len=0.1];
+      Rn -> Rm [label="f"];
+      RnRn -> RmRm [label="(f, ∇f)"];
+    }
+  #+end_src
+
+  #+RESULTS: backprop-and-lens
+  [[file:../_img/cat-for-ai/backprop-and-lens.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/backprop-and-lens.svg]]
++ Optimisers as lenses
+
+注: 但是我并不觉得这个的实现做得比较好, 之后还是得想点方法来重新实现一下.
+不过这种写法你完全可以直接迁移到其他编程语言, 比如 =C= 语言中去:
+
+#+begin_src c
+  typedef struct lens {
+    void* (*view) (void *arg);
+    void* (*upd)  (void *arg);
+  } Lens;
+#+end_src
+
+虽然感觉会很麻烦就是了.
+
+注: 这里的实现并不好用, 实际使用的实现见 [[https://github.com/li-yiyang/cat4ai][cat4ai]].
+
+#+begin_html
+</details>
+#+end_html
+
+*** Optics Category
++ *Definition*: the category \(\mathrm{Optic}(\mathcal{C})\)
+  + *objects*: pairs \(\left( \begin{matrix}A \\ A'\end{matrix} \right)\) of objects in \(\mathcal{C}\)
+  + *morphism*: \(\left( \begin{matrix}A \\ A'\end{matrix} \right) \xrightarrow{(M, f, l)} \left( \begin{matrix}B \\ B'\end{matrix} \right)\)
+    + \(M \in \mathcal{C}\) object of \(\mathcal{C}\)
+    + \(f : A \rightarrow M \otimes B\) morphisms
+    + \(l : M \otimes B' \rightarrow A'\) morphisms
+  + *compose*:
+    + \((M_1, f_1, l_1) \circ (M_2, f_2, l_2) \Rightarrow (M_1 \otimes M_2, f_1 \circ (f_2 \otimes M), (M \otimes l_2) \circ l_1)\)
++ *WHY* Optics?
+  + probabilitst bidrectional transformations
+  + bidirectional transformations with side-effect
+  + bidirectional transformations that operate on containers
++ Examples
+
+** Categorical Foundations of Gradient-Based Learning
+接下来的具体的代码实现可以参考 [[https://github.com/li-yiyang/cat4ai][cat4ai]] 仓库.
+
++ *Definition*: *Parametrized Category* =para=
+
+  #+name: para-cat-plot
+  #+begin_src dot :exports none :file ../_img/cat-for-ai/para-cat-plot.svg
+    digraph {
+      <<dot-setup>>
+      label="composition of Para(C)"
+      f, "f'" [shape=rect];
+      node [shape=plain];
+
+      P -> f [constraint=false];
+      A -> f;
+      f -> "f'" [label="B"];
+      "f'" -> C;
+      Q -> "f'" [constraint=false];
+    }
+  #+end_src
+
+  #+RESULTS: para-cat-plot
+  [[file:../_img/cat-for-ai/para-cat-plot.svg]]
+
+  [[{{ site.github.url }}/_img/cat-for-ai/para-cat-plot.svg]]
++ *Definition*: *Lenses Category* =lens=
+
+
++ *Definition*: *Parametric Lenses Category* =param-lens=
+
+* 其他吐槽
++ 理论理论大好き?
+
+  在导师点评的时候我意识到了这样的一个 "理论之所以学起来痛苦" 原因.
+  大家想要知道/学的东西是那种非常具体的东西. 比如说,
+  有人说自己搞出了万物理论, 或者做了很牛逼的东西.
+
+  但是在向你介绍的时候, 每快要逼近这个最终的结论的时候, 就要说一句:
+  "等等, 先让我介绍一下原理/前提". 哇, 这种也太痛苦了...
+
+  这简直就是拼多多的再砍一刀啊. 这么搞很容易就会让大家失去兴趣了...
+  要是有能够将理论和实践结合起来的方法就好了. 比如讲完实例后,
+  再说: "欸, 其实我们刚刚做的东西的背后是这个理论. ", 然后再举几个例子,
+  最后再一般化...
+
+  但是感觉要求很高... 而且感觉, 尤其是数学方面折腾的例子,
+  感觉和 "应用" 和 "事例" 关系并不大. 真是难呢.
+
+* File Configures :noexport:
+** Graphviz Configures
+#+name: dot-setup
+#+begin_src dot
+  rankdir=LR;
+  bgcolor="transparent";
+  fontname="Arial";
+  color="#888888";
+  node [shape="circle", fontname="Arial", color="#888888"];
+  edge [fontname="Arial", color="#888888"];
+#+end_src
+
+#+name: dot-double-arrow
+#+begin_src dot
+  color="#888888:invis:#888888"
+#+end_src
+
+感觉自己纯手工敲这些 Graphviz 的绘图代码实在是太蠢了,
+不过感觉自己以后应该也用不上画交换图这种技能,
+这里暂时就忍了.
