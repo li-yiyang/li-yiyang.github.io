@@ -1,0 +1,70 @@
+#+title: QEMU Tutorial by Examples
+#+date: 2024-12-19
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: ctf
+* About
+这是一个给 CTF RE 用的快速 QEMU 入门, 注重的是实用性,
+和原理绝对没有任何关系, 假如文中有出现任何看起来像是原理解释的文字,
+那么全部都是我瞎编的 (我有自信保证我瞎编的 90% 都是有问题的).
+
+* Example 0: 安装 QEMU
+这部分估计要花很多时间, 毕竟配置环境很容易出现各种各样的问题.
+
++ macOS 或者 linux: 请使用你们在 [[https://ucas-ctf.github.io/posts/2024/0_VirtualMachine/how-to-use-shell][CTF 培训时候]] 学会的包管理器使用方法
+  + macOS
+
+    #+begin_src shell
+      brew install qemu
+    #+end_src
+  + linux (只是示意, 不一定对)
+
+    #+begin_src shell
+      sudo pacman -Syu qemu     # arch like
+      sudo apt-get install qemu # debian/ubuntu like
+      sudo dnf install qemu     # rocky/fedora like
+    #+end_src
++ windows or others: [[https://www.qemu.org/download/][Download QEMU]]
+
+* Example 1: run some OS
+** Example 1.1: Guix
++ [[https://guix.gnu.org/manual/en/html_node/Running-Guix-in-a-VM.html][Running Guix in VM]]
++ 请阅读, 下载并运行镜像
+
+#+begin_src shell
+  qemu-system-x86_64 \
+     -nic user,model=virtio-net-pci \
+     -enable-kvm -m 2048 \
+     -device virtio-blk,drive=myhd \
+     -drive if=none,file=guix-system-vm-image-1.4.0.x86_64-linux.qcow2,id=myhd
+#+end_src
+
+** Example 1.2: arch-boxes
++ [[https://github.com/archlinux/arch-boxes][arch-boxes]]
++ 请阅读, 下载并运行虚拟磁盘镜像
++ 需要改编 Example 1.1 中的命令
+
+* Example 2: install from scratch
+不妨思考一下如何使用 VMware, [[https://li-yiyang.github.io/ctf/untitled(2)/][UTM]], VBox 之类的虚拟机程序去虚拟自己的
+linux 系统:
++ CPU 架构
++ Drive 硬盘
++ Network 网络
++ Display 显示
+
+类似的, 我们可以有对 qemu 相同的操作来从零构建一个系统.
+(见 Example 3 来
+
+* Example 3: a real working example
+post: [[https://li-yiyang.github.io/lisp/opengenera2-on-macos-via-qemu/][Open Genera 2 on macOS via QEMU]]
+
+Repo: [[https://github.com/li-yiyang/qemu-opengenera][li-yiyang/qemu-opengenera]]
+
++ 基于 [[https://cloud-images.ubuntu.com][cloud-images]] (ubuntu) 进行构建
++ 一种自动构建虚拟机镜像的方法
++ 如何暴露虚拟机端口 (ssh forward, vnc server)
++ 一些简单的 linux +运维+ 操作
+
+Extra: 对于学有余力的同学, 可以玩玩看 Symbolics Genera.
+还是非常好玩的呢. (最近会出一个相关的介绍, 请祝我别鸽了就好)
