@@ -1,0 +1,158 @@
+#+title: Port SCIGRAPH and CL-PPCRE to Open Genera
+#+date: 2024-12-27
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+I was recently consider using Symbolics Open Genera
+as my second programming environment.
+
+Pros:
++ nice developing experience
++ can learn a lot from its design for building my future projects
+
+Cons:
++ missing some useful packages (for example, CL-PPCRE for regexp,
+  QuickLisp for package managing, ...)
++ toooooooooo much documentation (manual) to read (good, yet a
+  little difficult to read them all)
++ some protocol is bit old and not function well (NFSv2 and NFSv3,
+  which made me headache for days)
+
+But any way, I thought it was generally a charming experience.
+Right now, I've made OpenGenera running successfully within the
+[[https://github.com/li-yiyang/qemu-opengenera][QEMU]] and [[https://github.com/li-yiyang/genera-docker][Docker]] (little faulty due to NFSv2/3, documentation reading
+is not avaliable... ).
+
+The future route will be like:
+1. porting some existing Common Lisp library ([[https://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/lang/lisp/gui/clim/general/scigraph/0.html][SCIGRAPH]] and [[http://edicl.github.io/cl-ppcre/][CL-PPCRE]]
+   in this post) as Genera System
+2. build a RPC interface for distribute computation to host machine
+   for heavy computations (or I think I'll just copy the code from
+   Genera to SBCL and they could run nicely)
+3. some reverse engineering on =vbin=? (possibly, I am not sure if I'd
+   be able to do so)
+4. ... (if I'd be free)
+
+So here is how I port SCIGRAPH and CL-PPCRE:
+
+* SCIGRAPH
+Since it's designed with support for Genera, the portation is easy.
+So the process looks like this:
+1. add =scigraph.system= under =sys.cst/site=, with things like:
+
+   #+name: scigraph-system
+   #+begin_src lisp
+     ;;; -*- Mode: LISP; Syntax: Common-lisp; Package: USER; Base: 10; Lowercase: Yes -*-
+
+     (sct:set-system-source-file :scigraph "SYS:SCIGRAPH;SYSDCL")
+   #+end_src
+
+   this will tell Genera where to look for system definition file.
+   In this case, the file should be =sys.sct/scigraph/sysdcl.lisp=
+2. set the load package method at =sys.sct/scigraph/sysdcl.lisp=
+
+   maybe you could refer to =sys.sct/concordia/concordia.lisp= for
+   how to write =defsystem= to specify the system compoents.
+
+   #+name: scigraph-sysdcl
+   #+begin_src lisp
+     ;;; -*- Mode: LISP; Package: USER; Syntax: Common-Lisp; Base: 10 -*-
+
+     (in-package :user)
+
+     ;;; ...
+
+     (defsystem scigraph
+     	   (:pretty-name         "Scigraph"
+     	    :default-pathname    "SYS:SCIGRAPH;"
+     	    :source-category     :basic
+     	    :distribute-sources  T
+     	    :distribute-binaries NIL)
+       (:module components (scigraph-dwim scigraph-core)
+     	   (:type :system))
+       (:serial components))
+
+     (defsubsystem scigraph-dwim
+     	      (:pretty-name         "SciGraph DWIM"
+     	       :default-pathname    "SYS:SCIGRAPH;DWIM;"
+     	       :source-category     :basic
+     	       :distribute-sources  T
+     	       :distribute-binaries NIL)
+       (:serial
+         "package"
+         ;; ... load from load-dwim.lisp ...
+         ))
+
+     ;;; ...
+   #+end_src
+
+   the original system loading process is defined in =load-dwim.lisp=
+   and =load-scigraph.lisp=.
+
+   *In short*: to port a system to Genera, just rewrite the original
+   =load-*.lisp= to =sysdcl.lisp= to define a system in Genera.
+3. to load Scigraph, should =Load System CLIM=, =Load System Genera-CLIM=,
+   =Load System Postscript-CLIM=, =Load System CLX-CLIM= before =Load System Scigraph=.
+4. test with =(graph:make-demo-frame)= to see if loaded properly
+
+   [[{{ site.github.url }}/_img/lisp/misc/opengenera/scigraph-make-demo-frame.png]]
+
+Note: mostly working, but seemed to be a little buggy?
+
+Note: after I've done this, I found something like =dwim-system.lisp=
+and =scigraph-system.lisp=, I think which could be used as the porper
+loader of =sysdcl.lisp= instead. for example, maybe I could write
+=scigraph.system= like:
+
+#+name: new-scigraph
+#+begin_src lisp
+  (sct:set-system-source-file :scigraph "SYS:SCIGRAPH;DWIM;DWIM-SYSTEM")
+  (sct:set-system-source-file :scigraph "SYS:SCIGRAPH;SCIGRAPH;SCIGRAPH-SYSTEM")
+#+end_src
+
+But anyway, it works and I don't see urgency to use it...
+
+* CL-PPCRE
+Since OpenGenera doesn't support and has some feature missing? for example:
++ =(declare (fixnum ...))= will not be treated like =(declare (type fixnum ...))=
++ =(lambda ...)= will not be treated like =#'(lambda ...)= (in SBCL)
++ =(coerce ... 'simple-string)= will not work properly, so I changed them as
+  =(coerce ... 'string)= to make it compile pass...
+
+  not sure how this will affect the performance... and not sure if
+  need to change more...
+
+I think I have to change these codes to make it work on OpenGenera.
+Meanwhile, I thought it would be difficult to keep consistency with
+current CL-PPCRE version. (maybe you could call it in Chinese "魔改").
+
+Just test with Advent Of Code 2024 Day 3's problem:
+
+#+name: cl-ppcre-test
+#+begin_src lisp
+  ;; -*- Package: CL-PPCRE -*-
+
+  (let ((input "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))")
+        (sum   0))
+    (do-matches-as-strings (m "mul\\((\\d{1,3}),(\\d{1,3})\\)" input)
+      (let ((mul 1))
+        (do-matches-as-strings (d "\\d+" m) (setf mul (* mul (parse-integer d))))
+        (incf sum mul)))
+    sum) ; => 161
+#+end_src
+
+* Finally
+So, this two patches has now been ported into Symbolics OpenGenera ([[https://github.com/li-yiyang/genera-docker/commit/05e6f03562535e4df993a81173b0255c1beedc67][#05e6f03]] and [[https://github.com/li-yiyang/genera-docker/commit/66dc2c3f9f034b248d2a38d72f878ab983b07ae3][#66dc2c3]]).
+Though its shame to declaim, but I could tell there must be some hidden bugs
+since I'm still not a mature Lisp Programmer. Contributions and helps are welcomed.
+
+So, what to do next?
++ port or make some simple HTTP downloader package (maybe [[https://github.com/fukamachi/dexador][dexador]] or something else),
+  but this would be sure more difficult though
++ do some simple programming on CLIM (I was always curious about it, but the McCLIM
+  often fail to boot on my macOS)
++ try to fix *Document Examiner* and *NFSv3* (no clue)
++ RPC to host PC for heavy computation (maybe should base on TCP/IP)
+
