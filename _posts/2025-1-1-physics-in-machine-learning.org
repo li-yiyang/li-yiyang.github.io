@@ -1,0 +1,448 @@
+#+title: 机器学习中的物理 (预习? 复习)
+#+date: 2025-01-01
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* About
+这差不多是我对这学期物理学中的机器学习的一个 "复习" 笔记吧.
+虽然这学期完全没有任何的 "Coding", 抽象的高层概念太多的感觉...
+
+年轻人不讲武德, 来偷来骗我这个小孩子. 啪地一下上来就是一个条件概率,
+一个贝叶斯分布, 一个协方差, 我概统学得跟狗屎一样, 残念.
+
+吃了一套数理组合拳, 传统机器学习就自然应该点到为止, 我打开 Emacs
+准备写代码了. 老师笑了一下, 又是好几周的概率统计.
+
+本来传统机器学习到了这里都开始介绍算法和模型了,
+如果我要写代码的话, 这个时候再不济也得是一个线性分类器了.
+老师好像也知道这是门 "偏计算机的" 课程, 讲了点线性拟合
+(多项式函数的线性拟合), 讲了些梯度下降 (Gradient Descent),
+反传算法 (Dense Layer). 这些好像有些陌生, 但是也不是很难,
+没关系啊.
+
+然后怎么就是统计物理了. 什么 Ising 模型啊, 交叉熵, 联合分布,
+你们凝聚态真可怕... 我大意了没有闪. 年轻人真是不讲武德,
+这好吗? 这不好.
+
+注: 其实课还是上得挺好的, 感觉不适合没学过机器学习的人,
+更适合学过 (或者较精通) 机器学习, 想要用物理的视角重新梳理一遍机器学习的人.
+
+注: 时间不够了, 感觉自己学得很差, 没法自己写一套流畅通顺的代码.
+以后再想办法能否实现...
+
+注: 下面的代码是最后一节课给出的复习方向 (大概), 我重新整理了顺序,
+并结合我个人对机器学习的理解添加了衔接内容.
+
+* What do Machine Learning do?
+*Notation*: 真实世界的模型满足函数 \(F(x)\), 其中 \(x\) 为参数.
+
+*Notation*: 对真实世界的观测中存在随机噪声 \(y = N + F(x)\).
+
+*Notation*: 对真实世界的一组观测 (样本) 为 \(S = \{(x, y)\}\).
+
+*Definition*: 目标是通过构造带参数 \(\theta\) 的模型 \(f(x|\theta)\),
+从观测样本集 \(S\) 中拟合真实函数 \(f(x | \theta) \rightarrow F(x)\).
+
+*Notation*: 使用误差函数 \(L\) (loss function) 描述 \(f(x|\theta)\) 与 \(F(x)\)
+之间的接近程度, 误差越小, 则越接近.
+
+*Methodology*: 拟合过程变为对给定 \(S\), 以 \(\theta\) 为自变量的 \(L(\theta | S, F)\)
+最小化问题 (Optimization).
+
+* Variance of Models \(f(x|\theta)\)
+** Boltzmann Machine
+*Recall*: 生物神经元 (节点) 之间相互连接, 不同神经元 (节点)
+之间通过不同的权重 (weighted edge) 相互影响 (不同的能量函数, 激活函数),
+并改变自己的状态.
+
+*Recall*: MC Sampling ([[{{ site.github.url }}/learning/metropolis-hastings-algorithm/][Metropolis Hastings Algorithm]])
+
+*Programming Notes*:
++ 定义神经元为节点 \(N_i\), 神经元之间的相互影响为连接节点的边的权重 \(E_{ij}\),
+  即可以使用一个图表示系统 \(G = \{N_i, E_{ij}\}\)
+
+  *Notation*: 将神经元中的某几个节点定义为输入节点, 其余节点定义为隐藏节点.
++ 定义系统能量: \(E = - \left(\sum E_{ij} N_i N_j + \sum \theta_i N_i\right)\)
++ 对系统进行采样 (MC Simulation/退火算法), 使得达到 "热平衡" (能量最小)
++ 此时输出层的状态即为模型对于给定输入的输出
+
+#+name: boltzmann-machine-compute
+#+begin_src lisp
+  (defun boltzmann-machine-compute (model input)
+    (setf (visual-nodes-states model) input)
+    (mc-sampling-on model energy-function (all-nodes-states model))
+    (visual-nodes-states model))
+#+end_src
+
+*Definition*: 此时我们的模型的 \(f(x|\theta)\) 为:
++ \(f\): =(boltzmann-machine-compute model *)=
++ \(x\): =input=
++ \(\theta\): =(all-the-weight-of model)=
+
+*Definition*: 定义损失函数为对训练集的分布的 KL-divergence,
+则误差函数描述为:
+
+\[L(\theta) = \sum_x f(x|\theta) \ln \left( \frac{f(x|\theta)}{y} \right)\]
+
+#+begin_html
+<details><summary>KL-divergence</summary>
+#+end_html
+
+*What does it do*: 描述了两个分布之间的相似程度.
+
+#+begin_html
+</details>
+#+end_html
+
+*Recall*: 2D Ising Model ([[{{ site.github.url }}/lisp/clim/my-first-clim-application/][My First CLIM Application]])
+
+[[{{ site.github.url }}/_img/lisp/mcclim/animated-2-d-ising-model.gif]]
+
+可以看作是一种相邻节点 \(E_{ij} = 1\) 的一种 Boltzmann Machine.
+
++估计这也是为啥搞统计物理的会认为机器学习可以用统计物理来解释的原因吧...+
+
+** Dense Layer (FFN, *F*​eed *F*​orward *N*​etwork)
+肉眼可见的, Boltzman 机中的所有神经元都相互连接的做法会有一个问题:
+参数量大了之后, 不仅跑得慢, 训练也很痛苦.
+
+#+begin_html
+<details><summary>Restricted Boltzmann Machine</summary>
+#+end_html
+
+一种算是解决参数量巨大的方法? 在 visible units 之间并不相互连接,
+在 hidden units 之间并不相互连接, 连接只发生在 visible 和 hidden
+units 之间.
+
+注: 这样的模型不难发现和简单的 Dense Layer 比较类似了.
+
+#+begin_html
+</details>
+#+end_html
+
+注: 接下来的解释我并不清楚是否真的逻辑上存在这样的联想关系,
+毕竟我也没有做过科学史考据.
+
+*Definition*: 一种简化的版本则是连接相邻两层, 使得激活信息从前一层向后一层逐步传递:
+
+\[\mathrm{layer}_{n+1} = \mathrm{active}(\boldsymbol{w}_{n \rightarrow n + 1} \mathrm{layer}_n + \boldsymbol{b}_{n \rightarrow n + 1})\]
+
+这也就是大家常见的 Dense Layer 模型. 其中上面的参数 \(\theta\) 为 \(\boldsymbol{w}_{n \rightarrow n+1}\), \(\boldsymbol{b}_{n \rightarrow n+1}\).
+
+*Programming Notes*:
++ 可以把 =dense= layer 看作是 =linear= (线性变换), =bias= (偏置), =active= (激活函数) 的叠加:
+
+  #+name: dense
+  #+begin_src lisp
+    (defun dense (in out &optional (active :sigmoid))
+      (composes (linear in out :init-with :random-noise)
+                (bias   out    :init-with :random-noise)
+                (active active)))
+  #+end_src
++ 可以叠加多个 =dense= layer 实现 "深" 神经网络
+
+  #+name: deep-dense-network
+  #+begin_src lisp
+    (composes (dense 20 100)
+              (dense 100 100)
+              ;; ...
+              (dense 100 10))
+  #+end_src
+
+#+begin_html
+<details><summary>为什么能拟合? </summary>
+#+end_html
+
++ [[https://en.wikipedia.org/wiki/Universal_approximation_theorem][Universal approximation theorem]]: 万有逼近定律
+
+  省流版就是: FNN 的多层神经层 + 多神经元架构可以使得 FNN *理论上*
+  可以拟合/逼近任何函数.
++ 网络越深越好吗? 是这样的.
+
+#+begin_html
+</details>
+#+end_html
+
+** Convolution Layer (CNN, *C*​onvolution *N*​eural *N*​etwork)
+但是不难发现, 对于一些特定的输入, 比如图像, FNN 还是存在参数巨大的问题.
+(如: \(255 \times 255\) 的图片, 其输入的参数就是 65025... )
+
+于是一个直观的想法就是将图像进行 "降采样" 减少输入图像的大小,
+使得较大的图片输入可以用较小的参数进行描述.
+
+*Definition*: Convolution Layer
++ *Predefinition*: Windowed Map
+  + *Example 1*: 1-dimensional windowed map
+
+    #+name: 1d-windowed-map
+    #+begin_src lisp
+      (defun 1d-windowed-map (function array &optional (stride 1))
+        (let ((window-size (arity function)))
+          (loop for i below (- (lenth array) window-size) by stride
+                collect (apply function (dotimes-collect (i window-size)
+                                          (aref array i))))))
+    #+end_src
+  + *Example 2*: 2-dimensional windowed map
+
+    #+name: 2d-windowed-map
+    #+begin_src lisp
+      (defun 2d-windowed-map (function shape array
+                              &optional (stride-i 1) (stride-j stride-i))
+        (destructuring-bind (width height) shape
+          (loop
+            for j below (- (array-dimension array 0) height) by stride-j
+            collect (loop for i below (- (array-dimension array 1) width) by stride-i
+                          collect (funcall function (dotimes-collect (j height)
+                                                      (dotimes-collect (i width)
+                                                        (aref array j i))))))))
+    #+end_src
++ 卷积核可以定义为对 =sequence= 数据的 windowed map
+
+  #+name: conv
+  #+begin_src lisp
+    (defun conv-on (array kernel)
+      (2d-windowed-map (lambda (region)
+                         (sum-of (element-wise-product region kernel)))
+                       (shape-of kernel)
+                       array))
+  #+end_src
++ *Example 1*: 对于 \(\left( \begin{matrix}1 & 1 \\ 1 & 1\end{matrix} \right)\) 的卷积核,
+  可以看作是对 4 个像素进行一个取均值的操作 (Box blur)
++ *Example 2*: 对于 \(\left( \begin{matrix}0 & -1 & 0 \\ -1 & 4 & -1 \\ 0 & -1 & 0\end{matrix} \right)\) 的卷积核, 可以看作是对边缘的一个检测
++ 其中卷积核 =kernel= 即为我们需要学习的参数
+
+*Definition*: Conv with padding
++ 不难发现, 对于 =stride= 为 =s=, =shape= 为 =(n n)= 的卷积核,
+  其会将一张 \(w \times h\) 的图片矩阵变成 \((w - n + s) \times (h - n + s)\) 的小矩阵.
+
+  因为在扫描 (windowed map) 到边缘的时候, 相当于去掉了一部分的边缘.
++ 如果将多余的边缘补回去 (用 0, 举个例子), 则图片会变成 \((w + n - s) \times (h + n - s)\)
+
+*Definition*: Maxpooling Layer
++ 池化层同样可以定义为 windowed map:
+
+  #+name: pooling
+  #+begin_src lisp
+    (defun maxpooling-on (array shape)
+      (2d-windowed-map #'max-element-of shape array
+                       (first shape) (second shape)))
+  #+end_src
++ 在这个问题中, 我们可以将 pooling 层看作是一种对矩阵进行分块
+  (分成大小为 =shape= 的小块), 并从小块中选择最大的一块作为向后传递的值.
+
+*Programming Notes*:
++ 同样, 可以将卷积核与池化层看作是一个 layer 节点, 并进行不断地串联
+
+  #+name: conv-maxpooling
+  #+begin_src lisp
+    (composes (conv kernel-shape)
+              (maxpooling pooling-shape)
+              (dense in-shape out-shape))
+  #+end_src
++ 可以串联多层的 =conv= 和 =maxpooling=
+
+*Why Conv*: 这意味着更少的权重.
+
+#+begin_html
+<details><summary>ResNet</summary>
+#+end_html
+
+在看到这个网络结构前, 我一直对书中的狗屎网络直连边的权重计算的习题感到匪夷所思.
+既然是直连边了, 那么其权重的误差传递不就是和单层的误差传递一样了么?
+
+看到 ResNet 之后我感觉好像直连边确实有点用处, 只是和 FNN 中的直连边没啥关系吧?
+
+不管怎么说, 感觉书和上课都不适合没学过机器学习的同学...
+
+#+begin_html
+</details>
+#+end_html
+
+** RNN (*R*​ecurrent *N*​eural *N*​etwork)
+*Definition*: 将隐藏层的输出储存在 memory 中, 此时 memory 可以看作是另外的一个输入.
+
+#+begin_html
+<details><summary>Hopfield Network</summary>
+#+end_html
+
+可以看作是一种循环神经网络.
+
+#+begin_html
+</details>
+#+end_html
+
+** Attention
+
+* Gradient Based Optimization
+** Backpropagation
+*Recall*: Gradient Descent Optimization ([[{{ site.github.url }}/learning/computational-physics/][Brief Surf of Computational Physics]])
+
+*Issue*: 注意到对于参数量大的 \(f(x|\theta)\), 其 \(\partial_{\theta} L\) 是难以直接计算的.
+
+*Recall*: 导数的链式法则 \(\mathrm{d} f(g(x)) = \mathrm{d}_{g(x)} f \mathrm{d}_x g \mathrm{d}x\)
+
+*Notice (In Short)*: 不难注意到通过链式法则, 只需要向前传递误差的累积即可.
+
+#+begin_html
+<details><summary>More in Details</summary>
+#+end_html
+
+*Definition*: a lens is a pair of function \(\boldsymbol{f} = (\overrightarrow{f}, \overleftarrow{f})\), where:
++ \(\overrightarrow{f}(x) \rightarrow y\) goes forward
++ \(\overleftarrow{f}(x, y^{\star}) \rightarrow x^{\star}\) goes backward
+
+so we could define a lens as a bridge over a pair of
+data \((x, x^{\star}) \xrightarrow{\boldsymbol{f}} (y, y^{\star})\).
+
+*Definition*: a compose of lens is like compose of function,
+where \(\boldsymbol{f} ; \boldsymbol{g} = (\overrightarrow{f;g}, \overleftarrow{f;g})\), where:
++ \(\overrightarrow{f;g}(x) \rightarrow \overrightarrow{g}(\overrightarrow{f}(x))\)
++ \(\overleftarrow{f;g}(x, y^{\star}) \rightarrow \overleftarrow{f}(x, \overleftarrow{g}(\overrightarrow{f}(x), y^{\star}))\)
+
+用 lens 表示导数的链式法则也就是 *backpropagation* (反传)
+可以用如下的 Lens 描述进行描述:
++ \(\overrightarrow{f}(x) = f\)
++ \(\overleftarrow{f}(x, \delta) = f'(x) \delta\)
+
+此时对于两个 lens 的组合 (=compose=) \(\boldsymbol{h} = \boldsymbol{f} ; \boldsymbol{g}\), 其组合会变成:
++ \(\overrightarrow{h} = \overrightarrow{f} ; \overrightarrow{g}\)
++ \(\overleftarrow{h} = \overrightarrow{f}'(\overrightarrow{g}(x)) \times \overleftarrow{g}(\overrightarrow{f}(x), \delta) = \overrightarrow{f}'(\overrightarrow{g}(x)) \overleftarrow{g}'(\overrightarrow{f}(x)) \delta\)
+
+不难发现, 函数的值通过组合 (compose) 向后计算 (forward),
+其导数 (或者说误差) 反向传递 (backward).
+
+#+begin_html
+<details><summary>语言艺术... </summary>
+#+end_html
+
+我在写这段文字的时候不禁感叹, 啊, 汉语真是博大精深啊...
+"向前", "向后" 竟然在这个语境里面完全是一个意思呢.
+
+#+begin_html
+</details>
+#+end_html
+
+*Example*: 用 Mathematica 实现 Lens 的导数链式法则.
+
+#+begin_html
+<details><summary>Lens implementation in Mathematica</summary>
+#+end_html
+
+用一个列表表示 =Lens= 这种数据结构: ={fwd, bwd}=.
+
+#+name: lens-in-mathematica
+#+begin_src mathematica
+  (* 数据结构 *)
+  MkLens[fwd_Function, bwd_Function] := List[fwd, bwd];
+  LensForward[lens_] := lens[[1]];
+  LensBackward[lens_] := lens[[2]];
+
+  (* Lens 运算 *)
+  LensCompose = Function[{lens1, lens2},
+   MkLens[
+    LensForward[lens1]/*LensForward[lens2],
+    Function[{x, yy},
+     LensBackward[lens1][
+      x,
+      LensBackward[lens2][LensForward[lens1][x], yy]]]]];
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+实现导数:
+
+#+name: MkFnLens
+#+begin_src mathematica
+  MkFnLens = Function[{fwd},
+   MkLens[
+    fwd,
+    Function[{x, dx}, (* bwd = df * dx *)
+     Module[{df = D[fwd[xxx], xxx]},
+      (df /. xxx -> x)*dx]]]];
+#+end_src
+
+不难验证:
++ 正向传播的结果的导数:
+  =D[LensForward[LensCompose[MkFnLens[Sin], MkFnLens[Cos]]][θ], θ]*dθ=
++ 就是反向传播的结果:
+  =LensBackward[LensCompose[MkFnLens[Sin], MkFnLens[Cos]]][θ, dθ]=
++ 可以尝试更多, 更长的函数组合链
+
+当然, 对于 Mathematica 这样的历史悠久的计算机代数系统 CAS 来说,
+算一个符号求导显然不在话下.
+而我们却只需要短短几行并配合一些简单的规则声明, 即可实现与
+Mathematica 求导等效的功能. 这岂不是很爽?
+
+#+begin_html
+</details>
+#+end_html
+
+** GD, and Various of GD
+*Definition*: 最简单的梯度下降算法 \(\theta_{t+1} = \theta_t - \alpha f'(\theta)\)
+
+*Definition*: 加上动量的梯度下降算法
+
+* Active Function and Loss Function
+** Sigmoid
+#+name: sigmoid
+#+begin_src lisp
+  (defun sigmoid (x)
+    (let ((exp (exp x)))
+      (/ exp (1+ exp))))
+#+end_src
+
+** ReLU
+#+name: relu
+#+begin_src lisp
+  (defun relu (x)
+    (if (> x 0) x 0))
+#+end_src
+
+#+begin_html
+<details><summary>Parameterized ReLU</summary>
+#+end_html
+
+#+name: param-relu
+#+begin_src lisp
+  (defun param-relu (x param)
+    (if (> x 0) x (* param x)))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+** L2 Loss
+*Definition*: 平方误差
+
+#+name: l2-loss
+#+begin_src lisp
+  (defun l2-loss (ys ys*)
+    (flet ((diff (a b) (square (- a b))))
+      (sum-of (mapcar #'diff ys ys*))))
+#+end_src
+
+** Cross Entropy
+*Definition*: 对两个概率分布 \(p(x)\) (target), \(q(x)\) (predict):
+
+\[H(p, q) = - \sum_x p(x) \log q(x)\]
+
+*Why this*: 对 sigmoid 作为激活函数的收敛速度很快更好.
+
+** KL-divergence
+*Definition*: 对两个概率分布 \(P\) (target), \(Q\) (predict)
+
+\[D_{\mathrm{KL}}(P \Vert Q) = \sum_x P(x) \log \frac{P(x)}{Q(x)}\]
+
+* Representation of Question
+** 1-N word (one-hot word)
+** Diffusion Model
+
+* Training
++ Mini batch
+
+* 教训
+离搞理论的人远一点. 
