@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>PWN &amp; Crypto &amp; Misc | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="PWN &amp; Crypto &amp; Misc" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="PWN &amp; Crypto &amp; Misc 乱花渐欲迷人眼, 浅草才能没马蹄." />
+<meta property="og:description" content="PWN &amp; Crypto &amp; Misc 乱花渐欲迷人眼, 浅草才能没马蹄." />
+<link rel="canonical" href="/ctf/pwn-crypto-misc/" />
+<meta property="og:url" content="/ctf/pwn-crypto-misc/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-01-21T14:05:26+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="PWN &amp; Crypto &amp; Misc" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-01-21T14:05:26+00:00","datePublished":"2022-01-21T14:05:26+00:00","description":"PWN &amp; Crypto &amp; Misc 乱花渐欲迷人眼, 浅草才能没马蹄.","headline":"PWN &amp; Crypto &amp; Misc","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/pwn-crypto-misc/"},"url":"/ctf/pwn-crypto-misc/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">PWN &amp; Crypto &amp; Misc</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-01-21T14:05:26+00:00" itemprop="datePublished">Jan 21, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="pwn--crypto--misc">PWN &amp; Crypto &amp; Misc</h1>
+<blockquote>
+  <p>乱花渐欲迷人眼, 浅草才能没马蹄.</p>
+</blockquote>
+
+<p>感觉学起来有点点吃力, 但是我可以努力试试. 
+因为这几天学的东西太多了, 但是掌握的情况又不是很好, 
+只能够写下一些大概的点. 以后就看这些点来进行一个复(预)习.</p>
+
+<h2 id="pwn">PWN</h2>
+<p>学长介绍原理的时候主要介绍的网站是
+<a href="https://ctf-wiki.org">ctf-wiki</a></p>
+
+<p>这里就记录一下简单的原理和攻击.</p>
+
+<h3 id="stack">Stack</h3>
+<p>虽然之前也写过一个<a href="../../../2021/11/04/stack.html">超级烂的东西</a></p>
+
+<p>但是当时应该是没有很明白, 导致现在学的时候就更不明白了. QAQ.</p>
+
+<p>现在是简单地把栈想成一个书架, 书架是从最上面开始向下面放书的, 
+(数据从高地址向低地址增长).</p>
+
+<ul>
+  <li>Stack Overflow  <br />
+有一些函数比如<code class="language-plaintext highlighter-rouge">gets</code>就会无限制地读取输入并写入栈中, 于是就会导致栈溢出.
+    <ul>
+      <li>ROP  <br />
+利用栈溢出的方法, 可以把栈的返回地址覆盖掉, 
+让函数执行完毕以后(<code class="language-plaintext highlighter-rouge">eip</code>)跳转到指定的位置去执行特定的代码. 
+(据说可以利用类似的方法达到)
+        <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">form_playload</span><span class="p">(</span><span class="n">length</span><span class="p">)</span>
+  <span class="n">temp</span> <span class="o">=</span> <span class="s1">'A'</span> <span class="o">*</span> <span class="n">length</span>
+  <span class="n">res</span> <span class="o">=</span> <span class="s1">''</span>
+  <span class="n">time</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span>
+    <span class="n">res</span> <span class="o">+=</span> <span class="n">temp</span>
+    <span class="n">temp</span><span class="p">.</span><span class="nf">succ!</span>
+  <span class="k">end</span>
+  <span class="n">res</span>
+<span class="k">end</span>
+</code></pre></div>        </div>
+        <p>可以这样构造一个函数用来输出一堆无用的填充, 
+然后在调试器里面看最后返回的地址, 
+然后计算出是第几个要被替换成要用的地址. 要利用的地址比如说是某个函数, 
+或者是<code class="language-plaintext highlighter-rouge">shellcode</code>之类的东西, 还有就是<code class="language-plaintext highlighter-rouge">libc</code>地址.</p>
+      </li>
+    </ul>
+  </li>
+  <li>Format String  <br />
+在<code class="language-plaintext highlighter-rouge">printf(s)</code>的时候, 假如<code class="language-plaintext highlighter-rouge">s</code>是用户可控的话, 
+就有办法利用格式化字符串输出任意地址的数据. 
+一个简单的例子就是:
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>%p.%p.%p.%p.%p.%s
+</code></pre></div>    </div>
+    <p>可能就会在输出了一堆地址之后输出一个字符串, 
+然后这个字符串刚好就是我要知道的东西.</p>
+  </li>
+</ul>
+
+<h3 id="heap">Heap</h3>
+<p>(学长说读<a href="https://elixir.bootlin.com/glibc/latest/source">源码</a>
+是一种学习方法. 虽然现在还没有这个能力. )</p>
+
+<p>主要的问题是我现在也不是很熟… (没有遇到过)
+所以这个就先留空… (尴尬)</p>
+
+<h2 id="crypto">Crypto</h2>
+<p>学长是以RSA算法为例子为我们讲解的.</p>
+
+<p>(虽然我对密码学不是很理解, 但是感觉能够接受一些. )</p>
+
+<h3 id="tools">Tools</h3>
+<p>推荐的工具是<code class="language-plaintext highlighter-rouge">Mathematica</code>和<code class="language-plaintext highlighter-rouge">SageMath</code>, 用来计算(解决数学问题), 
+这两个都得要好好学一遍…</p>
+
+<p>(之前<code class="language-plaintext highlighter-rouge">mma</code>接触的时候只是了解了如何解方程, 还有简单的画图之类的, 
+对数论部分不太清楚. 而<code class="language-plaintext highlighter-rouge">sage</code>又因为是python的, 所以有点不想用, 
+于是就没学… 亏啊. )</p>
+
+<h3 id="rsa算法介绍">RSA算法介绍</h3>
+<p>简单的python代码:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># RSA 加密方法
+# 密文是 ct = pt ** e mod N
+# 明文是 pt = ct ** d mod N
+# 公匙为 e, N
+# 私匙为 d, N
+</span>
+<span class="kn">from</span> <span class="nn">Crypto.Util.number</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">pt_txt</span> <span class="o">=</span> <span class="s">"balabala"</span>
+<span class="n">pt</span> <span class="o">=</span> <span class="n">byte_to_long</span><span class="p">(</span><span class="n">pt_txt</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="c1"># RSA难以破解的关键之一就在于大数难以分解质因数
+</span><span class="n">BITS</span> <span class="o">=</span> <span class="mi">1024</span>
+<span class="n">p</span> <span class="o">=</span> <span class="n">getPrime</span><span class="p">(</span><span class="n">BITS</span><span class="p">)</span>
+<span class="n">q</span> <span class="o">=</span> <span class="n">getPrime</span><span class="p">(</span><span class="n">BITS</span><span class="p">)</span>
+<span class="n">N</span> <span class="o">=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">q</span>
+
+<span class="c1"># 一般e是一个大数
+</span><span class="n">e</span> <span class="o">=</span> <span class="mi">6337</span>
+
+<span class="n">ct</span> <span class="o">=</span> <span class="nb">pow</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="一个例子">一个例子</h3>
+<p>假如<code class="language-plaintext highlighter-rouge">e</code>很小的话, 比如<code class="language-plaintext highlighter-rouge">3</code>, 就可以尝试暴力枚举<code class="language-plaintext highlighter-rouge">k</code>, 
+看是否满足<code class="language-plaintext highlighter-rouge">gmpy2.iroot(ct + k * N, e)</code>的输出是一个整数.</p>
+
+<h3 id="密码学的类似方法">密码学的类似方法</h3>
+<p>总之, 在密码学里面的问题往往是针对一个数学问题的解决, 
+有时候就是某个人的论文的结果, 所以往往是利用数学做题. 
+并且网络上的工具都是完善的. 直接用就好了.</p>
+
+<p>(又: 不要怕暴力枚举, <code class="language-plaintext highlighter-rouge">2 ** 22</code>都是可以接受的数量级. )</p>
+
+<h2 id="misc">Misc</h2>
+<p>Misc里面, 凡是看到一点点的奇怪的东西, 不管怎么奇怪, 
+都有隐藏信息的可能性. 并且在Misc里面对于编码的了解也是很重要的.</p>
+
+<p>实际上Misc里面的题目往往是一个对工具的利用的题目, 
+常常需要学会对工具的使用. 并且还要见多识广.</p>
+
+<h3 id="隐写">隐写</h3>
+<p><strong>图片</strong></p>
+<ul>
+  <li>追加式文件隐写
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">strings</code>命令</li>
+      <li><code class="language-plaintext highlighter-rouge">binwalk</code>可以分析文件的区块</li>
+      <li><code class="language-plaintext highlighter-rouge">010editor</code>等</li>
+    </ul>
+  </li>
+  <li>文件结构隐写  <br />
+利用的是</li>
+  <li>LSB隐写  <br />
+原理就是利用人眼对颜色的分辨能力没有那么强, 
+于是修改</li>
+</ul>
+
+<p><strong>音频隐写</strong></p>
+<ul>
+  <li>追加隐写  <br />
+和追加式隐写差不多, 一般都是在靠头部和尾部的一段奇怪的编码.</li>
+  <li>频谱隐写  <br />
+特点就是声音听起来很刺耳, 转到频谱视角一般可以出结果.</li>
+</ul>
+
+<h3 id="流量包">流量包</h3>
+<p>一般会跟踪HTTP流而不是TCP流. 用到的是一个叫做<code class="language-plaintext highlighter-rouge">wireshark</code>的工具.</p>
+
+<ul>
+  <li>看HTTP</li>
+  <li>看DNS的隐写</li>
+  <li>关于SQL注入
+一般是想要知道最后一次的得到的解</li>
+  <li>USB  <br />
+从source(比如说是3.2)到host(也就是电脑)的信息发送,</li>
+</ul>
+
+<h3 id="压缩包">压缩包</h3>
+<ul>
+  <li>爆破密码</li>
+  <li>CRC32校验  <br />
+可以利用文件的校验码来爆破, 前提是这个的样本要足够小,</li>
+  <li>明文攻击  <br />
+利用没有加密的文件来计算加密的文件, 对比的方法就是CRC校验,</li>
+  <li>伪加密  <br />
+特点是有一个<code class="language-plaintext highlighter-rouge">01</code>的密码标志, 但是实际上没有被加密, 
+需要尽可能的去试探. 类似于利用一个已知解缩小求解的范围.</li>
+</ul>
+
+<h2 id="后记">后记</h2>
+<p>看不下去了, 这里写的这些实在是太水了. 希望以后可以逐渐变强一些.</p>
+
+  </div><a class="u-url" href="/ctf/pwn-crypto-misc/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

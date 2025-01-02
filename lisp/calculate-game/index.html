@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>一个简单的算数小游戏的逻辑部分的复刻尝试 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="一个简单的算数小游戏的逻辑部分的复刻尝试" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 起因是在 b 站 看到 超级代数大战 Super Algebrawl 的一个介绍. 对里面的结果是否可能一定有解感到比较好奇. (毕竟要是为了学算数而给孩子做的这个游戏, 结果最终发现没法解, 那么孩子估计一定非常高兴吧. ) 不过作者并没有给出具体的实现方法或是相关的技术说明 (很合理), 但是作为一个吃饱了闲的的人, 我觉得可以自己试试看. Algorithm 核心的思路 维护一个参数列表 leaves-list, 对于给定的运算符 op-plist, 从参数列表中任意挑选满足给定运算符参数数量的元素作为参数, 以抽象语法树 AST 的形式重新添加到参数列表中去. 使用代码来描述就是: (defun leaves-reduce (leaves-list op-plist) &quot;使用 `op-plist&#39; 对 `leaves-list&#39; 进行缩减. 返回新的参数列表.&quot; (let ((arg-size (getf op-plist :arg))) (multiple-value-bind (picked rest) (rand-identity-pick leaves-list arg-size) (cons `((:depth ,(apply #&#39;ast-depth-max picked) ,@op-plist) ,@picked) rest)))) 这样是单步的计算, 如果要对一组的运算符进行计算, 就可以通过反复使用来实现: (defun leaves-full-reduce (leaves-list op-list) &quot;根据 `op-list&#39; 的结果对 `leaves-list&#39; 进行缩减, 返回一个包含所有 AST 结果的列表.&quot; (loop with ast = leaves-list for op in op-list do (setf ast (leaves-reduce ast op)) finally (return ast))) Misc 数据结构 以树的数据结构来储存一个 AST, leaves-list 则为元素为 AST 的列表. (declaim (inline #:leaf? #:node-properity #:node-children #:ast-depth)) (defun leaf? (ast) &quot;测试 `ast&#39; 是否为叶子节点. &quot; (not (listp ast)))" />
+<meta property="og:description" content="About 起因是在 b 站 看到 超级代数大战 Super Algebrawl 的一个介绍. 对里面的结果是否可能一定有解感到比较好奇. (毕竟要是为了学算数而给孩子做的这个游戏, 结果最终发现没法解, 那么孩子估计一定非常高兴吧. ) 不过作者并没有给出具体的实现方法或是相关的技术说明 (很合理), 但是作为一个吃饱了闲的的人, 我觉得可以自己试试看. Algorithm 核心的思路 维护一个参数列表 leaves-list, 对于给定的运算符 op-plist, 从参数列表中任意挑选满足给定运算符参数数量的元素作为参数, 以抽象语法树 AST 的形式重新添加到参数列表中去. 使用代码来描述就是: (defun leaves-reduce (leaves-list op-plist) &quot;使用 `op-plist&#39; 对 `leaves-list&#39; 进行缩减. 返回新的参数列表.&quot; (let ((arg-size (getf op-plist :arg))) (multiple-value-bind (picked rest) (rand-identity-pick leaves-list arg-size) (cons `((:depth ,(apply #&#39;ast-depth-max picked) ,@op-plist) ,@picked) rest)))) 这样是单步的计算, 如果要对一组的运算符进行计算, 就可以通过反复使用来实现: (defun leaves-full-reduce (leaves-list op-list) &quot;根据 `op-list&#39; 的结果对 `leaves-list&#39; 进行缩减, 返回一个包含所有 AST 结果的列表.&quot; (loop with ast = leaves-list for op in op-list do (setf ast (leaves-reduce ast op)) finally (return ast))) Misc 数据结构 以树的数据结构来储存一个 AST, leaves-list 则为元素为 AST 的列表. (declaim (inline #:leaf? #:node-properity #:node-children #:ast-depth)) (defun leaf? (ast) &quot;测试 `ast&#39; 是否为叶子节点. &quot; (not (listp ast)))" />
+<link rel="canonical" href="/lisp/calculate-game/" />
+<meta property="og:url" content="/lisp/calculate-game/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-02-22T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="一个简单的算数小游戏的逻辑部分的复刻尝试" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-02-22T00:00:00+00:00","datePublished":"2024-02-22T00:00:00+00:00","description":"About 起因是在 b 站 看到 超级代数大战 Super Algebrawl 的一个介绍. 对里面的结果是否可能一定有解感到比较好奇. (毕竟要是为了学算数而给孩子做的这个游戏, 结果最终发现没法解, 那么孩子估计一定非常高兴吧. ) 不过作者并没有给出具体的实现方法或是相关的技术说明 (很合理), 但是作为一个吃饱了闲的的人, 我觉得可以自己试试看. Algorithm 核心的思路 维护一个参数列表 leaves-list, 对于给定的运算符 op-plist, 从参数列表中任意挑选满足给定运算符参数数量的元素作为参数, 以抽象语法树 AST 的形式重新添加到参数列表中去. 使用代码来描述就是: (defun leaves-reduce (leaves-list op-plist) &quot;使用 `op-plist&#39; 对 `leaves-list&#39; 进行缩减. 返回新的参数列表.&quot; (let ((arg-size (getf op-plist :arg))) (multiple-value-bind (picked rest) (rand-identity-pick leaves-list arg-size) (cons `((:depth ,(apply #&#39;ast-depth-max picked) ,@op-plist) ,@picked) rest)))) 这样是单步的计算, 如果要对一组的运算符进行计算, 就可以通过反复使用来实现: (defun leaves-full-reduce (leaves-list op-list) &quot;根据 `op-list&#39; 的结果对 `leaves-list&#39; 进行缩减, 返回一个包含所有 AST 结果的列表.&quot; (loop with ast = leaves-list for op in op-list do (setf ast (leaves-reduce ast op)) finally (return ast))) Misc 数据结构 以树的数据结构来储存一个 AST, leaves-list 则为元素为 AST 的列表. (declaim (inline #:leaf? #:node-properity #:node-children #:ast-depth)) (defun leaf? (ast) &quot;测试 `ast&#39; 是否为叶子节点. &quot; (not (listp ast)))","headline":"一个简单的算数小游戏的逻辑部分的复刻尝试","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/calculate-game/"},"url":"/lisp/calculate-game/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">一个简单的算数小游戏的逻辑部分的复刻尝试</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-02-22T00:00:00+00:00" itemprop="datePublished">Feb 22, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>起因是在 <a href="https://www.bilibili.com/video/BV1QZ42127jW/">b 站</a> 看到 <a href="https://punkcake.itch.io/super-algebrawl">超级代数大战 Super Algebrawl</a> 的一个介绍.
+  对里面的结果是否可能一定有解感到比较好奇.</p>
+<p>(毕竟要是为了学算数而给孩子做的这个游戏, 结果最终发现没法解,
+  那么孩子估计一定非常高兴吧. )</p>
+<p>不过作者并没有给出具体的实现方法或是相关的技术说明 (很合理),
+  但是作为一个吃饱了闲的的人, 我觉得可以自己试试看.</p>
+<h1>Algorithm</h1>
+<h2>核心的思路</h2>
+<p>维护一个参数列表 <code>leaves-list</code>, 对于给定的运算符 <code>op-plist</code>,
+  从参数列表中任意挑选满足给定运算符参数数量的元素作为参数,
+  以抽象语法树 AST 的形式重新添加到参数列表中去.</p>
+<p>使用代码来描述就是:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">leaves-reduce</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves-list</span><span class="w"> </span><span class="nv">op-plist</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;使用 `op-plist&#39; 对 `leaves-list&#39; 进行缩减.</span>
+<span class="s">返回新的参数列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arg-size</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">op-plist</span><span class="w"> </span><span class="nv">:arg</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">picked</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">rand-identity-pick</span><span class="w"> </span><span class="nv">leaves-list</span><span class="w"> </span><span class="nv">arg-size</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="nf">:depth</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;ast-depth-max</span><span class="w"> </span><span class="nv">picked</span><span class="p">)</span><span class="w"> </span><span class="o">,@</span><span class="nv">op-plist</span><span class="p">)</span>
+<span class="w">              </span><span class="o">,@</span><span class="nv">picked</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">rest</span><span class="p">))))</span>
+</pre></div>
+<p>这样是单步的计算, 如果要对一组的运算符进行计算,
+  就可以通过反复使用来实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">leaves-full-reduce</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves-list</span><span class="w"> </span><span class="nv">op-list</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;根据 `op-list&#39; 的结果对 `leaves-list&#39; 进行缩减,</span>
+<span class="s">返回一个包含所有 AST 结果的列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">leaves-list</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">op-list</span>
+<span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves-reduce</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">op</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">ast</span><span class="p">)))</span>
+</pre></div>
+<h2>Misc</h2>
+<h3>数据结构</h3>
+<p>以树的数据结构来储存一个 AST, <code>leaves-list</code> 则为元素为 AST 的列表.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">declaim</span><span class="w"> </span><span class="p">(</span><span class="nf">inline</span><span class="w"> </span><span class="kd">#:leaf?</span>
+<span class="w">                 </span><span class="kd">#:node-properity</span>
+<span class="w">                 </span><span class="kd">#:node-children</span>
+<span class="w">                 </span><span class="kd">#:ast-depth</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">leaf?</span><span class="w"> </span><span class="p">(</span><span class="nf">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;测试 `ast&#39; 是否为叶子节点. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">ast</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">node-properity</span><span class="w"> </span><span class="p">(</span><span class="nf">ast</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">key</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;返回 `ast&#39; 的属性. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">key</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span><span class="w"> </span><span class="nv">key</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">ast</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">node-children</span><span class="w"> </span><span class="p">(</span><span class="nf">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;返回 `ast&#39; 的参数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">ast</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ast-depth</span><span class="w"> </span><span class="p">(</span><span class="nf">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;测试 `ast&#39; 的深度, 对于 `leaf&#39; 深度为 `0&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">node-properity</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">:depth</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ast-depth-max</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;返回 `ast&#39; 中最小的深度的大小.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;max</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;ast-depth</span><span class="w"> </span><span class="nv">ast</span><span class="p">)))</span>
+</pre></div>
+<p>有了数据结构, 历遍 AST 树就比较轻松了, 以计算 AST 为例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ast-eval</span><span class="w"> </span><span class="p">(</span><span class="nf">ast</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;计算 `ast&#39; 最终对应的值.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">ast</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="nf">node-properity</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">:fn</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;ast-eval</span><span class="w"> </span><span class="p">(</span><span class="nf">node-children</span><span class="w"> </span><span class="nv">ast</span><span class="p">)))))</span>
+</pre></div>
+<h3>随机算法</h3>
+<p>主要的就是:</p>
+<ul>
+  <li><code>rand-identity-pick (list n)</code>: 从 <code>list</code> 中随机提取 <code>n</code> 个不同的元素</li>
+  <li><code>rand-list (length min max)</code> 和 <code>rand-op (length &amp;optional op-set)</code>:
+    产生长度为 <code>length</code> 的随机列表.</li>
+</ul>
+<details><summary>这个具体的实现不是很难, 就折叠了&#8230;</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand</span><span class="w"> </span><span class="p">(</span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成大小在 `min&#39;, `max&#39; 之间的随机数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nb">max</span><span class="w"> </span><span class="nb">min</span><span class="p">))</span><span class="w"> </span><span class="nb">min</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">luck-in</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">p</span><span class="w"> </span><span class="mf">0.5</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;根据 `p&#39; 的概率大小返回 `t&#39; 或 `nil&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="nv">p</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand-identity-pick</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;从 `list&#39; 中不重复随机挑选 `n&#39; 个元素.</span>
+<span class="s">返回挑出的元素和剩下的元素. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="mi">1</span><span class="w">        </span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nb">list</span>
+<span class="w">        </span><span class="nv">with</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">luck-in</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="nv">len</span><span class="p">)))</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">decf</span><span class="w"> </span><span class="nv">pick</span><span class="p">)</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">picked</span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">rest</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">picked</span><span class="w"> </span><span class="nv">rest</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand-op</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">op-set</span><span class="w"> </span><span class="nv">*default-op-set*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;返回 `op-set&#39; 中随机的运算符对应的 plist.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cdar</span><span class="w"> </span><span class="p">(</span><span class="nf">rand-identity-pick</span><span class="w"> </span><span class="nv">op-set</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">isotropy-list</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">fn-args</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;使用 `fn&#39; 生成长度为 `length&#39; 的各向同性链表, 可以额外提供 `fn&#39; 参数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">fn-args</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand-list</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成长度为 `length&#39;, 大小在 `min&#39;, `max&#39; 之间的随机数链表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">isotropy-list</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;rand</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand-op-list</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">op-set</span><span class="w"> </span><span class="nv">*default-op-set*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;根据 `op-set&#39; 生成长度为 `length&#39; 的运算符列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">isotropy-list</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;rand-op</span><span class="w"> </span><span class="nv">op-set</span><span class="p">))</span>
+</pre></div>
+</details>
+<h3>可视化</h3>
+<details><summary>
+诶, 感觉写 Graphviz 的代码实在是太多了,
+总有一天要写一个 wrapper 把这个工作给简化一下.
+</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ast-format</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;AST-ROOT&quot;</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;以 Graphviz 的形式输出 `ast&#39; 到 `stream&#39; 中.</span>
+<span class="s">需要注意的是: `ast&#39; 为一个 AST 元素.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                 </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [shape=circle,label=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">];&quot;</span>
+<span class="w">                 </span><span class="nv">node</span><span class="w"> </span><span class="nv">ast</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">t</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                 </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [shape=doublecircle,label=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">];&quot;</span>
+<span class="w">                 </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">node-properity</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">:name</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">node-children</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">for</span><span class="w"> </span><span class="nv">next-node</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;AST-NODE&quot;</span><span class="p">)</span>
+<span class="w">               </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">ast-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="nv">next-node</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">collect</span><span class="w"> </span><span class="nv">next-node</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">next-nodes</span>
+<span class="w">               </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                               </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> -&gt; {~{</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">~^, ~}};&quot;</span>
+<span class="w">                               </span><span class="nv">node</span><span class="w"> </span><span class="nv">next-nodes</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">leaves-&gt;graphviz</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">header</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;将包含多个 AST 元素的列表 `leaves&#39; 输出为 Graphviz 的代码.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">out</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="s">&quot;digraph {~%~a&quot;</span><span class="w"> </span><span class="nv">header</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">leaves</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">ans-node</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;AST-ANS&quot;</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">root-node</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;AST-ROOT&quot;</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">ans-val</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">ast-eval</span><span class="w"> </span><span class="nv">ast</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [shape=square,label=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">];&quot;</span>
+<span class="w">                     </span><span class="nv">ans-node</span><span class="w"> </span><span class="nv">ans-val</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> -&gt; </span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [dir=back];&quot;</span>
+<span class="w">                     </span><span class="nv">ans-node</span><span class="w"> </span><span class="nv">root-node</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">ast-format</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="nv">ast</span><span class="w"> </span><span class="nv">root-node</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="s">&quot;~&amp;}&quot;</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">leaves-&gt;svg</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">debug</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">with-input-from-string</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">debug</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves-&gt;graphviz</span><span class="w"> </span><span class="nv">leaves</span><span class="p">))</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">leaves-&gt;graphviz</span><span class="w"> </span><span class="nv">leaves</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">uiop:run-program</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;dot&quot;</span><span class="w"> </span><span class="s">&quot;-Tsvg&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:input</span><span class="w"> </span><span class="nv">in</span>
+<span class="w">                      </span><span class="nv">:output</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">output</span><span class="p">))</span>
+</pre></div>
+</details>
+<p>效果类似于如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">numbers</span><span class="w"> </span><span class="p">(</span><span class="nf">rand-list</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">ops</span><span class="w">     </span><span class="p">(</span><span class="nf">rand-op-list</span><span class="w"> </span><span class="mi">10</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">leaves-&gt;svg</span><span class="w"> </span><span class="p">(</span><span class="nf">leaves-full-reduce</span><span class="w"> </span><span class="nv">numbers</span><span class="w"> </span><span class="nv">ops</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">output</span><span class="p">))</span>
+</pre></div>
+<p><img src="/_img/lisp/misc/calculator-game/test.svg" alt="/_img/lisp/misc/calculator-game/test.svg" /></p>
+<h1>Dynamics</h1>
+<h2>不平衡在哪里?</h2>
+<h3>随机不一定全是好事</h3>
+<p>实际上如果只是使用上面的 (几乎是完全) 随机的算法,
+  很容易出现一些 &#8220;坏&#8221; 的结果, 比如:</p>
+<p><img src="/_img/lisp/misc/calculator-game/tooo-deep-example.svg" alt="/_img/lisp/misc/calculator-game/tooo-deep-example.svg" /></p>
+<p>AST 的深度太深了 (难度太大了), 而类似于下图的形式, 则可能有点太简单了?</p>
+<p><img src="/_img/lisp/misc/calculator-game/tooo-shallow-example.svg" alt="/_img/lisp/misc/calculator-game/tooo-shallow-example.svg" /></p>
+<p>即: 全靠随机, 没法保证游戏的一个难度的均衡性.</p>
+<p>那么一个简单的做法就是: 我不随机了, 我用规则来制定. 比如说在 <code>rand-identity-pick</code>
+  这个函数里面加一个拒取条件, 或者是在 <code>rand-op</code> 里面加一个分布,
+  让不同的算符被取到有不同的概率等级, 这样就会让这个游戏变得稍微更加有 &#8220;规律&#8221; 一些.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">rand-identity-pick</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="p">(</span><span class="nf">retry</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;从 `list&#39; 中随机取 `n&#39; 个元素, 元素需满足 `test&#39; 函数, 最大重试次数 `retry&#39;.</span>
+<span class="s">+ `test&#39; 应为一个接受并判断 `list&#39; 中单个元素的函数;</span>
+<span class="s">+ `retry&#39; 应为一个表示重试次数的非负整数&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">integer</span><span class="w"> </span><span class="nv">retry</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">functionp</span><span class="w"> </span><span class="nv">test</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nb">list</span>
+<span class="w">            </span><span class="nv">with</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">luck-in</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">pick</span><span class="w"> </span><span class="nv">len</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">decf</span><span class="w"> </span><span class="nv">pick</span><span class="p">)</span>
+<span class="w">              </span><span class="k">and</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">picked</span>
+<span class="w">            </span><span class="k">else</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">rest</span>
+<span class="w">            </span><span class="nv">finally</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">pick</span><span class="p">))</span><span class="w"> </span><span class="c1">; 取的元素数量不够</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">retry</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w">       </span><span class="c1">; 且还可以继续重试</span>
+<span class="w">                     </span><span class="c1">;; 重取的方式为在 `rest&#39; 列表中随机取剩下的 `pick&#39; 元素</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">more</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">rand-identity-pick</span><span class="w"> </span><span class="nv">rest</span><span class="w"> </span><span class="nv">pick</span>
+<span class="w">                                             </span><span class="nv">:test</span><span class="w"> </span><span class="nv">test</span>
+<span class="w">                                             </span><span class="nv">:retry</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">retry</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="nv">picked</span><span class="w"> </span><span class="nv">more</span><span class="p">)</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">                     </span><span class="c1">;; 若放弃, 则返回 `picked&#39; 和 `rest&#39;</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">picked</span><span class="w"> </span><span class="nv">rest</span><span class="p">))))</span>
+<span class="w">      </span><span class="c1">;; 若 `test&#39; 不是一个函数, 则默认返回 `t&#39;</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">rand-identity-pick</span><span class="w"> </span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">                          </span><span class="nv">:test</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                          </span><span class="nv">:retry</span><span class="w"> </span><span class="nv">retry</span><span class="p">)))</span>
+</pre></div>
+<p>而对于 <code>rand-op</code>, 则可以对运算符进行人为评分, 比较难度, 然后给一个拒取函数来实现.</p>
+<h3>是否可以多解</h3>
+<p>嘛, 有一种数学上的奇妙 xp 就是一题多解. 但是很可惜, 我暂时还没有一个很好的方法,
+  如果要考虑同一组数在同一组运算符下的不同 AST 分解 (分解到同一组叶子节点),
+  总觉得用递归配合深搜复杂度有点大.</p>
+<p>卧槽, 突然感觉这个可能会是一个比较好的加密方法, 就像 RSA 算法一样,
+  大质数的乘法很容易, 但是其分解并不轻松, 如果&#8230; (感觉有点跑题)</p>
+<h3>更多的算符和更加复杂的规则?</h3>
+<p>没错, 算算加减乘除什么的有点太轻松了吧? 我觉得, 对于纯正数p,
+  (啊, 先叠个甲, 俺就是一臭学物理的, 还是搞实验方向的菜逼),
+  估计是抽象代数才能些许挑起一些兴趣?</p>
+<p>啊, 蟪蛄莫言春秋, 我还是先别想这些东西先. 还是看 <a href="https://www.bilibili.com/video/BV1QZ42127jW">视频</a> 里面的游戏,
+  里面有一个会分裂的史莱姆, 会毒杀所有奇数怪物的 (平等扣血) 的中毒巫师,
+  会攻击后自动叛变的队友 (如果血量大于敌人). 这种时候就感觉更像是一种回合制策略游戏了.</p>
+<p>为什么要加入这样超过四则运算的规则? 实际上并没有, 分裂就是 <code>/</code>, 毒杀更像是 <code>-1</code>,
+  但是它们的表现又有些不同, 所以让这个游戏在另一个程度上来说增加了随机性.</p>
+<p>这种随机性的来源, 我认为是在于因为不容易被单一机械地实现,
+  所以会让人有一些感兴趣的地方.</p>
+<p>那么这样该如何设计?</p>
+<p>我觉得可能需要修改 <code>leaves-reduce</code> 函数以及对 <code>op-set</code> 添加更多的描述特性,
+  来支持更多的操作, 比如说分裂的操作 (但是感觉这样可能就不是很容易画出 AST 了).</p>
+<h1>Aesthetic</h1>
+<p>(注: 虽然这部分应当被放在后记中的, 因为我有点不是那么想继续写这个东西了&#8230;)</p>
+<h2>这能怎么有趣起来?</h2>
+<p>在 <a href="https://punkcake.itch.io/super-algebrawl">原始游戏</a> 中, 给数字画了一个好看的立绘, 并且还有一个还算简单好用的交互&#8230;
+  在 <a href="https://www.bilibili.com/video/BV1QZ42127jW">视频</a> 中所展示的, 通过在基本规则上添加肉鸽的随机性, 来让这个更加有趣一些.</p>
+<details><summary>
+当然, 美术肯定是重要的, 但是这个暂时不是我们讨论的重点, 毕竟我现在不想画画.
+</summary>
+<p>一些阴暗的想法:</p>
+<ul>
+  <li>这个可以直接变成换皮美少女游戏呢&#8230; 只要立绘改一改,
+    甚至还可能可以有收集属性, 这样就可以抽卡, 氪金&#8230;</li>
+  <li>这个还可以直接出动画收割一波粉丝, 然后骗氪佬入场</li>
+  <li>甚至还可以变成 PVP, 然后整一个排行榜, 卧槽, 社交属性一下子就上来了</li>
+  <li>&#8230;</li>
+</ul>
+<p>太恶心了.</p>
+</details>
+<h2>玩这游戏的人都是什么成分&#8230;</h2>
+<p>虽然我不理解为什么就是会有人喜欢玩 24 点, 但是既然它存在,
+  就应当是有这么一部分人喜欢的. 也许是策略性? 也许是随机性?</p>
+<p>但是 24 点有时候也会有一些不一样的地方, 比如小孩子可能并不知道阶乘 (bushi)
+  或者说括号, 指标之类的东西, 但是长大了之后, 可能就会学刁了,
+  喜欢用上一些自己觉得花里胡哨的运算来解决问题 &#8211; 嗯, 成就感.</p>
+<p>但是如果换一个角度来看, 如果增加一个类似于 Steam 的创意工坊,
+  比如说加上自定义卡组函数之类的功能, 会不会更加好玩呢?
+  因为你可以自己造函数了呢. (就是不知道会不会图灵完备呢? )</p>
+<h1>后记</h1>
+<p>大概就这样?</p>
+
+  </div><a class="u-url" href="/lisp/calculate-game/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
