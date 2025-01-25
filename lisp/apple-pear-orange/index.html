@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>苹果, 梨, 橘子以及翻车 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="苹果, 梨, 橘子以及翻车" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="故事的开始 某朋友问了一个小学生问题: 苹果, 梨, 橘子三种水果都有许多, 混在一起合成一大堆, 最少要分成多少堆 (每堆都有苹果, 梨和橘子), 才能保证找得到这样的两堆, 把这两堆合并后这三种水果的个数都是偶数? 当然, 单单求解这一个问题应该不是啥难事. 在我愚蠢的想法下, 一开始我认为这个问题可以被轻松地拓展到被 \(p\) 整除的问题: 求解该问题的反问题会更加简单: 即计算能够让两两合并的结果不能被整除的最大堆数 \(N_{\mathrm{max}}\), 然后问题的答案即为 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\). 苹果, 梨, 橘子是完全独立的, 所以 \(N_{\mathrm{max}} = &prod;_i (N_{\mathrm{max}})_i\), 即只需要计算单个的最大堆数即可. 显然这个问题放到 \(\mathbb{Z}_p\) 环上会比较好做, 于是问题变成了在 \(\mathbb{Z}_p\) 环下, \((N_{\mathrm{max}})_i\) 为使得 \(x_i + x_j &ne; 0, &forall; x_i, x_j &isin; X &sub; \mathbb{Z}_p\) 的最大的 \(\mathrm{card}(X)\) 的值. 对于 \(p = 2\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (1, 0), (0, 1)\), 这个时候只有两种, 所以很容易就可以知道 \(X = \{0, 1\}\). 故 \((N_{\mathrm{max}})_i = 2\), \(N_{\mathrm{min}} = 1 + 2^3 = 9\). 对于 \(p = 3\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)\) 这个时候想要找到最大的 \(X\) 的话, 应该也不是啥难事: \(X = \{0, 1_1, 1_2\}, \{0, 2_1, 2_2\}\). 于是 \(N_{\mathrm{min}} = 1 + 3^3 = 28\)? 并不是, 因为其中会有重复, 于是在合并的时候 \((1_1, 1_1, 1_1), (1_2, 1_1, 1_1)\) 这样虽然是单个不同, 但是还是不可区分的一个结果. 所以在排完之后还要调出这些重复的东西. 对于任意的 \(p\), 也只要找到这样的一个方法即可. 但是这个应该不会太轻松吧&#8230; 注: 昨天我没有太仔细想, 把 \(N_{\mathrm{min}} = 1 + (p(p - 1))^2\) 错误地当成了答案. 现在仔细一想, 发现可能还是需要用到我的求最大两两相连图的一个做法. 不过要真的就这么无聊我也不会写这么个问题了. 按照我一如既往的奇葩脑回路, 肯定不会那么简单地解决这个问题的. 请听我瞎说一通&#8230; 农民的奇葩思路 整体的一个思路就是: 暴力枚举得到两两组合 选择得到不能满足条件的两两组合对 根据找到的不能满足条件的两两组合对, 计算包含数量最多的组合, 得到不能满足条件的堆的 \(N_{\mathrm{max}}\), 最终得到 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\). 代码可以在 这里 找到&#8230; 在 \(\mathbb{Z}_p\) 上的加法 显然在奇葩的脑子里面, 立刻想到的就是 \(\mathbb{Z}_p\) 上的一个小计算: (defun z-mod-ring-add (m) &quot;得到一个简单的 Z mod m 环上的加法函数.&quot; (lambda (&amp;rest lst) (reduce (lambda (r1 r2) (mod (+ r1 r2) m)) lst))) 农民就只会枚举&#8230; 没错, 我就是农民, 拿到问题之后我的第一个想法就是枚举一下不就完事了? (defun z-mod-m-ring-patterns (m) &quot;苹果, 梨, 橘子按照 Z mod m 结果组合为 m^3 种." />
+<meta property="og:description" content="故事的开始 某朋友问了一个小学生问题: 苹果, 梨, 橘子三种水果都有许多, 混在一起合成一大堆, 最少要分成多少堆 (每堆都有苹果, 梨和橘子), 才能保证找得到这样的两堆, 把这两堆合并后这三种水果的个数都是偶数? 当然, 单单求解这一个问题应该不是啥难事. 在我愚蠢的想法下, 一开始我认为这个问题可以被轻松地拓展到被 \(p\) 整除的问题: 求解该问题的反问题会更加简单: 即计算能够让两两合并的结果不能被整除的最大堆数 \(N_{\mathrm{max}}\), 然后问题的答案即为 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\). 苹果, 梨, 橘子是完全独立的, 所以 \(N_{\mathrm{max}} = &prod;_i (N_{\mathrm{max}})_i\), 即只需要计算单个的最大堆数即可. 显然这个问题放到 \(\mathbb{Z}_p\) 环上会比较好做, 于是问题变成了在 \(\mathbb{Z}_p\) 环下, \((N_{\mathrm{max}})_i\) 为使得 \(x_i + x_j &ne; 0, &forall; x_i, x_j &isin; X &sub; \mathbb{Z}_p\) 的最大的 \(\mathrm{card}(X)\) 的值. 对于 \(p = 2\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (1, 0), (0, 1)\), 这个时候只有两种, 所以很容易就可以知道 \(X = \{0, 1\}\). 故 \((N_{\mathrm{max}})_i = 2\), \(N_{\mathrm{min}} = 1 + 2^3 = 9\). 对于 \(p = 3\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)\) 这个时候想要找到最大的 \(X\) 的话, 应该也不是啥难事: \(X = \{0, 1_1, 1_2\}, \{0, 2_1, 2_2\}\). 于是 \(N_{\mathrm{min}} = 1 + 3^3 = 28\)? 并不是, 因为其中会有重复, 于是在合并的时候 \((1_1, 1_1, 1_1), (1_2, 1_1, 1_1)\) 这样虽然是单个不同, 但是还是不可区分的一个结果. 所以在排完之后还要调出这些重复的东西. 对于任意的 \(p\), 也只要找到这样的一个方法即可. 但是这个应该不会太轻松吧&#8230; 注: 昨天我没有太仔细想, 把 \(N_{\mathrm{min}} = 1 + (p(p - 1))^2\) 错误地当成了答案. 现在仔细一想, 发现可能还是需要用到我的求最大两两相连图的一个做法. 不过要真的就这么无聊我也不会写这么个问题了. 按照我一如既往的奇葩脑回路, 肯定不会那么简单地解决这个问题的. 请听我瞎说一通&#8230; 农民的奇葩思路 整体的一个思路就是: 暴力枚举得到两两组合 选择得到不能满足条件的两两组合对 根据找到的不能满足条件的两两组合对, 计算包含数量最多的组合, 得到不能满足条件的堆的 \(N_{\mathrm{max}}\), 最终得到 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\). 代码可以在 这里 找到&#8230; 在 \(\mathbb{Z}_p\) 上的加法 显然在奇葩的脑子里面, 立刻想到的就是 \(\mathbb{Z}_p\) 上的一个小计算: (defun z-mod-ring-add (m) &quot;得到一个简单的 Z mod m 环上的加法函数.&quot; (lambda (&amp;rest lst) (reduce (lambda (r1 r2) (mod (+ r1 r2) m)) lst))) 农民就只会枚举&#8230; 没错, 我就是农民, 拿到问题之后我的第一个想法就是枚举一下不就完事了? (defun z-mod-m-ring-patterns (m) &quot;苹果, 梨, 橘子按照 Z mod m 结果组合为 m^3 种." />
+<link rel="canonical" href="/lisp/apple-pear-orange/" />
+<meta property="og:url" content="/lisp/apple-pear-orange/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="苹果, 梨, 橘子以及翻车" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-13T00:00:00+00:00","datePublished":"2023-07-13T00:00:00+00:00","description":"故事的开始 某朋友问了一个小学生问题: 苹果, 梨, 橘子三种水果都有许多, 混在一起合成一大堆, 最少要分成多少堆 (每堆都有苹果, 梨和橘子), 才能保证找得到这样的两堆, 把这两堆合并后这三种水果的个数都是偶数? 当然, 单单求解这一个问题应该不是啥难事. 在我愚蠢的想法下, 一开始我认为这个问题可以被轻松地拓展到被 \\(p\\) 整除的问题: 求解该问题的反问题会更加简单: 即计算能够让两两合并的结果不能被整除的最大堆数 \\(N_{\\mathrm{max}}\\), 然后问题的答案即为 \\(N_{\\mathrm{min}} = N_{\\mathrm{max}} + 1\\). 苹果, 梨, 橘子是完全独立的, 所以 \\(N_{\\mathrm{max}} = &prod;_i (N_{\\mathrm{max}})_i\\), 即只需要计算单个的最大堆数即可. 显然这个问题放到 \\(\\mathbb{Z}_p\\) 环上会比较好做, 于是问题变成了在 \\(\\mathbb{Z}_p\\) 环下, \\((N_{\\mathrm{max}})_i\\) 为使得 \\(x_i + x_j &ne; 0, &forall; x_i, x_j &isin; X &sub; \\mathbb{Z}_p\\) 的最大的 \\(\\mathrm{card}(X)\\) 的值. 对于 \\(p = 2\\) 的情况, \\(a + b &ne; 0 &rArr; (a, b) = (1, 0), (0, 1)\\), 这个时候只有两种, 所以很容易就可以知道 \\(X = \\{0, 1\\}\\). 故 \\((N_{\\mathrm{max}})_i = 2\\), \\(N_{\\mathrm{min}} = 1 + 2^3 = 9\\). 对于 \\(p = 3\\) 的情况, \\(a + b &ne; 0 &rArr; (a, b) = (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)\\) 这个时候想要找到最大的 \\(X\\) 的话, 应该也不是啥难事: \\(X = \\{0, 1_1, 1_2\\}, \\{0, 2_1, 2_2\\}\\). 于是 \\(N_{\\mathrm{min}} = 1 + 3^3 = 28\\)? 并不是, 因为其中会有重复, 于是在合并的时候 \\((1_1, 1_1, 1_1), (1_2, 1_1, 1_1)\\) 这样虽然是单个不同, 但是还是不可区分的一个结果. 所以在排完之后还要调出这些重复的东西. 对于任意的 \\(p\\), 也只要找到这样的一个方法即可. 但是这个应该不会太轻松吧&#8230; 注: 昨天我没有太仔细想, 把 \\(N_{\\mathrm{min}} = 1 + (p(p - 1))^2\\) 错误地当成了答案. 现在仔细一想, 发现可能还是需要用到我的求最大两两相连图的一个做法. 不过要真的就这么无聊我也不会写这么个问题了. 按照我一如既往的奇葩脑回路, 肯定不会那么简单地解决这个问题的. 请听我瞎说一通&#8230; 农民的奇葩思路 整体的一个思路就是: 暴力枚举得到两两组合 选择得到不能满足条件的两两组合对 根据找到的不能满足条件的两两组合对, 计算包含数量最多的组合, 得到不能满足条件的堆的 \\(N_{\\mathrm{max}}\\), 最终得到 \\(N_{\\mathrm{min}} = N_{\\mathrm{max}} + 1\\). 代码可以在 这里 找到&#8230; 在 \\(\\mathbb{Z}_p\\) 上的加法 显然在奇葩的脑子里面, 立刻想到的就是 \\(\\mathbb{Z}_p\\) 上的一个小计算: (defun z-mod-ring-add (m) &quot;得到一个简单的 Z mod m 环上的加法函数.&quot; (lambda (&amp;rest lst) (reduce (lambda (r1 r2) (mod (+ r1 r2) m)) lst))) 农民就只会枚举&#8230; 没错, 我就是农民, 拿到问题之后我的第一个想法就是枚举一下不就完事了? (defun z-mod-m-ring-patterns (m) &quot;苹果, 梨, 橘子按照 Z mod m 结果组合为 m^3 种.","headline":"苹果, 梨, 橘子以及翻车","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/apple-pear-orange/"},"url":"/lisp/apple-pear-orange/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">苹果, 梨, 橘子以及翻车</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-07-13T00:00:00+00:00" itemprop="datePublished">Jul 13, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>故事的开始</h1>
+<p>某朋友问了一个小学生问题:</p>
+<blockquote>
+  <p>苹果, 梨, 橘子三种水果都有许多, 混在一起合成一大堆, 最少要分成多少堆
+    (每堆都有苹果, 梨和橘子), 才能保证找得到这样的两堆,
+    把这两堆合并后这三种水果的个数都是偶数?</p>
+</blockquote>
+<details><summary>
+当然, 单单求解这一个问题应该不是啥难事.
+</summary>
+<p>在我愚蠢的想法下, 一开始我认为这个问题可以被轻松地拓展到被 \(p\) 整除的问题:</p>
+<ol>
+  <li>求解该问题的反问题会更加简单:
+    即计算能够让两两合并的结果不能被整除的最大堆数 \(N_{\mathrm{max}}\),
+    然后问题的答案即为 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\).</li>
+  <li>苹果, 梨, 橘子是完全独立的, 所以 \(N_{\mathrm{max}} = &prod;_i (N_{\mathrm{max}})_i\),
+    即只需要计算单个的最大堆数即可.</li>
+  <li>显然这个问题放到 \(\mathbb{Z}_p\) 环上会比较好做,
+    于是问题变成了在 \(\mathbb{Z}_p\) 环下, \((N_{\mathrm{max}})_i\) 为使得
+    \(x_i + x_j &ne; 0, &forall; x_i, x_j &isin; X &sub; \mathbb{Z}_p\) 的最大的 \(\mathrm{card}(X)\) 的值.</li>
+</ol>
+<ul>
+  <li>对于 \(p = 2\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (1, 0), (0, 1)\),
+    这个时候只有两种, 所以很容易就可以知道 \(X = \{0, 1\}\).
+    故 \((N_{\mathrm{max}})_i = 2\), \(N_{\mathrm{min}} = 1 + 2^3 = 9\).</li>
+  <li>对于 \(p = 3\) 的情况, \(a + b &ne; 0 &rArr; (a, b) = (0, 1), (0, 2), (1, 0), (1, 1), (2, 0), (2, 2)\)
+    这个时候想要找到最大的 \(X\) 的话, 应该也不是啥难事:
+    \(X = \{0, 1_1, 1_2\}, \{0, 2_1, 2_2\}\). 于是 \(N_{\mathrm{min}} = 1 + 3^3 = 28\)?
+    <p>并不是, 因为其中会有重复, 于是在合并的时候 \((1_1, 1_1, 1_1), (1_2, 1_1, 1_1)\)
+      这样虽然是单个不同, 但是还是不可区分的一个结果.
+      所以在排完之后还要调出这些重复的东西.</p>
+  </li>
+  <li>对于任意的 \(p\), 也只要找到这样的一个方法即可.
+    但是这个应该不会太轻松吧&#8230;</li>
+</ul>
+<p>注: 昨天我没有太仔细想, 把 \(N_{\mathrm{min}} = 1 + (p(p - 1))^2\) 错误地当成了答案.
+  现在仔细一想, 发现可能还是需要用到我的求最大两两相连图的一个做法.</p>
+</details>
+<p>不过要真的就这么无聊我也不会写这么个问题了. 按照我一如既往的奇葩脑回路,
+  肯定不会那么简单地解决这个问题的. 请听我瞎说一通&#8230;</p>
+<h1>农民的奇葩思路</h1>
+<p>整体的一个思路就是:</p>
+<ol>
+  <li>暴力枚举得到两两组合</li>
+  <li>选择得到不能满足条件的两两组合对</li>
+  <li>根据找到的不能满足条件的两两组合对,
+    计算包含数量最多的组合, 得到不能满足条件的堆的 \(N_{\mathrm{max}}\),
+    最终得到 \(N_{\mathrm{min}} = N_{\mathrm{max}} + 1\).</li>
+</ol>
+<p>代码可以在 <a href="/_img/lisp/misc/apple-pear-orange/apple-pear-orange.lisp">这里</a> 找到&#8230;</p>
+<h2>在 \(\mathbb{Z}_p\) 上的加法</h2>
+<p>显然在奇葩的脑子里面, 立刻想到的就是 \(\mathbb{Z}_p\) 上的一个小计算:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">z-mod-ring-add</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;得到一个简单的 Z mod m 环上的加法函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">lst</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">r1</span><span class="w"> </span><span class="nv">r2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">r1</span><span class="w"> </span><span class="nv">r2</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">            </span><span class="nv">lst</span><span class="p">)))</span>
+</pre></div>
+<h2>农民就只会枚举&#8230;</h2>
+<p>没错, 我就是农民, 拿到问题之后我的第一个想法就是枚举一下不就完事了?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">z-mod-m-ring-patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;苹果, 梨, 橘子按照 Z mod m 结果组合为 m^3 种.</span>
+
+<span class="s">返回的结果为一个元素为 (苹果个数 梨个数 橘子个数) 的列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">upper</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">res</span><span class="w">   </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">apple</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="nv">upper</span><span class="w"> </span><span class="k">do</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">pear</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="nv">upper</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">orange</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="nv">upper</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">apple</span><span class="w"> </span><span class="nv">pear</span><span class="w"> </span><span class="nv">orange</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">))))</span>
+<span class="w">    </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+<details><summary> 一个重写的想法 </summary>
+<p>可以用后面构造的 <code>combine-by-patterns</code> 函数来重写. 不过我觉得没啥鸟用.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">z-mod-m-ring-patterns-at</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;N 个元素按照能被 M 整除进行组合的总的情况.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;combine-by-patterns</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">i</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>基本的思路就是找一个判定函数, 然后把两两组合的结果过一遍判定函数,
+  来选择出那些不能整除的组合:</p>
+<ul>
+  <li>判定函数
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">modp</span><span class="w"> </span><span class="p">(</span><span class="nf">number</span><span class="w"> </span><span class="nv">divider</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;测试 NUMBER 是否能够被 DIVIDER 整除.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">number</span><span class="w"> </span><span class="nv">divider</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pick-odd-patterns-mod</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;得到一个测试 PATTERN 是否不能够被 M 整除. </span>
+<span class="s">若不能被整除的, 则返回 T 的函数.</span>
+
+<span class="s">如果 M 为一个 list, 则将会按照规则一一对 PATTERN 整除, </span>
+<span class="s">比如说 PATTERN 为 (p1 p2 p3), M 为 (m1 m2 m3) 则会变成 pj mod mj.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mlst</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">                               </span><span class="nv">:initial-element</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">m</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;modp</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">mlst</span><span class="p">))))))</span>
+</pre></div>
+  <details><summary> 判定并选择满足条件的模式 </summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pick-matched-pattern-mod</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;得到一个测试 PATTERN 是否都能够被 M 整除, 若都能整除则返回 T 的函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mlst</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">                               </span><span class="nv">:initial-element</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">m</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;modp</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">mlst</span><span class="p">)))))</span>
+</pre></div>
+  </details>
+  </li>
+  <li>计算两两组合不满足判定函数 (实际上是判定函数返回 <code>T</code> 的结果) 的两两组合:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pick-odd-merge-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;选择两两合并后, 是不能被 M 整除的合并函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">patterns</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">upper</span><span class="w">  </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">adder</span><span class="w">  </span><span class="p">(</span><span class="nf">z-mod-ring-add</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">picker</span><span class="w"> </span><span class="p">(</span><span class="nf">pick-odd-patterns-mod</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">res</span><span class="w">    </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">g1</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="nv">upper</span><span class="w"> </span><span class="k">do</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">g2</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">g1</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="nv">upper</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">group1</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">g1</span><span class="w"> </span><span class="nv">patterns</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">group2</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">g2</span><span class="w"> </span><span class="nv">patterns</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">merged</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="nv">adder</span><span class="w"> </span><span class="nv">group1</span><span class="w"> </span><span class="nv">group2</span><span class="p">)))</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">picker</span><span class="w"> </span><span class="nv">merged</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">g1</span><span class="w"> </span><span class="nv">g2</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">)))))</span>
+<span class="w">      </span><span class="nv">res</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>历遍所有的组合, 查找两两组合不能满足判定函数的两个组合
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pick-out-patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="nv">patterns</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">odd</span><span class="w"> </span><span class="nv">T</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;选择 PATTERNS 中两两相加后, 满足条件的两两序号对. </span>
+<span class="s">其中:</span>
+<span class="s">+ PATTERNS 为元素为 (a1 a2 ...) 形式的模式列表</span>
+<span class="s">+ 若 ODD 为 T, 则选择不能都满足的对, 若 NIL 选择能都满足的对.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">adder</span><span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pat1</span><span class="w"> </span><span class="nv">pat2</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="nf">z-mod-ring-add</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="nv">pat1</span><span class="w"> </span><span class="nv">pat2</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">picker</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">odd</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">pick-odd-patterns-mod</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">pick-matched-pattern-mod</span><span class="w"> </span><span class="nv">m</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">size</span><span class="w">   </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">patterns</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">pairs</span><span class="w">  </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">size</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">picker</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">adder</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">                                        </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)))</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">pairs</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">pairs</span><span class="p">))</span>
+</pre></div>
+  </li>
+</ul>
+<p>于是对于 <code>*p*</code> 等于 <code>2</code> 的情况下, 可能的组合为:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*p*</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">  </span><span class="s">&quot;苹果, 梨, 橘子的合并要能够被 *P* 整除.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*patterns*</span><span class="w"> </span><span class="p">(</span><span class="nf">z-mod-m-ring-patterns</span><span class="w"> </span><span class="nv">*p*</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;苹果, 梨, 橘子按照在 Z mod 3 结果下的可能组合为 3^3 = 27 种.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*odd-patterns*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">pick-out-patterns</span><span class="w"> </span><span class="nv">*p*</span><span class="w"> </span><span class="nv">*patterns*</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;对 *patterns* 两两组合, 存在问题的两个组放到问题组合中.</span>
+<span class="s">得到的结果为一个元素为 (ID-1 ID-2) 的列表, 其中 ID 为 *PATTERN* 中元素的序号.&quot;</span><span class="p">)</span>
+</pre></div>
+<h2>最大两两连接</h2>
+<p>思路是这样的: 如果把上文得到的 <code>*odd-patterns*</code> 的结果看作是一个无向图,
+  那么可以发现, 无向图的边表示了一个关系: 两个组合之间是否不能满足条件.</p>
+<details><summary> 一些花里胡哨的绘制代码 </summary>
+<p>首先将 <code>*odd-patterns*</code> 绘制成图:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*default-headers*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;layout = fdp;&quot;</span>
+<span class="w">    </span><span class="s">&quot;node [shape=</span><span class="se">\&quot;</span><span class="s">circle</span><span class="se">\&quot;</span><span class="s">];&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;默认的 Graphiz 的设置.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">arc-to-graph</span><span class="w"> </span><span class="p">(</span><span class="nf">arcs</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">headers</span><span class="w"> </span><span class="nv">*default-headers*</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;将无向图 ARCS 输出为 Graphviz 的代码并打印. 默认输出到标准输出.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;graph {~%&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">header</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">headers</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;  ~A~%&quot;</span><span class="w"> </span><span class="nv">header</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">arc</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arcs</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;  ~A -- ~A;~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arc</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">arc</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;}&quot;</span><span class="p">))</span>
+</pre></div>
+<p>如果是绘制矩阵的话:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">matrix-to-graph</span><span class="w"> </span><span class="p">(</span><span class="nf">matrix</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">headers</span><span class="w"> </span><span class="nv">*default-headers*</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;将 MATRIX 输出为 Graphviz 的代码并打印. 默认输出到标准输出.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;graph {~%&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">header</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">headers</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;  ~A~%&quot;</span><span class="w"> </span><span class="nv">header</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">line</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">matrix</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">line-num</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">arc-p</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">nthcdr</span><span class="w"> </span><span class="nv">line-num</span><span class="w"> </span><span class="nv">line</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">for</span><span class="w"> </span><span class="nv">row-num</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">line-num</span>
+<span class="w">                 </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">arc-p</span><span class="p">)</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;  ~A -- ~A;~%&quot;</span>
+<span class="w">                              </span><span class="nv">line-num</span><span class="w"> </span><span class="nv">row-num</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;}&quot;</span><span class="p">))</span>
+</pre></div>
+</details>
+<p>对于 <code>p = 2</code> 的情况, 绘制得到的图如下:</p>
+<p><img src="/_img/lisp/misc/apple-pear-orange/p-eq-2.svg" alt="/_img/lisp/misc/apple-pear-orange/p-eq-2.svg" /></p>
+<p>对于这样的 (p = 2) 的结果, 看起来还是很容易的 (多么对称啊&#8230; ).
+  甚至你可以一眼看出, 这些节点之间都是两两相互连接的. 也就是说,
+  对于 p = 2 的情况, 其最大两两连接图的节点数量为 8 (也就是图的节点数量).</p>
+<p>但是对于 p = 3 的情况:</p>
+<p><img src="/_img/lisp/misc/apple-pear-orange/p-eq-3.svg" alt="/_img/lisp/misc/apple-pear-orange/p-eq-3.svg" /></p>
+<p>这个就比较夸张了, 自然不用说对于 p = 4 的情况&#8230;</p>
+<p><img src="/_img/lisp/misc/apple-pear-orange/p-eq-4.svg" alt="/_img/lisp/misc/apple-pear-orange/p-eq-4.svg" /></p>
+<p>显然, 这样的鸟东西肯定是不可能人眼判断的.
+  对于用手算的同学肯定会觉得我是傻逼, 没错, 我真的是傻逼,
+  因为我还真地就这么继续折腾了下去, 而不是去想一个更加美妙的解析解.</p>
+<h2>艺术就是爆炸&#8230;</h2>
+<p>问题的思路就是要找到一个最大两两连接图.
+  一个比较朴素的解决思路是这样的:</p>
+<ul>
+  <li>用一个 <code>to-search-nodes</code> 作为待搜索节点的列表,
+    用一个 <code>searched-nodes</code> 作为已经找过的节点列表</li>
+  <li>假如 <code>to-search-nodes</code> 不为空, 则取其中的一个节点 <code>node</code>
+    <ul>
+      <li>假如该节点和已经找过的节点都相连接 <code>test-connection</code>,
+        则将该节点添加到 <code>searched-nodes</code>, 然后以在 <code>to-search-nodes</code> 中,
+        <code>node</code> 后的节点作为新的 <code>to-search-nodes</code> 继续搜索.</li>
+      <li>假如不相连, 那么直接就搜索下一个 <code>node</code></li>
+    </ul>
+  </li>
+  <li>假如 <code>to-search-nodes</code> 为空, 则更新最大长度的信息</li>
+  <li>在搜索完毕后, 返回最大长度信息</li>
+</ul>
+<p>当然, 为了实现上面的算法, 将图转换为邻接矩阵的形式可能会比较好:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">arc-to-matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="nv">arcs</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;将边组 ARCS 变换为邻接矩阵形式. </span>
+
+<span class="s">其中 ARCS 的形式为 ((点1 点2) ...), 是无向图.</span>
+<span class="s">得到的 MATRIX 的形式为 ((a11 a12 ...) (a21 a22 ...) ...).&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">size</span>
+<span class="w">                      </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="mi">0</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">arc</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arcs</span><span class="w"> </span><span class="k">do</span>
+<span class="w">          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">p1</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w">  </span><span class="nv">arc</span><span class="p">))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">p2</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">arc</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="nv">p1</span><span class="w"> </span><span class="nv">p2</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="nv">p2</span><span class="w"> </span><span class="nv">p1</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">matrix</span><span class="p">))</span>
+</pre></div>
+<p>然后在邻接矩阵的基础上去查找一个最大两两连接图:</p>
+<details><summary> 其中的一些帮助函数 </summary>
+<ul>
+  <li>最大值记录帮助函数
+<div class="highlight"><pre><span></span><span class="c1">;;; 最大值记录帮助函数</span>
+<span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">max-value</span><span class="w">   </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">max-pattern</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">max-reset</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nb">max</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="s">&quot;重置 MAX-VALUE 的值为 MAX, 默认为 0.&quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">max-value</span><span class="w">   </span><span class="nb">max</span>
+<span class="w">          </span><span class="nv">max-pattern</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">re-max</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">    </span><span class="s">&quot;比较 PATTERN 长度和 MAX-VALUE 的大小并更新 MAX-VALUE 的值. </span>
+<span class="s">返回 MAX-VALUE 和 MAX-PATTERN.&quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">value</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">value</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">value</span><span class="w"> </span><span class="nv">max-value</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">max-value</span><span class="w"> </span><span class="nv">value</span>
+<span class="w">              </span><span class="nv">max-pattern</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">max-value</span><span class="w"> </span><span class="nv">max-pattern</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">max-connection-matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">matrix</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;在邻接矩阵的基础上查找最大的两两连接图.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">test-connection</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">others</span><span class="p">)</span>
+<span class="w">             </span><span class="s">&quot;判断 NODE 与 OTHERS 之间是否相连.&quot;</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">other</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">others</span>
+<span class="w">                   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">other</span><span class="p">)))</span>
+<span class="w">                     </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">T</span><span class="p">)))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">search-max</span><span class="w"> </span><span class="p">(</span><span class="nf">to-search</span><span class="w"> </span><span class="nv">searched-nodes</span><span class="p">)</span>
+<span class="w">             </span><span class="s">&quot;查找最大两两连接图的递归函数.&quot;</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">to-search</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">re-max</span><span class="w"> </span><span class="nv">searched-nodes</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">node</span><span class="w">  </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">to-search</span><span class="p">)))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">search-max</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">to-search</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">test-connection</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">searched-nodes</span><span class="p">)</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">searched-nodes</span><span class="p">)</span>
+<span class="w">                                   </span><span class="nv">searched-nodes</span><span class="p">))))))</span>
+
+<span class="w">    </span><span class="p">(</span><span class="nf">max-reset</span><span class="p">)</span><span class="w">                         </span><span class="c1">; 重置最大值</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">size</span><span class="w">  </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">matrix</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">nodes</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">idx</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">nodes</span><span class="w"> </span><span class="k">do</span><span class="w">       </span><span class="c1">; 选择不同的起点</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">search-max</span><span class="w"> </span><span class="nv">nodes</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">start</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">re-max</span><span class="p">)))</span>
+</pre></div>
+<details><summary> 一些掉书袋的东西 </summary>
+<p>其实也不是掉书袋, 分析一下算法的复杂度而已: 对于一个 \(M_{n &times; n}\) 的方阵,
+  分析的时候将其节点序号编号为 \(1, 2, &hellip;, i, &hellip;, n\),
+  当取 <code>node</code> 为第 \(i\) 号节点时, <code>searched-nodes</code> 的大小 \(\leq i\),
+  那么计算中的消耗:</p>
+<ul>
+  <li><code>test-connection</code> 最多需要比较 <code>(length searched-nodes)</code> 次,
+    于是可以近似为 \(O(i)\) 次.</li>
+  <li>一次 <code>search-max</code> 需要计算第 \(1, &hellip;, n\) 个 <code>node</code>,
+    那么对应需要 \(&sum; i = \frac{n(n + 1)}{2}\) 次计算, 近似为 \(O(n^2)\) 次.</li>
+  <li>而需要从 \(n\) 个起点开始, 所以复杂度为 \(O(n^3)\).</li>
+</ul>
+<p>(注: 我也不是啥正经计算机系人, 大概就是这样的一个复杂度?
+  算错了我也可以负责一下, 不过没人来扣我分就是了.)</p>
+</details>
+<p>不过在看结果的时候, 突然想到如果有这样的一个图:
+  其中的节点到任意节点 (包括自身) 都存在边, 那么这个时候,
+  是不是就不存在可以分解为堆的情况呢?</p>
+<p>但是, 理论上应该是不可能的, 在环 \(\mathbb{Z}_p\) 上, 总是存在逆元.
+  所以 \(x\) 的逆元和 \(x\) 之间一定不存在边. 于是在上面的问题里面,
+  既然已经得到了最大两两相连图的节点组 \(X\), 那么任意取 \(x &isin; X\),
+  往其中添加一个 \(x^{-1}\) 形成的新的组 \(X' = X &cup; \{x^{-1}\}\) 就是最小的满足条件的组了.</p>
+<p>于是对于不同的 \(p\), 就应该也许大概可以计算咯:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="p">(</span><span class="nf">p</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;简单的测试函数, 测试对于整除 P 的组合的可能的结果数量.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">patterns</span><span class="w">     </span><span class="p">(</span><span class="nf">z-mod-m-ring-patterns</span><span class="w"> </span><span class="nv">p</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">odd-patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">pick-out-patterns</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="nv">patterns</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">matrix</span><span class="w">       </span><span class="p">(</span><span class="nf">arc-to-matrix</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="nv">odd-patterns</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="nv">pattern-idx</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">max-connection-matrix</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">size</span>
+<span class="w">              </span><span class="nv">pattern-idx</span>
+<span class="w">              </span><span class="nv">patterns</span><span class="p">))))</span>
+</pre></div>
+<details><summary> 更加详细的一些测试 </summary>
+<p>那么一个想法就是测试上面 <code>test</code> 函数得到的结果是否满足一开始的要求:</p>
+<ul>
+  <li>两两之间总会有连线:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">test-connection</span><span class="w"> </span><span class="p">(</span><span class="nf">nodes</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;测试 NODES 在 MATRIX 中是否是两两相连的. </span>
+<span class="s">返回 T 如果是两两相连的, 否则返回 NIL.</span>
+
+<span class="s">示例代码:</span>
+<span class="s">    (let* ((p 3)</span>
+<span class="s">           (patterns     (z-mod-m-ring-patterns p))</span>
+<span class="s">           (odd-patterns (pick-out-patterns p patterns))</span>
+<span class="s">           (matrix       (arc-to-matrix (expt p 3) odd-patterns)))</span>
+<span class="s">      (multiple-value-bind (- pattern-idx)</span>
+<span class="s">          (max-connection-matrix matrix)</span>
+<span class="s">        (test-connection pattern-idx matrix)))</span>
+<span class="s">返回的结果应当为 T.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">upper</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">nodes</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">upper</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">upper</span>
+<span class="w">                   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">nodes</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">nodes</span><span class="p">)))</span>
+<span class="w">                     </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">T</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">T</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>确认没有其他的节点 (最大): 添加任意一个新节点, 则不满足两两相连的条件.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">test-max-connection</span><span class="w"> </span><span class="p">(</span><span class="nf">nodes</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;测试是否为最大的连接.</span>
+
+<span class="s">示例代码:</span>
+<span class="s">     (let* ((p 3)</span>
+<span class="s">           (patterns     (z-mod-m-ring-patterns p))</span>
+<span class="s">           (odd-patterns (pick-out-patterns p patterns))</span>
+<span class="s">           (matrix       (arc-to-matrix (expt p 3) odd-patterns)))</span>
+<span class="s">      (multiple-value-bind (- pattern-idx)</span>
+<span class="s">          (max-connection-matrix matrix)</span>
+<span class="s">        (test-max-connection pattern-idx matrix)))</span>
+<span class="s">结果应当为 T.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">nodes</span><span class="p">))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">test-connection</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">nodes</span><span class="p">)</span><span class="w"> </span><span class="nv">matrix</span><span class="p">))</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">T</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>那么对于 p = 3 的情况, 应该得到的结论为:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">test</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+15
+</pre>
+<h2>换一个思路</h2>
+<p>当前的算法对于 \(p\) 的复杂度约为 \(O((p^3)^3)\). 但是如果先进行分组进行划分,
+  然后在组合进行合并, 是否可以将问题的复杂度降低下来呢?</p>
+<details><summary> 这个复杂度是怎么算的 </summary>
+<p>前面计算了对于一个 \(M_{n &times; n}\) 的方阵, 找到最大两两连接图的复杂度为 \(O(n^3)\),
+  而对于 \(\mathbb{Z}_p\) 的环, 其对应的方阵大小 \(n = p^3\) (三个: 苹果, 梨, 橘子).</p>
+</details>
+<p>而分组的基本思路就是一开始的那种方式:</p>
+<ol>
+  <li>因为苹果, 梨, 橘子是独立的, 所以单独考虑一个的复杂度:
+    <ul>
+      <li>在 \(p\) 的情况下, 计算 \(P = \{(x_i, x_j) | x_i + x_j &ne; 0, x_i, x_j &isin; \mathbb{Z}_p\}\)
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-matrix-of</span><span class="w"> </span><span class="p">(</span><span class="nf">p</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;计算 P 下的组合图, 并将其以矩阵的形式输出.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arcs</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="k">do</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">p</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">modp</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">p</span><span class="p">))</span>
+<span class="w">                  </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">arcs</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">arc-to-matrix</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="nv">arcs</span><span class="p">)))</span>
+</pre></div>
+      </li>
+      <li>将 \(P\) 变成图然后计算最大两两相连图.
+     <details><summary> 比如对于不同的 \(p\) </summary>
+        <p>\(p = 3\):</p>
+        <p><img src="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-3.svg" alt="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-3.svg" /></p>
+        <p>\(p = 4\):</p>
+        <p><img src="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-4.svg" alt="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-4.svg" /></p>
+        <p>\(p = 5\):</p>
+        <p><img src="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-5.svg" alt="/_img/lisp/misc/apple-pear-orange/matrix-to-graph-of-5.svg" /></p>
+        <p>好消息是这个图非常的简单, 甚至可以说对于大佬来说估计可以一眼望穿&#8230;</p>
+     </details>
+        <p>于是可以计算一个最小满足条件的组合 \(C: &forall; x &isin; C, &exist; x' &isin; C, x + x' = 0\).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">min-combination-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">matrix</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;计算通过邻接矩阵 MATRIX 得到的最小长度和所有对应最小的组合.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">max-connection-matrix</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">size</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">matrix</span><span class="p">)</span>
+<span class="w">                  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">patterns</span>
+<span class="w">                           </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))</span>
+<span class="w">                             </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">T</span><span class="p">)</span>
+<span class="w">                           </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">                    </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)))))</span>
+</pre></div>
+     <details><summary> 代码注记 </summary>
+        <ul>
+          <li>首先找到最大两两相连矩阵 <code>(max-connection-matrix matrix)</code></li>
+          <li>有前面的逆元的论证, 最小的非两两相连的图的大小为最大两两相连图的大小加一.
+            对应的节点集合为往最大两两相连图中添加一个新的不满足的节点即可.
+            <p>但是这个添加的点不同, 最终得到的节点组也不同, 所以需要历遍所有可能的点.</p>
+          </li>
+        </ul>
+     </details>
+      </li>
+    </ul>
+  </li>
+  <li>计算苹果, 梨, 橘子按照 \(C\) 中元素进行组合的排布, 并剔除重复项.
+    <p>注: 剔除重复项的时候, 我觉得可以用二叉树来实现,
+      这样估计可以降低复杂度 (\(O(ln n)\)), 不过我比较懒,
+      所以就用一个 \(O(n)\) 的历遍来做先.</p>
+   <details><summary> 一个无聊的代码 </summary>
+    <p>我的想法是, 如果可以整一个组合函数就好了:
+      对于第 \(i\) 位元素的可能取值组合 \(\mathrm{pattern}_i\),
+      能够得到所有可能组合的 \(\{(x_i)\}\) 就好了.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">combine-by-patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;PATTERNS 为可能的模式组合的列表以及长度, 如:</span>
+<span class="s">(combine-by-patterns &#39;(1 0) &#39;(1 0)) 将得到 (1 1) (1 0) (0 1) (0 0) </span>
+<span class="s">并且在组合中会剔除重复的模式.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">combine-two-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">pat1</span><span class="w"> </span><span class="nv">pat2</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem1</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">pat1</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem2</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">pat2</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">union</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">elem2</span><span class="w"> </span><span class="nv">elem1</span><span class="p">))</span>
+<span class="w">                                            </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">))))</span>
+<span class="w">               </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">patterns</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;combine-two-pattern</span><span class="w"> </span><span class="nv">patterns</span>
+<span class="w">                            </span><span class="nv">:initial-value</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">NIL</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">patterns</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)))))</span>
+</pre></div>
+    <p>利用这个函数, 就可以比较轻松地计算 <code>n</code> 个相同 <code>patterns</code> 的情况的组合了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">combine-by-n-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;N 个 PATTERN 的组合的不重复的组合以及组合的长度.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;combine-by-patterns</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+</pre></div>
+   </details>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">combine-patterns-count</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">p</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;对于 N 个元素在模 P 组合下进行计数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">min-combination-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">make-matrix-of</span><span class="w"> </span><span class="nv">p</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">combinations</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">pat</span><span class="w"> </span><span class="nv">size</span><span class="p">)</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">combine-by-n-pattern</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">pat</span><span class="p">)))</span>
+<span class="w">                     </span><span class="nv">patterns</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">combination</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="nv">combinations</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;&lt;</span><span class="w"> </span><span class="nv">:key</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">combination</span><span class="p">)))</span>
+<span class="w">              </span><span class="nv">combination</span><span class="p">))))</span>
+</pre></div>
+  </li>
+</ol>
+<p>细心的或者运行了代码的估计已经发现问题了,
+  运行代码的可以直接看出来两种方法答案不同,
+  细心的估计直接发现了这样的解法得到的是苹果或者梨或者橘子至少有一个能被整除.</p>
+<p>欸&#8230;</p>
+<details><summary> 做一些测试 </summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">combine-patterns-count</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">            </span><span class="c1">; =&gt; 8</span>
+<span class="p">(</span><span class="nf">combine-patterns-count</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w">            </span><span class="c1">; =&gt; 8</span>
+<span class="p">(</span><span class="nf">combine-patterns-count</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w">            </span><span class="c1">; =&gt; 27</span>
+</pre></div>
+<p>会发现稍微比前一种方法需要的少一些, 毕竟条件更加宽松一些&#8230;</p>
+</details>
+<h1><del>废话集</del></h1>
+<p>感觉这样的小代码还是挺有意思的.
+  估计以后闲了时候可以像这样做一些小代码来练练手.</p>
+<p>但是可能以后还是要写一些大一点的代码.</p>
+<p>不过感觉可能这样的做法还是不太合理, 估计不一定是最优解法,
+  甚至不一定是正确的解法就是了.</p>
+<p>欸, 做到最后有点不想做了, 做研究写论文大概就会是这种感觉吧&#8230;</p>
+<p>啊, 最后, 为啥要叫翻车呢? 大概是因为这个玩意我写了太久,
+  中间还出错了太多了吧&#8230; 并且最终的结果估计也不一定对&#8230;</p>
+
+  </div><a class="u-url" href="/lisp/apple-pear-orange/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
