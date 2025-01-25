@@ -1,0 +1,1210 @@
+#+title: Little Sound Dj Manual
+#+date: 2025-01-21
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lsdj
+* About
+不是 [[DAW][DAW]] 买不起, 而是 Game Boy 更有意思.
+小小翻译一下 [[lsdj][LSDJ]] 的手册, 之后再去学点简单的编曲估计就可以了.
+感觉 bit tone 音乐真有意思.
+
+阅读指南:
++ 可以先阅读 [[Making Your First Sounds]] 以大概了解如何使用 [[lsdj][LSDJ]]
++ 然后快速翻阅一遍 [[The Screens]] (大概了解有哪些 Screen),
+  然后快速看一遍 [[Commands]] (大概了解有那些命令 =A-Z=)
++ 去读点编曲教材或者自动编曲的文章
+
+#+begin_markdown
+<style type="text/css">
+img {
+  width: 300px;
+}
+</style>
+#+end_markdown
+
+* LSDJ Manual (9_2_6)
+** Getting Started
+*** Game Boy Sound
+[[gameboy][Game Boy]] 的 APU 包含 4 个通道, 每个通道的分辨率为 4-bit.
+
++ *Pluse Channel 1*: 带有 [[envelope][包络]] 以及 [[sweep][扫频]] 的方波输出
++ *Pluse Channel 2*: 带有 [[envelope][包络]] 的方波输出
++ *Wave Channel*: [[soft-synthesizer][软件合成器]], [[sample-playback][采样播放]] 以及 [[speech-synthesis][语音合成器]]
++ *Noise Channel*: 带有 [[envelope][包络]] 和 [[shape][形状]] 的噪声通道
+
+*** Key Presses
+在本文档中, 按键有如下的记号:
++ =A=, =B=, =START=, =SELECT= 按键
++ =CURSOR= 十字键:
+  + =LEFT=, =RIGHT=, =UP=, =DOWN=
+  + =LEFT/RIGHT=, =UP/DOWN=
++ =SELECT+A= 在按下 =SELECT= 时同时按 =A=
++ =SELECT+(B,B)= 在按下 =SELECT= 时同时按两次 =B=
+
+*** Navigating the Program
+#+name: song-screen
+#+caption: Song Screen
+[[/_img/lsdj/song-screen.png]]
+
+[[lsdj][LSDJ]] 在启动时进入 *S*​ong Screen. 其中的四列 (/PU1/, /PU2/, /WAV/, /NOI/)
+代表 Game Boy 的四个声道: 两个脉冲, 一个任意波形以及一个噪声通道.
+使用十字键可以将光标在不同的通道间切换.
+
+[[lsdj][LSDJ]] 有九个 screen, 按照右下角的 map (小地图) 进行排列.
+
+在 map 的中间栏为: *S*​ong, *C*​hain, *P*​hrase, *I*​nstrucment 以及 *T*​able.
+其按照细节程度进行排列: Song 为 Chain 的排列, 而 Chain 是 Phrase
+的组合, Phrase 由音符 Note 组成.
+
+使用 =SELECT+CURSOR= 在不同的 screen 间切换.
+
+*** Online Help
+<<Help Screen>>
+#+name: project-screen-help
+#+caption: Project Screen Help
+[[/_img/lsdj/project-screen-help.png]]
+
+内置的帮助可以通过在 Project screen 中, 将光标移动到 HELP 上按 =A= 打开.
+Help screen 中会列出不同 screen 的按键以及命令表.
+
+*** Making Your First Sounds
++ 在 Song screen, 将光标移动到 /PU1/ 列上,
+  按下 =A= 键将会新建一个名为 =00= 的 Chain;
++ 使用 =SELECT+RIGHT= 移动到 Chain screen.
+
+  在 Chain Screen, 按下 =A= 在 Chain 中插入一个新的 Phrase;
++ 使用 =SELECT+RIGHT= 移动到 Phrase Screen.
+
+  在 Phrase Screen, 按下 =A= 可以插入音符:
+
+  #+name: phrase-screen
+  #+caption: Phrase Screen
+  [[/_img/lsdj/phrase-screen.png]]
+
+  其中 =C= 表示 [[note][音符]], =2= 表示 [[octave][音阶]].
+  按下 =START= ([[note][音符]] 将会按照从上到下的顺序) 将会播放这段 phrase.
+  + 当按住 =A= 键时, 可以使用十字键更改 [[note][音符]]:
+    + =A+LEFT/RIGHT= 更改 [[note][音符]]
+    + =A+UP/DOWN= 更改 [[octave][音阶]]
+  + 使用十字键可以移动并在其他位置插入 [[note][音符]];
+  + 在按住 =B= 的同时, 按下 =A= 键可以删除当前的 [[note][音符]];
++ 使用 =SELECT+RIGHT= 移动到 Instrument Screen.
+
+  #+name: instrument-screen
+  #+caption: Instrument Screen
+  [[/_img/lsdj/instrument-screen.png]]
+
+  在 Instrument Screen 中:
+  + 使用 =A+LEFT/RIGHT= 可以修改 =ENV= ([[envelope][包络]])
+
+    *例*: 将包络设为 =83= 将会让声音听起来更短
+  + 使用 =A+LEFT/RIGHT= 可以修改 =TYPE= (乐器类型)
+
+    乐器类型是和通道类型强关联的:
+    =PULSE= 类型的乐器只能用于脉冲通道 (Pluse);
+    =WAVE= 和 =KIT= 类型的乐器只能用于波形 (Wave) 通道;
+    =NOISE= 类型的乐器只能用于噪声 (Noise) 通道.
+
+  *例*: Drum Kits: 在 Song Screen 中选择 /WAVE/ 通道,
+  并设置 =INSTR= 的类型为 =KIT= [fn:drum-kits]
+
+*** Hexadecimal Number System
+[[lsdj][LSDJ]] 使用十六进制数的表示 [fn:hex-presentation].
+十六进制的作用是减少数的表示所占用的空间大小.
+需要注意的是负数的表示是反码 (但是没有符号位),
+所以会稍微有些难懂.
+
+*** Initial Troubleshooting
+假如卡带没有正常启动, 崩溃了, 或者运行得比较奇怪, 可以尝试:
++ 换上新的电池以防止丢失数据
++ 用棉签和酒精清洁卡带触电
++ 多次重新插拔卡带来清除触电上的氧化物
++ 确保卡带插紧了 (也许可以使用胶带来帮助卡带固定)
++ 初始化卡带的储存: 在 Project Screen 上的 =LOAD/SAVE FILE=
+  上按下 =SELECT+A+B=
++ 部分 Game Boy Advance/Nintendo DS 卡带不支持 [[lsdj][LSDJ]],
+  可以尝试 "[[https://www.littlesounddj.com/lsd/latest/rom_images/goomba/][Goomba]]" 版本的 [[lsdj][LSDJ]].
++ LSDJ Wiki
+
+** The Screens
+[[lsdj][LSDJ]] 有 9 个 Screen, 在小地图中以 \(5 \times 3\) 的结构进行排布.
+
+*** Screen Map
+#+name: screen-map-layout
+#+caption: Screen Map 小地图布局
++--------------+-----------------+-------+
+| Project      | Synth           | Wave  |
++------+-------+--------+--------+-------+
+| Song | Chain | Phrase | Instr. | Table |
++------+-------+--------+--------+-------+
+| Groove                                 |
++----------------------------------------+
+
+其中 [fn:hidden-screens]
++ Song, Chain, 和 Phrase Screen 用于编曲;
++ Wave, Synth, Instrument 和 Table Screen 用于修改声色;
++ Project Screen 包含项目的设定
++ Groove Screen 控制音序器的时间
+
+在编曲时, 主要使用的是中间的一行.
+
+使用 =SELECT+CURSOR= 在不同的 Screen 之间切换.
+
+*** Starting and Stopping
++ 在 Song Screen 按下 =START= 时, [[lsdj][LSDJ]] 将会播放所有四个通道;
++ 在其他 Screen 按下 =START= 时, [[lsdj][LSDJ]] 只会播放当前编辑的通道;
++ 若要在其他 Screen 播放所有的通道, 按下 =SELECT+START=
+
+*** Song Screen
+#+name: song-screen-2
+#+caption: Song Screen
+[[/_img/lsdj/song-screen.png]]
+
+Song Screen 为音序器的最高层级. (其他说明前面写过了, 略)
+
+*Tip*:
++ 在空 step 上按下 =B+A= 可以将其下方的 Chains 向上移动;
++ 按 =B+UP/DOWN= 快速跳到下一页的 row
+
+*** Chain Screen
+#+name: chain-screen-example
+#+caption: 当前的 Chain 包含 Phrase 3 (转调 5 个半音), 后面跟着 Phrase 4, 5, 6
+[[/_img/lsdj/chain-screen-example.png]]
+
+Chain 包含一列可播放的 Phrases. 可以用来表示旋律,
+或是 Bass Line. 每个 Phrases 都有一个可选的变调 (transpose).
+
+Chains 可以被不同的通道重复使用.
+比如可以在两个脉冲通道里面播放一个 Chain.
+
+*** Phrase Screen
+#+name: phrase-screen-2
+#+caption: Phrase Screen
+[[/_img/lsdj/phrase-screen.png]]
+
+在 Phrase Screen 中输入 [[note][音符]]. 包含四列: Note (音符),
+Instrument (乐器), Command (命令) 以及 Command Value (命令参数).
+
+Phrase 在不同的通道间可以共享. 但是在不同的通道里一个 Phrase
+可能听起来有些不同. 比如在脉冲通道里面播放的旋律,
+可能在其他通道里其他听起来有些不同.
+
++ Note 列:
+  根据所选取的乐器不同, Note 列的显示可能有些不同.
+  + 通常会显示 [[note][音符]] 和 [[octave][音阶]]
+  + 对于 KIT 或 SPEECH 类型的 [[sample-playback][采样]] 将会显示采样的名称
+  + 对于 NOISE 类型将会显示其值或 [[note][音符]] 和 [[octave][音阶]]
++ INSTR 列:
+  显示的是音符所用的乐器. 在其上按下 =SELECT+RIGHT=
+  可以编辑在 Instrument Screen 中对应的乐器.
++ CMD 列:
+  用于添加命令. 不同的命令有不同的特殊功能.
+  比如 =H= (HOP) 跳至下一个 Phrase. 在任意的命令上按下 =A,A=
+  可以弹出 Quick-Help 显示.
+
+*Tip*:
++ 使用 =B+A= 来剪切当前选择的音符
++ 对于 DRUM KIT 可以使用 =A+RIGHT= 直到显示 =OFF= 来将 KIT 静音
+  (只在 [[sample-playback][采样]] 少于 15 个的情况下有用)
+
+*** Instrument Screen
+#+name: instrument-screen
+#+caption: Instrument Screen
+[[/_img/lsdj/instrument-screen.png]]
+
+有五种乐器类型:
+
+| Type   | Function                      | Channel  |
+|--------+-------------------------------+----------|
+| *PULSE*  | Pulse Wave                    | /PU1/, /PU2/ |
+| *WAVE*   | waves from Synth, Wave Screen | /WAV/      |
+| *KIT*    | samples from [[rom][ROM]]              | /WAV/      |
+| *NOISE*  | pitched 7-bit or 15-bit noise | /NOI/      |
+| *SPEECH* | Intrument 40 for speech       | /WAV/      |
+
+在 =TYPE= 栏按下 =A+CURSOR= 可以更改乐器的类型.
+
+乐器并不会自动匹配对应的通道.
+所以在选择乐器的时候需要确保其应与通道相匹配.
+
+**** Instrument Parameters
+下面是乐器的通用参数:
+
+| NAME     | 按 =A= 改名字.                                                   |
+|          | 乐器的名称会在 Phrase Screen 选中时在边栏显示                  |
+|----------+----------------------------------------------------------------|
+| TYPE     | 乐器类型                                                       |
+|----------+----------------------------------------------------------------|
+| LENGTH   | 声音长度                                                       |
+|----------+----------------------------------------------------------------|
+| OUTPUT   | 控制声道输出 (左/双/右)                                        |
+|----------+----------------------------------------------------------------|
+| PITCH    | 控制 =P=, =L=, =V= 命令的行为.                                       |
+|          | =A+U/D= 改变 pitch 更新的速度: FAST 将 pitch 更新为 360Hz; TICK  |
+|          | 在每次 tick 更新 pitch; STEP 类似于 FAST, 但是 P does pitch    |
+|          | change instead of pitch bend; DRUM 类似于 FAST 但是有对数衰减, |
+|          | 常用于 P kick. =A+L/R= 在下三角波, 锯齿和方波, 上三角波,         |
+|          | 以及锯齿和方波之间改变振动的形状.                              |
+|----------+----------------------------------------------------------------|
+| TRANSP   | 当为 =ON= 的时候, pitch 将会受 Project 和 Chain 而改变           |
+|----------+----------------------------------------------------------------|
+| CMD/RATE | 减缓 =C= 和 =R= 命令的速度.                                        |
+|          | 当 PITCH 设为 TICK 时, 也影响 =P= 和 =V= 命令 (=0= 最快, =F= 最慢)     |
+|----------+----------------------------------------------------------------|
+| TABLE    | 按 =SELECT+RIGHT= 编辑播放 [[note][音符]] 时所用的 Table;                  |
+|          | 按 =A,A= 创建一个新的 Table; 按 =SELECT+(B,A)= 克隆一个 Table.     |
+|          | 修改 TICK 为 STEP 可以使得 [[lsdj][LSDJ]] 历遍 Table (每次增加一步)      |
+
+*Tip*
++ 在 Instrument Screen, 按下 =A,A= 可以显示 Quick-help
+
+**** Pulse Instrument Parameters
+#+name: instrument-screen
+#+caption: Pulse Instrument Screen (其中的包络为 32/AD/10)
+[[/_img/lsdj/instrument-screen.png]]
+
+| ENV.     | 有三段包络控制值: 每一位都第一位控制幅值, |
+|          | 第二个值控制上升/下降的速度.              |
+|----------+-------------------------------------------|
+| WAVE     | 波形类型                                  |
+|----------+-------------------------------------------|
+| SWEEP    | 扫频的设置: 第一位设置时间,               |
+|          | 第二位设置音调与下降. 只在 /PU1/ 起效.      |
+|----------+-------------------------------------------|
+| PU2 TSP. | Transpose /PU2/                             |
+|----------+-------------------------------------------|
+| FINETUNE | detune /PU1/ downwards, /PU2/ upwards         |
+
+*Note*: 包络被分成三段, 每段都是由 Amplitude 和 Speed 两部分组成.
+
+**** Wave Instrument Parameters
+#+name: wave-instrument-parameters
+#+caption: Wave Instrument Parameters
+[[/_img/lsdj/wave-instrument-parameter.png]]
+
+WAVE 类型的乐器将会播放在 SYNTH Screen 编辑的合成器声音.
+
+| VOLUME   | 设置音量 (增幅, =0= 0%, =1= 25%, =2= 50%, =3= 100%) 以及左右声道的输出 |
+|----------+----------------------------------------------------------------|
+| FINETUNE | detune                                                         |
+|----------+----------------------------------------------------------------|
+| WAVE     | 选择 [[sample-playback][采样的波形]]. (可以在 Wave Screen 设置波形)                 |
+|          | 当 =PLAY= 设置为 =MANUAL= 以外的值时, 其参数会被替换为 =SYNTH=       |
+|----------+----------------------------------------------------------------|
+| SYNTH    | 选择合成器声音. (可以在 Synth Screen 设置. =A,A= 新建一个合成器, |
+|          | =SELECT+(B,A)= 可以克隆波形, =SELECT+(B,A)= 可以克隆合成器)        |
+|----------+----------------------------------------------------------------|
+| PLAY     | 如何播放采样: =MANUAL=, =ONCE=, =LOOP= 或 =PINGPONG=.                  |
+|          | =MANUAL= 只会播放一个波形. 若要在 =MANUAL= 模式下播放合成器声音,   |
+|          | 则需要使用 [[F: Wave Frame/Finetune][=F=]] 命令在波形间步进.                               |
+|----------+----------------------------------------------------------------|
+| SPEED    | 设置合成器声音播放的速度                                       |
+|----------+----------------------------------------------------------------|
+| LENGTH   | 合成器声音的长度                                               |
+|----------+----------------------------------------------------------------|
+| LOOP POS | 合成器声音的循环位置                                           |
+
+**** Kit Instrument Parameters
+#+name: kit-instrument-parameters
+#+caption: Kit Instrument Parameters
+[[/_img/lsdj/kit-instrument-parameter.png]]
+
+| KIT      | 选择所用的 [[drum-kit][鼓机]].                                                          |
+|          | 第一个鼓机用于 Phrase 左侧音符,                                           |
+|          | 第二个鼓机用于 Phrase 右侧音符                                            |
+|----------+---------------------------------------------------------------------------|
+| VOLUME   | 设置音量 (幅值 =0= 0%, =1= 25%, =2= 50%, =3= 100%),                               |
+|          | 以及输出 (左右声道, 双声道或关闭)                                         |
+|----------+---------------------------------------------------------------------------|
+| FINETUNE | 音调修改                                                                  |
+|----------+---------------------------------------------------------------------------|
+| OFFSET   | 设置循环开始的位置.                                                       |
+|          | 若 =LOOP= 为 =OFF=, =OFFSET= 可以用于跳过循环开头.                              |
+|----------+---------------------------------------------------------------------------|
+| SPEED    | =1X= (全速) 或 =0.5X= (半速)                                                  |
+|----------+---------------------------------------------------------------------------|
+| CLIP     | 选择两个鼓机的声音信号如何混合.                                           |
+|          | =HARD= 为默认值;                                                            |
+|          | =SOFT= 将衰减信号以减少失真, 产生类似磁带的效果;                            |
+|          | =FOLD= 和 =WRAP= 将信号 [[clip-fold][折叠]] (fold) 或 [[clip-wrap][包裹]] (wrap), 其阈值为 =0= 到 =F= 之间设置. |
+|          | 在 =HARD= 模式下, 按下 =A+(LEFT,LEFT)= 可以使用 raw memory 内容进行混合.      |
+
+*Tip*:
++ 想要替换默认的鼓机采样, 使用 =ladpatcher= 程序. ([[https://github.com/jkotlinski/lsdpatch][Github]])
+
+**** Noise Instrument Parameters
+#+name: noise-instrument-parameters
+#+caption: Noise Instrument Parameters
+[[/_img/lsdj/noise-instrument-parameter.png]]
+
+| ENV.  | 同 [[Pulse Instrument Parameters]]                           |
+|-------+----------------------------------------------------------|
+| PITCH | 当设为 =FREE= 时, [[pitch][音调]] 的改变可能会随机静音;               |
+|       | =SAFE= 通过在 [[pitch][音调]] 改变的时候重新开始声音来避免随机的静音. |
+
+**** Speech Instrument
+#+name: speech-instrument-parameters
+#+caption: Speech Instrument Parameters
+[[/_img/lsdj/speech-instrument-parameter.png]]
+
+[[lsdj][LSDJ]] 有 59 个叫作 [[Appendix B: Allophones][allophones]] 的 speech sound.
+通过组合这些 [[Appendix B: Allophones][allophones]] 理论上可以说出任意的英语或短语.
+
+Speech 类型的乐器被固定为 =40= 的编号, 并且只能用于 /WAV/ 通道.
+其包含 =14= 个 word 槽, 默认从 =W-0= 到 =W-D= 进行命名.
+
+若需要编辑 word, 在其上按下 =SELECT+RIGHT= 可以进入 Word Screen.
+
+#+name: word-example
+#+caption: Example Word: (应该会说 Little Sound Dj)
+[[/_img/lsdj/word-example.png]]
+
+在 Speech Instrument Screen 上按 =A= 可以给 Word 进行命名,
+以使得 Word 更加任意记住.
+
+*Tip*:
++ 在编辑 [[Appendix B: Allophones][allophones]] 的时候, 请考虑它们听起来如何而不是拼起来如何;
++ 在英文里, 相同的字符在不同的词里面听起来可能会不同
+
+*** Table Screen
+#+name: table-screen
+#+caption: Table Screen
+[[/_img/lsdj/table-slide.png]]
+
+Table 为一系列 [[transpose][变调]], [[Commands][命令]] 以及 [[amplitude][音量]] 变化的组合.
+其可以以任意速度运行, 也可以应用到任意的通道上.
+通过在 [[Instrument Screen][Instrument Screen]] 中设置 Table, Table
+将会在每次该乐器播放的时候都生效.
+这可以实现一些单独乐器无法实现的有趣效果.
+
+Table 包含 6 列:
++ 第一列为 [[envelope][包络]], 用于控制自定义的增幅包络;
++ 第二列为 [[transpose][变调]], 用于控制当前 [[note][音符]] 的 [[transpose][变调]] (以 [[semitone][半音]] 为单位)
++ 其他列则类似 Phrase 为 [[Commands][命令]]
+
+默认的 Table 速度为 1 tick/step.
+可以通过 [[G: Groove Select][=G=]] 来改变 Table 速度.
+使用 =B+CURSOR= 在不同的 Table 之间切换.
+
+*Tip*
++ 在 Phrase Screen 上的 [[A: Table Start/Stop][=A=]] 命令按下 =SELECT+RIGHT=
+  可以编辑对应的 Table. 按下 =SELECT+LEFT= 来返回.
+
+**** Envelope Example
+#+name: table-envelope-example
+#+caption: Table Envelope with Tremolo Effect
+[[/_img/lsdj/table-envelope-example.png]]
+
+[[envelope][包络]] 参数的第一位设置了 [[amplitude][振幅]], 第二位设置了包络持续的时间
+(持续多少个 tick). 在设置循环时, 第一位参数设置想要跳转到的 step,
+第二位参数会被传给 [[H: Hop][=H=]] 命令.
+
+在图 [[table-envelope-example]] 中构建了一个 [[tremolo][Tremolo]] 效果.
+
+**** Arpeggio Example
+#+name: table-transpose-example
+#+caption: Table Transpose with Major Arpeggio
+[[/_img/lsdj/table-transpose-example.png]]
+
+应用 Table 的另一个常见的例子是 [[arpeggio][琶音]],
+即通过快速播放音符来实现类似和弦的效果.
+
+图 [[table-transpose-example]] 中实现了一个 [[major-chord][大三和弦]] 的效果.
+当然, 也可以用 [[C: Chord][=C=]] 实现一些较短的 [[arpeggio][琶音]].
+
+*** Groove Screen
+#+name: groove-screen
+#+caption: Groove Screen
+[[/_img/lsdj/groove-screen.png]]
+
+Groove 控制了播放 Phrases 和 Table 的速度. 假如合理使用,
+可以使得你的音乐更加有活力.
+
+[[sequencer][音序器]] 按照 tick 为最小单位进行更新, 其持续时间由歌曲的 [[tempo][节奏]] 控制.
+对于 125 BPM, 约为 50 tick/second. 更高的 [[tempo][节奏]] 意味着更快的 tick,
+反之则更慢. 在 Groove Screen 中, 可以控制每个 Phrase 或 Table
+step 将持续多少个 tick. 图 [[groove-screen]] 设置了每个 step 包含 6 个 tick.
+
+#+name: swing-example
+#+caption: Swing Example
+[[/_img/lsdj/swing-example.png]]
+
+也可以使用 Groove 来创建自定义的 [[rhythm][旋律]].
+图 [[swing-example]] 将设置偶数 [[note][音符]] step 持续 8 个 ticks,
+奇数 [[note][音符]] step 持续 5 个 ticks.
+Groove 也可以用于创作 [[triplets][三连音符]] 或其他更加复杂的 [[rhythm][旋律]].
+
+所有的 Phrase 的默认 Groove 是 Groove =0=.
+但是也可以通过 [[G: Groove Select][=G=]] 命令选择不同的 Groove,
+该命令也可以用在 Table 中.
+
+在 Groove Screen 中可以用 =B+CURSOR=.
+
+*Tip*
++ =A+UP/DOWN= 会在不改变 ticks 总数 (即歌曲的速度)
+  的情况下改变 swing 的比例.
+
+  *例*: 比如说原本的值为 =6/6= (50%),
+  按下 =A+UP= 则会将其值变为 =7/5= (58%).
++ 在 [[G: Groove Select][=G=]] 命令上按下 =SELECT+DOWN= 可以编辑对应的 Groove
+
+*** Synth Screen
+#+name: synth-screen
+#+caption: Synth Screen
+[[/_img/lsdj/synth-screen.png]]
+
+Synth Screen 提供了一个 [[soft-synthesizer][软件合成器]] 以通过 /WAV/ 通道播放声音.
+每隔合成器的声音可以使用 10 个波形. 合成器声音 =0= 使用了
+=00-0F= 的波形, 合成器 =1= 使用了 =10-1F= 的波形, 以此类推.
+生成的合成器波形可以在 [[Wave Screen][Wave Screen]] 中预览.
+
+总共有 16 个合成器声音. 可以通过 =B+CURSOR= 切换不同的合成器声音.
+
+**** Fixed Synth Settings
+| SIGNAL | [[square][方波]], [[saw][锯齿波]], [[triangle][三角波]] 或自定义的波形.  |
+|        | =W.FX= 使用 =F0-FF= 的波形作为信号        |
+|--------+---------------------------------------|
+| FILTER | [[low-pass][低通]], [[high-pass][高通]], [[band-pass][带通]] 或者 [[all-pass][全通]]            |
+|--------+---------------------------------------|
+| DIST   | [[distortion][失真]] (Distortion) 模式.               |
+|        | =CLIP= 将根据 =LIMIT= 参数限制波形;       |
+|        | =FOLD= 将反转超出 =LIMIT= 参数设定的波形; |
+|        | =WRAP= 将偏移超出 =LIMIT= 参数设定的区域. |
+|--------+---------------------------------------|
+| PHASE  | 水平地压缩波形.                       |
+
+**** Variable Synth Settings
+通过设置第一个和最后一个声音的波形, 来产生一个平滑的 [[fade][淡出]] 效果.
+
+| VOLUME | 信号音量                               |
+|--------+----------------------------------------|
+| CUTOFF | [[filter][滤波器]] 的截断频率                      |
+|--------+----------------------------------------|
+| Q      | 控制 [[resonance][回响]].                             |
+|--------+----------------------------------------|
+| VSHIFT | 竖直地偏移信号.                        |
+|--------+----------------------------------------|
+| LIMIT  | 限制在 =DIST= 模式的的阈值.              |
+|        | =0-F= 减少音量,                          |
+|        | =10-FF= 允许在偏移音量,                  |
+|        | 对较大音量的信号可以添加一些有趣的音调 |
+|--------+----------------------------------------|
+| PHASE  | 水平压缩信号.                          |
+
+*** Wave Screen
+在 Wave Screen 中可以预览和编辑合成器的单个波形.
+16 个合成器声音分别有 16 个波形. 这意味着第一个合成器 =0=
+可以使用 =0-F= 的波形, 第二个合成器 =1= 可以使用 =10-1F= 的波形,
+以此类推.
+
+Wave Screen 的按键可以在 Help Screen 中查看.
+
+*例*: Phase Examples
++ 默认的波形
+
+  #+name: orginal-wave
+  #+caption: Phrase example. Orginial Wave
+  [[/_img/lsdj/original-wave.png]]
++ PINCH Pharsing
+
+  #+name: pinch-phasing
+  #+caption: Pinch phasing
+  [[/_img/lsdj/pinch-phasing.png]]
++ WARP Phasing
+
+  #+name: warp-phasing
+  #+caption: WARP phasing
+  [[/_img/lsdj/warp-phasing.png]]
++ RESYNC Phasing
+
+  #+name: resync-phasing
+  #+caption: RESYNC phasing
+  [[/_img/lsdj/resync-phasing.png]]
+
+*例*: Vshift Examples
++ 默认的波形
+
+  #+name: vshift-orginal-wave
+  #+caption: Vshift example. Orginal Wave
+  [[/_img/lsdj/original-wave.png]]
++ Vshift signal (=VSHIFT= = =40=, =CLIP= = =WRAP=)
+
+  #+name: vshift-40
+  #+caption: Vshifted signal (Vshift = 40, Clip = WRAP)
+  [[/_img/lsdj/vshift-40.png]]
++ Vshift signal (=VSHIFT= = =80=, =CLIP= = =WRAP=)
+
+  #+name: vshift-80
+  #+caption: Vshifted signal (Vshift = 80, Clip = WRAP)
+  [[/_img/lsdj/vshift-80.png]]
+
+*** Project Screen
+#+name: project-screen
+#+caption: Project Screen
+[[/_img/lsdj/project-screen.png]]
+
+| TEMPO            | 以 BPM 为单位设置歌曲的节奏                             |
+|------------------+---------------------------------------------------------|
+| TRANSPOSE        | 以给定的 [[semitone][半音]] 数量调整 =PULSE= 和 =WAVE= 类型的乐器         |
+|------------------+---------------------------------------------------------|
+| SYNC             | 和其他的设备连接                                        |
+|------------------+---------------------------------------------------------|
+| CLONE            | 设置 =DEEP= 或 =SLIM= 的克隆方式:                           |
+|                  | =DEEP= 将克隆 Chain 的所有 Phrases,                       |
+|                  | =SLIM= 将重复使用旧的 Phrases.                            |
+|                  | 详见 [[Cloning]].                                           |
+|------------------+---------------------------------------------------------|
+| LOOK             | 改变字体和颜色设置                                      |
+|------------------+---------------------------------------------------------|
+| KEY DELAY/REPEAT | 设置 [[gameboy][Game Boy]] 按键的延迟                                |
+|------------------+---------------------------------------------------------|
+| PRELISTEN        | 设置是否在进入 [[note][音符]] 或乐器的时候播放声音                |
+|------------------+---------------------------------------------------------|
+| HELP             | 进入 [[Help Screen][Help Screen]].                                       |
+|                  | [[Help Screen][Help Screen]] 中包含按键和命令的使用参考                  |
+|------------------+---------------------------------------------------------|
+| CLEAN SONG DATA  | 去掉重复的 Chain 和 Phrases 并清除未使用的数据          |
+|------------------+---------------------------------------------------------|
+| CLEAN INSTR DATA | 去掉重复的 Table 和未使用的乐器, Tables, 合成器以及波形 |
+|------------------+---------------------------------------------------------|
+| LOAD/SAVE SONG   | 进入 [[File Screen][File Screen]]                                        |
+
+Project Screen 也包含两个时钟:
++ =WORKED= 显示制作当前歌曲所使用的时间;
+
+  当播放的时候会被替换为 =PLAY= 时钟, 显示歌曲被播放的时间长度.
++ =TOTAL= 显示当前卡带被使用的时间
+
+*Tip*:
++ 可以使用 lsdpatcher 替换字体和配色.
+
+**** Total Memory Reset
+在 =LOAD/SAVE FILE= 上按下 =SELECT+A+B= 将清空所有的数据.
+通常在卡带出现问题的时候有用.
+
+*** File Screen
+#+name: file-screen
+#+caption: File Screen
+[[/_img/lsdj/file-screen.png]]
+
+在 Project Screen 中的 =LOAD/SAVE SONG= 可以进入 File Screen.
+在 File Screen 中可以将歌曲保存在 [[SRAM][内存]] [fn:memory-or-disk] 中.
+也可以将 [[SRAM][内存]] 中的歌曲读取到当前内存 (运行内存) 中.
+可以保存最多 32 个歌曲到卡带中.
+
+File Screen 只能用于有 64kb [[SRAM][SRAM]] 的卡带中.
+
+| FILE  | 显示当前编辑的文件名称.                                  |
+|       | 当显示 =!= 时表示未保存.                                   |
+|-------+----------------------------------------------------------|
+| LOAD  | 载入歌曲.                                                |
+|       | 按下 =A= 后选择文件并再按下 =A= 可以载入歌曲.                |
+|-------+----------------------------------------------------------|
+| SAVE  | 保存歌曲.                                                |
+|       | 按下 =A= 后选择槽位并再次按下 =A= 可以写入歌曲.              |
+|-------+----------------------------------------------------------|
+| ERASE | 清除歌曲.                                                |
+|       | 按下 =A= 后选择文件并再次按下 =A= 可以清除歌曲.              |
+|-------+----------------------------------------------------------|
+| BLOCK | 显示使用了多少储存空间.                                  |
+| USED  | 一个块 (block) 为 512 比特.                              |
+|       | 在底部的数值为十六进制表示, 即 ~BF * 512 = 97792~ 有效比特 |
+
+按下 =B= 可以回到 [[Project Screen][Project Screen]].
+
+*Tip*:
++ 可以使用 lsdpatcher 来管理歌曲.
+
+**** Song List
+歌曲列表显示歌曲的名称, 版本编号以及文件大小. 当保存的时候,
+歌曲文件将会进行压缩, 所以不同的歌曲可能会有不同的大小.
+若想要开始创建新的歌曲, 可以载入 =EMPTY= 槽位.
+
+*Tip*
++ 在歌曲列表中按下 =SELECT+A= 中可以载入歌曲而不需要切换到 [[Song Screen][Song Screen]],
+  然后就可以按下 =START= 来播放或停止歌曲.
+  这样就可以快速预览歌曲而不需要反复切换到不同的 Screen 中.
+  这对于 Live 的表演比较有用.
+
+*** Border Information
+边栏上会显示一些有用的信息:
+1. Screen 的标题: 显示当前正在编辑的内容.
+2. 显示当前正在编辑的通道, 及选中的 Song Screen 的列
+3. 当前正在编辑的 Chain 的位置
+4. 当前歌曲的 [[tempo][节奏]] (BPM)
+5. 显示当前正在播放的通道.
+   当按下 =B+SELECT= 或者 =B+START= 是会显示 =MUTE= (静音)
+6. 在 /WAV/ 通道正在播放的波形
+7. 在 [[Phrase Screen][Phrase Screen]] 正选中的乐器
+8. Sync 状态
+9. Screen Map
+
+** Advanced Techniques
+*** Copy and Paste
+[[lsdj][LSDJ]] 中有一部分的内存空间作为剪贴板.
+按下 =B+A= 可以将光标下的值进行剪切, 并将其储存在剪贴板中.
+按下 =SELECT+A= 可以粘贴剪贴板中的内容.
+
+在大多数的 Screen 中, 可以用 =SELECT+B= 来选中,
+然后移动光标来选中块. 当选中块时, 可以按下 =B= 键将其复制到剪贴板中,
+或使用 =SELECT+A= 来剪切到剪贴板中. 同样, 可以使用 =SELECT+A= 粘贴.
+
+一些快速的选择操作:
++ =SELECT+(B,B)= 快速标记行或列
++ =SELECT+(B,B,B)= 快速标记整个屏幕
+
+当标记块后, 可以按下 =A+CURSOR= 来修改整个块中的数据.
+这样可以快速的对一系列 [[note][音符]] 进行 [[transpose][转调]].
+
+*** Cloning
+克隆可以用来减少一些不必要的复制粘贴工作.
+可以直接从 [[Song Screen][Song]], [[Chain Screen][Chain]], [[Phrase Screen][Phrase]] 或者 [[Instrument Screen][Instrument Screen]]
+中克隆 Chain, Phrases 或 Tables.
+
+*例*: 想要克隆 Chain =0= 的旋律.
++ 在 [[Song Screen][Song Screen]] 中在 =00= 上按下 =A= 来选中 Chain
++ 移动到下一个空的 step 中再次按下 =A= 来应用对应的 Chain
++ 按下 =SELECT+(B,A)= 来克隆 Chain =0=
+
+**** Deep vs. Slim-Cloning
+克隆模式分为 =DEEP= 和 =SLIM=, 可以在 [[Project Screen][Project Screen]] 中选择.
+
++ 当使用 =SLIM= 克隆 Chain 时, 会同时克隆和原本 Phrase 一样的内容.
++ 当使用 =DEEP= 克隆 Chain 时, 新的 Chain 包含原本的 Phrase.
+
+=DEEP= 克隆的好处是可以减少不小心修改旧的 Phrase.
+坏处是这样会更快地消耗可用 Phrase 内存, 并导致在保存的时候占用更多内存.
+
+如果你用完了可用的 Phrase, 可以使用 [[Project Screen][Project Screen]] 中的 =CLEAN SONG DATA=.
+
+*** The Importance of Backups
+一些血泪教训: 在使用 Game Boy 的卡带时, 常保存!
+大多数 Game Boy 的卡带依赖其内部的电池储存数据,
+但其电量可能会耗尽以导致你丢失数据或精度.
+请时不时做保存和备份或者至少将你的歌曲录制下来以免丢失.
+
+*** Muting, Soloing and Panning
++ 在任意 Screen 下按下 =B+SELECT= 可以静音当前通道
+
+  若 =B= 在 =SELECT= 键松开前被松开, 该通道在按下 =B= 键前将一直保持静音.
++ 在任意 Screen 下按下 =B+START= 可以将该通道声音独立出来
+  (除了该通道其他通道都静音)
+
+  若 =B= 在 =START= 键松开前被松开, 其他通道在按下 =B= 键前将一直保持静音.
+  若 =START= 键先松开, 则其他所有通道都会被取消静音.
++ 在 [[Song Screen][Song Screen]] 按下 =B+LEFT/RIGHT= 可以改变左右声道的 pan
+
+*** Live Mode
+Live 模式可以用于在 Live 演奏时自由地混合和匹配 Chains:
+
+此时的 [[Song Screen][Song Screen]] 包含:
+
+| =SELECT+LEFT=  | 在 Song 和 Live 模式之间切换 |
+|--------------+------------------------------|
+| =START=        | 开始选中的 Chain             |
+|--------------+------------------------------|
+| =SELECT+START= | 停止选中的 Chain             |
+|--------------+------------------------------|
+| =LEFT+START=   | 开始在该行中的所有的 Chain   |
+
+若 Chain 已经开始播放, 则开始和停止将会等到其完全播放完后生效.
+按下 =START= 两次将会加速该过程.
+
+*** Synthetic Drum Instruments
+不适用鼓机采样来创建鼓类乐器的好处是可以让通道的分配更加灵活.
+以下是一些简单的例子:
+
+(注: 这里不翻译了, 因为不会)
+
+**** Pulse Bass Drum
+**** Snare Drum
+**** Hi-Hats and Cymbals
+**** Wave Bass Drum
+
+** Commands
+在 Phrase 和 Table 中使用命令可以做任何事情.
+一个建议是先快速略过本节以大致了解命令可以做些什么.
+
+*Tip*:
++ 在命令上按 =A,A= 可以在屏幕上方显示一个滚动的帮助文本.
+  =A+L/R= 可以用于在这些命令之间游览. 按下 =SELECT= 可以停止文本的滚动.
+
+*** A: Table Start/Stop
+开始或停止当前的通道的 Table. 其参数为对应的 Table Number,
+或是 =20= 表示停止 Table.
+
+*例*:
+| =A03= | 开始 Table =03= |
+| =A20= | 停止 Table    |
+
+*** B: Maybe
+**** In Phrases (MayBe Play Note)
+控制其左边与右边的 [[note][音符]] 或者 [[sample-playback][采样]] 被触发的概率.
+第一位数设置​*左边* KIT 的概率, 第二位数设置​*右边* KIT 的概率.
+
+*例*:
+| =B00= | 永不触发 [[note][音符]]           |
+| =B0F= | 总是触发右侧的 [[note][音符]]     |
+| =BF0= | 总是触发左侧的 [[note][音符]]     |
+| =B08= | 50% 概率触发右侧的 [[note][音符]] |
+
+**** In Tables (MayBe Hop)
+设置一个有概率的跳转 (Hop). 第一位数设置触发概率,
+第二位数设置跳转的目标行.
+
+*例*:
+| =BF5= | 跳转到第 =5= 行, 15/16 的概率 |
+| =B84= | 跳转到第 =4= 行, 1/2 的概率   |
+| =B03= | 永远不会跳转到第 =3= 行       |
+
+*** C: Chord
+通过 [[arpeggio][琶音]] 将输入的参数 [[semitone][半音]] 在基础的 [[note][音符]] 拓展为和弦.
+[[arpeggio][琶音]] 的速度可以通过在 Instrument Screen 的 CMD/RATE 调节.
+
+*例*:
+| =C37= | [[minor-chord][小三和弦]]: 0, 3, 7, 0, 3, 7, 0, 3, 7, ... |
+| =C47= | [[major-chord][大三和弦]]: 0, 4, 7, 0, 4, 7, 0, 4, 7, ... |
+| =C0C= | 0, 0, C, 0, 0, C, 0, 0, C, ...           |
+| =CC0= | 0, C, 0, C, ...                          |
+| =CCC= | 0, C, C, 0, C, C, 0, C, C, ...           |
+| =C00= | 清除和弦设置                             |
+
+*** D: Delay
+延迟根据给定的参数延迟触发.
+
+*** E: Amplitude Envelope
+**** For Pulse and Noise Instruments
+第一位数字设置初始的增幅 (=0= 表示最小, =F= 表示最大);
+第二位数字设置 [[adsr-release][释放时间]] (=0,8=: 表示没有, =1-7=: 减少, =9-F=: 增加).
+
+**** For Wave Instruments
+*例*:
+| =E00= | 音量 0%   |
+| =E01= | 音量 25%  |
+| =E02= | 音量 50%  |
+| =E03= | 音量 100% |
+
+*** F: Wave Frame/Finetune
+**** For Pulse Instruments
+第一位数设置 /PU2/ TSP, 第二位数按 [[semitone][1/32 音]] 每 step =FINETUNE=.
+详见 [[Pulse Instrument Parameters]].
+
+**** For Kit Instruments
+修改 [[sample-playback][采样]] 的播放位置. =00-7F= step forward, =80-FF= steps back.
+
+**** For Wave Instruments
+改变 /WAV/ 通道所播放的波形帧 (wave frame),
+其参数为相对当前波形帧 (frame number) 的位移.
+可以用于手动播放合成器声音 (synth sound).
+
+*Tip*:
++ 因为一个合成器声音 (synth sound) 包含 16 (10) 个波形,
+  所以 =F10= 会跳转到下一个合成器声音里
+
+*例*:
+| =F01= | 假如当前已经播放了 frame 3, 那么前进一帧, 播放 frame 4 |
+
+*** G: Groove Select
+使用要播放的 Phrases 或 Tables 的 Groove
+
+*例*:
+| =G04= | 选择 groove 4 |
+
+*** H: Hop
+跳转到新的播放位置. 也同时可以被用于停止播放.
+
+**** H in Phrases
+*例*:
+| =H00-F0F= | 跳到下一个 Phrase. 其参数设置了目标的 Phrase 对应的 step |
+| =H10-HFE= | 在当前 Phrase 跳转, 第一位设置次数, 第二位设置目标 step  |
+| =HFF=     | 停止播放                                                 |
+
+*Tip*
++ To compose in waltz time (3/4), put =H00= commands on step C in
+  every phrase
+
+**** H in Tables
+在 Table Screen 中, =H= 用于实现循环. 第一位设置循环的次数或
+=0= 表示无数次. 第二位数设置跳转的 step. 循环跳转可以是嵌套的,
+可以在大循环里面设置小循环.
+
+*例*:
+| =H21= | 跳到 Table 的第 1 step 2 次  |
+| =H04= | 无限次掉到 Table 的第 4 step |
+
+*** K: Kill Note
+=K= 停止当前的声音 (会产生一个 click 声). 假如不希望有 click 声,
+可以使用 =E00= (/WAV/) 或者 =E11= (/PU*/, /NOI/).
+
+*例*:
+| =K00= | 立刻清除当前的 [[note][音符]]   |
+| =K03= | 在 3 tick 后清除 [[note][音符]] |
+
+*** L: Slide
+在给定时间里移至对应的 [[note][音符]] 实现 [[slide][滑音]]. 如果乐器的 PITCH 为 TICK,
+则给定的时间的单位为 tick, 否则则为 n/360 秒.
+
+*例*: 从 =C-4= 到 =F-4= 并快速回到 =C-4=.
+
+#+begin_example
+C-4 ---
+F-4 L40
+--- ---
+C-4 L10
+#+end_example
+
+**** L in Tables
+#+name: table-slide
+#+caption: Table Slide
+[[/_img/lsdj/table-slide.png]]
+
+=L= 命令可以在左边的 CMD 列中使用.
+TSP (Transpose) 列将会被设为相对 base note 的 target note.
+
+(...)
+
+*** M: Master Volume
+改变主音量 (master output volume). 第一位为左声道输出,
+第二位为右声道输出. 可以以相对值或绝对值的方式进行设置.
+
+对于 =0-7= 的值为绝对值, =8-F= 为相对值 (=8= 不改变, =9-B= 增加, =D-F= 减少).
+
+*例*:
+| =M77= | 最大音量                             |
+| =M08= | 左声道音量最小, 右声道音量不变       |
+| =M99= | 增加 1 音量                          |
+| =MFE= | 减少左声道 1 音量, 增加右声道 2 音量 |
+
+*** O: Set Output
+设置通道的输出为左声道, 右声道, 无或者双声道 (pan).
+
+*** P: Pitch Bend
+**** For Pulse, Wave and Kit Instruments
+以给定速度进行频移. 其行为受乐器的 =PITCH= 影响:
+
+| DRUM | 对数频移 (更新率 360Hz) |
+| FAST | 线性频移 (更新率 360Hz) |
+| TICK | 每 tick 更新            |
+| STEP | 立刻更新频率            |
+
+*例*:
+| =P02= | 以 =2= 的速率增加音调            |
+| =PFE= | 以 =2= (=FE= 为 =-2=) 的速率减少音调 |
+
+**** For Noise Instruments
+在每个 tick 处应用 [[S: Sweep/Shape][=S=]] 命令.
+
+*** R: Retrig/Resync
+重新触发之前播放过的 [[note][音符]]. 第一位数修改脉冲或噪声的音量
+(=0= 不变, =1-7= 增加, =9-F= 减少), 第二位设置重新触发的频率 (rate),
+(=1= 为最快, =F= 为最慢, =0= 表示只重新触发一次).
+
+*** S: Sweep/Shape
+=S= 的效果根据乐器类型的不同会有不同的效果.
+
+**** Pulse Instruments
+效果为扫频. 在 bass drum 和打击乐比较有用.
+第一位设置了时间, 第二位设置了 [[ pitch][音调]] 的增加和减少.
+这只在 /PU1/ 有效.
+
+**** Kit Instruments
+=S= 改变循环点. 第一位修改循环偏移值, 第二位修改循环长度.
+(=1-7= 增加, =9-F= 减少) 如果使用得当, 可以实现有效的打击乐的效果.
+
+**** Noise Instruments
+改变噪声的形状 (见 [[Noise Instrument Parameters]]).
+其参数值会增加当前生效的 /NOI/ 形状的值. (相对偏移)
+
+*** T: Tempo
+改变 tick 的速率以匹配给定的 [[BPM][BPM]]. 不过需要注意的是,
+只有当 Groove 为 6 tick/step 时 [[BPM][BPM]] 是直接设置的.
+否则 [[BPM]] 将需要通过以下的公式进行计算:
+
+\[\mathrm{BPM}_{\mathrm{LSDJ}} = \mathrm{BPM}_{\mathrm{desired}} \times \frac{\mathrm{tick}}{\mathrm{step}} / 6\]
+
+=T28-TFF= 设置 40-255 BPM, =T00-T27= 设置了 256-295 BPM.
+
+*例*:
+| =T80= | 128 BPM |
+| =TFF= | 255 BPM |
+| =T27= | 295 BPM |
+
+*** V: Vibrato
+添加 [[vibrato][颤音]]. 第一位设置速度, 第二位设置深度.
+
+[[vibrato][颤音]] 的速度和形状受乐器的 PITCH 影响. 当 PITCH 设为 TICK 时,
+[[vibrato][颤音]] 会被设置为与音乐同步 (假设有一个 6ticks/step 的节奏).
+
+| Depth     |     0 |    1 |     2 |   3 |    4 | 5 |   6 | 7 |
+|-----------+-------+------+-------+-----+------+---+-----+---|
+| Semitones | 0.125 | 0.25 | 0.375 | 0.5 | 0.75 | 1 | 1.5 | 2 |
+
+| Depth     |   8 | 9 |   A | B | C | D | E | F |
+|-----------+-----+---+-----+---+---+---+---+---|
+| Semitones | 2.5 | 3 | 3.5 | 4 | 5 | 6 | 7 | 8 |
+
+*例*:
+| =V42= | 速度为 4, depth 为 0.375 的半音 |
+| =V00= | 重设颤音                            |
+
+*** W: Wave
+**** For Pulse Instruments
+改变波形. 受限于硬件, 乐器 LENGTH 的计时器将会清零,
+可能会增加声音的持续时间.
+
+**** For Wave Instruments
+第一位设置了声音的速度, 第二位设置了合成器的声音长度.
+=0= 表示不改变. 若 LENGTH 被修改时, 将会重新开始 Synth.
+
+*** Z: RandomiZe
+重复前一个非 =Z= 或 =H= 的命令, 在原本的参数上加上一个随机值.
+其中 =Z= 的参数控制了增加的随机值的最大大小.
+
+*例*:
+| =Z02= | 0, 1, 2                         |
+| =Z20= | 0, 10, 20                       |
+| =Z22= | 0, 1, 2, 10, 11, 12, 20, 21, 22 |
+
+** Synchronization
+(用的是模拟器, 所以不管这部分)
+
+** Appendix A: Sample Kits
+(不知道, 略)
+
+** Appendix B: Allophones
+建议去读原文档.
+
+** Appendix C: SRAM Memory Map
+在 SRAM 中如何存放歌曲数据.
+
+(略)
+
+* Dictionary
+注: 这里的解释完全是以瞎解释为主. 我就喜欢瞎解释, 嘻嘻.
+
++ <<DAW>>              DAW          (*D*​igital *A*​udio *W*​orkstation)
+
+  数字音频工作站 (直译是这样的).
++ <<BPM>>              BPM          (*B*​eats *P*​er *M*​inute)
++ <<gameboy>>          Game Boy APU (*A*​udio *P*​rocessing *U*​nits)
+
+  [[gameboy][Game Boy]] 的音频处理单元 ([[https://gbdev.io/pandocs/Audio.html][Audio Overview (Pan Doc)]]).
++ <<lsdj>>             LSDJ       (*L*​ittle *S*​ound *Dj*)
+
+  [[gameboy][Game Boy]] 上的 [[sequencer][音序器]] ([[https://www.littlesounddj.com/lsd/index.php][LSDj Site]]).
++ <<rom>>              ROM        (*R*​ead *O*​nly *M*​emory)
+
+  [[gameboy][Game Boy]] 的卡带, 或是下载的游戏文件.
+  是储存 [[gameboy][GB]] 游戏的程序的部分.
++ <<sram>>             SRAM       (*S*​tatic *R*​random *A*​ccess *M*​emory)
+
+  在 [[gameboy][Game Boy]] 的一些卡带上一般会有的另外的芯片, 实现了存档之类的功能.
+  受限于当时的技术, 这个芯片的一个特点就是掉电了就会丢数据,
+  所以通常会在边上带一个小电池来保持 (也是常见的丢数据的元凶了).
++ <<sound-is-wave>>    声音
+
+  声音是一种振动. 描述一个最简单的振动即描述其振动的 [[pitch][频率]] (音调),
+  以及 [[amplitude][振幅]] (音量). 当然, 有许多不同的振动模式就是了:
++ <<amplitude>>        振幅       (amplitude)
+
+  虽然说振幅为 "音量" 可能有些不太准确, 但是差不多有些关联:
+  振幅更大, 音量更大.
++ <<square>>           方波       (square wave)
+
+  方方的波.
++ <<triangle>>         三角波     (triangle)
+
+  上升, 掉到低电平, 然后再慢慢上升, 掉到低电平.
++ <<saw>>              锯齿波     (saw tooth)
+
+  有点类似 [[saw][三角波]], 但是不是立刻掉到低电平,
+  而是上升, 下降再上升, 再下降.
++ <<note>>             音符       (note)
+
+  给一段声音命名当作一个单位声音片段来使用.
++ <<pitch>>            音调       (pitch)
+
+  主要描述了声音的频率. 但是和任意频率声音不同,
++ <<transpose>>        变调       (transpose)
+
+  改​*变* [[pitch][*音*​调]].
++ <<filter>>           滤波器     (filter)
+
+  按照波的特定类型和特征对其进行一定的筛选.
+  假如我们把波看作是不同频率的波的叠加 (傅里叶变换),
+  那么常见的 [[high-pass][高通]] (high-pass), [[low-pass][低通]] (low-pass), [[band-pass][带通]] (band-pass)
+  滤波器的功能就是根据频率的高低控制对应的波是否通过.
+  高通就是只让频率高的成分通过, 低通同理,
+  带通则是在一定频率区域内的成分通过. [fn:real-filter]
++ <<low-pass>>         低通       (low pass)
++ <<high-pass>>        高通       (high pass)
++ <<band-pass>>        带通       (band pass)
++ <<all-pass>>         全通       (all pass)
++ <<fade>>             淡出       (fade)
+
+  PPT 经典特效淡出. 你可以想象 [[amplitude][音量]] 逐渐减小.
++ <<rhythm>>           旋律       (rhythm)
+
+  嗯, 一段听起来好听的 [[sound-is-wave][声音]] 的排列.
++ <<triplets>>         三连音符   (triplets)
++ <<tempo>>            节奏       (tempo)
+
+  按照一定时间间隔变换 [[sound-is-wave][声音]]. 比如
++ <<octave>>           八度       (octave)
+
+  把 [[sound-is-wave][声音]] 按照 [[pitch][频率]] 进行一个分割.
+  一般来说, 把声音按照频率分成几个大块,
+  然后在大块中按照 =C=, =D=, =E=, =F=, =G=, =A=, =B=
+  (对应简谱的 =1=, =2=, =3=, =4=, =5=, =6=, =7=) 的方式进行分割与命名.
+
+  即:
+
+  #+begin_example
+    C2 D2 E2 F2 G2 A2 B2 C3 D3 E3 F3 G3 A3 B3
+  #+end_example
+
+  (频率按照从左到右增加)
++ <<sequencer>>        音序器     (sequencer)
+
+  按照一定频率 (时间间隔) 产生音符信号以控制其他乐器 (合成器)
+  发出声音的东西. 在这里 [[Song Screen][Song]], [[Chain Screen][Chain]], [[Phrase Screen][Phrase Screen]] 控制了
+  [[lsdj][LSDJ]] 会发出什么信号以及什么时候发出信号.
++ <<drum-kit>>         鼓机       (drum kit)
+
+  会发出鼓的声音的一种 [[sample-playback][采样器]].
++ <<envelope>>         包络       (envelope)
+
+  一种控制声音振幅的东西.
+
+  *例*: 假如有包络形如 \(A(t)\),
+  那么将其施加到一个正弦波上即 \(A(t) \sin \omega t\).
++ <<distortion>>       失真       (distortion)
+
+  指会将信号原本的波形进行一个不真实的变换.
+
+  虽然听起来好像很不好, 但是有时候会有些有趣的效果.
++ <<clip-fold>>        折叠       (fold)
+
+  一种非线性的音效: 对于超过限制的振幅, 会 "反射" 回去.
+
+  类似于:
+
+  #+begin_example
+        #       #                ____________________ LIMIT
+       # #     #       fold         # #     # #
+      #   #   #     ---------->    # @ #   # @ #
+     #     # #                    #     # #     #
+    #       #                    #       #       #
+  #+end_example
+
+  有点像栅栏加密算法.
++ <<resonance>>        回音, 回响 (resonance)
+
+  比如说大家在浴室里面唱歌, 墙壁就会有 "回音" (混响).
+  这样就会听起来更好听 (并不是你唱得好... 伤心捏).
+
+  但是坏处就是如果调多了就会导致声音很糊.
+
+  当然, 如果回音的时间延迟比较久, 那么也会有其他的效果.
+  (类似双声部? )
++ <<clip-wrap>>        包裹       (wrap)
+
+  一种非线性的音效: 对于超过限制的振幅, 会 "平移" 回去.
+
+  类似于:
+
+  #+begin_example
+        #       #                ____________________ LIMIT
+       # #     #       fold         # #     # #
+      #   #   #     ---------->    #   #   #   #
+     #     # #                    #     # #     #
+    #       #                    #   @   #   @   #
+  #+end_example
+
+  有点类似于 MD 模拟的平移不变边界条件.
++ <<sweep>>            扫频       (sweep)
+
+  随时间变换频率.
+
+  假如你见过钢琴, 并且保证屁股够硬,
+  你可以拿起扫帚在钢琴键上从一头扫 (sweep) 到另一头,
+  你就可以听到 [[sweep][扫频]] 的声音了. (当然, 我想后面估计还能听到屁股被打的声音)
++ <<soft-synthesizer>> 软件合成器 (soft synthesizer)
+
+  通过软件产生声音信号并对这些声音信号进行运算和混合的东西.
+
+  对应的是 *硬件* 合成器. 是模电领域了. 有点想玩.
++ <<sample-playback>>  采样播放   (sample playback)
+
+  用人话说就是用录音机录下来然后再播放.
+
+  可以通过改变录下来再播放的音调和速度等方式来调整听起来的效果,
+  这样就会比较好玩.
++ <<speech-synthesis>> 语音合成器 (speech synthesis)
+
+  顾名思义, 是用来合成 "人声" 的合成器.
++ <<shape>>            形状       (shape)
++ <<arpeggio>>         琶音       (arpeggio)
+
+  通过快速弹一连串的音来实现听起来有 [[chord][和弦]] 的效果.
++ <<vibrato>>          颤音       (vibrato)
+
+  著名音乐下午茶动画 +滑滑蛋+ 轻音少女中亦有记载:
+  在吉他拨动后扭动琴弦以实现声音的 "摇晃".
+
+  用严谨一些的说法就是在声音后半部分加入一些音频参数上的改变.
+  比如说 [[pitch][音调]] 上的略微变化.
++ <<semitone>>         半音       (semitone)
++ <<chord>>            和弦       (chord)
+
+  同时按下几个音, 听起来就比较好听.
++ <<minor-chord>>      小三和弦   (minor chord)
+
+  按下 =0, 3, 7= 常用于渲染恐怖的氛围.
++ <<major-chord>>      大三和弦   (major chord)
+
+  按下 =0, 4, 7=.
++ <<slide>>            滑音       (slide)
+
+
++ <<tremolo>>          Tremolo    (有翻译为: 颤音)
+
+  用人话来说就是随着时间改变 [[amplitude][振幅]].
++ <<asdr>>             ASDR       (*A*​ttack *D*​ecay *S*​ustain *R*​elease)
+
+  一种用来描述包络的参数的方式.
++ <<adsr-attack>>      Attack     (*A*​DSR Attack)
+
+  上升 (跑到最高点)
++ <<adsr-decay>>       Decay      (A​*D*​SR Decay)
+
+  衰减 (掉下去一点点)
++ <<adsr-sustain>>     Sustain    (AD​*S*​R Sustain)
+
+  保持 (会影响声音可以持续多久)
++ <<adsr-release>>     Release    (ADS​*R* Release)
+
+  释放 (掉到零)
+
+* Footnotes
+
+[fn:drum-kits] 这里省略了部分的例子. 主要是一些重复的 Chain,
+Phrase 的选择说明.
+
+[fn:hex-presentation] 这里省略了部分的十六进制的说明.
+假如你不了解什么是十六进制的话, 请参考 [[https://en.wikipedia.org/wiki/Hexadecimal][Hexadecimal (Wikipedia)]].
+
+[fn:hidden-screens] 另外还有 3 个不在 map 中显示的隐藏 Screens:
+File, Word 以及 Help Screens.
+
+[fn:memory-or-disk] 内存 (memory)? 还是硬盘 (disk)?
+请不要追究这里的用词是否严谨.
+
+[fn:real-filter] 实际上并没有这种好事.
+理论上听起来我们只需做一个简单的傅里叶变换: \(s(t) \rightarrow A(\omega)\),
+然后筛选函数 \(f(\omega) = 0\ \mathrm{if}\ \omega < \omega_0\ \mathrm{else}\ 1\) (以高通为例),
+最后做一个逆变换: \(s(t) \xrightarrow{\mathcal{F}} A(\omega) \rightarrow f(\omega) A(\omega) = A'(\omega) \xrightarrow{\mathcal{F}^{-1}} s'(t)\) 即可.
+实际上, 比如用 RC 滤波, 会有一堆的问题,
+也很难实现尖锐的频率筛选的效果. 不过不管怎么说, 差不多理解就好,
+这里的字典不追求严谨性, 图一乐吧...
