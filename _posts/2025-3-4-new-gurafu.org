@@ -1,0 +1,112 @@
+#+title: What if a new GURAFU
+#+date: 2025-03-04
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+[[https://github.com/li-yiyang/gurafu][GURAFU]] 是我之前做的一个简单的绘图库,
+但是现在看来里面的一些绘图 API 设计得不是那么好用.
+(虽然也不是不能用就是了).
+
+假如我有时间重新构建 GURAFU 的 API 的话,
+我的想法是这样的:
+
+* Lowlevel =gurafu.uv=
+底层的 API 应当建立在不同的 backend 上,
+然后提供一些基础的适当抽象:
+
++ =*bounding-box*=
+
+  看作是一个抽象的 =stream=, 带有
+  + =cursor-position= 当前绘制的 =cursor= 位置 (相对位置)
+  + =transform= 变换规则 (=#'indentity=)
+  + =parent= 父元素
+  + =u=, =v= 之类的相对 "父元素" 的坐标信息
+  + =u-min=, =u-max=, =v-min=, =v-max= 之类的大小信息
++ =*color*=
++ =*font*=
++ =*font-size*=
++ =(gurafu.uv:pixel stream uv)=
++ =(gurafu.uv:point stream uv)=
++ =(gurafu.uv:line stream uv1 uv2)=
++ =(gurafu.uv:spline stream list-of-uv)=
++ =(gurafu.uv:trig stream uv1 uv2 uv3)=
++ =(gurafu.uv:rect stream uv1 uv2)=
++ =(gurafu.uv:poly stream list-of-uv)=
++ =(gurafu.uv:circ stream uv r)=
++ =(gurafu.uv:arc stream uv r theta1 theta2)=
++ =(gurafu.uv:text stream text uv)=
+
+* MidLevel
+** Coordinates
+这部分将做坐标的计算与变换, 比如做各种坐标系的变换:
+
++ =(define-transform name coordinate-list lambda-list &body return transformed-coordinate)=
+
+  比如:
+
+  #+begin_src lisp
+    (define-transform linear (x y) (matrix base)
+      (let-bind* ((matrix ((a11 a12)
+                           (a21 a22)))
+                  (base   (b1 b2)))
+        (list (+ (* a11 x) (* a12 y) b1)
+              (+ (* a21 x) (* a22 y) b2))))
+  #+end_src
+
+  对应为定义一个返回变换函数的函数.
++ =(with-translation (trans &rest trans-arguments) &body body)=
+
+  =translation= 或者说 =transform= 通过 =compose= 的方式在原有的变换基础上进行应用.
+
+  比如:
+
+  #+begin_src lisp
+    (with-translation (gurafu:linear '((1 0)
+                                       (0 1))
+                                     '(0 1))
+      (gurafu:point '(2 3)))
+  #+end_src
+
+  对应为在当前 =*bouding-box*= 上的 =translation= 的基础上:
+
+  #+begin_src lisp
+    (let ((*translation* (compose (linear ...) *translation*)))
+      ...)
+  #+end_src
++ =(define-coordinate (name &rest coordinate-list) lambda-list &body return-uv-list)=
+
+  比如:
+
+  #+begin_src lisp
+    (define-coordinate (:xy x y) (umin umax vmin vmax xmin xmax ymin ymax)
+      (progn ...
+             (return (list u v))))
+  #+end_src
+
+  如是会定义一个 =gurafu.coord.xy= 为名称的 package,
+  然后将所有的 =gurafu.uv:pixel= 之类的函数做一个中层封装.
+  其中 =umin= 之类的值由 =*bounding-box*= 给出.
+
+  或者感觉这个完全可以用 =with-translation= 的方式进行实现.
+
+** Present Object
++ =(defdraw name lambda-list &body body)=
++ =(defpresent object-class super-class slots &rest options)=
+
+** Color System
++ 自动配色系统 (感觉可以参考 Material 的 Dynamic Color System)
+
+* HighLevel
++ 应当可以自动计算 =x-min= 之类的坐标信息
++ 如果能够实现绘图添加 cache 并复用 cache 就好了
+
+#+begin_src lisp
+  (gurafu:histogram (do-collect (i 10) (random 10.0)))
+  (gurafu:scatter   (do-collect (i 10) (list (random 10.0) (random 10.0))))
+#+end_src
+
+* Ends
+简化后的系统感觉实现起来应该会更加容易一些, 这段时间有空的话会考虑从
+=gurafu.uv= 开始重构. 争取先实现更多的 =backend= 吧.
