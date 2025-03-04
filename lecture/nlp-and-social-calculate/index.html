@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Lecture] 文本数据建模与理解 – 社会计算视角 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[Lecture] 文本数据建模与理解 – 社会计算视角" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="[讲座] 文本数据建模与理解 &#8211; 社会计算视角 注 因为时间不够, 所以讲座仅能介绍前一部分, 后半部分的社会计算视角就略去了. 人工智能的两个核心 表示 推理 而其中, 表示是一个非常重要的东西. 因为总所周知, 计算的本质就是信息变换. 而我, 是真的不知道. 或者, 不妨抄一抄 SICP 中对于计算的一段介绍: 计算过程是存在与计算机力的一类抽象事物, 在其演化进程中, 这些过程会去操作一些被称为 数据 的抽象事物, 人们创建出一些称为 程序 的规则模式, 以指导这类过程的进行. 如何算不可算的东西? 或者说, 为了能够让计算机能够计算某类东西, 所需要的一个必不可少的事物是什么 &#8211; 那就是 表示. 有了表示, 那么就能够进行后续的 推理 计算. 比如说将一个集合 (群) \(G &sim; Z_m\), 于是就能够用 \(\{0, 1, \cdots, m\}\) 来表示集合元素, 就很容易定义运算 \(+, &times;\) 以及 \(G\) 中元素进行运算的方式了. 那么哪怕 \(G\) 里面的元素都是一些阿猫阿狗也没有任何问题了. 同理, 倘若能够给文本一个比较好的表示, 那么就可以根据其为基础进行各种各样的算法了. 文本表示与分析范式 总的一个思路是这样的: 将非结构化的自由文本通过文本分析技术进行编码进行表示, 然后就可以对其进行各种分析, 最后就能够应用到各种各样的领域之中了: 非结构化自由文本 \(&rarr;\) 文本分析技术 \(&rarr;\) 文本应用技术: 文本分析技术 分为两个部分: 表示 和 分析: 表示 向量化表示 产生式表示 分布式表示 参数化表示 分析 自然语言处理 自然语言理解 自然语言生成 文本应用技术 社会计算 智能投顾 深度鉴伪 智慧写作 拟人交互 语言模型的演进 第一代: (语言学和统计学的融合) 1916: 通用语言学 从语言学的开始: 语言学 1957: 句法结构 Noam Chomsky Noam Chomsky: 人和动物的区别在于人的语言直接描述递归 (recursion). 图灵机与邱奇: 可计算性和递归, 计算机与人的语言的能力的可相比 并且 Chomsky 还有这样的一个看法: 认为语法是一台处理语言的机器 在编译原理里面也会遇到他, 提出了上下文无关文法, 形式语言这样的高级玩意 1966: 首个自然语言对话程序 ELIZA 诞生 人机对话的神奇现象, 但是实际上是一种 &#8220;骗局&#8221;, 因为 ELIZA 并没有多么智能 可以试试在 Emacs 里面使用 doctor 命令来体验一下类似的感觉, 效果并不是很惊艳, 只能说只能骗骗愿意上当的人 (bushi) 1971: TF-IDF \(TF-IDF = TF(+, d) &times; IDF(+)\) 在 Google 的搜索引擎的搭建中也有它的影子, 属于是一种虽然简单, 但是很妙的东西 (具体介绍见下) 1992: N-Gram 模型 第二代: (引入贝叶斯, 分布表示 Distribution Representation, Hidden 模型) 通过引入了隐藏层的概念来进行表示. 2000: PLSA 2003: LDA 模型 引入了 hidden 概念: 隐藏模型, 在当前的 &#8220;大模型&#8221; 中有表现. 隐马尔可夫模型 第三代: (分布式表示 Distributed Representation, 向语义方向理解) 思路从构建表示, 到自动学习一个表示方式 2003: 神经语言模型 2013: word2vec 第四代: (大模型时代) 2017: Transformer 2018~2022: ChatGPT, BERT ChatGPT: 一个集成了各种功能的东西, 但是不能不承认其在工程上的壮举. 语言模型与 NLP 应用的基础: 文本表示 算法不重要, _表示_ 重要 接下来具体介绍一些关于一些方向的使用: 第一代: 语言学和统计学的融合 向量化表示: 将单词映射到向量空间, 对单次向量进行算术运算. 最朴素的词向量编码: One-Hot. (每一位代表一个单词) 比如有一列 \(N\) 个单词 =&#39;(happy sad surprised &#8230;)=, 那么这个时候就用 =&#39;(1 0 0 &#8230;)= 来表示 happy, 用 =&#39;(0 1 0 &#8230;)= 来表示 sad. 这样的就是 One-Hot 编码方式. (注: 虽然这么说起来听着非常离谱, 毕竟直观来看那有人会这么做呢? 但是实际上还真是这样的, 以之前做的最简单的 &#8220;文本识别&#8221; 的例子 来看的话, 其中利用一个自动机进行匹配, (if (eq token abbreviation) next break), 那么匹配时就相当于是在一个 Abbreviation 向量空间里面进行比较, 只不过写成这样的向量的形式更加形式化而已. ) 词袋模型 Bag-of-Words: 忽略词的顺序, 词频越高, 表示该词在文章中越重要. 数据稀疏维度大, 无法保留词序信息. 这个有点像是将上面的 \(2^N\) 的向量空间变成了 \(\mathbb{P}^{N}\), 其中 \(\mathbb{P}\) 为频率信息. 这个的感觉和下面的 TF-IDF 很像. (map-with-index (lambda (idx word count) `(word ,(update-at idx count (vector-zero)))) (group-and-count input)) N-gram 模型: 保留部分词序, 词频越高表示该词在文章中越重要 比如若 \(N = 1\), 则变成上面的词袋模型 若 \(N = 2\), 则对于一个输入 =&#39;(Hello the lucky me haha)= 就会被拆成 =&#39;(Hello the)=, =&#39;(the lucky)=, =&#39;(lucky me)=, =&#39;(me haha)=. 那么这个时候就相当于是保留了部分的词频信息和词序信息了. 若 \(N = \cdots\), 同理 TF-IDF: 上面统计词频的方法有一个比较坑爹的问题: 那就是如果某些无意义的修饰词, 比如 &#8220;啊巴巴&#8221;, &#8220;啊对对对&#8221; 频繁地在语境中出现, 那么这些被作为口癖一样的词就会在统计上占据不必要的重要性, 所以要通过一些方法来除去它们的影响. (注: 实际上以英文为例, &#8220;the&#8221;, &#8220;a&#8221;, &#8220;an&#8221; 这样的词因为出现得太频繁了, 所以会被认为是 &#8220;水词&#8221; 而减少影响力. 怎么一股水论文被贬低的感觉) Term Frequency: 词在文档中出现的频次 (出现多的比较重要) Inverse Document Frequency: 词在文档集的多少个文档的出现的倒序排序 (去掉出现多的水词) 于是就可以计算一个词的 &#8220;重要程度&#8221;: \[TF-IDF = TF(+, d) &times; IDF(+)\] 第二代: 分布表示 You shall know a word by the company it keeps! J.R.Firth. A synopsis of linguistic theory. 在这个时候, 就会有想法去考虑如何在统计的时候加入对上下文的考虑, 因为说话是一个和语境相关的一个东西. 贝叶斯生成模型 词本身 \(&rarr;\) 上下文 文章由单词直接表示, 单个词频统计 (词本身) 文章由主题构成, 主题由单词构成: 基于分布假设, 描述词的共现关系 (上下文) 一个简单的理解 (不一定对): 通过条件概率计算单词 \(w\) 出现在语境 \(c\) 下的概率: \(P(w|c)\). 比如一个语境可以是这个单词周围的一个 \(\{w_i\}\) 单词序列. PLSA (Probabilistic Latent Semantic Analysis 隐藏层) LDA (隐含狄利克雷分布, 据说论文写得很好, 以后试试读读看) 第三代: 分布式语义 这个时候的一个突破的思路是这样的: 通过自监督学习的方式, 来自己给自己找一个可能的表示. 表示学习: word2vec 将 One-hot 的高维稀疏的结果, 变成低维稠密的表示结果 通过计算来得到最终的结果. 自监督学习 skip-gram 是 word2vec 的其中一个实现, 一个比较详细的介绍如下: The skip-gram objective function sums the log probabilities of the surrounding $n$ words to the left and right of the target word $w_t$ to produce the following objective: \[J_{&theta;} = \frac{1}{T} &sum;^T_{t=1} &sum;_{-n \leq j \leq n &ne; 0} \mathrm{log} p(w_{i+j} | w_i)\] (Skip-gram Word2Vec) 论文中使用的方式 (Skip-gram Model): 目标是在 $n$ 维向量空间中表示序列 (word2vec) 数据表示: 有一列由 token (word, 可以认为是最小不可分割元素) 组成的序列, 该序列中的第 $i$ 个 token 为 $w_i$. 其在向量空间中对应 \(\boldsymbol{v}\) 向量. 目标是得到这个向量的表达形式. 考虑该 token 与周围环境的关系: \[p(w_{i+j}|w_i) = \frac{\mathrm{exp}((\boldsymbol{v}&#39;_{w_{i+j}})^T v_{w_i})}{&sum;_{k=1}^w \mathrm{exp}((v&#39;_{w_k})^T v_{w_i})}\] 即若 $i$ 处为 $w_i$, 则周围 $i+j$ 处出现 $w_{i+j}$ 的概率. 以周围 $c$ 大小的范围作为自己的 scope (认为是可以目力所及的范围), 于是在 $w_i$ 周围的一个序列 $\{w_{i-c}, \cdots, w_{i+c}\}$ 的出现概率: $P(w_{i-c} w_{i-c+1} \cdots w_{i-1} w_{i+1} \cdots w_{i+c} | w_{i}) = &prod; P(w_{i+j}|w_{i})$. 通过对数操作变成求和: $&sum; \mathrm{log} P(w_{i+j}|w_i)$. 使得对于序列 $\{w_i\}$ 整体概率最大 (类似极大似然估计) 的 $\{\boldsymbol{v}_i\}$ 即为所需要的表达向量: \[\mathrm{argmax} \frac{1}{N} &sum;_{i=1}^N &sum;_{-c \leq j \leq c, j &ne; 0} \mathrm{log} p(w_{i+j}|w_{i})\] Transformer: Self-attention 输入状态矩阵 - 编码 -&gt; 输出编码矩阵 - 解码 -&gt; 词向量矩阵 * Mask 矩阵 感觉对 Transformer 有了那么点感觉: (个人理解, 不一定对, 以后有时间再详细看吧&#8230; ) 首先还是整体的模型的框架: (注: 图片和接下来的介绍主要来自 The Annotated Transformer) 这里还是 &#8220;表示&#8221; 作为核心呢: Here, the encoder maps an input sequence of symbol representations \((x_1, &hellip;, x_n)\) to a sequence of continuous representations \(\boldsymbol{z} = (z_1, &hellip;, z_n)\). Given \(\boldsymbol{z}\), the decoder then generates an output sequence \((y_1, &hellip;, y_m)\) of symbols one element at a time. 核心貌似还是一个表示的特征提取&#8230; 一个可以参考的 Self-Attention和Transformer 大模型时代: 两阶段预训练模型: 无监督预训练 (pre-training) + 有监督微调 (fine-tuning) 大模型未来趋势 单模态 \(&rarr;\) 跨模态 大教堂 \(&rarr;\) 大集市 Big Science 大科学 数据驱动 \(&rarr;\) 数据 + 知识双驱动 记忆大模型 \(&rarr;\) 推理小模型 性能模型 \(&rarr;\) 可信, 可依赖模型 使用过程不更新参数 \(&rarr;\) 基于用户反馈持续学习 学习中融入只是 \(&rarr;\) 应用中利用知识 社会计算基本思路 社会计算: 应用的视角. 如何通过文本来帮助解决并计算错综复杂的社会问题 实际上这个给我感觉非常的有意思, 相当于是用文字作为 encoder, 然后通过大语言模型的方式来进行对 encoder 编码的数据重新进行解码, 然后再重新编码输出用于进行更进一步的问题计算和分析. 并且从这个角度来看, 实际上确实 表示 这个部分非常的重要. 只要有了一个好的 encoder 能够将输出的任意的东西编码成一个可计算的数据结构, 那么后面跟着算法去进行推理. 我逐渐理解一切 面向社会计算的 NLP 应用 残念, 该部分没时间去讲了." />
+<meta property="og:description" content="[讲座] 文本数据建模与理解 &#8211; 社会计算视角 注 因为时间不够, 所以讲座仅能介绍前一部分, 后半部分的社会计算视角就略去了. 人工智能的两个核心 表示 推理 而其中, 表示是一个非常重要的东西. 因为总所周知, 计算的本质就是信息变换. 而我, 是真的不知道. 或者, 不妨抄一抄 SICP 中对于计算的一段介绍: 计算过程是存在与计算机力的一类抽象事物, 在其演化进程中, 这些过程会去操作一些被称为 数据 的抽象事物, 人们创建出一些称为 程序 的规则模式, 以指导这类过程的进行. 如何算不可算的东西? 或者说, 为了能够让计算机能够计算某类东西, 所需要的一个必不可少的事物是什么 &#8211; 那就是 表示. 有了表示, 那么就能够进行后续的 推理 计算. 比如说将一个集合 (群) \(G &sim; Z_m\), 于是就能够用 \(\{0, 1, \cdots, m\}\) 来表示集合元素, 就很容易定义运算 \(+, &times;\) 以及 \(G\) 中元素进行运算的方式了. 那么哪怕 \(G\) 里面的元素都是一些阿猫阿狗也没有任何问题了. 同理, 倘若能够给文本一个比较好的表示, 那么就可以根据其为基础进行各种各样的算法了. 文本表示与分析范式 总的一个思路是这样的: 将非结构化的自由文本通过文本分析技术进行编码进行表示, 然后就可以对其进行各种分析, 最后就能够应用到各种各样的领域之中了: 非结构化自由文本 \(&rarr;\) 文本分析技术 \(&rarr;\) 文本应用技术: 文本分析技术 分为两个部分: 表示 和 分析: 表示 向量化表示 产生式表示 分布式表示 参数化表示 分析 自然语言处理 自然语言理解 自然语言生成 文本应用技术 社会计算 智能投顾 深度鉴伪 智慧写作 拟人交互 语言模型的演进 第一代: (语言学和统计学的融合) 1916: 通用语言学 从语言学的开始: 语言学 1957: 句法结构 Noam Chomsky Noam Chomsky: 人和动物的区别在于人的语言直接描述递归 (recursion). 图灵机与邱奇: 可计算性和递归, 计算机与人的语言的能力的可相比 并且 Chomsky 还有这样的一个看法: 认为语法是一台处理语言的机器 在编译原理里面也会遇到他, 提出了上下文无关文法, 形式语言这样的高级玩意 1966: 首个自然语言对话程序 ELIZA 诞生 人机对话的神奇现象, 但是实际上是一种 &#8220;骗局&#8221;, 因为 ELIZA 并没有多么智能 可以试试在 Emacs 里面使用 doctor 命令来体验一下类似的感觉, 效果并不是很惊艳, 只能说只能骗骗愿意上当的人 (bushi) 1971: TF-IDF \(TF-IDF = TF(+, d) &times; IDF(+)\) 在 Google 的搜索引擎的搭建中也有它的影子, 属于是一种虽然简单, 但是很妙的东西 (具体介绍见下) 1992: N-Gram 模型 第二代: (引入贝叶斯, 分布表示 Distribution Representation, Hidden 模型) 通过引入了隐藏层的概念来进行表示. 2000: PLSA 2003: LDA 模型 引入了 hidden 概念: 隐藏模型, 在当前的 &#8220;大模型&#8221; 中有表现. 隐马尔可夫模型 第三代: (分布式表示 Distributed Representation, 向语义方向理解) 思路从构建表示, 到自动学习一个表示方式 2003: 神经语言模型 2013: word2vec 第四代: (大模型时代) 2017: Transformer 2018~2022: ChatGPT, BERT ChatGPT: 一个集成了各种功能的东西, 但是不能不承认其在工程上的壮举. 语言模型与 NLP 应用的基础: 文本表示 算法不重要, _表示_ 重要 接下来具体介绍一些关于一些方向的使用: 第一代: 语言学和统计学的融合 向量化表示: 将单词映射到向量空间, 对单次向量进行算术运算. 最朴素的词向量编码: One-Hot. (每一位代表一个单词) 比如有一列 \(N\) 个单词 =&#39;(happy sad surprised &#8230;)=, 那么这个时候就用 =&#39;(1 0 0 &#8230;)= 来表示 happy, 用 =&#39;(0 1 0 &#8230;)= 来表示 sad. 这样的就是 One-Hot 编码方式. (注: 虽然这么说起来听着非常离谱, 毕竟直观来看那有人会这么做呢? 但是实际上还真是这样的, 以之前做的最简单的 &#8220;文本识别&#8221; 的例子 来看的话, 其中利用一个自动机进行匹配, (if (eq token abbreviation) next break), 那么匹配时就相当于是在一个 Abbreviation 向量空间里面进行比较, 只不过写成这样的向量的形式更加形式化而已. ) 词袋模型 Bag-of-Words: 忽略词的顺序, 词频越高, 表示该词在文章中越重要. 数据稀疏维度大, 无法保留词序信息. 这个有点像是将上面的 \(2^N\) 的向量空间变成了 \(\mathbb{P}^{N}\), 其中 \(\mathbb{P}\) 为频率信息. 这个的感觉和下面的 TF-IDF 很像. (map-with-index (lambda (idx word count) `(word ,(update-at idx count (vector-zero)))) (group-and-count input)) N-gram 模型: 保留部分词序, 词频越高表示该词在文章中越重要 比如若 \(N = 1\), 则变成上面的词袋模型 若 \(N = 2\), 则对于一个输入 =&#39;(Hello the lucky me haha)= 就会被拆成 =&#39;(Hello the)=, =&#39;(the lucky)=, =&#39;(lucky me)=, =&#39;(me haha)=. 那么这个时候就相当于是保留了部分的词频信息和词序信息了. 若 \(N = \cdots\), 同理 TF-IDF: 上面统计词频的方法有一个比较坑爹的问题: 那就是如果某些无意义的修饰词, 比如 &#8220;啊巴巴&#8221;, &#8220;啊对对对&#8221; 频繁地在语境中出现, 那么这些被作为口癖一样的词就会在统计上占据不必要的重要性, 所以要通过一些方法来除去它们的影响. (注: 实际上以英文为例, &#8220;the&#8221;, &#8220;a&#8221;, &#8220;an&#8221; 这样的词因为出现得太频繁了, 所以会被认为是 &#8220;水词&#8221; 而减少影响力. 怎么一股水论文被贬低的感觉) Term Frequency: 词在文档中出现的频次 (出现多的比较重要) Inverse Document Frequency: 词在文档集的多少个文档的出现的倒序排序 (去掉出现多的水词) 于是就可以计算一个词的 &#8220;重要程度&#8221;: \[TF-IDF = TF(+, d) &times; IDF(+)\] 第二代: 分布表示 You shall know a word by the company it keeps! J.R.Firth. A synopsis of linguistic theory. 在这个时候, 就会有想法去考虑如何在统计的时候加入对上下文的考虑, 因为说话是一个和语境相关的一个东西. 贝叶斯生成模型 词本身 \(&rarr;\) 上下文 文章由单词直接表示, 单个词频统计 (词本身) 文章由主题构成, 主题由单词构成: 基于分布假设, 描述词的共现关系 (上下文) 一个简单的理解 (不一定对): 通过条件概率计算单词 \(w\) 出现在语境 \(c\) 下的概率: \(P(w|c)\). 比如一个语境可以是这个单词周围的一个 \(\{w_i\}\) 单词序列. PLSA (Probabilistic Latent Semantic Analysis 隐藏层) LDA (隐含狄利克雷分布, 据说论文写得很好, 以后试试读读看) 第三代: 分布式语义 这个时候的一个突破的思路是这样的: 通过自监督学习的方式, 来自己给自己找一个可能的表示. 表示学习: word2vec 将 One-hot 的高维稀疏的结果, 变成低维稠密的表示结果 通过计算来得到最终的结果. 自监督学习 skip-gram 是 word2vec 的其中一个实现, 一个比较详细的介绍如下: The skip-gram objective function sums the log probabilities of the surrounding $n$ words to the left and right of the target word $w_t$ to produce the following objective: \[J_{&theta;} = \frac{1}{T} &sum;^T_{t=1} &sum;_{-n \leq j \leq n &ne; 0} \mathrm{log} p(w_{i+j} | w_i)\] (Skip-gram Word2Vec) 论文中使用的方式 (Skip-gram Model): 目标是在 $n$ 维向量空间中表示序列 (word2vec) 数据表示: 有一列由 token (word, 可以认为是最小不可分割元素) 组成的序列, 该序列中的第 $i$ 个 token 为 $w_i$. 其在向量空间中对应 \(\boldsymbol{v}\) 向量. 目标是得到这个向量的表达形式. 考虑该 token 与周围环境的关系: \[p(w_{i+j}|w_i) = \frac{\mathrm{exp}((\boldsymbol{v}&#39;_{w_{i+j}})^T v_{w_i})}{&sum;_{k=1}^w \mathrm{exp}((v&#39;_{w_k})^T v_{w_i})}\] 即若 $i$ 处为 $w_i$, 则周围 $i+j$ 处出现 $w_{i+j}$ 的概率. 以周围 $c$ 大小的范围作为自己的 scope (认为是可以目力所及的范围), 于是在 $w_i$ 周围的一个序列 $\{w_{i-c}, \cdots, w_{i+c}\}$ 的出现概率: $P(w_{i-c} w_{i-c+1} \cdots w_{i-1} w_{i+1} \cdots w_{i+c} | w_{i}) = &prod; P(w_{i+j}|w_{i})$. 通过对数操作变成求和: $&sum; \mathrm{log} P(w_{i+j}|w_i)$. 使得对于序列 $\{w_i\}$ 整体概率最大 (类似极大似然估计) 的 $\{\boldsymbol{v}_i\}$ 即为所需要的表达向量: \[\mathrm{argmax} \frac{1}{N} &sum;_{i=1}^N &sum;_{-c \leq j \leq c, j &ne; 0} \mathrm{log} p(w_{i+j}|w_{i})\] Transformer: Self-attention 输入状态矩阵 - 编码 -&gt; 输出编码矩阵 - 解码 -&gt; 词向量矩阵 * Mask 矩阵 感觉对 Transformer 有了那么点感觉: (个人理解, 不一定对, 以后有时间再详细看吧&#8230; ) 首先还是整体的模型的框架: (注: 图片和接下来的介绍主要来自 The Annotated Transformer) 这里还是 &#8220;表示&#8221; 作为核心呢: Here, the encoder maps an input sequence of symbol representations \((x_1, &hellip;, x_n)\) to a sequence of continuous representations \(\boldsymbol{z} = (z_1, &hellip;, z_n)\). Given \(\boldsymbol{z}\), the decoder then generates an output sequence \((y_1, &hellip;, y_m)\) of symbols one element at a time. 核心貌似还是一个表示的特征提取&#8230; 一个可以参考的 Self-Attention和Transformer 大模型时代: 两阶段预训练模型: 无监督预训练 (pre-training) + 有监督微调 (fine-tuning) 大模型未来趋势 单模态 \(&rarr;\) 跨模态 大教堂 \(&rarr;\) 大集市 Big Science 大科学 数据驱动 \(&rarr;\) 数据 + 知识双驱动 记忆大模型 \(&rarr;\) 推理小模型 性能模型 \(&rarr;\) 可信, 可依赖模型 使用过程不更新参数 \(&rarr;\) 基于用户反馈持续学习 学习中融入只是 \(&rarr;\) 应用中利用知识 社会计算基本思路 社会计算: 应用的视角. 如何通过文本来帮助解决并计算错综复杂的社会问题 实际上这个给我感觉非常的有意思, 相当于是用文字作为 encoder, 然后通过大语言模型的方式来进行对 encoder 编码的数据重新进行解码, 然后再重新编码输出用于进行更进一步的问题计算和分析. 并且从这个角度来看, 实际上确实 表示 这个部分非常的重要. 只要有了一个好的 encoder 能够将输出的任意的东西编码成一个可计算的数据结构, 那么后面跟着算法去进行推理. 我逐渐理解一切 面向社会计算的 NLP 应用 残念, 该部分没时间去讲了." />
+<link rel="canonical" href="/lecture/nlp-and-social-calculate/" />
+<meta property="og:url" content="/lecture/nlp-and-social-calculate/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-21T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Lecture] 文本数据建模与理解 – 社会计算视角" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-04-21T00:00:00+00:00","datePublished":"2023-04-21T00:00:00+00:00","description":"[讲座] 文本数据建模与理解 &#8211; 社会计算视角 注 因为时间不够, 所以讲座仅能介绍前一部分, 后半部分的社会计算视角就略去了. 人工智能的两个核心 表示 推理 而其中, 表示是一个非常重要的东西. 因为总所周知, 计算的本质就是信息变换. 而我, 是真的不知道. 或者, 不妨抄一抄 SICP 中对于计算的一段介绍: 计算过程是存在与计算机力的一类抽象事物, 在其演化进程中, 这些过程会去操作一些被称为 数据 的抽象事物, 人们创建出一些称为 程序 的规则模式, 以指导这类过程的进行. 如何算不可算的东西? 或者说, 为了能够让计算机能够计算某类东西, 所需要的一个必不可少的事物是什么 &#8211; 那就是 表示. 有了表示, 那么就能够进行后续的 推理 计算. 比如说将一个集合 (群) \\(G &sim; Z_m\\), 于是就能够用 \\(\\{0, 1, \\cdots, m\\}\\) 来表示集合元素, 就很容易定义运算 \\(+, &times;\\) 以及 \\(G\\) 中元素进行运算的方式了. 那么哪怕 \\(G\\) 里面的元素都是一些阿猫阿狗也没有任何问题了. 同理, 倘若能够给文本一个比较好的表示, 那么就可以根据其为基础进行各种各样的算法了. 文本表示与分析范式 总的一个思路是这样的: 将非结构化的自由文本通过文本分析技术进行编码进行表示, 然后就可以对其进行各种分析, 最后就能够应用到各种各样的领域之中了: 非结构化自由文本 \\(&rarr;\\) 文本分析技术 \\(&rarr;\\) 文本应用技术: 文本分析技术 分为两个部分: 表示 和 分析: 表示 向量化表示 产生式表示 分布式表示 参数化表示 分析 自然语言处理 自然语言理解 自然语言生成 文本应用技术 社会计算 智能投顾 深度鉴伪 智慧写作 拟人交互 语言模型的演进 第一代: (语言学和统计学的融合) 1916: 通用语言学 从语言学的开始: 语言学 1957: 句法结构 Noam Chomsky Noam Chomsky: 人和动物的区别在于人的语言直接描述递归 (recursion). 图灵机与邱奇: 可计算性和递归, 计算机与人的语言的能力的可相比 并且 Chomsky 还有这样的一个看法: 认为语法是一台处理语言的机器 在编译原理里面也会遇到他, 提出了上下文无关文法, 形式语言这样的高级玩意 1966: 首个自然语言对话程序 ELIZA 诞生 人机对话的神奇现象, 但是实际上是一种 &#8220;骗局&#8221;, 因为 ELIZA 并没有多么智能 可以试试在 Emacs 里面使用 doctor 命令来体验一下类似的感觉, 效果并不是很惊艳, 只能说只能骗骗愿意上当的人 (bushi) 1971: TF-IDF \\(TF-IDF = TF(+, d) &times; IDF(+)\\) 在 Google 的搜索引擎的搭建中也有它的影子, 属于是一种虽然简单, 但是很妙的东西 (具体介绍见下) 1992: N-Gram 模型 第二代: (引入贝叶斯, 分布表示 Distribution Representation, Hidden 模型) 通过引入了隐藏层的概念来进行表示. 2000: PLSA 2003: LDA 模型 引入了 hidden 概念: 隐藏模型, 在当前的 &#8220;大模型&#8221; 中有表现. 隐马尔可夫模型 第三代: (分布式表示 Distributed Representation, 向语义方向理解) 思路从构建表示, 到自动学习一个表示方式 2003: 神经语言模型 2013: word2vec 第四代: (大模型时代) 2017: Transformer 2018~2022: ChatGPT, BERT ChatGPT: 一个集成了各种功能的东西, 但是不能不承认其在工程上的壮举. 语言模型与 NLP 应用的基础: 文本表示 算法不重要, _表示_ 重要 接下来具体介绍一些关于一些方向的使用: 第一代: 语言学和统计学的融合 向量化表示: 将单词映射到向量空间, 对单次向量进行算术运算. 最朴素的词向量编码: One-Hot. (每一位代表一个单词) 比如有一列 \\(N\\) 个单词 =&#39;(happy sad surprised &#8230;)=, 那么这个时候就用 =&#39;(1 0 0 &#8230;)= 来表示 happy, 用 =&#39;(0 1 0 &#8230;)= 来表示 sad. 这样的就是 One-Hot 编码方式. (注: 虽然这么说起来听着非常离谱, 毕竟直观来看那有人会这么做呢? 但是实际上还真是这样的, 以之前做的最简单的 &#8220;文本识别&#8221; 的例子 来看的话, 其中利用一个自动机进行匹配, (if (eq token abbreviation) next break), 那么匹配时就相当于是在一个 Abbreviation 向量空间里面进行比较, 只不过写成这样的向量的形式更加形式化而已. ) 词袋模型 Bag-of-Words: 忽略词的顺序, 词频越高, 表示该词在文章中越重要. 数据稀疏维度大, 无法保留词序信息. 这个有点像是将上面的 \\(2^N\\) 的向量空间变成了 \\(\\mathbb{P}^{N}\\), 其中 \\(\\mathbb{P}\\) 为频率信息. 这个的感觉和下面的 TF-IDF 很像. (map-with-index (lambda (idx word count) `(word ,(update-at idx count (vector-zero)))) (group-and-count input)) N-gram 模型: 保留部分词序, 词频越高表示该词在文章中越重要 比如若 \\(N = 1\\), 则变成上面的词袋模型 若 \\(N = 2\\), 则对于一个输入 =&#39;(Hello the lucky me haha)= 就会被拆成 =&#39;(Hello the)=, =&#39;(the lucky)=, =&#39;(lucky me)=, =&#39;(me haha)=. 那么这个时候就相当于是保留了部分的词频信息和词序信息了. 若 \\(N = \\cdots\\), 同理 TF-IDF: 上面统计词频的方法有一个比较坑爹的问题: 那就是如果某些无意义的修饰词, 比如 &#8220;啊巴巴&#8221;, &#8220;啊对对对&#8221; 频繁地在语境中出现, 那么这些被作为口癖一样的词就会在统计上占据不必要的重要性, 所以要通过一些方法来除去它们的影响. (注: 实际上以英文为例, &#8220;the&#8221;, &#8220;a&#8221;, &#8220;an&#8221; 这样的词因为出现得太频繁了, 所以会被认为是 &#8220;水词&#8221; 而减少影响力. 怎么一股水论文被贬低的感觉) Term Frequency: 词在文档中出现的频次 (出现多的比较重要) Inverse Document Frequency: 词在文档集的多少个文档的出现的倒序排序 (去掉出现多的水词) 于是就可以计算一个词的 &#8220;重要程度&#8221;: \\[TF-IDF = TF(+, d) &times; IDF(+)\\] 第二代: 分布表示 You shall know a word by the company it keeps! J.R.Firth. A synopsis of linguistic theory. 在这个时候, 就会有想法去考虑如何在统计的时候加入对上下文的考虑, 因为说话是一个和语境相关的一个东西. 贝叶斯生成模型 词本身 \\(&rarr;\\) 上下文 文章由单词直接表示, 单个词频统计 (词本身) 文章由主题构成, 主题由单词构成: 基于分布假设, 描述词的共现关系 (上下文) 一个简单的理解 (不一定对): 通过条件概率计算单词 \\(w\\) 出现在语境 \\(c\\) 下的概率: \\(P(w|c)\\). 比如一个语境可以是这个单词周围的一个 \\(\\{w_i\\}\\) 单词序列. PLSA (Probabilistic Latent Semantic Analysis 隐藏层) LDA (隐含狄利克雷分布, 据说论文写得很好, 以后试试读读看) 第三代: 分布式语义 这个时候的一个突破的思路是这样的: 通过自监督学习的方式, 来自己给自己找一个可能的表示. 表示学习: word2vec 将 One-hot 的高维稀疏的结果, 变成低维稠密的表示结果 通过计算来得到最终的结果. 自监督学习 skip-gram 是 word2vec 的其中一个实现, 一个比较详细的介绍如下: The skip-gram objective function sums the log probabilities of the surrounding $n$ words to the left and right of the target word $w_t$ to produce the following objective: \\[J_{&theta;} = \\frac{1}{T} &sum;^T_{t=1} &sum;_{-n \\leq j \\leq n &ne; 0} \\mathrm{log} p(w_{i+j} | w_i)\\] (Skip-gram Word2Vec) 论文中使用的方式 (Skip-gram Model): 目标是在 $n$ 维向量空间中表示序列 (word2vec) 数据表示: 有一列由 token (word, 可以认为是最小不可分割元素) 组成的序列, 该序列中的第 $i$ 个 token 为 $w_i$. 其在向量空间中对应 \\(\\boldsymbol{v}\\) 向量. 目标是得到这个向量的表达形式. 考虑该 token 与周围环境的关系: \\[p(w_{i+j}|w_i) = \\frac{\\mathrm{exp}((\\boldsymbol{v}&#39;_{w_{i+j}})^T v_{w_i})}{&sum;_{k=1}^w \\mathrm{exp}((v&#39;_{w_k})^T v_{w_i})}\\] 即若 $i$ 处为 $w_i$, 则周围 $i+j$ 处出现 $w_{i+j}$ 的概率. 以周围 $c$ 大小的范围作为自己的 scope (认为是可以目力所及的范围), 于是在 $w_i$ 周围的一个序列 $\\{w_{i-c}, \\cdots, w_{i+c}\\}$ 的出现概率: $P(w_{i-c} w_{i-c+1} \\cdots w_{i-1} w_{i+1} \\cdots w_{i+c} | w_{i}) = &prod; P(w_{i+j}|w_{i})$. 通过对数操作变成求和: $&sum; \\mathrm{log} P(w_{i+j}|w_i)$. 使得对于序列 $\\{w_i\\}$ 整体概率最大 (类似极大似然估计) 的 $\\{\\boldsymbol{v}_i\\}$ 即为所需要的表达向量: \\[\\mathrm{argmax} \\frac{1}{N} &sum;_{i=1}^N &sum;_{-c \\leq j \\leq c, j &ne; 0} \\mathrm{log} p(w_{i+j}|w_{i})\\] Transformer: Self-attention 输入状态矩阵 - 编码 -&gt; 输出编码矩阵 - 解码 -&gt; 词向量矩阵 * Mask 矩阵 感觉对 Transformer 有了那么点感觉: (个人理解, 不一定对, 以后有时间再详细看吧&#8230; ) 首先还是整体的模型的框架: (注: 图片和接下来的介绍主要来自 The Annotated Transformer) 这里还是 &#8220;表示&#8221; 作为核心呢: Here, the encoder maps an input sequence of symbol representations \\((x_1, &hellip;, x_n)\\) to a sequence of continuous representations \\(\\boldsymbol{z} = (z_1, &hellip;, z_n)\\). Given \\(\\boldsymbol{z}\\), the decoder then generates an output sequence \\((y_1, &hellip;, y_m)\\) of symbols one element at a time. 核心貌似还是一个表示的特征提取&#8230; 一个可以参考的 Self-Attention和Transformer 大模型时代: 两阶段预训练模型: 无监督预训练 (pre-training) + 有监督微调 (fine-tuning) 大模型未来趋势 单模态 \\(&rarr;\\) 跨模态 大教堂 \\(&rarr;\\) 大集市 Big Science 大科学 数据驱动 \\(&rarr;\\) 数据 + 知识双驱动 记忆大模型 \\(&rarr;\\) 推理小模型 性能模型 \\(&rarr;\\) 可信, 可依赖模型 使用过程不更新参数 \\(&rarr;\\) 基于用户反馈持续学习 学习中融入只是 \\(&rarr;\\) 应用中利用知识 社会计算基本思路 社会计算: 应用的视角. 如何通过文本来帮助解决并计算错综复杂的社会问题 实际上这个给我感觉非常的有意思, 相当于是用文字作为 encoder, 然后通过大语言模型的方式来进行对 encoder 编码的数据重新进行解码, 然后再重新编码输出用于进行更进一步的问题计算和分析. 并且从这个角度来看, 实际上确实 表示 这个部分非常的重要. 只要有了一个好的 encoder 能够将输出的任意的东西编码成一个可计算的数据结构, 那么后面跟着算法去进行推理. 我逐渐理解一切 面向社会计算的 NLP 应用 残念, 该部分没时间去讲了.","headline":"[Lecture] 文本数据建模与理解 – 社会计算视角","mainEntityOfPage":{"@type":"WebPage","@id":"/lecture/nlp-and-social-calculate/"},"url":"/lecture/nlp-and-social-calculate/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[Lecture] 文本数据建模与理解 -- 社会计算视角</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-04-21T00:00:00+00:00" itemprop="datePublished">Apr 21, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>[讲座] 文本数据建模与理解 &#8211; 社会计算视角</h1>
+<h2>注</h2>
+<p>因为时间不够, 所以讲座仅能介绍前一部分, 后半部分的社会计算视角就略去了.</p>
+<h2>人工智能的两个核心</h2>
+<ul>
+  <li>表示</li>
+  <li>推理</li>
+</ul>
+<p>而其中, 表示是一个非常重要的东西. 因为总所周知, 计算的本质就是信息变换.
+  <del>而我, 是真的不知道.</del></p>
+<p>或者, 不妨抄一抄 SICP 中对于计算的一段介绍:</p>
+<blockquote>
+  <p>计算过程是存在与计算机力的一类抽象事物,
+    在其演化进程中, 这些过程会去操作一些被称为 <i>数据</i> 的抽象事物,
+    人们创建出一些称为 <i>程序</i> 的规则模式, 以指导这类过程的进行.</p>
+</blockquote>
+<p>如何算不可算的东西? 或者说, 为了能够让计算机能够计算某类东西,
+  所需要的一个必不可少的事物是什么 &#8211; 那就是 <b>表示</b>.</p>
+<p>有了表示, 那么就能够进行后续的 <b>推理</b> 计算.
+  比如说将一个集合 (群) \(G &sim; Z_m\), 于是就能够用 \(\{0, 1, \cdots, m\}\) 来表示集合元素,
+  就很容易定义运算 \(+, &times;\) 以及 \(G\) 中元素进行运算的方式了.
+  那么哪怕 \(G\) 里面的元素都是一些阿猫阿狗也没有任何问题了.</p>
+<p>同理, 倘若能够给文本一个比较好的表示, 那么就可以根据其为基础进行各种各样的算法了.</p>
+<h2>文本表示与分析范式</h2>
+<p>总的一个思路是这样的: 将非结构化的自由文本通过文本分析技术进行编码进行表示,
+  然后就可以对其进行各种分析, 最后就能够应用到各种各样的领域之中了:</p>
+<p>非结构化自由文本 \(&rarr;\) 文本分析技术 \(&rarr;\) 文本应用技术:</p>
+<ul>
+  <li>文本分析技术
+    <p>分为两个部分: <b>表示</b> 和 <b>分析</b>:</p>
+    <ul>
+      <li>表示
+        <ul>
+          <li>向量化表示</li>
+          <li>产生式表示</li>
+          <li>分布式表示</li>
+          <li>参数化表示</li>
+        </ul>
+      </li>
+      <li>分析
+        <ul>
+          <li>自然语言处理</li>
+          <li>自然语言理解</li>
+          <li>自然语言生成</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>文本应用技术
+    <ul>
+      <li>社会计算</li>
+      <li>智能投顾</li>
+      <li>深度鉴伪</li>
+      <li>智慧写作</li>
+      <li>拟人交互</li>
+    </ul>
+  </li>
+</ul>
+<h2>语言模型的演进</h2>
+<h3>第一代: (语言学和统计学的融合)</h3>
+<ul>
+  <li>1916: 通用语言学 从语言学的开始: 语言学</li>
+  <li>1957: 句法结构 Noam Chomsky
+    <ul>
+      <li>Noam Chomsky: 人和动物的区别在于人的语言直接描述递归 (recursion).</li>
+      <li>图灵机与邱奇: 可计算性和递归, 计算机与人的语言的能力的可相比</li>
+      <li>并且 Chomsky 还有这样的一个看法: 认为语法是一台处理语言的机器</li>
+      <li>在编译原理里面也会遇到他, 提出了上下文无关文法, 形式语言这样的高级玩意</li>
+    </ul>
+  </li>
+  <li>1966: 首个自然语言对话程序 ELIZA 诞生
+    <ul>
+      <li>人机对话的神奇现象, 但是实际上是一种 &#8220;骗局&#8221;, 因为 ELIZA 并没有多么智能</li>
+      <li>可以试试在 Emacs 里面使用 <code>doctor</code> 命令来体验一下类似的感觉,
+        效果并不是很惊艳, 只能说只能骗骗愿意上当的人 (bushi)</li>
+    </ul>
+  </li>
+  <li>1971: TF-IDF
+    <ul>
+      <li>\(TF-IDF = TF(+, d) &times; IDF(+)\)</li>
+      <li>在 Google 的搜索引擎的搭建中也有它的影子,
+        属于是一种虽然简单, 但是很妙的东西 (具体介绍见下)</li>
+    </ul>
+  </li>
+  <li>1992: N-Gram 模型</li>
+</ul>
+<h3>第二代: (引入贝叶斯, 分布表示 Distribution Representation, Hidden 模型)</h3>
+<p>通过引入了隐藏层的概念来进行表示.</p>
+<ul>
+  <li>2000: PLSA</li>
+  <li>2003: LDA 模型
+    <ul>
+      <li>引入了 hidden 概念: 隐藏模型,
+        在当前的 &#8220;大模型&#8221; 中有表现.</li>
+    </ul>
+  </li>
+  <li>隐马尔可夫模型</li>
+</ul>
+<h3>第三代: (分布式表示 Distributed Representation, 向语义方向理解)</h3>
+<p>思路从构建表示, 到自动学习一个表示方式</p>
+<ul>
+  <li>2003: 神经语言模型</li>
+  <li>2013: word2vec</li>
+</ul>
+<h3>第四代: (大模型时代)</h3>
+<ul>
+  <li>2017: Transformer</li>
+  <li>2018~2022: ChatGPT, BERT</li>
+  <li>ChatGPT: 一个集成了各种功能的东西, 但是不能不承认其在工程上的壮举.</li>
+</ul>
+<h2>语言模型与 NLP 应用的基础: 文本表示</h2>
+<p><b>算法不重要, _表示_ 重要</b></p>
+<p>接下来具体介绍一些关于一些方向的使用:</p>
+<h3>第一代: 语言学和统计学的融合</h3>
+<ul>
+  <li>向量化表示: 将单词映射到向量空间, 对单次向量进行算术运算.
+    <ul>
+      <li>最朴素的词向量编码: One-Hot. (每一位代表一个单词)
+        <p>比如有一列 \(N\) 个单词 ='(happy sad surprised &#8230;)=,
+          那么这个时候就用 ='(1 0 0 &#8230;)= 来表示 <code>happy</code>,
+          用 ='(0 1 0 &#8230;)= 来表示 <code>sad</code>. 这样的就是 One-Hot 编码方式.</p>
+        <p>(注: 虽然这么说起来听着非常离谱, 毕竟直观来看那有人会这么做呢?
+          但是实际上还真是这样的, 以之前做的最简单的 <a href="/reading/natural-language-processing-in-lisp/">&#8220;文本识别&#8221; 的例子</a> 来看的话,
+          其中利用一个自动机进行匹配, <code>(if (eq token abbreviation) next break)</code>,
+          那么匹配时就相当于是在一个 <code>Abbreviation</code> 向量空间里面进行比较,
+          只不过写成这样的向量的形式更加形式化而已. )</p>
+      </li>
+      <li>词袋模型 Bag-of-Words: 忽略词的顺序, 词频越高, 表示该词在文章中越重要.
+        数据稀疏维度大, 无法保留词序信息.
+        <p>这个有点像是将上面的 \(2^N\) 的向量空间变成了 \(\mathbb{P}^{N}\),
+          其中 \(\mathbb{P}\) 为频率信息. 这个的感觉和下面的 TF-IDF 很像.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">map-with-index</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">idx</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nb">count</span><span class="p">)</span>
+<span class="w">                  </span><span class="o">`</span><span class="p">(</span><span class="nf">word</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">update-at</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="p">(</span><span class="nf">vector-zero</span><span class="p">))))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">group-and-count</span><span class="w"> </span><span class="nv">input</span><span class="p">))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+  <li>N-gram 模型:
+    <ul>
+      <li>保留部分词序, 词频越高表示该词在文章中越重要</li>
+      <li>比如若 \(N = 1\), 则变成上面的词袋模型</li>
+      <li>若 \(N = 2\), 则对于一个输入 ='(Hello the lucky me haha)=
+        就会被拆成 ='(Hello the)=, ='(the lucky)=, ='(lucky me)=, ='(me haha)=.
+        那么这个时候就相当于是保留了部分的词频信息和词序信息了.</li>
+      <li>若 \(N = \cdots\), 同理</li>
+    </ul>
+  </li>
+  <li>TF-IDF:
+    <ul>
+      <li>上面统计词频的方法有一个比较坑爹的问题: 那就是如果某些无意义的修饰词,
+        比如 &#8220;啊巴巴&#8221;, &#8220;啊对对对&#8221; 频繁地在语境中出现,
+        那么这些被作为口癖一样的词就会在统计上占据不必要的重要性,
+        所以要通过一些方法来除去它们的影响.
+        <p>(注: 实际上以英文为例, &#8220;the&#8221;, &#8220;a&#8221;, &#8220;an&#8221; 这样的词因为出现得太频繁了,
+          所以会被认为是 &#8220;水词&#8221; 而减少影响力. <del>怎么一股水论文被贬低的感觉</del>)</p>
+      </li>
+      <li>Term Frequency: 词在文档中出现的频次
+        <p>(出现多的比较重要)</p>
+      </li>
+      <li>Inverse Document Frequency: 词在文档集的多少个文档的出现的倒序排序
+        <p>(去掉出现多的水词)</p>
+      </li>
+      <li>于是就可以计算一个词的 &#8220;重要程度&#8221;:
+        <p>\[TF-IDF = TF(+, d) &times; IDF(+)\]</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h3>第二代: 分布表示</h3>
+<blockquote>
+  <p>You shall know a word by the company it keeps!</p>
+  <p>J.R.Firth. A synopsis of linguistic theory.</p>
+</blockquote>
+<p>在这个时候, 就会有想法去考虑如何在统计的时候加入对上下文的考虑,
+  因为说话是一个和语境相关的一个东西.</p>
+<ul>
+  <li>贝叶斯生成模型
+    <ul>
+      <li>词本身 \(&rarr;\) 上下文</li>
+      <li>文章由单词直接表示, 单个词频统计 (词本身)</li>
+      <li>文章由主题构成, 主题由单词构成: 基于分布假设, 描述词的共现关系 (上下文)
+        <p>一个简单的理解 (不一定对):
+          通过条件概率计算单词 \(w\) 出现在语境 \(c\) 下的概率: \(P(w|c)\).
+          比如一个语境可以是这个单词周围的一个 \(\{w_i\}\) 单词序列.</p>
+      </li>
+    </ul>
+  </li>
+  <li>PLSA (Probabilistic Latent Semantic Analysis 隐藏层)</li>
+  <li>LDA (隐含狄利克雷分布, 据说论文写得很好, 以后试试读读看)</li>
+</ul>
+<h3>第三代: 分布式语义</h3>
+<p>这个时候的一个突破的思路是这样的: 通过自监督学习的方式,
+  来自己给自己找一个可能的表示.</p>
+<ul>
+  <li>表示学习:
+    <ul>
+      <li>word2vec</li>
+      <li>将 One-hot 的高维稀疏的结果, 变成低维稠密的表示结果
+        通过计算来得到最终的结果.</li>
+      <li>自监督学习</li>
+      <li>skip-gram
+        <p>是 word2vec 的其中一个实现, 一个比较详细的介绍如下:</p>
+        <blockquote>
+          <p>The skip-gram objective function sums the log probabilities
+            of the surrounding $n$ words to the left and right of the
+            target word $w_t$ to produce the following objective:</p>
+          <p>\[J_{&theta;} = \frac{1}{T} &sum;^T_{t=1} &sum;_{-n \leq j \leq n &ne; 0} \mathrm{log} p(w_{i+j} | w_i)\]</p>
+          <p>(<a href="https://paperswithcode.com/method/skip-gram-word2vec">Skip-gram Word2Vec</a>)</p>
+        </blockquote>
+        <p>论文中使用的方式 (Skip-gram Model):</p>
+        <ul>
+          <li>目标是在 $n$ 维向量空间中表示序列 (<code>word2vec</code>)</li>
+          <li>数据表示: 有一列由 token (word, 可以认为是最小不可分割元素) 组成的序列,
+            该序列中的第 $i$ 个 token 为 $w_i$. 其在向量空间中对应 \(\boldsymbol{v}\) 向量.
+            目标是得到这个向量的表达形式.</li>
+          <li>考虑该 token 与周围环境的关系:
+            <p>\[p(w_{i+j}|w_i) = \frac{\mathrm{exp}((\boldsymbol{v}'_{w_{i+j}})^T v_{w_i})}{&sum;_{k=1}^w \mathrm{exp}((v'_{w_k})^T v_{w_i})}\]</p>
+            <p>即若 $i$ 处为 $w_i$, 则周围 $i+j$ 处出现 $w_{i+j}$ 的概率.
+              以周围 $c$ 大小的范围作为自己的 scope (认为是可以目力所及的范围),
+              于是在 $w_i$ 周围的一个序列 $\{w_{i-c}, \cdots, w_{i+c}\}$ 的出现概率:
+              $P(w_{i-c} w_{i-c+1} \cdots w_{i-1} w_{i+1} \cdots w_{i+c} | w_{i}) = &prod; P(w_{i+j}|w_{i})$.
+              通过对数操作变成求和: $&sum; \mathrm{log} P(w_{i+j}|w_i)$.</p>
+          </li>
+          <li>使得对于序列 $\{w_i\}$ 整体概率最大 (类似极大似然估计) 的 $\{\boldsymbol{v}_i\}$
+            即为所需要的表达向量:
+            <p>\[\mathrm{argmax} \frac{1}{N} &sum;_{i=1}^N &sum;_{-c \leq j \leq c, j &ne; 0} \mathrm{log} p(w_{i+j}|w_{i})\]</p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Transformer:
+    <ul>
+      <li>Self-attention</li>
+      <li>输入状态矩阵 - 编码 -&gt; 输出编码矩阵 - 解码 -&gt; 词向量矩阵 * Mask 矩阵</li>
+      <li>感觉对 Transformer 有了那么点感觉: (个人理解, 不一定对, 以后有时间再详细看吧&#8230; )
+        <ul>
+          <li>首先还是整体的模型的框架:
+            <p><img src="/_img/lectures/nlp-and-social-calculate/the-annotated-transformer_14_0.png" alt="/_img/lectures/nlp-and-social-calculate/the-annotated-transformer_14_0.png" /></p>
+            <p>(注: 图片和接下来的介绍主要来自 <a href="https://nlp.seas.harvard.edu/2018/04/03/attention.html">The Annotated Transformer</a>)</p>
+          </li>
+          <li>这里还是 &#8220;表示&#8221; 作为核心呢:
+            <blockquote>
+              <p>Here, the encoder maps an input sequence of symbol representations
+                \((x_1, &hellip;, x_n)\) to a sequence of continuous representations
+                \(\boldsymbol{z} = (z_1, &hellip;, z_n)\). Given \(\boldsymbol{z}\), the decoder then generates an output
+                sequence \((y_1, &hellip;, y_m)\) of symbols one element at a time.</p>
+            </blockquote>
+          </li>
+          <li>核心貌似还是一个表示的特征提取&#8230;</li>
+          <li>一个可以参考的 <a href="https://luweikxy.gitbook.io/machine-learning-notes/self-attention-and-transformer">Self-Attention和Transformer</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h3>大模型时代:</h3>
+<ul>
+  <li>两阶段预训练模型: 无监督预训练 (pre-training) + 有监督微调 (fine-tuning)</li>
+  <li>大模型未来趋势
+    <ul>
+      <li>单模态 \(&rarr;\) 跨模态</li>
+      <li>大教堂 \(&rarr;\) 大集市
+        <ul>
+          <li>Big Science 大科学</li>
+        </ul>
+      </li>
+      <li>数据驱动 \(&rarr;\) 数据 + 知识双驱动</li>
+      <li>记忆大模型 \(&rarr;\) 推理小模型</li>
+      <li>性能模型 \(&rarr;\) 可信, 可依赖模型</li>
+      <li>使用过程不更新参数 \(&rarr;\) 基于用户反馈持续学习</li>
+      <li>学习中融入只是 \(&rarr;\) 应用中利用知识</li>
+    </ul>
+  </li>
+</ul>
+<h2>社会计算基本思路</h2>
+<p>社会计算: 应用的视角.</p>
+<ul>
+  <li>如何通过文本来帮助解决并计算错综复杂的社会问题</li>
+</ul>
+<p>实际上这个给我感觉非常的有意思, 相当于是用文字作为 encoder,
+  然后通过大语言模型的方式来进行对 encoder 编码的数据重新进行解码,
+  然后再重新编码输出用于进行更进一步的问题计算和分析.</p>
+<p>并且从这个角度来看, 实际上确实 <b>表示</b> 这个部分非常的重要.
+  只要有了一个好的 encoder 能够将输出的任意的东西编码成一个可计算的数据结构,
+  那么后面跟着算法去进行推理.</p>
+<p><del>我逐渐理解一切</del></p>
+<h2>面向社会计算的 NLP 应用</h2>
+<p>残念, 该部分没时间去讲了.</p>
+
+  </div><a class="u-url" href="/lecture/nlp-and-social-calculate/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
