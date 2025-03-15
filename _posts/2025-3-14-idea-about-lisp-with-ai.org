@@ -1,0 +1,660 @@
+#+property: header-args:lisp :results none
+#+title: Ideas about Lisp with AI
+#+date: 2025-03-15
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+感觉自己都没有怎么在写代码的时候使用过 AI, 还是有些落伍了 (bushi).
+所以试试给自己做一个简单的 AI agent.
+
+* API
+#+name: api-package
+#+headers: :noweb yes :tangle ../_img/lisp/lisp-with-ai/api.lisp
+#+begin_src lisp :exports none
+  (defpackage #:llmisp.api
+    (:use :cl)
+    (:export
+     #:*host*
+     #:*api-key*
+     #:*temperature*
+     #:*model*
+     #:define-api
+     #:balance
+     #:models
+     #:chat-complete
+     #:fill-in-middle))
+
+  (in-package :llmisp.api)
+
+  <<api-host>>
+  <<api-headers>>
+
+  ;; Utils
+  <<api-utils>>
+
+  ;; API
+  <<api-apis>>
+#+end_src
+
+#+begin_html
+<details><summary>API 的部分折叠了, 毕竟大家可能不是很喜欢看</summary>
+#+end_html
+
+首先是依赖:
+
+#+name: api-dependency
+#+begin_src lisp
+  (ql:quickload '(:dexador :str :shasht :parse-float))
+#+end_src
+
+** Ladder
+这里使用 [[https://api-docs.deepseek.com][DeepSeek]] 的 API:
+
+#+name: api-host
+#+begin_src lisp
+  (defparameter *host* "api.deepseek.com"
+    "DeepSeek API host. ")
+
+  (defparameter *api-key* "sk-you-should-set-it-your-self"
+    "DeepSeek API key. ")
+
+  (defparameter *temperature* 1.0
+    "Default temperature. ")
+
+  (defparameter *model* "deepseek-chat"
+    "Default LLM model")
+#+end_src
+
+#+name: api-headers
+#+begin_src lisp :exports none
+  (defparameter *headers*
+    '(("Accept"       . "application/json")
+      ("Content-Type" . "application/json"))
+    "Default API headers. ")
+#+end_src
+
+一个 JSON object 的 API 的请求和接受处理可以如下抽象:
+
+#+name: api-query
+#+begin_src lisp
+  (defun query (method api content
+                &key
+                  (headers *headers*)
+                  (api-key *api-key*)
+                  (host    *host*))
+    "Query for `api' by `method'.
+  Return a JSON object as hash-table. "
+    (shasht:read-json*
+     :stream (dex:request
+              (format nil "https://~A/~A" host api)
+              :method method
+              :headers (cons (cons "Authorization"
+                                   (format nil "Bearer ~A" api-key))
+                             headers)
+              :content (if (null content) "" (json content)))
+     :null-value    :null
+     :false-value   nil
+     :true-value    t
+     :array-format  :list
+     :object-format :hash-table
+     :eof-error     t))
+#+end_src
+
+这里不使用 =shasht:write-json= 来产生 JSON 输入, 而是通过 =json= 函数进行处理.
+
+#+begin_html
+<details><summary>JSON 函数的定义</summary>
+#+end_html
+
+#+name: api-json
+#+begin_src lisp
+  (defun json (obj)
+    "Turn Lisp `obj' to JSON string. "
+    (with-output-to-string (json)
+      (labels ((write-json (obj)
+                 (if (atom obj)
+                     (cond ((null obj)      (write-string "false" json))
+                           ((eq obj t)      (write-string "true"  json))
+                           ((eq obj :null)  (write-string "null"  json))
+                           ((eq obj :true)  (write-string "true"  json))
+                           ((eq obj :false) (write-string "false" json))
+                           ((stringp obj)   (shasht:write-json-string obj json))
+                           (T               (shasht:write-json        obj json)))
+                     (cond ((and (evenp (length obj)) (keywordp (first obj)))
+                            ;; plist as object
+                            (write-char #\{ json)
+                            (shasht:write-json-string (str:snake-case (pop obj)) json)
+                            (write-char #\: json)
+                            (write-json (pop obj))
+                            (do-plist (key val obj)
+                              (write-char #\, json)
+                              (shasht:write-json-string (str:snake-case key) json)
+                              (write-char #\: json)
+                              (write-json val))
+                            (write-char #\} json))
+                           (T
+                            ;; normal list write as array
+                            (write-char #\[ json)
+                            (write-json (pop obj))
+                            (dolist (elem obj)
+                              (write-char #\, json)
+                              (write-json elem))
+                            (write-char #\] json))))))
+        (write-json obj))))
+#+end_src
+
+其中的 =do-plist= 的宏定义类似于 =dolist= 宏:
+
+#+name: api-do-plist
+#+begin_src lisp
+  (defmacro do-plist ((key val plist &optional result) &body body)
+    "Like `dolist' but on plist. "
+    (let ((val-rest (gensym "VAL-REST")))
+      `(loop for (,key . ,val-rest) on ,plist by #'cddr
+             if (endp ,val-rest)
+               do (error (format nil "Not property list: ~A. " ,plist))
+             do (let ((,val (first ,val-rest))) ,@body)
+             ,@(when result `(finally (return ,result))))))
+#+end_src
+
+#+name: api-do-bind-list
+#+begin_src lisp :exports none
+  (defmacro do-bind-list ((bindings list &optional result) &body body)
+    "Like `do-bind-list' but with `destructuring-bind'. "
+    `(loop for ,bindings in ,list
+           do (progn ,@body)
+           ,@(when result `(finally (return ,result)))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+比如可以测试一下如何了解自己还剩下多少的 API 用量:
+
+#+name: api-query-balance-example
+#+begin_src lisp :results replace :exports both
+  (let ((res (query :get "user/balance" nil)))
+    (gethash* res "balance_infos" #'first "total_balance"))
+#+end_src
+
+#+RESULTS: api-query-balance-example
+: 9.99
+
+(剩得不多了... )
+
+#+begin_html
+<details><summary>其中的 GETHASH* 的函数定义</summary>
+#+end_html
+
+#+name: api-gethash*
+#+begin_src lisp
+  (defun gethash* (hash-table &rest keys)
+    "Recursively get keys from `hash-table'.
+  Return `default' if not found. "
+    (if (endp keys) hash-table
+        (let* ((key  (first keys))
+               (hash (if (functionp key)
+                         (funcall key hash-table)
+                         (gethash key hash-table))))
+          (apply #'gethash* hash (rest keys)))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+于是可以定义一个简单的 wrapper:
+
+#+name: api-define-api
+#+begin_src lisp
+  (defmacro define-api (name (response method api &key required optional)
+                        &body body)
+    "Define LLMisp API function. "
+    `(defun ,name (,@required &key ,@optional &allow-other-keys)
+       ;; docstring
+       ,@(when (stringp (first body))
+           (list (pop body)))
+       ;; check parameters before query
+       ,@(when (and (listp (first body)) (eq (first (first body)) :check))
+           (mapcar #'(lambda (test) `(assert ,test)) (rest (pop body))))
+       (let ((,response
+               (query ,method ,api
+                      ;; generate the content plist
+                      (list ,@(let ((param ()))
+                                (dolist (var required (nreverse param))
+                                  (push (intern (symbol-name var) :keyword) param)
+                                  (push var param)))
+                            ,@(let ((param ()))
+                                (do-bind-list ((var) optional (nreverse param))
+                                  (push (intern (symbol-name var) :keyword) param)
+                                  (push var param)))))))
+         ;; return `response' directly if not used in `body'
+         ,@(if body body (list response)))))
+#+end_src
+
+#+name: api-utils
+#+begin_src lisp :noweb yes :exports none
+  <<api-do-plist>>
+  <<api-do-bind-list>>
+  <<api-json>>
+  <<api-gethash*>>
+#+end_src
+
+** DeepSeek API
+以下是抄袭至 [[https://api-docs.deepseek.com/api/deepseek-api][文档]] 的说明:
+
++ Get User Balance
+
+  #+name: api-ds-balance
+  #+begin_src lisp
+    (define-api balance (res :get "user/balance")
+      "Get user current balance.
+    Return values are total balance and raw JSON obj hash-table. "
+      (when (gethash "is_available" res)
+        (values (parse-float:parse-float
+                 (gethash* res "balance_infos" #'first "total_balance"))
+                res)))
+  #+end_src
++ Lists Models
+
+  #+name: api-ds-models
+  #+begin_src lisp
+    (define-api models (res :get "models")
+      "Return a list of models name and raw JSON obj hash-table.
+
+    Lists the currently available models, and provides basic
+    information about each one such as the owner and availability.
+
+    Check Models & Pricing for our currently supported models."
+      (values (mapcar #'(lambda (model) (gethash "id" model))
+                      (gethash "data" res))
+              res))
+  #+end_src
++ Create Chat Completion
+
+  #+name: api-ds-chat
+  #+begin_src lisp
+    (define-api chat-complete (res :post "chat/completions"
+                                   :required (messages)
+                                   :optional ((model             *model*)
+                                              (frequency-penalty 0)
+                                              (max-tokens        4096)
+                                              (presence-penalty  0)
+                                              (response-format   :null)
+                                              (stop              :null)
+                                              (stream            nil)
+                                              (stream-options    :null)
+                                              (temperature       *temperature*)
+                                              (top-p             1.0)
+                                              (tools             :null)
+                                              (tool-choice       "none")
+                                              (logprobs          nil)
+                                              (top-logprobs      :null)))
+      "Creates a model response for the given chat conversation.
+    Return output message and raw JSON obj hash-table. "
+      (:check
+       (or (eq frequency-penalty :null) (<= -2 frequency-penalty 2))
+       (or (eq max-tokens        :null) (< 1 max-tokens 8192))
+       (or (eq presence-penalty  :null) (<= -2 presence-penalty  2))
+       (or (eq temperature       :null) (<= 0  temperature 2))
+       (or (eq temperature       :null) (<= top-p 1)))
+      (values (gethash* res "choices" #'first "message" "content")
+              res))
+  #+end_src
++ FIM: Create FIM Completion
+
+  #+name: api-ds-fim
+  #+begin_src lisp
+    (define-api fill-in-middle (res :post "beta/completions"
+                                    :required (prompt)
+                                    :optional ((model             *model*)
+                                               (echo              nil)
+                                               (frequency-penalty 0)
+                                               (logprobs          0)
+                                               (max-tokens        4096)
+                                               (presence-penalty  0)
+                                               (stop              :null)
+                                               (stream            nil)
+                                               (suffix            :null)
+                                               (temperature       *temperature*)
+                                               (top-p             1)))
+      "The FIM (Fill-In-the-Middle) Completion API.
+    Return values are message and raw JSON obj hash-table. "
+      (:check
+       (or (eq frequency-penalty :null) (<= -2 frequency-penalty 2))
+       (or (eq logprobs          :null) (<= logprobs 20))
+       (or (eq presence-penalty  :null) (<= -2 presence-penalty  2))
+       (or (eq temperature       :null) (<= temperature 2))
+       (or (eq top-p             :null) (<= top-p 1)))
+      (values (gethash* res "choices" #'first "text")
+              res))
+  #+end_src
+
+#+name: api-apis
+#+begin_src lisp :noweb yes :exports none
+  <<api-ds-balance>>
+  <<api-ds-models>>
+  <<api-ds-chat>>
+  <<api-ds-fim>>
+#+end_src
+
+假如折叠隐藏前面的 Ladder 一节, 估计只看这部分的 =define-api= 会有一种:
+"啊? 这 Lisp 好简单哦" 的错觉吧. 虽然并不是想要强调 Lisp 其实很复杂
+(复杂吗? 并没有吧... 毕竟实际的行数也不多).
+
+#+begin_html
+<details><summary>这里吐槽一下</summary>
+#+end_html
+
+之前的看了一个 Lisp 的书, 里面把代码放在 Github 上, 结果发现其实实现得也不咋的.
+还不如我自己写的优雅容易拓展. (bushi)
+
+#+begin_html
+</details>
+#+end_html
+
+这里给个例子试试吧:
+
+#+name: api-ds-chat-test
+#+begin_src lisp :results replace :exports both
+  (chat-complete '((:content "你是一只猫娘, 说话的句尾需要加上喵. "
+                    :role    "system")
+                   (:content "你好, 请问你是谁? "
+                    :role    "user"))
+                 :temperature 1.3)
+#+end_src
+
+#+RESULTS: api-ds-chat-test
+: 你好喵~我是一只可爱的猫娘喵!很高兴认识你喵~ (开心地摇晃着尾巴)
+
+#+begin_html
+</details>
+#+end_html
+
+* 一些比较好玩的尝试
+#+name: try-package
+#+headers: :noweb yes :tangle ../_img/lisp/lisp-with-ai/api.lisp
+#+begin_src lisp :exports none
+  (defpackage #:llmisp.try
+    (:use :cl :llmisp.api)
+    (:export
+     #:ask-math))
+
+  (in-package :llmisp.try)
+
+  <<try-ask-math-prompt>>
+  <<try-ask-math>>
+  <<try-lisp-fill-???>>
+  <<try-ask-lisp-expr>>
+  <<try-gen-docstring>>
+#+end_src
+
+** Mathematica-like DataBase query
+在 Mathematica 里面有一些很有用的功能: [[https://reference.wolfram.com/language/ref/menuitem/InlineFree-formInput.html][Inline Free-form Input]].
+常见的一些使用方法是用来输入单位 ([[https://reference.wolfram.com/language/ref/Quantity.html][Quantity]]), 用来输入物理量的值之类的.
+
+这里可以模拟做一些类似的操作:
+
+#+name: try-ask-math-example
+#+begin_src lisp :results replace :exports both
+  (ask-math "fourth prime number")
+#+end_src
+
+#+RESULTS: try-ask-math-example
+: 7
+
+具体的实现如下:
+
+#+name: try-ask-math-prompt
+#+begin_src lisp
+  (defparameter *prompt-only-number*
+    "Return only the finaly answer as number without any other text. ")
+#+end_src
+
+(注: prompt 来自 [[https://www.rangakrish.com/index.php/2025/01/20/using-openai-from-allegro-common-lisp/][Using OpenAI from Allegro Common Lisp]], 有少许修改. )
+
+#+name: try-ask-math
+#+begin_src lisp
+  (defun ask-math (query &key (parse :read))
+    "Ask with `query'.
+  Return results, raw string, raw JSON obj hash-table.
+
+  Arguments:
+  + `parse':
+    + `nil' for no parse, return raw string
+    + `:int' for using `parse-integer'
+    + `:float' for using `parse-float:parse-float'
+    + `:read' for using `read-from-string'
+    + `function' for using custom parsing function
+  "
+    (multiple-value-bind (res raw)
+        (chat-complete `((:content ,*prompt-only-number*
+                          :role    "system")
+                         (:content ,query
+                          :role    "user"))
+                       :temperature 0)
+      (values
+       (etypecase parse
+         (null res)
+         (function (funcall parse res))
+         (keyword  (ecase parse
+                     (:int   (parse-integer res :junk-allowed t))
+                     (:float (parse-float:parse-float res :junk-allowed t))
+                     (:read  (read-from-string res)))))
+       res raw)))
+#+end_src
+
+感觉可以做一些简单的 wrapper 并写一些更多的 prompt 来添加功能.
+
+** AI Macro Expanding
+既然能够展开提问, 为什么不直接展开代码呢? 比如:
+
+#+name: try-defun-with-ai-example
+#+begin_src lisp :eval no
+  (defun-with-ai fibonacci (n)
+    "Return `n'th `fibonacci' number. "
+    :goal (:performance :readability :type-strict)
+    :confirm t))
+#+end_src
+
+*** Generate by FIM
+看到 API 文档里面有一个 [[https://api-docs.deepseek.com/guides/fim_completion][FIM 的例子]], 感觉也不是不能试试:
+
+#+name: try-fim-example
+#+headers: :results replace :results verbatim
+#+begin_src lisp :exports both
+  (lisp-fill-??? (defun fib (a) ??? (+ (fib (- a 1)) (fib (- a 2)))))
+#+end_src
+
+#+RESULTS: try-fim-example
+: (defun fib (a)
+:   (if (< a 2)
+:       1
+:       (+ (fib (- a 1)) (fib (- a 2)))))
+
+具体的实现:
+
+#+name: try-lisp-fill-???
+#+begin_src lisp
+  (defun read-list-from-string (string &optional (max-retry 10))
+    "Read list from `string', auto completing the `)' if eof. "
+    (handler-case (read-from-string string)
+      (end-of-file (err)
+        (if (> max-retry 0)
+            (read-list-from-string (str:concat string ")") (1- max-retry))
+            (error err)))))
+
+  (defun ask-lisp-fim-expr (prefix suffix &key (max-tokens 128) (hints "") (echo t))
+    "Using FIM to generate Lisp code. "
+    (multiple-value-bind (res raw)
+        (fill-in-middle (format nil
+                                ";;; Common Lisp Code, output with no space indent
+  ~A
+  ;; ~A
+  "
+                                prefix hints)
+                        :suffix     suffix
+                        :max-tokens max-tokens)
+      (let ((res (str:concat prefix res suffix)))
+        (when echo (write-string res echo))
+        (values (read-list-from-string res)
+                res raw))))
+
+  (defmacro lisp-fill-??? (expr &key (max-tokens 128) (hints "") (echo nil))
+    (destructuring-bind (prefix suffix)
+        (str:split "???" (let ((*print-pretty* nil))
+                           (format nil "~A" expr)))
+      `(ask-lisp-fim-expr ,prefix ,suffix
+                          :max-tokens ,max-tokens
+                          :hints      ,hints
+                          :echo       ,echo)))
+#+end_src
+
+现在只能生成代码, 那么能不能直接运行呢? 至少我是不太敢的,
+我觉得估计需要做一个简单的确认工作和展开工作. 这个估计需要打通 Lisp 和 Emacs
+之间的通信和编辑功能.
+
+*** Generate by Prompt
+#+name: ask-lisp-expr-example
+#+begin_src lisp :results replace :results verbatim :exports both
+  (ask-lisp-expr "define function `fibonacci', return `n'th fibonacci number")
+#+end_src
+
+#+RESULTS: ask-lisp-expr-example
+#+begin_example
+(defun fibonacci (n)
+  (labels ((fib-aux (a b count)
+             (if (zerop count)
+                 b
+                 (fib-aux (+ a b) a (1- count)))))
+    (fib-aux 1 0 n)))
+#+end_example
+
+具体的实现如下:
+
+#+name: try-ask-lisp-expr
+#+begin_src lisp
+  (defparameter *prompt-lisp-coder*
+    "You are a common lisp code assitent. You should:
+  + Return only common lisp s-expr without any other text.
+  + Write code more lispy and functional
+  + Not wrapp code in Markdown code block")
+
+  (defun ask-lisp-expr (query &key (goal '(:performance :readability :security)))
+    "Ask for Lisp expression.
+  Return lisp expression, raw string, raw JSON hash-table. "
+    (multiple-value-bind (res raw)
+        (chat-complete `((:content ,*prompt-lisp-coder*
+                          :role    "system")
+                         (:content ,(format nil
+                                            ";; Code Goal: ~{~A~^, ~}~%~A"
+                                            goal query)
+                          :role    "user"))
+                       :temperature 0.2)
+      (values (read-list-from-string
+               (str:trim res :char-bag '(#\` #\Space #\Newline #\l #\i #\s #\p)))
+              res raw)))
+#+end_src
+
+但是发现其实写的 Lisp 代码不是很好强, 比如很明显的就会有对于 =(fibonacci n)=
+在 =n= 小于零的时候存在无限递归的问题. 看来不能只靠它来生成代码并立刻执行.
+应该是训练样本不足导致的.
+
+不过另外的想法可能是用来生成文档, 测试用例估计会比较好.
+另外一个想法就是如果在训练的时候用 S-expr 来做输出样本的训练,
+类似于 DeepSeek 保证能够输出 JSON 格式的输出, 没准会更加好用.
+(假如我有能力微调训练 LLM 的话估计会好一些).
+
+#+name: try-gen-docstring
+#+begin_src lisp
+  (defparameter *prompt-lisp-docstring*
+    "You are a common lisp code assistent.
+  You should generate or refine the docstring with given lisp code.
+
+  Example 1:
+  Input
+  ```lisp
+  (defun fibonacci (n)
+    (declare (type unsigned-byte n))
+    (if (< n 2) n (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))
+  ```
+
+  Output
+  ```
+  Return `n'th fibonacci number.
+
+  Arguments:
+  + `n': nth fibonacci number
+  ```
+
+  Example 2:
+  Input
+  ```lisp
+  (defmacro do-bind-list ((var list &optional result) &body body)
+    `(dolist (vars ,list ,result) (destructuring-bind ,var vars ,@body)))
+  ```
+
+  Output
+  ```
+  Iter over `list' and binds `var' list on each element of `list'.
+  Return `result' if given, or `nil'.
+
+  Syntax:
+
+     (do-bind-list (([var]*) list [res]?) . body)
+
+  Example:
+
+      (do-bind-list ((a b) list) (do-something-with a b))
+  ```")
+
+  (defmacro refine-docstring (expr)
+    "Refine docstring. "
+    (if (and (listp expr)
+             (or (eq (first expr) 'defun)
+                 (eq (first expr) 'defmacro)))
+        (destructuring-bind (def name lambda-list docstring . body) expr
+          `(,def ,name ,lambda-list
+             ,(str:trim (chat-complete `((:content ,*prompt-lisp-docstring*
+                                          :role "system")
+                                         (:content ,(format nil "~A" expr)
+                                          :role "user"))
+                                       :temperature 0.2)
+                        :char-bag '(#\` #\Space #\Newline))
+             ,@(unless (stringp docstring) (list docstring))
+             ,@body))
+        expr))
+#+end_src
+
+比如说:
+
+#+name: try-refine-docstring-example
+#+begin_src lisp :results replace :results verbatim :exports both
+  (macroexpand-1 '(refine-docstring
+                   (defun 2- (n) (- n 2))))
+#+end_src
+
+#+RESULTS: try-refine-docstring-example
+#+begin_example
+(defun 2- (n)
+  "Subtract 2 from `n'.
+
+Arguments:
++ `n': A number to subtract 2 from
+
+Returns:
+- The result of `n - 2'"
+  (- n 2))
+t
+#+end_example
+
+这样生成 docstring 的方式如何? 轻松多了吧.
+
+* End
+感觉可以把类似的做法拓展到各种地方. 比如 Mathematica 的代码生成之类的,
+之后感觉可以修正一些或者做一些更多的适配.
+
+本文中的所有代码可以从 [[{{ site.github.url }}/_img/lisp/lisp-with-ai/api.lisp][api.lisp]] 以及 [[{{ site.github.url }}/_img/lisp/lisp-with-ai/try.lisp][try.lisp]] 获取.
