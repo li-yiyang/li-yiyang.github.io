@@ -1,0 +1,445 @@
+:PROPERTIES:
+:header-args:lisp: :results silent
+:END:
+#+title: Gnuplot interface
+#+date: 2025-03-21
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+虽然在重构 GURAFU, 但是还是效率优先,
+有一个能跑的并且还算美观的绘图接口要紧.
+在这里整理一下写的思路.
+
+注: 结果整理的时候打算重构了... 阿巴阿巴.
+因为源代码里面加了很多我自己定义的 DSL.
+所以可能没法直接在正常的 Lisp 里面跑, 不过放心,
+我会尽量保留可读性, 你应当可以通过简单的手动编写函数来复现.
+
+#+begin_html
+<details><summary>为什么会有很多的自己的 DSL? </summary>
+#+end_html
+
+Wolfram 花了那么多年攒出来的自己的配置有如此的规模,
+我觉得我从现在开始攒一套自己的 Lisp 代码也绝对没有问题.
+并且更好的事情是, Lisp 已经是一个标准固定绝对不会更改的语言
+(唯一的更改估计就是性能上的调整和具体实现的变化),
+所以我这套配置 (毕竟大部分是纯 Lisp,
+唯一可能会变的估计就是这种依赖外部程序比如 Gnuplot 的部分的代码)
+理论上是可以使用无穷久的.
+
+这些 DSL 往往是一些我平时使用的时候发现自己需要重复编写的代码.
+于是就需要独立出来单独使用. 之所以没有同步到 [[https://github.com/li-yiyang/ryo][ryo]] 仓库里面,
+则是因为大部分是一些处理平时科研代码用的垃圾代码. 等到经过实践打磨之后,
+我想我会在有空的时候慢慢地把一些不会让我被导师追责的代码放上去... (大概)
+
+或者说有点像是一个日用功能大摸底的感觉...
+
+#+begin_html
+</details>
+#+end_html
+
+* 省流版
++ 交互通过 popen 的方式实现, 相当于是一个 REPL 的利用
++ 做一个限制功能的子集并通过 CLOS 拓展多种不同的功能
++ 尽可能利用规则自动生成而非手动编写
+
+最终的效果:
+
+#+begin_src lisp
+  (with-gnuplot (:output "example.png")
+    (plot '(1 2 3 4 5))
+    (plot histogram))
+#+end_src
+
+* 简单的实现
+#+name: with-gnuplot
+#+begin_src lisp
+  (defmacro with-gnuplot ((&rest sets &key &allow-other-keys) &body body)
+    `(with-output-to-gnuplot
+       (gnuplot-reset *gnuplot*)
+       (gnuplot-sets  *gnuplot* ,@sets)
+       (with-gnuplot-plot
+         ,@body)))
+#+end_src
+
+** =with-output-to-gnuplot=
+首先是实现 Gnuplot 的代码的发送执行, 举个例子:
+
+#+name: gnuplot-with-output-to-gnuplot
+#+begin_src lisp
+  (with-output-to-gnuplot
+    (write-line "set term qt"     *gnuplot*)
+    (write-line "plot sin(x) w l" *gnuplot*))
+#+end_src
+
+效果如下: (手动拉伸了窗口)
+
+[[{{ site.github.url }}/_img/lisp/misc/gnuplot/with-output-to-gnuplot.png]]
+
+#+begin_html
+<details><summary>而实现起来也非常轻松</summary>
+#+end_html
+
+#+name: gnuplot-process
+#+begin_src lisp
+  (defparameter *gnuplot* t
+    "Stream of Gnuplot source code goes. ")
+
+  (defparameter *gnuplot-exec* "gnuplot"
+    "Path to Gnuplot executble.
+  Set this if gnuplot could not start properly. ")
+
+  (defparameter *gnuplot-process* nil
+    "Holds the Gnuplot subprocess.
+  It should be a `uiop:process-info'. ")
+
+  (defparameter *gnuplot-debug* nil
+    "Set this to be non-nil for echo `*gnuplot*' stream code for debugging. ")
+
+  (defun ensure-gnuplot ()
+    "Make sure Gnuplot subprocess is running behind. "
+    (unless (and *gnuplot-process* (uiop:process-alive-p *gnuplot-process*))
+      (setf *gnuplot-process*
+            (uiop:launch-program *gnuplot-exec* :input :stream)))
+    (unless (uiop:process-alive-p *gnuplot-process*)
+      (error "Gnuplot could not properly init. ~
+  Make sure you sets `*gnuplot-exec*' properly. ~
+  (Currently it's set to be ~A. " *gnuplot-exec*)))
+
+  (defmacro with-output-to-gnuplot (&body body)
+    "With all the output to `*gnuplot*', send them to Gnuplot subprocess. "
+    `(let ((in (with-output-to-string (*gnuplot*) ,@body))
+           (to (uiop:process-info-input *gnuplot-process*)))
+       (ensure-gnuplot)
+       (when *gnuplot-debug* (format t "~A" in))
+       (write-string in to)
+       (force-output to)))
+#+end_src
+
+感觉如果后面需要反复编写类似的外部进程打开的代码的话,
+可以考虑写一个自动生成外部进程的 wrapper 的 wrapper 宏.
+
+小结: 对于外部 Gnuplot (CLI PIPE 进程), 通过 =uiop:lanuch-program= 创建子进程,
+并通过 =uiop:process-info-input= =stream= (重绑定为 =*gnuplot*=) 进行控制数据的发送.
+
+#+begin_html
+</details>
+#+end_html
+
+** =gnuplot-format=
+于是问题就转换为如何生成 lispy 的 gnuplot 的代码.
+此事在 SDF (*S*​oftware *D*​esign for *F*​lexibility) 中亦有记载.
+
+这里可以定义一个简单的 "general" 函数:
+
+#+name: gnuplot-format
+#+begin_src lisp
+  (defun gnuplot-format (stream method key val)
+    "Call Gnuplot format `method' with `key' and `val'. "
+    (ensure-gnuplot-output-stream stream)
+    (let ((fn (cdr (assoc method *gnuplot-format-alist*))))
+      (if fn
+          (funcall fn stream key val)
+          (error "Unknown Gnuplot format method `~A'. ~
+  Please use `define-gnuplot-format-method' or check your spelling first. "
+                 method))))
+#+end_src
+
+#+begin_html
+<details><summary>具体的实现</summary>
+#+end_html
+
+#+name: gnuplot-format-alist
+#+begin_src lisp
+  (defparameter *gnuplot-format-alist* ())
+
+  (defmacro define-gnuplot-format-method (name (stream key val) &body body)
+    "Define methods to format to Gnuplot stream. "
+    `(setf (cdr (assoc ,name *gnuplot-format-alist*))
+           (lambda (,stream ,key ,val)
+             (declare (type stream ,stream))
+             (declare (type keyword ,key))
+             ,@body)))
+#+end_src
+
+一些简单的例子:
+
+#+name: define-gnuplot-format-method
+#+begin_src lisp
+  (define-gnuplot-format-method :plain (stream key val)
+    (flet ((fmt! (elem)
+             (etypecase elem
+               (string  (format stream "~S" elem))
+               (integer (format stream "~D" elem))
+               (float   (format stream "~F" elem))
+               (symbol  (format stream "~(~A~)" elem)))))
+      (declare (inline fmt!))
+      (format stream "~(~A~) " key)
+      (if (listp val)
+          (dolist-and-between (elem (alexandria:flatten val))
+              (write-char #\Space stream)
+            (fmt! elem))
+          (fmt! val))))
+
+  (define-gnuplot-format-method :flag (stream flag enablep)
+    (if enablep
+        (format stream "~(~A~)"   flag)
+        (format stream "no~(~A~)" flag)))
+
+  (define-gnuplot-format-method :range (stream key range)
+    (let-bind* (((min max) range))
+      (when (and (numberp min) (numberp max) (> min max))
+        (error "Bad range with min (~A) > max (~A). " min max))
+      (format stream "~(~A~) [~F:~F]" key (or min "*") (or max "*"))))
+#+end_src
+
+不难注意到, 在这里的 =gnuplot-format-method= 除了起到了输出的功能,
+还起到了输入值检查的功能.
+
+#+begin_html
+</details>
+#+end_html
+
+*** =gnuplot-format-by-alist=
+既然有了 =gnuplot-format= 函数, 就可以根据规则集去映射一个 =plist=
+中不同参数的值该如何去显示.
+
+比如有这样的一个 =plist=:
+
+#+name: gnuplot-format-by-alist-example
+#+begin_src lisp
+  (gnuplot-format-by-alist-example stream *gnuplot-set-alist*
+                                   '(:terminal (:png :size (400 400))
+                                     :xrange   (-10 10)
+                                     :yrange   (-1 1))
+                                   :prefix "set "
+                                   :suffix (fmt "~%"))
+#+end_src
+
+不难注意到, 在 =set terminal= 中, 应当包含 =terminal= 对应的子规则,
+如是这般, balabala. 假设这里的 =*gnuplot-set-alist*= 如下定义:
+
+#+name: *gnuplot-set-alist*-example
+#+begin_src lisp
+  '((:xrange   . :range)
+    (:yrange   . :range)
+    (:terminal . *gnuplot-terminal-alist*)
+    (:size     . :size)
+    ...)
+#+end_src
+
+而对应的 =*gnuplot-terminal-alist*= 如下定义:
+
+#+name: *gnuplot-terminal-alist*-example
+#+begin_src lisp
+  '((:size   . :size)
+    (:output . :path)
+    ...)
+#+end_src
+
+伪功能代码如下:
+
+#+name: pseudo-gnuplot-format-by-alist
+#+begin_src lisp
+  (defun gnuplot-format-by-alist (...)
+    (let (method key val)
+      (cond ((keywordp method)              ; is gnuplot-format-method
+             (gnuplot-format stream method key val))
+            (T                              ; is subalist rule
+             (gnuplot-format stream :plain key (first val))
+             ;; format subrules
+             (gnuplot-format-by-alist stream method (rest val))))))
+#+end_src
+
+不难发现, 这样子就可以实现许多嵌套的复杂子功能设置.
+
+#+begin_html
+<details><summary>具体实现</summary>
+#+end_html
+
+#+name: gnuplot-format-by-alist
+#+begin_src lisp
+  (defun gnuplot-format-by-alist (stream alist plist &key (prefix " ") (suffix " "))
+    (do-plist (key val plist)
+      (when-bind ((key . method) (assoc key alist))
+        (write-string prefix stream)
+        (cond ((keywordp method)
+               (gnuplot-format stream method key val))
+              ((symbolp method)
+               (gnuplot-format stream :plain key (first val))
+               (gnuplot-format-by-alist stream (symbol-value method) (rest val)))
+              (T (error "Unknown `~A'. " method)))
+        (write-string suffix stream))))
+#+end_src
+
+其实这里还可以引入 =alias= 的功能, 只需要修改 =(assoc key alist)= 即可.
+
+#+begin_html
+</details>
+#+end_html
+
+*** 小结
+通过 =gnuplot-format= 实现单种类型的 Lisp 值到 Gnuplot 的值的映射 (与检查).
+通过 =gnuplot-format-by-alist= 实现根据不同的规则集的不同映射.
+这样就可以保证代码的可拓展性了.
+
+** =gnuplot-sets=, =gnuplot-resets=
+*** =gnuplot-reset=
+#+name: gnuplot-reset
+#+begin_src lisp
+  (defun gnuplot-reset (&optional (stream *gnuplot*))
+    (write-line "reset" stream)
+    (write-line "reset session" stream))
+#+end_src
+
+好, 下一个.
+
+*** =gnuplot-sets=
+#+name: gnuplot-sets
+#+begin_src lisp
+  (defun gnuplot-sets (stream &rest sets &key &allow-other-keys)
+    (gnuplot-format-by-alist stream *gnuplot-set-alist* sets
+                             :prefix "set "
+                             :suffix (fmt "~%")))
+#+end_src
+
+好, 下一个.
+
+#+begin_html
+<details><summary>会不会太快了? </summary>
+#+end_html
+
+假如还需要很久的打磨的话, 说明 =gnuplot-format-by-alist= 函数设计的不好 (bushi).
+
+#+begin_html
+</details>
+#+end_html
+
+** =with-gnuplot-plot=
+#+name: with-gnuplot-plot
+#+begin_src lisp
+  (defmacro with-gnuplot-plot (&rest body)
+    `(let ((*gnuplot-elements* ()))
+       ,@body
+       (unless *gnuplot-elements*
+         (format *gnuplot* "plot ~{~A~^, }~%"
+                 (nreverse *gnuplot-elements*)))))
+#+end_src
+
+设计是让 =plot= 把所有的绘制命令都扔到 =*gnuplot-elements*= 中,
+然后在最后统一合成为 =plot <gnuplot-element>, <gnuplot-element>, ...=
+这样形式的输出.
+
+*** =plot=
+#+name: plot-string-around
+#+begin_src lisp
+  (defmethod plot ((data string) &rest styles &key (style :lines) &allow-other-keys)
+    (push (with-output-to-string (stream)
+            (format stream "~A with ~(~A~)" data style)
+            (let ((alist (symbol-value (cdr (assoc style *gnuplot-styles-alist*)))))
+              (gnuplot-format-by-alist stream alist styles
+                                       :prefix " " :suffix " ")))
+          ,*gnuplot-elements*))
+#+end_src
+
+好了, 下一个 (不是).
+
+这里还是有一些比较有意思的东西可以进行一个解的说:
+
+**** =*gnuplot-styles-alist*=
+让其值形如:
+
+#+name: *gnuplot-styles-alist*-example
+#+begin_src lisp
+  '((:lines  . *gnuplot-style-lines-options*)
+    (:points . *gnuplot-style-points-options*)
+    ...)
+#+end_src
+
+可以定义一个简单的初始化函数 (类伪代码):
+
+#+begin_src lisp
+  (defmacro define-gnuplot-plot-style (name inherits initform)
+    ;; check initform
+    `(progn
+       (defparameter name-alist (merge-alist ,@inherits-alist ,initform))
+       (setf (cdr (assoc name *gnuplot-styles-alist*)) ',name-alist)))
+#+end_src
+
+**** 不同类型的数据的支持
+比如说 =pathname= (一个文件):
+
+#+name: plot-pathname
+#+begin_src lisp
+  (defmethod plot ((file pathname) &rest styles &key &allow-other-keys)
+    (apply #'plot (fmt "~S" (namestring (truename file))) styles))
+#+end_src
+
+比如说 =list=, 虽然你完全也可以通过将 =list= 写到一个临时文件里面,
+然后让 Gnuplot 去读取, 在绘图完后将临时文件删除.
+但是为什么不直接使用 inline data 呢?
+
+#+name: plot-list
+#+begin_src lisp
+  (defmethod plot ((list list) &rest styles &key &allow-other-keys)
+    (with-gnuplot-inline-data (stream var)
+      (format stream "~{~{~A~^ ~}~^~%~}" list)
+      (apply #'plot var styles)))
+#+end_src
+
+#+begin_html
+<details><summary>inline data 的实现</summary>
+#+end_html
+
+#+name: with-gnuplot-inline-data
+#+begin_src lisp
+  (defmacro with-gnuplot-inline-data ((stream data) &body body)
+    (let ((dataname (symbol-name (gensym "$DATA"))))
+      `(let ((,data   ,dataname)
+             (,stream *gnuplot*))
+         (format *gnuplot* ,(fmt "~A << EOD~%" dataname))
+         ,@body
+         (format *gnuplot* "~&EOD")
+         ,data)))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** 小结
+上层代码相比之下会简单许多... 不过实际上的代码, 里面加了很多的检查和条件判断,
+并没有想的那么的优雅. 不过这个感觉应该怪我缺少经验 (Gnuplot 不熟练以及写 Wrapper
+的经验不足导致的).
+
+* 假如我有超级健忘症
+其实我已经练习过, 使用过很多次 Gnuplot 了,
+但是每次回过头来再去使用 Gnuplot 的时候, 总是会忘记参数,
+然后就不得不去查参数.
+
+那么可不可以通过自动生成文档的方式来构造上层的 wrapper 函数/宏呢?
+显然是可以的, 例如:
+
+#+begin_src lisp
+  (let ((styles ()))
+    `(defgeneric plot
+         (data
+          &rest styles
+          &key
+            ,@(let ((options ()))
+                (do-alist (style alist *gnuplot-style-alist*)
+                  (push style styles)
+                  (do-alist (opt method (symbol-value alist))
+                    (pushnew opt options)))
+                (mapcar #'keyword->intern options))
+          &allow-other-keys)
+       (:documentation ,(fmt "~A
+  Possible styles:~%~{+ `:~A'~^~%~}" doc styles))))
+#+end_src
+
+这样就可以通过 SLY 的 pretty lambda list 提示在调用 =plot= 函数的时候提供提示了.
+
+* End
+拖了两天才陆陆续续把 bug 啥的都调好.
