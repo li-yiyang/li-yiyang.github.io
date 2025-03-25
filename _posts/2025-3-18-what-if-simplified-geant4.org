@@ -1,0 +1,294 @@
+#+title: What if a simplified Geant4
+#+date: 2025-03-18
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+Note: this is not a proposal for how to improve the Geant 4.
+I think those Rust guys may have more plans about how to
+rewrite Geant 4 in a more efficient way. C++ is too easy to
+get yourself in trouble.
+
+So this blog is like my thoughts on these days struggling with
+Geant 4. And what if we could make a easier Geant 4.
+
+* The Design
+The main ideas cames from my [[{{ site.github.url }}/learning/finite-element-method/][Comsol]] learning experience, the
+HTML usage experience and the design of [[{{ site.github.url }}/lisp/gnuplot/][Gnuplot]] wrapper.
+
+The final design would look like this:
+(Note the code is just I copied from B3a, but made it much
+messy. It should not work, but would give a proper overview).
+
+#+name: proposal
+#+begin_src lisp
+  (define-g4-detector-project :my-detector
+    (:physics-list
+     "G4DecayPhysics"
+     "G4EmStandardPhysics"
+     "G4RadioactiveDecayPhysics")
+    (:materials
+     (:default :g4material "G4_AIR")
+     (:foobar  :elements '(:o 5 :si 1 :lu 2)))
+    (:detector
+     ((:world (g4box 100 200 300 :mm) :material :default)
+      ((:ring (g4tubs 50 20 30 :mm)
+        :material :default
+        :place (dotimes-collect (i 3)
+                 (g4placement :transform (g4rotation (quantity (* i 30) :deg)
+                                                     (quantity (* i 20) :deg))
+                              :posistion (list (quantity (* i 30) :mm)
+                                               (quantity (* i 30) :mm)
+                                               (quantity (* i 30) :mm)))))
+       ((:detector (g4tubes 10 10 10 :mm)
+         :material :default))))))
+#+end_src
+
+So focus on =:detector= part, it should wrap geometry sepcification,
+logical volume specification and physical volume (placement) specification.
+So just introduce a HTML-like S-expr would be a nice idea:
+
+#+name: detector-s-expr
+#+begin_src lisp
+  (<node> . <childrens>)
+#+end_src
+
+where the =node= should be:
+
+#+name: detector-s-expr
+#+begin_src text
+  <node> ::= <keyword-of-detector-element>
+           | ( <keyword-of-detector-element>
+               ( ;; geometry definition
+                  [:g4box | :g4tubs | :g4ellipsoid | ... ]
+                  .
+                  <g4-geometry-arguments-with-a-unit-at-last>
+               )
+               . [property property-value]* ;; for other properities
+             )
+#+end_src
+
+And it would be nice if =:detector= itself could have interactively
+preview while modeling. (I think this could be done using [[https://github.com/kaveh808/kons-9][Kons-9]]
+or other 3D modeling process).
+
+(Note: it would be nice if using CAD and import it to Geant 4,
+but as you know, I was just struggling with Geant 4 and have no
+time to try it out. )
+
+In the end, the project should be tangled into a CMake project
+locally and automatically linted, and compiled.
+
+* Possible Routes to make this real
+As mentioned before, this G4 simplification is just a proposal,
+rather than a specific implementation. Because it would cost
+massive time to cover all the Cpp features and Geant 4 features.
+
+** format
+Just like what I did in [[{{ site.github.url }}/lisp/gnuplot/][Gnuplot]], I think I'll use a format method
+alist to store how to formatting the Codes.
+
+#+name: cpp-format
+#+begin_src lisp
+  (define-alist-with-define-and-undefine cpp-format)
+
+  (defmacro define-cpp-format-method (method (stream &rest args) &body)
+    `(define-cpp-format ,method (lambda (,stream ,@args) ,@body)))
+
+  (defun cpp-format (stream method &rest args)
+    (apply (cdr (assoc method *cpp-format-alist*)) (cons stream args)))
+#+end_src
+
+*** Cpp Wrapper
+I think I will make a Lisp class-like DSL for the Cpp class:
+
+#+name: physics-list-example
+#+begin_src lisp
+  (define-cpp-class :physics ("G4VModularPhysicsList")
+    ((physics-list *physics-list*)) ;; local bindings
+    (:nickname "PhysicsList")
+    (:init-method
+     (g4-regist-physics-list physics-list))
+    (:includes
+     (mapcar #'atomize physics-list)
+     "G4OpticalPhysics"
+     "G4OpticalParameters")
+    ((:method "SetCuts" :void)
+     "SetCutsWithDefault();"))
+#+end_src
+
+It should be parsed into a list like =(name . plist)=:
+
+#+name: physics-plist
+#+begin_src lisp
+  (:physics
+   :nickname "PhysicsList"
+   :init-method ("...")
+   :includes    (... "G4OpticalPhysics" "G4OpticalParameters")
+   :methods     ((("SetCuts" :void) () "SetCutsWithDefault();")))
+#+end_src
+
+then using =:class-include= and =:class-src= to format it into
+header files and src implementation files.
+
+*** Detector
+**** Material and Elements
+#+name: material
+#+begin_src lisp
+  (define-alist-with-define-and-undefine material)
+
+  (defun define-g4material
+      (name &key method nickname g4material density elements &allow-other-keys)
+    (let* ((method     (or method
+                           (cond (g4material :g4-find-material)
+                                 (elements   :g4-build-material)
+                                 (T (error "Missing `:method' keyword")))))
+           (properties (list :method method)))
+      (when nickname (push-plist :nickname nickname properties))
+      (ecase method
+        (:g4-find-material
+         (push-plist :g4material g4material properties)
+         (when density
+           (push-plist :density (quantity-value density (unit :g/cm3)) properties)))
+        ((:build :g4-build-material)
+         (push-plist :density  (quantity-value density (unit :g/cm3)) properties)
+         (push-plist :elements elements)))
+      (define-material name properties)))
+
+  (define-cpp-format-method :g4-find-material
+      (stream material &key nickname density g4material &allow-other-keys)
+    (let ((name     (cpp-format nil :g4material material :nickname nickname))
+          (material (or g4material
+                        (string-upcase (str:snake-case material)))))
+      (format stream "G4Material *~A = ~A->" name *nist-manager*)
+      (if density
+          (format stream "BuildMaterialWithNewDensity(\"~A\", \"~A\", ~F * g / cm3);~%"
+                  name material density)
+          (format stream "FindOrBuildMaterial(\"~A\");~%" material))))
+#+end_src
+
+Elements should be the same.
+
+**** Geometry, LogicalVolume, PhysicalVolume
+So this would like this for geometry definition:
+
+#+name: geometry
+#+begin_src lisp
+  (define-cpp-format-method :g4box (stream name x y z &optional (unit :mm))
+    (let ((name (cpp-format nil :cpp-name name)))
+      (format stream
+              "G4Box *~A = new G4Box(\"~A\", ~{~{~F / 2.0 * ~A~}~^, ~});~%"
+              name name
+              (dolist-collect (elem (list x y z))
+                (list (quantity-value elem unit) unit)))))
+#+end_src
+
+For LogicalVolume and PhysicalVolume, it would be like:
+
+#+name: g4-logical-volume
+#+begin_src lisp
+  (define-cpp-format-method :g4-define-volume
+      (stream g4volume
+              &key geometry parent material (unit :mm) optical union
+              &allow-other-keys)
+    (let* ((name     (cpp-format nil :g4volume g4volume))
+           (material (cpp-format nil :material material))
+           (geo      (cpp-format nil :g4volume-geometry name))
+           (log      (cpp-format nil :g4-logical-volume name)))
+      ;; Geometry
+      (let-bind* (((method . args) geometry))
+        (cpp-format stream method (cons geo args)))
+
+      ;; LogicalVolume
+      (format stream
+              "G4LogicalVolume *~A = new G4LogicalVolume(~A, ~A, \"~A\");~%"
+              log geo mat log)
+
+      ;; VPhyscialVolume
+      (cond ((null parent)
+             (format stream
+                     "G4VPhysicalVolume *~A = ~
+  new G4PVPlacement(0, G4ThreeVector(), ~A, \"~A\", 0, false, false);~%"
+                     name log name))
+            (T
+             (format stream "G4VPhysicalVolume *~A;~%" name)
+             (do-alist (parent-log coordinates parent)
+               ​             (dolist-indexed (idx coords coordinates)
+                              (format stream
+                                      "~A = ~
+  new G4PVPlacement(0, G4ThreeVector(~{~{~F * ~(~A~)~}~^, ~}), ~
+  ~A, \"~A\", ~A, false, ~D, false);~%"
+                                      name
+                                      (dolist-collect (coord coords)
+                                        (list (quantity-value coord unit) unit))
+                                      log
+                                      name
+                                      parent-log
+                                      idx)))))))
+#+end_src
+
+#+begin_html
+<details><summary>Notes</summary>
+#+end_html
+
+It should be noted that logical volume could be combined
+and perform boolean operation. But since I only need a
+subset of Geant 4, so maybe it is okay.
+
+#+begin_html
+</details>
+#+end_html
+
+**** Misc: Live preview
+So I use [[https://github.com/kaveh808/kons-9/][kons-9]] for quick prototype.
+
+#+begin_src lisp
+  (define-alist-with-define-and-undefine kons-9-g4geometry)
+  (defmacro define-kons-9-geo (method (&rest coords) &body body)
+    (with-gensyms (coord)
+    `(define-kons-9-g4geometry ,method
+       (lambda (&rest ,coord)
+         (let-bind* ((,coords
+                      (dolist-collect (coord (butlast ,coord))
+                        (* *kons-9-scale* coord))))
+           ,@body)))))
+
+  (defun render-g4geo (method coords pos)
+    (kons-9::add-shape kons-9::*scene*
+                       (kons-9::translate-to
+                        (apply (cdr (assoc method *kons-9-g4geometry-alist*)) coords)
+                        pos)))
+
+  (defun render-g4volume (&optional
+                            (physical-volume-alist *physical-volume-alist*)
+                            (root (find-physical-volume-root physical-volume-alist))
+                            (from nil)
+                            (center (kons-9::p! 0.0 0.0 0.0)))
+    (assert (g4volumep root))
+    (let ((properties (cdr (assoc root physical-volume-alist))))
+      (let-bind* (((type . args) (getf properties :geometry)))
+        (flet ((render (coord)
+                 (let ((pos (kons-9::p+ center (apply #'kons-9::p! coord))))
+                   (render-g4geo type args pos)
+                   (dolist (children (getf properties :children))
+                     (render-g4volume physical-volume-alist children root pos)))))
+          (if from
+              (do-alist (parent coordinates (getf properties :parent))
+                (when (eq parent from)
+                  (dolist (coord coordinates)
+                    (render (dolist-collect (cor coord) (* *kons-9-scale* cor))))))
+              (render '(0 0 0)))))))
+#+end_src
+
+(note: code not so polished, maybe buggy)
+
+* End
+I think it would be a nice try to generate template-like code
+from lisp to anyother language. Bringing the lisp-macros to
+other languages to speed-up the developing process, for example,
+the Geant 4 application building.
+
+Although I think it costs more times than directly copy and
+paste from a existing project... if i have to do all the things
+from zero...
