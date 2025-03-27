@@ -1,0 +1,125 @@
+#+title: 澡堂密码的 "解压缩"
+#+date: 2025-03-27
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: misc
+* About
+洗澡的时候想到的, 假如把洗澡的时候的口令密码 (一个 6 位数字)
+用一个简单的算法进行压缩:
+
+对于连续重复的 =m= 部分, 若其长度 =n= 大于等于 =3=, 则记为 =nm=
+
+例: =822232= 就变成 =83232=, 那么是否有一个简单的还原算法呢?
+以及如此简单的算法是否会有歧义呢? (显然, 比如 =833323= 会变成
+=83323=, 此时可能是 =33= 也可能是 =32=).
+
+* 压缩
+对于重复 =n= 次的数字 =m=, 其应输出为:
++ 若 =n > 2=, 则输出 =nm=
++ 若 =n = 2=, 则输出 =mm=
++ 若 =n = 1=, 则输出 =m=
+
+#+name: write-nm
+#+begin_src lisp
+  (defun write-nm (n m)
+    (cond ((> n 2) (format t "~D~C" n m))
+          ((= n 2) (format t "~C~C" m m))
+          ((= n 1) (format t "~C" m))))
+#+end_src
+
+对于一组洗澡口令, 历遍其每个元素 =i= 及其前一个元素 =(1- i)=,
+同时记录前一个元素的重复次数 =n=, 若:
++ 到达口令末尾 (=i = 6=), 则输出 =nm=
++ 两者相等: 增加当前元素的重复次数 =(incf n)=, 即计数当前元素重复了几次;
++ 两者不同: 输出 =nm=, 并移动到下一个元素, 记 =n= 为 =1=
+
+#+name: scan-passwd
+#+begin_src lisp
+  (defun scan-passwd (passwd i &optional (n 1))
+    (let ((m (aref passwd (1- i)))) ;; m  为前一个元素
+      (cond ((= i 6)
+             (write-nm n m))
+            ((char= m (aref passwd i)) ;; (aref passwd i) 为当前元素o
+             (scan-passwd passwd (1+ i) (1+ n)))
+            (T
+             (write-nm n m)
+             (scan-passwd passwd (1+ i) 1)))))
+
+#+end_src
+
+#+begin_html
+<details><summary>有点不太懂? 对它使用 trace 吧!</summary>
+#+end_html
+
+#+begin_src lisp
+  ;; scan:
+  ;; 8 3 3 3 2 3    | passwd
+  ;;   ^ ^ ^ ^ ^ ^  | 当前 scan 到的地方
+  ;; 0 1 2 3 4 5 6  | i
+  ;;   1 1 2 3 1 1  | n
+  cl-user> (scan-passwd "833323" 1)
+    0: (SCAN-PASSWD "833323" 1)               ;; 因为 8 3 不同, 所以输出
+  8    1: (SCAN-PASSWD "833323" 2 1)
+        2: (SCAN-PASSWD "833323" 3 2)
+          3: (SCAN-PASSWD "833323" 4 3)       ;; 因为 3 2 不同, 所以输出
+  33          4: (SCAN-PASSWD "833323" 5 1)   ;; 因为 2 3 不同, 所以输出
+  2            5: (SCAN-PASSWD "833323" 6 1)  ;; 因为结束所以输出
+  3            5: scan-passwd returned nil
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+于是压缩函数即:
+
+#+name: encode
+#+begin_src lisp
+  (defun encode (passwd)
+    (with-output-to-string (*standard-output*)
+      (scan-passwd passwd 1 1)))
+#+end_src
+
+* 解压缩
+对于两隔壁的数 =lnm=, 若:
++ =n < 3= 或者 =n > 6=, 则不认为是可展开的数
++ =nm= 相等, 则不认为是可展开的数
++ 其他情况都尝试去展开它们, 若:
+  + 展开后长度为 =6=, 则使用
+  + 长度不足 =6=, 则在其之后继续扫描, 从 =i + n= 开始扫描
+  + 长度超过 =6=, 则退出 (太长了)
+
+#+begin_src lisp
+  (defun get-num (string i)
+    "得到字符串 `string' 第 `i' 位上的数.
+  返回一个整形. "
+    (- (char-code (aref string i)) (char-code #\0)))
+
+  (defun try-expand (compressed i)
+    "尝试把 `compressed' 字符串的第 i 处做为 n, i+1 处作为字符 m, 展开 nm.
+  返回展开后的字符串. "
+    (let ((n (get-num compressed i))
+          (m (aref compressed (1+ i))))
+      (with-output-to-string (expanded)
+        (write-string (subseq compressed 0 i) expanded)
+        (dotimes (i n) (write-char m expanded))
+        (write-string (subseq compressed (+ i 2)) expanded))))
+
+  (defun scan-compressed (compressed i &optional (len (length compressed)))
+    (when (< i (1- len))
+      (let ((l (get-num compressed (1- i)))
+            (n (get-num compressed i))
+            (m (get-num compressed (1+ i))))
+        (or (and (<= 3 n 6)
+                 (/= m l)
+                 (let* ((expanded (try-expand compressed i))
+                        (len      (length expanded)))
+                   (cond ((= len 6) expanded)
+                         ((< len 6) (scan-compressed expanded (+ i n) len)))))
+            (scan-compressed compressed (1+ i) len)))))
+#+end_src
+
+* End
+大概就这样, 一个小品例子, 算是写论文发神经的中间结果吧...
+(也许有问题就是了, 不保熟, +毕竟洗澡的时候容易脑子进水+ bushi)
