@@ -1,0 +1,468 @@
+#+title: ObjC 0: WebDriver Download ObjC Runtime Documentation
+#+date: 2025-03-31
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+记录一下我尝试复刻 objectvie-c-bridge (参考的是 LispWorks 的 [[https://www.lispworks.com/documentation/pdf/lw80/objc-8-0.pdf][API]],
+CCL 也有一个 [[https://ccl.clozure.com/manual/chapter14.html#The-Objective-C-Bridge][objective-c-bridge]], 但是因为 CCL arm port 目前是缺失的,
+所以我没法在我的电脑上面测试其表现, 我不是一个善于读文档的人).
+
+注: 因为我做这个的目标完全只是为了不花钱去买 LispWorks 的 Licence,
+以及给比较无聊的生活加点乐子和非游戏的打发时间的事做. 所以该项目在我能
+被批准用学校的钱去购买 Licence 或者很忙的情况下就会被中断.
+
+目前我的计划是这样的:
+1. 用 CFFI 建立 Objcective-C Runtime 的一个绑定
+2. 去了解一下 Objective-C Runtime 该怎么 [[https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Introduction/Introduction.html][编写]]
+3. 去模拟 LispWorks 的 ObjC 的函数
+4. 去添加其他的库, 或者做一些高层的 wrapping 之类的
+5. 去尝试实现 CLIM 的 backend 或者模拟 CAPI 的 API?
+
+这估计会是一个跨越时间非常长的项目了...
+
+不过这个 post 的主要内容是如何从苹果的官网上把文档给爬下来, 并解析成
+CFFI 可以使用的形式. 其中使用了我对之前 [[{{ site.github.url }}/lisp/lisp-webdriver-macros/][WebDriver]] 协议的一个小小改进
+版本的代码 ([[https://gist.github.com/li-yiyang/e777ea711e39c554703f520ff7c75f34][gist]]).
+
+#+begin_html
+<details><summary>一些基于 WebDriver 库的小小 wrapper</summary>
+#+end_html
+
+#+name: wd-helper
+#+begin_src lisp :results none
+  (defmacro map-find-elems ((elem selector &optional (node '*session*))
+                            &body body)
+    `(mapcar (lambda (,elem) ,@body) (wd:find-elems ,node ,selector)))
+
+  (defun find-text (selector &optional (node *session*) (retry 5) (wait 1.0))
+    (handler-case (wd:text (wd:find-elem node selector))
+      (wd::webdriver-error (err)
+        (cond ((> retry 0)
+               (sleep wait)
+               (find-text selector node (1- retry) wait))
+              (T
+               (error err))))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+* Objective-C 文档的读取
+新建一个 WebDriver Session:
+
+#+name: session
+#+begin_src lisp
+  (defparameter *session* (wd:make-webdriver-session))
+#+end_src
+
+#+RESULTS: session
+: *session*
+
+然后访问苹果 Objective-C Runtime 的网页:
+
+#+name: navigate-to-apple-objc-runtime-doc
+#+begin_src lisp
+  (wd:navigate *session* "https://developer.apple.com/documentation/objectivec/objective-c-runtime?language=objc")
+#+end_src
+
+#+RESULTS: navigate-to-apple-objc-runtime-doc
+: :null
+
+** Section
+其被分隔成多个 section, 于是可以提取到 =sections= 中, 并提取每章的子文档
+的链接用于之后分章节进行实现:
+
+#+name: *objc-runtime-sections*
+#+begin_src lisp :results none
+  (defparameter sections
+    (map-find-elems (section "div.contenttable-section")
+      (list (find-text "h3.contenttable-title" section)
+            (map-find-elems (link "a:not(.deprecated):has(code)" section)
+              (cons (wd:text link) (wd:property link "href"))))))
+#+end_src
+
+注: 这里用 =:has(code)= 的 CSS selector 来选择是子节点 =code= 类型的链接而
+不是链接到其他的说明文档去.
+
+类似如下:
+
+#+name: preview-objc-runtime-sections
+#+begin_src lisp :exports results :results table
+  (cons '("Section" "Links Counts")
+        (dolist-bind-collect ((title elem) sections)
+          (list title (length elem))))
+#+end_src
+
+#+RESULTS: preview-objc-runtime-sections
+| Section                             | Links Counts |
+| Working with Classes                |           30 |
+| Adding Classes                      |            5 |
+| Instantiating Classes               |            3 |
+| Working with Instances              |           10 |
+| Obtaining Class Definitions         |            6 |
+| Working with Instance Variables     |            3 |
+| Associative References              |            3 |
+| Sending Messages                    |            5 |
+| Working with Methods                |           13 |
+| Working with Libraries              |            3 |
+| Working with Selectors              |            4 |
+| Working with Protocols              |           15 |
+| Working with Properties             |            4 |
+| Using Objective-C Language Features |            9 |
+| Class-Definition Data Structures    |            9 |
+| Instance Data Types                 |            3 |
+| Boolean Value                       |            1 |
+| Associative References              |            1 |
+| Constants                           |            0 |
+| Related Documentation               |            0 |
+| Reference                           |            0 |
+
+** Function, Type Alias, Structure
+对于单个文档, 例:
+
+#+name: single
+#+begin_src lisp :results output :exports both
+  (defparameter link
+    (let ((section (first sections)))
+      (destructuring-bind (title (code . rest)) section
+        (declare (ignore rest))
+        (format t ";;; ~A~%" title)
+        (format t "~A~%~A~%" (car code) (cdr code))
+        (cdr code))))
+#+end_src
+
+#+RESULTS: single
+: ;;; Working with Classes
+: class_getName
+: https://developer.apple.com/documentation/objectivec/class_getname(_:)?language=objc
+
+其有一些比较有用的信息:
++ =div.topictitle=: 类别和简要文档说明 =objc-doc-type=, =objc-doc-short=
+
+  #+name: objc-doc-type-and-objc-doc-short
+  #+begin_src lisp :results none
+    (defun objc-doc-type  (session) (find-text "div.topictitle > span" session))
+    (defun objc-doc-short (session) (find-text "div.abstract" session))
+  #+end_src
++ =pre.source > code=: lambda list =objc-doc-lambda=
+
+  #+name: objc-doc-lambda
+  #+begin_src lisp :results none
+    (defun objc-doc-lambda (session) (find-text "pre.source > code" session))
+  #+end_src
+
+  例:
+
+  #+name: objc-doc-lambda-example
+  #+begin_src lisp :exports results
+    (wd:navigate *session* link)
+    (objc-doc-lambda *session*)
+  #+end_src
+
+  #+RESULTS: objc-doc-lambda-example
+  : extern const char * class_getName(Class cls);
+
+  这里有一个比较有趣的事情是如何解析这个 =objc-lambda=.
++ =#parameters=: 参数说明 =objc-doc-params=
+
+  #+name: objc-doc-params
+  #+begin_src lisp
+    (defun objc-doc-params (session)
+      (let ((param (first (wd:find-elems session "#parameters + dl"))))
+        (when param
+          (mapcar #'cons
+                  (map-find-elems (name "dt" param)
+                    (get-nickname (wd:text name)))
+                  (map-find-elems (doc-paras "dd" param)
+                    (map-find-elems (para "p" doc-paras)
+                      (objc-doc-text para)))))))
+  #+end_src
+
+  #+RESULTS: objc-doc-params
+  : objc-doc-params
+
+  例:
+
+  #+name: objc-doc-params-example
+  #+begin_src lisp :exports results
+    (objc-doc-params *session*)
+  #+end_src
+
+  #+RESULTS: objc-doc-params-example
+  | class | A class object. |
+
+  #+begin_html
+  <details><summary>objc-doc-text 的一个说明</summary>
+  #+end_html
+
+  用于将 HTML 转换为可读的 Lisp 文档:
+
+  #+name: objc-doc-text
+  #+begin_src lisp
+    (defparameter *objc-nickname-alist*
+      '(("cls"      . "class")
+        ("Class"    . "objc-class")
+        ("Method"   . "objc-method")
+        ("IMP"      . "objc-imp")
+        ("SEL"      . "objc-sel")
+        ("Protocol" . "objc-protocol")))
+
+    (defun get-nickname (key)
+      (let ((cons (assoc key *objc-nickname-alist* :test #'equal)))
+        (if cons (cdr cons) (str:param-case key))))
+
+    (defun objc-doc-text (node)
+      (let ((dom (plump:parse (wd:property node "innerHTML"))))
+        (flet ((parse (node)
+                 (if (or (plump:text-node-p node)
+                         (and (string= (plump:tag-name node) "code")
+                              (/= (length (plump:children node)) 1)))
+                     (plump:text node)
+                     (format nil "`~A'" (get-nickname (plump:text node))))))
+          (str:join "" (map 'list #'parse (plump:children dom))))))
+  #+end_src
+
+  #+RESULTS: objc-doc-text
+  : objc-doc-text
+
+  #+begin_html
+  </details>
+  #+end_html
++ =#return-value=: 返回值 =objc-doc-return-value=
+
+  #+name: objc-doc-return-value
+  #+begin_src lisp
+    (defun objc-doc-return-value (session)
+      (map-find-elems (elem "#return-value ~ p" session)
+        (objc-doc-text elem)))
+  #+end_src
+
+  #+RESULTS: objc-doc-return-value
+  : objc-doc-return-value
+
+  例:
+
+  #+name: objc-doc-return-value-example
+  #+begin_src lisp :exports results
+    (objc-doc-return-value *session*)
+  #+end_src
+
+  #+RESULTS: objc-doc-return-value-example
+  | The name of the class, or the empty string if class is nil. |
++ =#Discussion=: 一些额外的说明 =objc-doc-discussion=
+
+  #+name: objc-doc-discussion
+  #+begin_src lisp
+    (defun objc-doc-discussion (session)
+      (map-find-elems (elem "#Discussion ~ p" session)
+        (objc-doc-text elem)))
+  #+end_src
+
+  #+RESULTS: objc-doc-discussion
+  : objc-doc-discussion
+
+于是可以实现 =objc-doc-parse-url= 的功能:
+
+#+name: objc-doc-parse-url
+#+begin_src lisp
+  (defun objc-doc-parse-name-url-cons (cons)
+    (let ((name (car cons))
+          (url  (cdr cons)))
+      (unless (string= (wd:url *session*) url)
+        (wd:navigate *session* url))
+      (list :name   name
+            :type   (objc-doc-type   *session*)
+            :doc    (objc-doc-short  *session*)
+            :lambda (objc-doc-lambda *session*)
+            :params (objc-doc-params *session*)
+            :return (objc-doc-return-value *session*)
+            :discussion (objc-doc-discussion *session*))))
+#+end_src
+
+#+RESULTS: objc-doc-parse-url
+: objc-doc-parse-name-url-cons
+
+例:
+
+#+name: objc-doc-parse-url-example
+#+begin_src lisp :results verbatim :exports both
+  (objc-doc-parse-name-url-cons (first (second (first sections))))
+#+end_src
+
+#+RESULTS: objc-doc-parse-url-example
+: (:name "class_getName" :type "Function" :doc "Returns the name of a class."
+:  :lambda "extern const char * class_getName(Class cls);" :params
+:  (("class" "A class object.")) :return
+:  ("The name of the class, or the empty string if `class' is `nil'.")
+:  :discussion nil)
+
+** Parse Function Lambda
+*** Tokenrize
+#+name: objc-tokenrize
+#+begin_src lisp
+  (defparameter *objc-keywords-alist*
+    '(("extern"   . :extern)
+      ("struct"   . :struct)
+      ("unsigned" . :unsigned)
+      ("const"    . :const)))
+
+  (defparameter *objc-type-alist*
+    '(("char"     . :char)
+      ("int"      . :int)
+      ("void"     . :void)
+      ("uint8_t"  . :uint8)
+      ("size_t"   . :size)
+      ;; 注: 这里开了一个 parser 的洞
+      ("void (*)(id)" . (:function objc-id))))
+
+  (defun objc-token-regexp ()
+    "void \\(\\*\\)\\(id\\)|[a-zA-Z][a-zA-Z0-9_]*|\\(|\\)|\\;|\\,|\\*")
+
+  (defun objc-lexer (str)
+    (flet ((tokenrize (token)
+             (cond ((string= token ";") (values :eol        :eol))
+                   ((string= token "*") (values :pointer    :pointer))
+                   ((string= token "(") (values :args-start :args-start))
+                   ((string= token ")") (values :args-end   :args-end))
+                   ((string= token ",") (values :comma      :comma))
+                   ((assoc token *objc-keywords-alist* :test #'equal)
+                    (let ((token (cdr (assoc token *objc-keywords-alist* :test #'equal))))
+                      (values token token)))
+                   ((assoc token *objc-type-alist* :test #'equal)
+                    (let ((token (cdr (assoc token *objc-type-alist* :test #'equal))))
+                      (values 'type token)))
+                   (T (values 'name (intern (str:upcase (get-nickname token))))))))
+      (let ((search 0)
+            (regexp (ppcre:create-scanner (objc-token-regexp))))
+        (lambda ()
+          (multiple-value-bind (start end) (ppcre:scan regexp str :start search)
+            (when end (setf search end))
+            (if start
+                (tokenrize (str:substring start end str))
+                (values nil nil)))))))
+
+  (defun objc-tokenrize (str)
+    (let ((lexer (objc-lexer str)))
+      (loop for (terminal value) = (multiple-value-list (funcall lexer))
+            while terminal collect (list terminal value))))
+#+end_src
+
+#+RESULTS: objc-tokenrize
+: objc-tokenrize
+
+这个 tokenizer 的实现还是挺 trivial 的, 毕竟需要处理的问题有限,
+可以进行一个肮脏的开洞.
+
+例:
+
+#+name: objc-tokenrize-example
+#+begin_src lisp :results table :exports results
+  (objc-tokenrize "extern Ivar class_getInstanceVariable(Class cls, const char * name);")
+#+end_src
+
+#+RESULTS: objc-tokenrize-example
+| :extern     | :extern                     |
+| name        | ivar                        |
+| name        | class-get-instance-variable |
+| :args-start | :args-start                 |
+| name        | objc-class                  |
+| name        | class                       |
+| :comma      | :comma                      |
+| :const      | :const                      |
+| type        | :char                       |
+| :pointer    | :pointer                    |
+| name        | name                        |
+| :args-end   | :args-end                   |
+| :eol        | :eol                        |
+
+*** Grammer Parser
+使用 [[https://www.irif.fr/~jch/software/cl-yacc/][cl-yacc]] 作为 parser generator:
+
+#+name: objc-parse
+#+begin_src lisp
+  (yacc:define-parser *objc-lambda-parser*
+    (:start-symbol objc-lambda)
+    (:terminals (name type :comma :extern :const :struct :unsigned
+                           :pointer :args-start :args-end :eol))
+    (objc-lambda
+     (:extern types name args :eol
+              (lambda (extern type name args eol)
+                (declare (ignore extern eol))
+                (list (list name type) args))))
+
+    (types
+     type
+     name
+     (:const    types (lambda (const type)
+                        (declare (ignore const))
+                        type))
+     (:unsigned types (lambda (unsigned type)
+                        (list unsigned type)))
+     (:struct   name  (lambda (struct name)
+                        (list struct name)))
+     (types  :pointer (lambda (type pointer)
+                        (list pointer type))))
+
+    (args
+     (:args-start pair* :args-end (lambda (a pairs c)
+                                    (declare (ignore a c))
+                                    pairs))
+     (:args-start :args-end       (constantly nil)))
+
+    (pair*
+     (types name              (lambda (type name)
+                                (list (list name type))))
+     (types name :comma pair* (lambda (type name comma pairs)
+                                (declare (ignore comma))
+                                (cons (list name type) pairs)))))
+
+  (defun objc-parse-lambda (objc-lambda)
+    (yacc:parse-with-lexer (objc-lexer objc-lambda) *objc-lambda-parser*))
+#+end_src
+
+#+RESULTS: objc-parse
+: objc-parse-lambda
+
+#+begin_html
+<details><summary>语法的设计的问题</summary>
+#+end_html
+
+这里有个小问题就是在 =types= 节点的 =types :pointer= 的语法, 这可能会导致
+parser 陷入无限循环的 bug 中. 但是能跑就行了?
+
+#+begin_html
+</details>
+#+end_html
+
+例:
+
+#+name: objc-parse-lambda-example
+#+begin_src lisp :results verbatim :exports results
+  (objc-parse-lambda (objc-doc-lambda *session*))
+#+end_src
+
+#+RESULTS: objc-parse-lambda-example
+: ((class-get-name :char) ((class objc-class)))
+
+** Lisp-Spider, Go!
+#+name: *objc-runtime-doc*
+#+begin_src lisp
+  (defparameter *objc-runtime-doc*
+    (dolist-bind-collect ((title elem) sections)
+      (list title (dolist-bind-collect ((method . url) elem)
+                    (let ((property (objc-doc-parse-name-url-cons (cons method url))))
+                      (when (string= (getf property :type) "Function")
+                        (setf (getf property :cffi)
+                              (objc-parse-lambda (getf property :lambda))))
+                      property)))))
+#+end_src
+
+* End
+最终处理结束的结果可以见 [[https://gist.github.com/li-yiyang/468b042bdf399435d0c5f561dba0d279][gist]], 理论上来说通过一些简单的 =format= 操作就
+能够生成 CFFI 的 bindings 了. 不过考虑到自动生成的 bingdings 可能并不
+是那么的可用 (不知道正确性, 毕竟不太会 CFFI 和 ObjC Runtime), 所以我决
+定先去看看 ObjC Runtime 的一些 Hello World 的例子, 然后去尝试构建模拟
+兼容 LispWorks 的 ObjC-Bridge API.
