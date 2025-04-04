@@ -1,0 +1,852 @@
+#+title: ObjC 1: Basic Objective-C Programming
+#+date: 2025-04-05
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+之前的活 ([[{{ site.github.url }}/lisp/objc-0-webdriver-download-objc-doc/][ObjC 0: WebDriver Download ObjC Runtime Documentation]]) 的下
+一部分就该轮到写一些简单的 Objective-C 的代码了. 但是问题是: 我好像从
+来没有写过 ObjC 的代码...
+
+所以这里会参考 [[https://github.com/EimaMei/Silicon/][Silicon.h]] 和 [[https://dev.to/colleagueriley/rgfw-under-the-hood-cocoa-in-pure-c-1c7j][RGFW Under the Hood: Cocoa in Pure C]] 中的
+方案尝试只使用 C-side (即 ObjC Runtime) 来调用 Objective-C 的部分. 同
+时借鉴 [[https://fullonrager.github.io/rys-objective-c-tutorial-archive/][Ry’s Objective-C Tutorial]] 用于测试 ObjC Runtime 的 binding 是否
+可用.
+
+* ObjC to C, then, CFFI, to Lisp
+** Simple =main()=
+示例代码来自 [[https://fullonrager.github.io/rys-objective-c-tutorial-archive/introduction.html][Ry's Objective-C]]:
+
+#+name: main-log-example
+#+begin_src objc
+  #import <Foundation/Foundation.h>
+
+  int main(int argc, char ** argv) {
+    @autoreleasepool {
+      NSLog(@"ObjC Test");
+    }
+    return 0;
+  }
+#+end_src
+
+使用 =clang -o <out> <src> -ObjC -framework Foundation= 进行编译. 效果如
+下:
+
+#+name: main-log-example-result
+#+begin_example
+~/Buff
+[੧ᐛ੭] > clang -o objc objc.m -ObjC -framework Foundation
+~/Buff
+[੧ᐛ੭] > ./objc
+2025-04-02 02:12:45.622 objc[75447:24806460] ObjC Test
+#+end_example
+
+嘛, 至少能动了.
+
+*** The =@= mark
+询问 DeepSeek 可以得知, =@= 表示这后面跟着的东西是 ObjC 的东西, 比如
+=@"balabala"= 表示 =NSString= 的字面量, =@[...]=, =@{...}= 分别表示 =NSArray= 和
+=NSDictionary=, 之类的. 那么差不多就需要一个 C literal value 转换为 ObjC
+量的操作.
+
+比如可以用 =[NSString stringWithUTF8String:"ObjC Test"]= 的方式来表示这
+个字面量. 区别就是 =@""= 会在编译的时候被当作常量储存, 而 =[]= 的形式会让
+字符串在运行时被转换.
+
+比如可以用 Clang 将 ObjC 代码 transcompile 到 C++ 代码:
+
+#+name: clang-cross-compile
+#+begin_src shell
+  clang -rewrite-objc objc.m -o objc.c -Wno-everything -fno-ms-extensions
+#+end_src
+
++ =@""= 形式:
+
+  #+name: basic-at
+  #+begin_src c
+    int main(int argc, char ** argv) {
+      /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool;
+        NSLog((NSString *)&__NSConstantStringImpl__var_folders_rm_bjy42f597pjbncssb6l_766m0000gn_T_objc_1497c2_mi_0);
+      }
+      return 0;
+    }
+  #+end_src
+
+  会编成常量形式进行储存:
+
+  #+name: basic-at-const
+  #+begin_src c
+    static __NSConstantStringImpl __NSConstantStringImpl__var_folders_rm_bjy42f597pjbncssb6l_766m0000gn_T_objc_1497c2_mi_0 __attribute__ ((section ("__DATA, __cfstring"))) = {__CFConstantStringClassReference,0x000007c8,"ObjC Test",9};
+  #+end_src
+
+  不过考虑到从 Lisp 侧调用的时候应该没法通过这种方式进行调用, 所以估计
+  得通过 Runtime =[]= 的形式调用.
++ =[]= 形式:
+  #+name: basic-square
+  #+begin_src c
+    int main(int argc, char ** argv) {
+      /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool;
+        NSLog(((NSString * _Nullable (*)(id, SEL, const char * _Nonnull))(void *)objc_msgSend)((id)objc_getClass("NSString"), sel_registerName("stringWithUTF8String:"), (const char *)"ObjC Test"));
+      }
+      return 0;
+    }
+  #+end_src
+
+*** The =[]= square
+这里参考 [[https://github.com/EimaMei/Silicon/blob/a64f695f00fe589fa3a20ad8df508487a023f2f4/silicon.h#L3495][Silicon.h]] 的实现:
+
+#+begin_src c
+  NSString* NSString_stringWithUTF8String(const char* str) {
+  	void* func = SI_NS_FUNCTIONS[NS_STRING_WIDTH_UTF8_STRING_CODE];
+  	return ((id (*)(id, SEL, const char*))objc_msgSend)
+  				(SI_NS_CLASSES[NS_STRING_CODE], func, str);
+  }
+#+end_src
+
+其中 =SI_NS_FUNCTIONS[NS_STRING_WIDTH_UTF8_STRING_CODE]= 和
+=SI_NS_CLASSES[NS_STRING_CODE]= 为缓存机制:
+
+#+begin_src c
+  SI_NS_CLASSES[NS_STRING_CODE] = objc_getClass("NSString");
+  SI_NS_FUNCTIONS[NS_STRING_WIDTH_UTF8_STRING_CODE] = sel_registerName("stringWithUTF8String:");
+#+end_src
+
+于是应当可以改写 =main=:
+
+#+begin_src c
+  NSLog(NSString_stringWithUTF8String("ObjC Test"));
+#+end_src
+
+其中对应的 =NSString_stringWithUTF8String= 的实现如下:
+
+#+begin_src c
+  void * NSString_stringWithUTF8String(const char* str) {
+    void* func = sel_registerName("stringWithUTF8String:");
+    return ((id (*)(id, SEL, const char*))objc_msgSend)
+      (objc_getClass("NSString"), func, str);
+  }
+#+end_src
+
+同样的, 可以学习 =SI_NS_FUNCTIONS= 和 =SI_NS_CLASSES=, 通过对 ObjC 的对象
+访问添加 =cache= 来减少重复查询的开销.
+
+#+begin_src lisp
+  (defun-cached coerce-to-objc-class (name) name
+    (objc-get-class name))
+
+  (defun-cached coerce-to-selector (name) name
+    (sel-register-name name))
+#+end_src
+
+#+begin_html
+<details><summary>defun-cached 的实现</summary>
+#+end_html
+
+#+name: defun-cached
+#+begin_src lisp
+  (defmacro defun-cached (name lambda-list key &body body)
+    (let ((cache (gensym "CACHE"))
+          (keyv  (gensym "KEY")))
+      `(let ((,cache (make-hash-table :test 'equal)))
+         (defun ,name ,lambda-list
+           (let ((,keyv ,key))
+             (or (gethash ,keyv ,cache)
+                 (setf (gethash ,keyv ,cache) (progn ,@body))))))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** The =@autorealeasepool=
+根据 [[https://stackoverflow.com/a/10290255][stackoverflow]] 上的这个帖子, 可以参考 [[https://developer.apple.com/documentation/foundation/nsautoreleasepool][文档]], 会发现用
+=[[NSAutoreleasePool alloc] init]= 不如 =@autoreleasepool=.
+
+通过 Clang transcompile 的结果里面, 可以发现:
+
+#+begin_src c
+  struct __AtAutoreleasePool {
+    __AtAutoreleasePool() {atautoreleasepoolobj = objc_autoreleasePoolPush();}
+    ~__AtAutoreleasePool() {objc_autoreleasePoolPop(atautoreleasepoolobj);}
+    void * atautoreleasepoolobj;
+  };
+#+end_src
+
+于是可以通过直接调用 =objc_autoreleasePoolPush()= 以及
+=objc_autorelasePoolPop()= 来解决这个问题.
+
+于是可以尝试:
+
+#+begin_src lisp
+  (defmacro with-autorelease-pool (&body body)
+    `(let ((autorelease-pool-obj (objc-autorelease-pool-push)))
+       (unwind-protect (progn ,@body)
+         (objc-autorelease-pool-pop autorelease-pool-obj))))
+#+end_src
+
+#+begin_html
+<details><summary>对自动生成的 binding 的 patch</summary>
+#+end_html
+
+这里发现在原本自动生成的绑定里面缺少了 =objc_autoreleasePoolPush= 和
+=objc_autoreleasePoolPop= 这两个函数, 一开始以为是被移除的 API, 但是发现
+貌似在我的电脑上也不是不能直接调用, 于是就直接进行一个的引用:
+
+#+begin_src lisp
+  (defcfun (objc-autorelease-pool-push "objc_autoreleasePoolPush") :pointer)
+
+  (defcfun (objc-autorelease-pool-pop "objc_autoreleasePoolPop") :void
+    (autorelease-pool-obj :pointer))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+当然, 在 LispWorks 里面的写法应该是这样的 (类似如此):
+
+#+begin_src lisp
+  (with-autorelease-pool ()
+    (ns-log (invoke "NSString" "stringWithUTF8String:" "ObjC Test")))
+#+end_src
+
+我的目标就是去模拟这个表示方式... 可以如下地实现:
+
+#+name: ns-log-example
+#+begin_src lisp :results output
+  (with-autorelease-pool ()
+    (ns-log
+     (foreign-funcall "objc_msgSend"
+                      :pointer (coerce-to-objc-class "NSString")
+                      :pointer (coerce-to-selector "stringWithUTF8String:")
+                      :string  "OBJC Test"
+                      :pointer)))
+#+end_src
+
+#+RESULTS:
+: 2025-04-03 00:00:59.293 sbcl[98401:25666096] OBJC Test
+
+#+begin_html
+<details><summary>这里为什么不用绑定的函数? </summary>
+#+end_html
+
+因为自动生成的的绑定是这样的:
+
+#+begin_src lisp
+  (defcfun (objc-msg-send "objc_msgSend") :void
+    (self objc-id)
+    (op   objc-sel)
+    &rest)
+#+end_src
+
+由于其是 =:void= 返回值, 其没法传值给 =ns-log=. 其中 =ns-log= 定义如下:
+
+#+begin_src lisp
+  (defcfun (ns-log "NSLog") :void
+    (formatter :pointer)
+    &rest)
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+** Simulate LispWorks API
+于是接下来的目标就是去模拟 LispWorks 的 API? 这里的困难在于缺少测试集,
+只能根据其 API 文档和 LispWorks Personal Edition 来进行一个黑箱逆向了.
+不过逆向这种事情, 我熟啊 (并没有).
+
+#+begin_html
+<details><summary>科技靠考古 (bushi)</summary>
+#+end_html
+
+很多东西都留到了历史书里面去了. 然而历史书往往不过只是短短的一句话, 可
+能这一句话里面就有好几百人数十年的努力... 但是随着潮流和发展方向的转变,
+可能这些技术就会被慢慢地淡忘甚至无人维护导致成为 "失传" 技术了.
+
+这有点像是非物质文化遗产, 因为没有人去维护于是就最后消失了, 只能等待后
+来的有志考古的人们去重新实现. 不过在计算机领域, 因为技术发展迭代速度实
+在是太快了, 可能十几年就是一个新的潮流了... 就比如最近老是刷到华为三进
+制, 虽然感觉媒体的宣传有点过分抽象了, 但是能有维护或者探索这些技术的尝
+试感觉其实也挺不错的.
+
+所以搞逆向还是有点用处的 (bushi).
+
+#+begin_html
+</details>
+#+end_html
+
+*** Lisp Machine 方向的逆向
+在 Lisp 的世界里面, 你就是神. 理论上你可以干各种事情... 只是可能没有源
+代码在手里... 所以只能通过检查 symbols, lambda list, documentation 之
+类的方式进行检查了.
+
+以下是一些我使用的简单的 Lisp Image 检查函数:
++ =function-lambda-list=
+
+  #+begin_src lisp
+    ,#+sbcl
+    (defun function-lambda-list (function &optional (errorp t))
+      "Given a function, return its lambda list.
+    If given a symbol, use the `symbol-function'. "
+      (declare (type (or function symbol) function))
+      (declare (ignore errorp))
+      (cond ((functionp function)
+             (sb-introspect:function-lambda-list function))
+            ((symbolp   function)
+             (sb-introspect:function-lambda-list (symbol-function function)))))
+  #+end_src
++ =sym-in-package-p=
+
+  #+begin_src lisp
+    (defun sym-in-package-p (sym &optional (package *package*))
+      "Test if `sym' is intern `package'. "
+      (declare (type symbol sym))
+      (declare (type (or package symbol string) package))
+      (equal (symbol-package sym) (find-package package)))
+  #+end_src
++ =sym-match-regexp-p=
+
+  #+begin_src lisp
+    (defun sym-match-regexp-p (regexp sym)
+      "Test if `sym' matches `regexp'. "
+      (declare (type symbol sym))
+      (and (ppcre:scan regexp (symbol-name sym)) t))
+
+    (defun find-package-symbols (&key (package *package*)
+                                   (no-other-package t)
+                                   (external-only nil)
+                                   (regexp nil regexp?)
+                                   (test (constantly t)))
+      "Find symbols in package as list. "
+      (let ((symbols ())
+            (regexp  (when regexp?
+                       (ppcre:create-scanner regexp))))
+        (if external-only
+            (do-external-symbols (sym package symbols)
+              (when (and (if regexp? (sym-match-regexp-p regexp sym) t)
+                         (funcall test sym))
+                (push sym symbols)))
+            (do-symbols (sym package symbols)
+              (when (and (if no-other-package (sym-in-package-p sym package)  t)
+                         (if regexp?          (sym-match-regexp-p regexp sym) t)
+                         (funcall test sym))
+                (push sym symbols))))))
+  #+end_src
+
+  #+begin_html
+  <details><summary>于是可以去寻找函数</summary>
+  #+end_html
+
+  #+begin_src lisp
+    (find-package-symbols :package :objc :test #'fboundp)
+  #+end_src
+
+  可以发现函数名称类似于:
+
+  #+begin_src lisp
+    OBJC::|invoke (FUNCTION (OBJC-OBJECT-POINTER SEL) INT)|
+    OBJC::|invoke (FUNCTION (OBJC-OBJECT-POINTER SEL INT) (SIGNED CHAR))|
+    OBJC::|invoke (FUNCTION (OBJC-OBJECT-POINTER SEL SEL) (SIGNED CHAR))|
+  #+end_src
+
+  这样的看起来就是程序自动化生成的函数, 以及:
+
+  #+begin_src lisp
+    OBJC::OBJECT_SETIVAR
+    OBJC::CLASS_GETCLASSMETHOD
+    OBJC::METHOD_GETNUMBEROFARGUMENTS
+    OBJC::CLASS_GETINSTANCEMETHOD
+    OBJC::OBJECT_GETIVAR
+  #+end_src
+
+  这样的看起来就是 FFI 绑定的函数, 以及:
+
+  #+begin_src lisp
+    (find-package-symbols :package :objc :test #'boundp)
+  #+end_src
+
+  #+begin_src lisp
+    OBJC::*METHOD-SIGNATURE-TABLE*
+    OBJC::*OBJC-LIBRARY-PATH*
+    OBJC::*POINTER-OBJC-OBJECTS*
+    OBJC::*ALLOW-NULL-POINTER-INVOKE*
+  #+end_src
+
+  这样看起来就是 cache table 之类的东西, 以及:
+
+  #+begin_src lisp
+    (find-package-symbols :package :objc :test (lambda (sym) (find-class sym nil)))
+  #+end_src
+
+  #+begin_src lisp
+    OBJC:STANDARD-OBJC-OBJECT
+    OBJC::OBJC-CLASS-INFO
+    OBJC::INTERNED-METHOD-SIGNATURE
+    OBJC::STRUCT-CONVERTER
+  #+end_src
+
+  这样类似 CLASS 的符号.
+
+  #+begin_html
+  </details>
+  #+end_html
++ =func-disassemble-comments=
+
+  #+begin_src lisp
+    (defun func-disassemble-comments (function &optional (capture ".*"))
+      "Get a list of disassmble comments. "
+      (declare (type function function))
+      (loop for line in (str:lines (with-output-to-string (*standard-output*)
+                                     (disassemble function)))
+            for cmt = (ppcre:register-groups-bind (cmt)
+                          ((format nil
+                                   ,#+lispworks ";\\s*(~A)\\s*"
+                                   ,#+sbcl ";[^;]*;\\s*(~A)\\s*"
+                                   capture)
+                           line)
+                        (str:trim cmt))
+            if cmt collect cmt))
+  #+end_src
+
+  #+begin_html
+  <details><summary>注: 为啥有这个函数</summary>
+  #+end_html
+
+  理论上你可以通过 =disassemble= 来看看 Lisp 函数的具体实现, 不过那也太
+  麻烦了点... 毕竟没有人会喜欢阅读没有 =F5= 的汇编代码吧... 并且在
+  LispWorks 中貌似并非直接编译到机器码? 也有可能是机器码, 但是我不是很
+  熟就是了. 不过通过读 =;= 后面的注释文本倒是感觉有点可行性.
+
+  比如对于 =objc:invoke= 函数, 可以看到其 commet 中包含
+  =objc::invoke-into*=, 于是可以大胆猜测调用 =invoke= 过程中调用了
+  =invoke-into*= 的函数 (也可以通过添加 =trace= 进一步确认).
+
+  并且也可以用来确定 =objc::objc_getclass= 函数中有调用
+  =#<FLI::EXTERNAL-SYMBOL "objc_getClass" : addr = #x199F15EFC>=,
+  可以猜测其等效为 CFFI 中调用 =objc_getClass=.
+
+  #+begin_html
+  </details>
+  #+end_html
+
+嗯, 有了这些简单的根据, 配合 LispWorks 的神一样的 Class Browser 和
+General Method Browser, 应该是比较容易进行分析逆向的. 同时也可以使用
+=disassemble=, =documentation= 配合分析, 这样的话会轻松一些...
+
+#+begin_html
+<details><summary>笑, 这让我想到了 IDA Pro... </summary>
+#+end_html
+
+著名的逆向工具, IDA Pro, 据说每次破解版的释出都是被自己 (IDA Pro) 给逆
+向破解的. 笑. 虽然 LispWorks 的 Personal Edition 并没有携带很多的函数
+(估计是给 tree-shake 掉了, 比如 =deliver= 之类的). 但是携带的一些功能和
+模块, 比如 ObjC-bridge 和 CAPI 我觉得就可以通过这种方式来进行逆向尝试
+做兼容模拟.
+
+#+begin_html
+</details>
+#+end_html
+
+#+begin_html
+<details><summary>一些可视化的分析 CAPI 函数</summary>
+#+end_html
+
+首先可以从 =disassemble= 的注释中找到所有类似于 symbol 形式的字符串, 然
+后把它们当作符号读进一个列表:
+
+#+begin_src lisp
+  (defun func-disassemble-symbols (function &optional (push 'pushnew))
+    "Get a list of disassemble comments symbols. "
+    (let ((symbols ()))
+      (dolist (sym
+               (func-disassemble-comments function "[a-zA-Z]+:{1,2}[a-zA-Z%\\*\\-\\_]+")
+               symbols)
+        (ignore-errors
+          (case push
+            (push    (push    (read-from-string sym) symbols))
+            (pushnew (pushnew (read-from-string sym) symbols)))))))
+#+end_src
+
+于是可以定义一个简单的 CAPI interface:
+
+#+begin_src lisp
+  (capi:define-interface disassemble-comment-tree ()
+    ((root-func :initarg :root-func)
+     (all-nodes :initform ())
+     (pkgs      :initarg :pkgs :initform ()))
+    (:panes
+     (tree capi:graph-pane
+           :roots (if (listp root-func) root-func (list root-func))
+           :font (gp:make-font-description :size 16)
+           :children-function
+           #'(lambda (func)
+               (when (and (fboundp func)
+                          (not (find func all-nodes))
+                          (find-if #'(lambda (pkg) (sym-in-package-p func pkg)) pkgs))
+                 (pushnew func all-nodes)
+                 (func-disassemble-symbols (symbol-function func))))
+           :print-function #'(lambda (func) (format nil "~S" func))))
+    (:layouts
+     (default-layout capi:simple-layout '(tree)))
+    (:default-initargs
+     :title "Disassemble Comment Tree"))
+#+end_src
+
+于是可以有:
+
+#+begin_src lisp
+  (defun analyze-disassmble-func-comments (func &key (pkgs '(:objc)))
+    (declare (symbol func))
+    (capi:display (make-instance 'disassemble-comment-tree :root-func func :pkgs pkgs)))
+
+  (analyze-disassmble-func-comments
+   '(
+     objc:coerce-to-objc-class
+     objc:coerce-to-selector
+     ))
+#+end_src
+
+这样的可以绘制出调用树, 于是可以适当折叠, 类似如下效果:
+
+[[{{ site.github.url }}/_img/lisp/objc/analyze-disassmble-func-comments.png]]
+
+#+begin_html
+</details>
+#+end_html
+
+*** 一些函数的 Wrapping
++ =coerce-to-objc-class=
+
+  使用 =func-disassemble-comments= 可以得知其包含如下的 comments:
+
+  #+begin_example
+    OBJC::INTERNED-OBJC-CLASS-P
+    OBJC::RESOLVE-CLASS
+    SYSTEM::*%WRONG-NUMBER-OF-ARGUMENTS-STUB
+    OBJC::INTERN-CLASS
+    OBJC::RESOLVE-CLASS
+    FLI:POINTER-POINTER-TYPE
+    OBJC:OBJC-CLASS
+    :POINTER-TYPE
+    OBJC:OBJC-CLASS
+    FLI:COPY-POINTER
+  #+end_example
+
+  其中 =OBJC::INTERN-CLASS= 的 comments 如下:
+
+  #+begin_example
+    OBJC::*CLASS-TABLE*
+    OBJC::*CLASS-TABLE*
+    #<structure descriptor: INTERNED-OBJC-CLASS>
+    SYSTEM::%STRUCTURE-ALLOCATE
+  #+end_example
+
+  这里猜测和之前我的 =defun-cached= 的想法应该是一样的, 用
+  =OBJC::*CLASS-TABLE*= 来实现 cache.
+
+  继续跟踪会发现 =objc::objc_getclass= 是在 =objc::resolve-class= 中调用的.
+  (或者可以通过 =(trace objc::objc_getclass)= 然后调用
+  =(objc:coerce-to-objc-class "NSString")= 来进行跟踪.
+
+  #+begin_html
+  <details><summary>我的实现</summary>
+  #+end_html
+
+  #+begin_src lisp
+    (defparameter *class-table* (make-hash-table :test 'equal))
+
+    (defstruct (interned-objc-class (:conc-name interned-objc-class-))
+      (name nil :type string)
+      (obj  nil :type objc-pointer))
+
+    (defun intern-class (name)
+      (or (gethash name *class-table*)
+          (setf (gethash name *class-table*)
+                (let ((ptr (objc_getclass name)))
+                  (if (null-objc-pointer-p ptr)
+                      (error "Cannot find class ~S. " name)
+                      (make-interned-objc-class :name name :obj ptr))))))
+
+    (defun coerce-to-objc-class (class)
+      (cond ((interned-objc-class-p class) (interned-objc-class-obj class))
+            ((stringp class)               (interned-objc-class-obj (intern-class class)))
+            ((objc-class-pointer-p  class) class)
+            (T (error "Cannot coerce ~S to ~S with type ~S. "
+                      class 'objc-pointer 'objc-class))))
+  #+end_src
+
+  这里我没有使用 =resolve-class= (在 LispWorks 中有这个函数). 目前并没有
+  看出 =resolve-class= 的用处是啥.
+
+  以及为啥不直接使用 =objc-pointer= 来作为 =*class-table*= 的值, 而是需要
+  用一个 =interned-objc-class= 结构做储存? 我觉得可以...
+
+  #+begin_html
+  </details>
+  #+end_html
++ =objc:coerce-to-selector= 实现同上
+
+既然都知道了 =[]= 就是 =obj_msgSend(*, SEL, ...)=, 所以可以做一个非常简单
+的操作:
+
+#+begin_src lisp
+  ;; [NSString stringWithUTF8String: "测试"]
+  (cffi:foreign-funcall "objc_msgSend"
+                        objc-class (objc:coerce-to-objc-class "NSString")
+                        sel        (objc:coerce-to-objc-class "stringWithUTF8String:")
+                        :string    "测试"
+                        objc-object-pointer)
+#+end_src
+
+目标是实现类似于: =(invoke "NSString" "stringWithUTF8String:" "测试")=
+这样的功能. 为了实现这个目标, 只有两个 =coerce-to-*= 函数还是不够的...
+不过思路是这样的: 通过 =receiver= 和 =sel= 来确定函数的入参和返回值, 然后
+自动生成 =cffi:foreign-funcall= 的结构, 最后实现 =invoke=.
+
+*** Detour: Method Signature
+即如何自动确定函数的入参和返回值? 答案是通过 =method_getTypeEncoding= 得
+到类似于 ="@24@0:8r*16"= 这样的表示. 其结构在 [[https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html][官方文档 Type Encoding]] 中
+亦有记载. 我写了一个比较丑陋的 parser 来处理这个, 将其映射成一个 CFFI
+type list, 类似如下:
+
+#+begin_src lisp
+  (objc-object-pointer objc-object-pointer sel (:const :string))
+#+end_src
+
+#+begin_html
+<details><summary>我的丑陋 parser</summary>
+#+end_html
+
+至少我让 DeepSeek 给我生成了几个测试用的 type encoding 都没有什么问题,
+可以正常解析. (不过发现 DeepSeek 的括号闭合能力其实并不是很强, 有些时
+候会生成不闭合的括号对. )
+
+#+begin_src lisp
+  (defun decode-encoded-type (encoding)
+    (declare (type string encoding))
+    (let ((len (length encoding))
+          (pos 0))
+      (labels ((parse-num ()
+                 (multiple-value-bind (num next-pos)
+                     (parse-integer encoding :start pos :junk-allowed t)
+                   (when num (setf pos next-pos) num)))
+               (parse-name ()
+                 (loop with start = pos do (incf pos)
+                       while (and (< pos len)
+                                  (let ((char (aref encoding pos)))
+                                    (and (char/= char #\=)
+                                         (char/= char #\))
+                                         (char/= char #\}))))
+                       finally (return (subseq encoding start pos))))
+               (parse-method-type ()
+                 (when (< pos len)
+                   (let* ((char (aref encoding pos))
+                          (type (cond ((char= char #\r) :const)
+                                      ((char= char #\n) :in)
+                                      ((char= char #\N) :inout)
+                                      ((char= char #\o) :out)
+                                      ((char= char #\O) :bycopy)
+                                      ((char= char #\R) :byref)
+                                      ((char= char #\V) :oneway)))
+                          (val  (progn (when type (incf pos)) (parse-type))))
+                     (when val (if type (list type val) val)))))
+               (parse-type ()
+                 (when (< pos len)
+                   (let* ((char (aref encoding pos))
+                          (type (cond ((char= #\c char) :char)
+                                      ((char= #\i char) :int)
+                                      ((char= #\s char) :short)
+                                      ((char= #\l char) :long)
+                                      ((char= #\q char) :long-long)
+                                      ((char= #\C char) :unsigned-char)
+                                      ((char= #\I char) :unsigned-int)
+                                      ((char= #\S char) :unsigned-short)
+                                      ((char= #\L char) :unsigned-long)
+                                      ((char= #\Q char) :unsigned-long-long)
+                                      ((char= #\f char) :float)
+                                      ((char= #\d char) :double)
+                                      ((char= #\B char) :bool)
+                                      ((char= #\v char) :void)
+                                      ((char= #\* char) :string)
+                                      ((char= #\@ char) 'objc-object-pointer)
+                                      ((char= #\# char) 'objc-class)
+                                      ((char= #\: char) 'sel)
+                                      ((char= #\? char) :objc-unknown))))
+                     (cond (type             ;; parse simple type
+                            (incf pos) (parse-num) ;; trim tailing number
+                            type)
+                           ((char= #\[ char) ;; parse array
+                            (incf pos)
+                            (let ((size (parse-num))
+                                  (type (parse-type)))
+                              (unless (char= #\] (aref encoding pos))
+                                (error "Malfromed type encoding: ~S, missing `]' at index ~D. "
+                                       encoding pos))
+                              (incf pos) (parse-num) ;; trim tailing number
+                              (list 'objc-array size type)))
+                           ((char= #\{ char) ;; parse struct
+                            (incf pos)
+                            (let ((name  (parse-name))
+                                  (types (cond ((char= #\= (aref encoding pos))
+                                                (incf pos) (parse-type*))
+                                               (T nil))))
+                              (unless (char= #\} (aref encoding pos))
+                                (error "Malfromed type encoding: ~S, missing `}' at index ~D. "
+                                       encoding pos))
+                              (incf pos) (parse-num) ;; trim tailing number
+                              (list 'objc-struct name types)))
+                           ((char= #\( char) ;; parse union
+                            (incf pos)
+                            (let ((name  (parse-name))
+                                  (types (cond ((char= #\= (aref encoding pos))
+                                                (incf pos) (parse-type*))
+                                               (T nil))))
+                              (unless (char= #\) (aref encoding pos))
+                                (error "Malfromed type encoding: ~S, missing `)' at index ~D. "
+                                       encoding pos))
+                              (incf pos) (parse-num) ;; trim tailing number
+                              (list 'objc-union name types)))
+                           ((char= #\b char) ;; parse bitfield
+                            (incf pos)
+                            (let ((num (parse-num)))
+                              (unless num
+                                (error "Malfromed type encoding: ~S, missing bitfield number at index ~D. "
+                                       encoding pos))
+                              (list 'objc-bitfield (parse-num))))
+                           ((char= #\^ char) ;; parse pointer
+                            (incf pos)
+                            (let ((type (parse-type)))
+                              (unless type
+                                (error "Malfromed type encoding: ~S, missing pointer type at index ~D. "
+                                       encoding pos))
+                              (list :pointer (parse-type))))))))
+               (parse-method-type* ()
+                 (loop for type = (parse-method-type)
+                       while type collect type))
+               (parse-type* ()
+                 (loop for type = (parse-type)
+                       while type collect type)))
+        (let* ((list (parse-method-type*)))
+          (when (< pos len)
+            (error "Unknown encoding ~S character `~C' at index ~D. "
+                   encoding (aref encoding pos) pos))
+          list))))
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+*** Detour: CFFI types
+即如何拓展 CFFI 的标准类型来支持类似于 =objc-object-pointer= 这样的类型.
+在 LispWorks 的 FLI:Pointer 里面有类型的提示 (不知道是不是自动推断的).
+不过要模拟也非常容易:
+
+#+begin_src lisp
+  (defstruct objc-pointer
+    (type nil :type symbol)
+    (ptr  nil :type foreign-pointer))
+
+  (define-foreign-type %objc-pointer ()
+    ((type :initarg :type))
+    (:actual-type :pointer))
+
+  (define-parse-method objc-pointer (&optional type)
+    (make-instance '%objc-pointer :type type))
+
+  (defmethod translate-to-foreign (pointer (type %objc-pointer))
+    (objc-pointer-ptr pointer))
+
+  (defmethod translate-from-foreign (pointer (type %objc-pointer))
+    (make-objc-pointer :type (slot-value type 'type) :ptr pointer))
+
+#+end_src
+
+就是这么简单喵.
+
+#+begin_html
+<details><summary>如果我用这种方式来构造 wrapper? </summary>
+#+end_html
+
+这里有一个想法, 如果我给 =translate-to-foreign= 同样来点类似于
+=coerce-to-objc-class= 这样的判断, 会不会更好玩一些?
+
+#+begin_html
+</details>
+#+end_html
+
+*** Invoke
+这里做了一个我觉得挺有意思的操作, 就是根据 signature 自动生成
+=CFFI:FOREIGN-FUNCALL= 表达式:
+
+#+begin_src lisp
+  (defun cffi-lambda-form-from-method-signature (return arg-types)
+    "Generate CFFI lambda form from given ObjC signature. "
+    (loop for type in arg-types
+          for arg = (gensym)
+          if (and (listp type)
+                  ;; Note: not knowing what to do with ObjC method description
+                  (member (first type) '(:const :in :out :inout :out
+                                         :bycopy :byref :oneway)))
+            collect (second type) into call-args and collect arg into call-args
+          else
+            collect type into call-args and collect arg into call-args
+          collect arg into args
+          finally (return
+                    (let ((receiver (gensym))
+                          (sel      (gensym)))
+                      (eval `(lambda (,receiver ,sel ,@args)
+                               (foreign-funcall "objc_msgSend"
+                                                objc-pointer ,receiver
+                                                sel          ,sel
+                                                ,@call-args
+                                                ,return)))))))
+#+end_src
+
+于是 =invoke-into*= 的实现即可如下:
+
+#+begin_src lisp
+  (defun invoke-into* (result pointer-or-class-name method args)
+    (declare (type (or string objc-pointer) pointer-or-class-name))
+    (declare (type (or string list) method))
+    (let* ((selector (coerce-to-selector (if (listp method) (first method) method)))
+           (receiver (etypecase pointer-or-class-name
+                       (string       (intern-class pointer-or-class-name))
+                       (objc-pointer pointer-or-class-name)))
+           (method*  (if (objc-class-pointer-p receiver)
+                         (class_getClassMethod receiver selector)
+                         (class_getInstanceMethod (object_getClass receiver) selector))))
+      (when (null-objc-pointer-p method*)
+        (error "Cannot invoke method ~S on ~S. "
+               method pointer-or-class-name))
+      (let ((signature (intern-method-signature method*)))
+        (cond ((listp method)
+               (error "Not imeplement yet... "))
+              (result
+               (apply (cffi-lambda-form-from-method-signature result (cdddr signature))
+                      (cons receiver (cons selector args))))
+              (T
+               (apply (gethash (objc-pointer-addr method*) *invoke-fuction-table*)
+                      (cons receiver (cons selector args))))))))
+#+end_src
+
+* The End
+不多说了:
+
+#+begin_src lisp
+  (foreign-funcall "NSLog"
+                   objc-pointer (invoke "NSString" "stringWithUTF8String:" "测试")
+                   :void)
+#+end_src
+
+你在 =*sly-inferior-lisp for sbcl*= buffer 中应当能看到:
+
+#+begin_example
+2025-04-05 02:47:39.644 sbcl[75196:28411918] 测试
+#+end_example
+
+类似的效果.
+
+接下来要做的估计就是 CFFI type 的 wrapping 以及错误处理等故障的解决了.

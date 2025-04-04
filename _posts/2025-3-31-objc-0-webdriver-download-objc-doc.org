@@ -204,6 +204,8 @@ CFFI 可以使用的形式. 其中使用了我对之前 [[{{ site.github.url }}/
   #+begin_src lisp
     (defparameter *objc-nickname-alist*
       '(("cls"      . "class")
+        ("id"       . "objc-id")
+        ("objc_property_t" . "objc-property")
         ("Class"    . "objc-class")
         ("Method"   . "objc-method")
         ("IMP"      . "objc-imp")
@@ -460,9 +462,58 @@ parser 陷入无限循环的 bug 中. 但是能跑就行了?
                       property)))))
 #+end_src
 
+#+RESULTS: *objc-runtime-doc*
+: *objc-runtime-doc*
+
 * End
 最终处理结束的结果可以见 [[https://gist.github.com/li-yiyang/468b042bdf399435d0c5f561dba0d279][gist]], 理论上来说通过一些简单的 =format= 操作就
 能够生成 CFFI 的 bindings 了. 不过考虑到自动生成的 bingdings 可能并不
 是那么的可用 (不知道正确性, 毕竟不太会 CFFI 和 ObjC Runtime), 所以我决
 定先去看看 ObjC Runtime 的一些 Hello World 的例子, 然后去尝试构建模拟
 兼容 LispWorks 的 ObjC-Bridge API.
+
+#+begin_html
+<details><summary>输出 format</summary>
+#+end_html
+
+#+begin_src lisp
+  (dolist (section *objc-runtime-doc*)
+    (destructuring-bind (title elems) section
+      (format t ";;; ~A~%~%" title)
+      (dolist (elem elems)
+        (when (getf elem :cffi)
+          (destructuring-bind ((lisp-name type) args) (getf elem :cffi)
+            (format t "(defcfun (~A ~S)~%    "
+                    lisp-name (getf elem :name))
+            (write type :stream *standard-output*)
+            (format t "~%  ~S"
+                    (with-output-to-string (*standard-output*)
+                      (format t "~A~%" (split-long-lines (getf elem :doc)))
+                      (format t "~%    ~A~%" (getf elem :lambda))
+                      (when (getf elem :params)
+                        (format t "~%Parameters:~%")
+                        (dolist-bind-collect ((para doc) (getf elem :params))
+                          (format t "+ `~A': ~A~%" para
+                                  (split-long-lines doc
+                                                    :indent 2
+                                                    :start (+ 5 (length para))))))
+                      (when (getf elem :return)
+                        (format t "~%Return Values:~%")
+                        (dolist (para (getf elem :return))
+                          (format t "~A~%" (split-long-lines para))))
+                      (when (getf elem :discussion)
+                        (format t "~%Discussion:~%")
+                        (dolist (para (getf elem :discussion))
+                          (format t "~A~%" (split-long-lines para))))))
+            (when args
+              (dolist (arg args)
+                (format t "~%  ")
+                (write arg :stream *standard-output*)))
+            (format t ")~%~%"))))))
+#+end_src
+
+#+RESULTS:
+
+#+begin_html
+</details>
+#+end_html
