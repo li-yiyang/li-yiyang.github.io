@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Let’s Learn Some (basic) Docker | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Let’s Learn Some (basic) Docker" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 本文用于介绍简单的 Docker 入门. 本文参考的是: Docker Manuals Docker Setup 假如你还没有配置好 Docker, 请点击展开查看细节 Network 也许可能需要用到类似的配置 JSON: { &quot;proxies&quot; : { &quot;http-proxy&quot; : &quot;...&quot;, &quot;https-proxy&quot; : &quot;...&quot; }, // ... } Windows, macOS, Linux Docker Desktop macOS (optional, but recommanded) OrbStack (但是有潜在的 bug) Docker docker help | head -n 20" />
+<meta property="og:description" content="About 本文用于介绍简单的 Docker 入门. 本文参考的是: Docker Manuals Docker Setup 假如你还没有配置好 Docker, 请点击展开查看细节 Network 也许可能需要用到类似的配置 JSON: { &quot;proxies&quot; : { &quot;http-proxy&quot; : &quot;...&quot;, &quot;https-proxy&quot; : &quot;...&quot; }, // ... } Windows, macOS, Linux Docker Desktop macOS (optional, but recommanded) OrbStack (但是有潜在的 bug) Docker docker help | head -n 20" />
+<link rel="canonical" href="/ctf/let-us-learn-some-basic-docker/" />
+<meta property="og:url" content="/ctf/let-us-learn-some-basic-docker/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Let’s Learn Some (basic) Docker" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-12-04T00:00:00+00:00","datePublished":"2024-12-04T00:00:00+00:00","description":"About 本文用于介绍简单的 Docker 入门. 本文参考的是: Docker Manuals Docker Setup 假如你还没有配置好 Docker, 请点击展开查看细节 Network 也许可能需要用到类似的配置 JSON: { &quot;proxies&quot; : { &quot;http-proxy&quot; : &quot;...&quot;, &quot;https-proxy&quot; : &quot;...&quot; }, // ... } Windows, macOS, Linux Docker Desktop macOS (optional, but recommanded) OrbStack (但是有潜在的 bug) Docker docker help | head -n 20","headline":"Let’s Learn Some (basic) Docker","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/let-us-learn-some-basic-docker/"},"url":"/ctf/let-us-learn-some-basic-docker/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Let&#39;s Learn Some (basic) Docker</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-12-04T00:00:00+00:00" itemprop="datePublished">Dec 4, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>本文用于介绍简单的 Docker 入门.</p>
+<p>本文参考的是:</p>
+<ul>
+  <li><a href="https://docs.docker.com/manuals/">Docker Manuals</a></li>
+</ul>
+<h2>Docker Setup</h2>
+<details><summary>假如你还没有配置好 Docker, 请点击展开查看细节</summary>
+<ul>
+  <li>Network
+    <p>也许可能需要用到类似的配置 JSON:</p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;proxies&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;http-proxy&quot;</span><span class="w">  </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;https-proxy&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;...&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li><b>Windows</b>, <b>macOS</b>, <b>Linux</b> <a href="https://www.docker.com/products/docker-desktop/">Docker Desktop</a></li>
+  <li><b>macOS</b> (optional, but recommanded) <a href="https://orbstack.dev">OrbStack</a> (但是有潜在的 bug)</li>
+</ul>
+</details>
+<h1>Docker</h1>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">help</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">20</span>
+</pre></div>
+<pre class="example">
+
+Usage:  docker [OPTIONS] COMMAND
+
+A self-sufficient runtime for containers
+
+Common Commands:
+  run         Create and run a new container from an image
+  exec        Execute a command in a running container
+  ps          List containers
+  build       Build an image from a Dockerfile
+  pull        Download an image from a registry
+  push        Upload an image to a registry
+  images      List images
+  login       Log in to a registry
+  logout      Log out from a registry
+  search      Search Docker Hub for images
+  version     Show the Docker version information
+  info        Display system-wide information
+
+Management Commands:
+</pre>
+<h2>Run</h2>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>-p<span class="w"> </span><span class="m">4000</span>:80<span class="w"> </span>docker/getting-started
+</pre></div>
+<p>此时拆解上面的命令:</p>
+<ul>
+  <li><code>run</code>: Create and run a new container from an image</li>
+  <li><code>-it</code>:
+<div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">help</span><span class="w"> </span>run<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;[it],&#39;</span>
+</pre></div>
+    <pre class="example">
+  -i, --interactive                      Keep STDIN open even if not attached
+  -t, --tty                              Allocate a pseudo-TTY
+    </pre>
+    <p>表示新建一个 pseudo-TTY 来交互式地运行 Docker 镜像.
+      当然, 你也可以使用 <code>-d</code> 参数 (daemon) 在后台运行.</p>
+  </li>
+  <li><code>-p &lt;host-port&gt;:&lt;container-port&gt;</code>:
+<div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">help</span><span class="w"> </span>run<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="s1">&#39;[p],&#39;</span>
+</pre></div>
+    <pre class="example">
+  -p, --publish list                     Publish a container&#39;s port(s) to
+                                         the host
+    </pre>
+    <p>这里将 container 的 <code>80</code> 端口映射到了 <code>4000</code>.</p>
+  </li>
+  <li><code>docker/getting-started</code>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span>search<span class="w"> </span>docker/getting-started<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">3</span>
+</pre></div>
+    <pre class="example">
+NAME                                            DESCRIPTION                                     STARS     OFFICIAL
+docker/getting-started                          Getting Started tutorial for Docker             94
+docker/dockerfile                               Official Dockerfile frontend images that ena…   105
+    </pre>
+    <p>这里抓取的是 <a href="https://github.com/docker/getting-started">docker/getting-started</a> 的镜像.</p>
+  </li>
+</ul>
+<p>在运行后, 你可以使用:</p>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span>ps
+</pre></div>
+<pre class="example">
+CONTAINER ID   IMAGE                    COMMAND                  CREATED          STATUS          PORTS                                     NAMES
+a5b981d074db   docker/getting-started   &quot;/docker-entrypoint.…&quot;   10 seconds ago   Up 10 seconds   0.0.0.0:4000-&gt;80/tcp, [::]:4000-&gt;80/tcp   festive_ishizaka
+</pre>
+<p>来列出当前正在运行的 container 列表. (就像是 <code>ps</code> 命令干的事情一样)</p>
+<p>注: 这一步的背后其实还做了 <code>docker pull docker/getting-started</code> 的操作.
+  因为默认本地 (local) 中并没有容器 (container) 的镜像 (image).</p>
+<h2>Exec</h2>
+<p>假设我们已经拉取 (pull) 了一个镜像并制作了一个容器 (container),
+  但是你可能想要稍微修改一下这个容器以让这个容器更加适合你的使用,
+  此时就可以使用 <code>exec</code> 命令:</p>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span>&lt;container-name&gt;<span class="w"> </span>sh
+</pre></div>
+<p>注: 此处的 <code>&lt;container-name&gt;</code> 可以通过 <code>docker ps</code> 来列出.</p>
+<h2>Build</h2>
+<p>但是如果我们想要基于已有的容器进行修改并保存我们的修改后的容器,
+  每次都使用 <code>exec</code> 也太麻烦了, 于是我们可以通过编写 <code>Dockerfile</code>
+  来配置和固定我们自己的 Docker 镜像.</p>
+<h3>Example: so simple like <code>ls</code></h3>
+<p>我们的基本镜像是 <code>alpine</code></p>
+<div class="highlight"><pre><span></span><span class="c"># dockerfile</span>
+<span class="k">FROM</span><span class="w"> </span><span class="s">alpine:latest</span>
+<span class="k">ENTRYPOINT</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;ls&quot;</span><span class="p">]</span>
+</pre></div>
+<p>这里干的事情就是: 在基本镜像 <code>alpine:latest</code> 的基础上,
+  设置 <code>docker run</code> 的时候的入口 (entrypoint) 命令.</p>
+<div class="highlight"><pre><span></span>docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>so-simple-like-ls:latest<span class="w"> </span>.
+</pre></div>
+<p>还是拆解命令:</p>
+<ul>
+  <li><code>build</code>: Build an image from a Dockerfile</li>
+  <li><code>-t</code>:
+<div class="highlight"><pre><span></span>docker<span class="w"> </span><span class="nb">help</span><span class="w"> </span>build<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="s2">&quot;t,&quot;</span>
+</pre></div>
+    <pre class="example">
+  -t, --tag list                Name and optionally a tag in the
+                                &quot;name:tag&quot; format
+    </pre>
+    <p>为我们打包的镜像创建一个名字</p>
+  </li>
+  <li><code>.</code>: 表示在当前的目录下进行镜像的打包,
+    我们当前的目录应当有类似如下的文件结构:
+    <pre class="example">
+.
+└── Dockerfile
+    </pre>
+  </li>
+</ul>
+<h3>Example: a Python Server</h3>
+<p>这里以 <a href="https://docs.docker.com/build/concepts/dockerfile/">Dockerfile overview</a> 为例.</p>
+<ul>
+  <li>最后应当有如下的文件结构:
+    <pre class="example">
+.
+├── Dockerfile
+└── hello.py
+    </pre>
+  </li>
+</ul>
+<h3>Example: nyxt-docker</h3>
+<p>这里以 <a href="https://github.com/deddu/nyxt-docker/">nyxt-docker</a> 为例, 这可是一个 &#8220;游览器&#8221; 级别复杂的项目呢.</p>
+<div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/deddu/nyxt-docker.git
+</pre></div>
+<p>请参考其 <a href="https://github.com/deddu/nyxt-docker/blob/master/Dockerfile">Dockerfile</a>.</p>
+<h3>Example: rajiko</h3>
+<p>这里以打包 <a href="https://github.com/li-yiyang/rajiko">rajiko</a> 为例:</p>
+<ul>
+  <li>这里以 <code>linuxcontainers/alpine:latest</code> 作为基础镜像</li>
+  <li>编写配置文件
+<div class="highlight"><pre><span></span><span class="k">FROM</span><span class="w"> </span><span class="s">linuxcontainers/alpine:latest</span>
+<span class="k">RUN</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;Setting up ENV...&#39;</span>
+<span class="k">RUN</span><span class="w"> </span>apk<span class="w"> </span>add<span class="w"> </span>--no-cache<span class="w"> </span>curl<span class="w"> </span>curl-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>gmp<span class="w"> </span>gmp-dev<span class="w"> </span>unzip<span class="se">\</span>
+<span class="w">    </span>ffmpeg<span class="w"> </span>sbcl
+<span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-L<span class="w"> </span>-O<span class="w"> </span>https://beta.quicklisp.org/quicklisp.lisp
+<span class="k">RUN</span><span class="w"> </span>sbcl<span class="w"> </span>--load<span class="w"> </span>quicklisp.lisp<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>--eval<span class="w"> </span><span class="s2">&quot;(quicklisp-quickstart:install)&quot;</span>
+<span class="w">         </span>--eval<span class="w"> </span><span class="s2">&quot;(ql:add-to-init-file)&quot;</span>
+<span class="w">         </span>--eval<span class="w"> </span><span class="s2">&quot;(quit)&quot;</span>
+<span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-L<span class="w"> </span>https://github.com/li-yiyang/rajiko/archive/refs/heads/main.zip<span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>-o<span class="w"> </span>quicklisp/local-projects/rajiko.zip
+<span class="k">RUN</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>quicklisp/local-projects<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>unzip<span class="w"> </span>rajiko.zip
+<span class="k">RUN</span><span class="w"> </span>sbcl<span class="w"> </span>--eval<span class="w"> </span><span class="s2">&quot;(ql:quickload :rajiko)&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">         </span>--eval<span class="w"> </span><span class="s2">&quot;(sb-ext:save-lisp-and-die \&quot;~/rajiko\&quot; :compression t :executable t :toplevel #&#39;rajiko:rajiko-cli)&quot;</span><span class="w"> </span><span class="se">\</span>
+ENTRYPOINT<span class="w"> </span><span class="o">[</span><span class="s2">&quot;rajiko&quot;</span><span class="o">]</span>
+</pre></div>
+  </li>
+  <li>run <code>docker build -t rajiko .</code></li>
+</ul>
+<h2>Compose</h2>
+<blockquote>
+  <p>Docker Compose is a tool for defining and running multi-container
+    applications. It is the key to unlocking a streamlined and
+    efficient development and deployment experience. (<a href="https://docs.docker.com/compose/">Docker compose</a>)</p>
+</blockquote>
+<p>大家可以理解为一种把各种容器合在一起运行的一种法子,
+  超级调包大师了属于是.</p>
+<h3>Example: docker manual</h3>
+<p>请参考 <a href="https://docs.docker.com/compose/gettingstarted/">Docker Compose Quickstart</a>.</p>
+
+  </div><a class="u-url" href="/ctf/let-us-learn-some-basic-docker/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

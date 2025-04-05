@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Hi, Radiko | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Hi, Radiko" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 看了一个漫画: 听我的电波吧 (波よ聞いてくれ). (确切来说是先看动画, 然后顺带看了一下漫画与真人剧), 不剧透的安利就是: 有趣的灵魂. 这漫画看了就想要去听广播&#8230; 但是 Radiko 对地域有一个限制, 别说在日本国外无法听见, 就是在日本国内听其他地区的广播部分也有一定的限制. 这不直接开始开始一手登陆绕过? 虽然已经有一个 jackyzy823/rajiko 项目, 作为 Chrome 的插件来对 radiko 进行绕过. 但是我不用 Chrome, 并且手机是该死的苹果, 所以, 得整一个自己用的小玩具. 目标是这样的: 先搞懂基本的原理, 这部分将使用 Common Lisp 进行重写; 核心使用 Swift 或者其他方式移植到 iOS 平台; 基本的登陆原理 省流版: 所谓的登陆其实就是为了得到一个 token, 为此需要进行两个步骤: auth1: 向服务器提交一个申请, 获得一个 offset 与 length 用于在本地的密钥中截取部分并在 auth2 中提交; auth2: 向服务器提交 auth1 中提取的密钥, 获得一个 token. 是不是看起来很简单? 毕竟有前人的智慧 (前人的逆向). 于是核心的代码如下所示 (defclass rajiko () ((app-version :reader rajiko-app-version) (user-id :reader rajiko-user-id) (user-agent :reader rajiko-user-agent) (device :reader rajiko-device) (area :initarg :area :initform (error &quot;Missing area. &quot;) :reader rajiko-area) (token :reader rajiko-token) (partial-key :reader rajiko-partial-key) (location :reader rajiko-location) (player :initform nil)) (:documentation &quot;The client of rajiko, with GPS bypassing. &quot;))" />
+<meta property="og:description" content="About 看了一个漫画: 听我的电波吧 (波よ聞いてくれ). (确切来说是先看动画, 然后顺带看了一下漫画与真人剧), 不剧透的安利就是: 有趣的灵魂. 这漫画看了就想要去听广播&#8230; 但是 Radiko 对地域有一个限制, 别说在日本国外无法听见, 就是在日本国内听其他地区的广播部分也有一定的限制. 这不直接开始开始一手登陆绕过? 虽然已经有一个 jackyzy823/rajiko 项目, 作为 Chrome 的插件来对 radiko 进行绕过. 但是我不用 Chrome, 并且手机是该死的苹果, 所以, 得整一个自己用的小玩具. 目标是这样的: 先搞懂基本的原理, 这部分将使用 Common Lisp 进行重写; 核心使用 Swift 或者其他方式移植到 iOS 平台; 基本的登陆原理 省流版: 所谓的登陆其实就是为了得到一个 token, 为此需要进行两个步骤: auth1: 向服务器提交一个申请, 获得一个 offset 与 length 用于在本地的密钥中截取部分并在 auth2 中提交; auth2: 向服务器提交 auth1 中提取的密钥, 获得一个 token. 是不是看起来很简单? 毕竟有前人的智慧 (前人的逆向). 于是核心的代码如下所示 (defclass rajiko () ((app-version :reader rajiko-app-version) (user-id :reader rajiko-user-id) (user-agent :reader rajiko-user-agent) (device :reader rajiko-device) (area :initarg :area :initform (error &quot;Missing area. &quot;) :reader rajiko-area) (token :reader rajiko-token) (partial-key :reader rajiko-partial-key) (location :reader rajiko-location) (player :initform nil)) (:documentation &quot;The client of rajiko, with GPS bypassing. &quot;))" />
+<link rel="canonical" href="/lisp/hi-radiko/" />
+<meta property="og:url" content="/lisp/hi-radiko/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-09-02T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Hi, Radiko" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-09-02T00:00:00+00:00","datePublished":"2024-09-02T00:00:00+00:00","description":"About 看了一个漫画: 听我的电波吧 (波よ聞いてくれ). (确切来说是先看动画, 然后顺带看了一下漫画与真人剧), 不剧透的安利就是: 有趣的灵魂. 这漫画看了就想要去听广播&#8230; 但是 Radiko 对地域有一个限制, 别说在日本国外无法听见, 就是在日本国内听其他地区的广播部分也有一定的限制. 这不直接开始开始一手登陆绕过? 虽然已经有一个 jackyzy823/rajiko 项目, 作为 Chrome 的插件来对 radiko 进行绕过. 但是我不用 Chrome, 并且手机是该死的苹果, 所以, 得整一个自己用的小玩具. 目标是这样的: 先搞懂基本的原理, 这部分将使用 Common Lisp 进行重写; 核心使用 Swift 或者其他方式移植到 iOS 平台; 基本的登陆原理 省流版: 所谓的登陆其实就是为了得到一个 token, 为此需要进行两个步骤: auth1: 向服务器提交一个申请, 获得一个 offset 与 length 用于在本地的密钥中截取部分并在 auth2 中提交; auth2: 向服务器提交 auth1 中提取的密钥, 获得一个 token. 是不是看起来很简单? 毕竟有前人的智慧 (前人的逆向). 于是核心的代码如下所示 (defclass rajiko () ((app-version :reader rajiko-app-version) (user-id :reader rajiko-user-id) (user-agent :reader rajiko-user-agent) (device :reader rajiko-device) (area :initarg :area :initform (error &quot;Missing area. &quot;) :reader rajiko-area) (token :reader rajiko-token) (partial-key :reader rajiko-partial-key) (location :reader rajiko-location) (player :initform nil)) (:documentation &quot;The client of rajiko, with GPS bypassing. &quot;))","headline":"Hi, Radiko","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/hi-radiko/"},"url":"/lisp/hi-radiko/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Hi, Radiko</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-09-02T00:00:00+00:00" itemprop="datePublished">Sep 2, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>看了一个漫画: 听我的电波吧 (波よ聞いてくれ). (确切来说是先看动画,
+  然后顺带看了一下漫画与真人剧), 不剧透的安利就是: 有趣的灵魂.</p>
+<p>这漫画看了就想要去听广播&#8230; 但是 <a href="https://radiko.jp/">Radiko</a> 对地域有一个限制,
+  别说在日本国外无法听见, 就是在日本国内听其他地区的广播部分也有一定的限制.</p>
+<p>这不直接开始开始一手登陆绕过?</p>
+<p>虽然已经有一个 <a href="https://github.com/jackyzy823/rajiko">jackyzy823/rajiko</a> 项目, 作为 Chrome 的插件来对 radiko
+  进行绕过. 但是我不用 Chrome, 并且手机是该死的苹果, 所以,
+  得整一个自己用的小玩具.</p>
+<p>目标是这样的:</p>
+<ol>
+  <li>先搞懂基本的原理, 这部分将使用 Common Lisp 进行重写;</li>
+  <li>核心使用 Swift 或者其他方式移植到 iOS 平台;</li>
+</ol>
+<h1>基本的登陆原理</h1>
+<p><b>省流版</b>: 所谓的登陆其实就是为了得到一个 <code>token</code>, 为此需要进行两个步骤:</p>
+<ol>
+  <li><code>auth1</code>: 向服务器提交一个申请,
+    获得一个 <code>offset</code> 与 <code>length</code> 用于在本地的密钥中截取部分并在 <code>auth2</code> 中提交;</li>
+  <li><code>auth2</code>: 向服务器提交 <code>auth1</code> 中提取的密钥,
+    获得一个 <code>token</code>.</li>
+</ol>
+<p>是不是看起来很简单? 毕竟有前人的智慧 (前人的逆向).</p>
+<details><summary>于是核心的代码如下所示</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">rajiko</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">app-version</span><span class="w"> </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-app-version</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">user-id</span><span class="w">     </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-user-id</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">user-agent</span><span class="w">  </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-user-agent</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">device</span><span class="w">      </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-device</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">area</span><span class="w">        </span><span class="nv">:initarg</span><span class="w">  </span><span class="nv">:area</span>
+<span class="w">		</span><span class="nv">:initform</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Missing area. &quot;</span><span class="p">)</span>
+<span class="w">		</span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-area</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">token</span><span class="w">       </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-token</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">partial-key</span><span class="w"> </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-partial-key</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">location</span><span class="w">    </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">rajiko-location</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">player</span><span class="w">      </span><span class="nv">:initform</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span>
+<span class="w">   </span><span class="s">&quot;The client of rajiko, with GPS bypassing. &quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">initialize-instance</span><span class="w"> </span><span class="nv">:after</span><span class="w"> </span><span class="p">((</span><span class="nf">rajiko</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">dummy</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">app-version</span><span class="w"> </span><span class="nv">device</span><span class="w"> </span><span class="nv">user-id</span><span class="w"> </span><span class="nv">user-agent</span>
+<span class="w">	       </span><span class="nv">token</span><span class="w"> </span><span class="nv">partial-key</span><span class="w"> </span><span class="nv">area</span><span class="w"> </span><span class="nv">location</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">rajiko</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nb">version</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="p">(</span><span class="nf">pick-random</span><span class="w"> </span><span class="nv">+version-alist+</span><span class="p">)))</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">sdk</span><span class="w">        </span><span class="p">(</span><span class="nf">alist-getf</span><span class="w"> </span><span class="nv">+version-alist+</span><span class="w"> </span><span class="nb">version</span><span class="w"> </span><span class="nv">:sdk</span><span class="p">))</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">build</span><span class="w">      </span><span class="p">(</span><span class="nf">pick-random</span><span class="w"> </span><span class="p">(</span><span class="nf">alist-getf</span><span class="w"> </span><span class="nv">+version-alist+</span><span class="w"> </span><span class="nb">version</span><span class="w"> </span><span class="nv">:builds</span><span class="p">)))</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">model</span><span class="w">      </span><span class="p">(</span><span class="nf">pick-random</span><span class="w"> </span><span class="nv">+model-list+</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; generate random infomation</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">app-version</span><span class="w"> </span><span class="p">(</span><span class="nf">pick-random</span><span class="w"> </span><span class="nv">+app-version-list+</span><span class="p">)</span>
+<span class="w">	    </span><span class="nv">user-id</span><span class="w">     </span><span class="p">(</span><span class="nf">gen-random-userid</span><span class="p">)</span>
+<span class="w">	    </span><span class="nv">user-agent</span><span class="w">  </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="s">&quot;Dalvik/2.1.0 (Linux; U; Android &quot;</span>
+<span class="w">				</span><span class="nb">version</span><span class="w"> </span><span class="s">&quot;; &quot;</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="s">&quot;/&quot;</span><span class="w"> </span><span class="nv">build</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">)</span>
+<span class="w">	    </span><span class="nv">device</span><span class="w">      </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="nv">sdk</span><span class="w"> </span><span class="s">&quot;.&quot;</span><span class="w"> </span><span class="nv">model</span><span class="p">)</span>
+<span class="w">	    </span><span class="nv">location</span><span class="w">    </span><span class="p">(</span><span class="nf">gen-GPS</span><span class="w"> </span><span class="nv">area</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; if dummy, will not auth</span>
+<span class="w">      </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">dummy</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">auth</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">auth1</span><span class="w"> </span><span class="p">((</span><span class="nf">rajiko</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">user-agent</span><span class="w"> </span><span class="nv">app-version</span><span class="w"> </span><span class="nv">device</span><span class="w"> </span><span class="nv">user-id</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">partial-key</span><span class="p">)</span><span class="w"> </span><span class="nv">rajiko</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">response</span><span class="w"> </span><span class="nv">http-code</span><span class="w"> </span><span class="nv">headers</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">dex:get</span><span class="w"> </span><span class="s">&quot;https://radiko.jp/v2/api/auth1&quot;</span>
+<span class="w">		 </span><span class="nv">:headers</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="s">&quot;User-Agent&quot;</span><span class="w">           </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">user-agent</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-App&quot;</span><span class="w">         </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;aSmartPhone7a&quot;</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-App-Version&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">app-version</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-Device&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">device</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-User&quot;</span><span class="w">        </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">user-id</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">offset</span><span class="w">     </span><span class="p">(</span><span class="nf">parse-integer</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;x-radiko-keyoffset&quot;</span><span class="w"> </span><span class="nv">headers</span><span class="p">)))</span>
+<span class="w">	    </span><span class="p">(</span><span class="nb">length</span><span class="w">     </span><span class="p">(</span><span class="nf">parse-integer</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;x-radiko-keylength&quot;</span><span class="w"> </span><span class="nv">headers</span><span class="p">))))</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;x-radiko-authtoken&quot;</span><span class="w"> </span><span class="nv">headers</span><span class="p">)</span>
+<span class="w">	      </span><span class="nv">partial-key</span><span class="w"> </span><span class="p">(</span><span class="nf">extract-partialkey</span><span class="w"> </span><span class="nv">offset</span><span class="w"> </span><span class="nb">length</span><span class="p">))</span>
+<span class="w">	</span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">response</span><span class="w"> </span><span class="nv">http-code</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">auth2</span><span class="w"> </span><span class="p">((</span><span class="nf">rajiko</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">user-agent</span><span class="w"> </span><span class="nv">app-version</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">device</span>
+<span class="w">	       </span><span class="nv">user-id</span><span class="w"> </span><span class="nv">location</span><span class="w"> </span><span class="nv">partial-key</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">rajiko</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">response</span><span class="w"> </span><span class="nv">http-code</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">dex:get</span><span class="w"> </span><span class="s">&quot;https://radiko.jp/v2/api/auth2&quot;</span>
+<span class="w">		 </span><span class="nv">:headers</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="s">&quot;User-Agent&quot;</span><span class="w">           </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">user-agent</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-App&quot;</span><span class="w">         </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;aSmartPhone7a&quot;</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-App-Version&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">app-version</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-AuthToken&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">token</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-Device&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">device</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-User&quot;</span><span class="w">        </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">user-id</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-Location&quot;</span><span class="w">    </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">location</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-Connection&quot;</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;wifi&quot;</span><span class="p">)</span>
+<span class="w">			    </span><span class="p">(</span><span class="s">&quot;X-Radiko-Partialkey&quot;</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">partial-key</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">response</span><span class="w"> </span><span class="nv">http-code</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>那么如何播放电台呢? 很简单, 找到电台, 并找到其对应的推流链接 (HLS),
+  然后在请求的头中加入: <code>X-Radio-AuthToken</code>, 也就是前面要得到的 <code>token</code> 即可.
+  这里采用 <code>ffplay</code> 对推流链接进行播放, 实现一个简单的电台播放功能:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">rajiko-play</span><span class="w"> </span><span class="p">((</span><span class="nf">rajiko</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">station</span><span class="w"> </span><span class="nv">rajiko-station</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">player</span><span class="p">)</span><span class="w"> </span><span class="nv">rajiko</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">player</span><span class="w"> </span><span class="p">(</span><span class="nf">rajiko-pause</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">player</span>
+<span class="w">	  </span><span class="p">(</span><span class="nf">uiop:launch-program</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="s">&quot;ffplay&quot;</span>
+<span class="w">				 </span><span class="s">&quot;-v&quot;</span><span class="w"> </span><span class="s">&quot;0&quot;</span>
+<span class="w">				 </span><span class="s">&quot;-headers&quot;</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="s">&quot;X-Radiko-AuthToken: &quot;</span>
+<span class="w">						     </span><span class="p">(</span><span class="nf">rajiko-token</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))</span>
+<span class="w">				 </span><span class="s">&quot;-i&quot;</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">rajiko-station-streaming-url</span>
+<span class="w">					</span><span class="nv">station</span><span class="w"> </span><span class="p">(</span><span class="nf">rajiko-area</span><span class="w"> </span><span class="nv">rajiko</span><span class="p">))</span>
+<span class="w">				 </span><span class="s">&quot;-nodisp&quot;</span><span class="p">)))))</span>
+</pre></div>
+<p>播放部分和推流链接的获取参考的是: <a href="https://github.com/uru2/radish/">radi.sh</a>. 原本的项目是用来下载 (录音) 的,
+  但是因为用不着, 所以直接变成播放即可. 差不多就是这样:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*rajiko*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-rajiko</span><span class="w"> </span><span class="p">(</span><span class="nf">rajiko-random-area</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">rajiko-play</span><span class="w"> </span><span class="nv">*rajiko*</span><span class="w"> </span><span class="p">(</span><span class="nf">rajiko-random-station</span><span class="w"> </span><span class="s">&quot;zenkoku&quot;</span><span class="p">))</span><span class="w"> </span><span class="c1">;; 开始播放电台</span>
+<span class="c1">;; (rajiko-pause) ;; 停止播放</span>
+</pre></div>
+<p>有点水啊, 因为是两个项目, 所以 <code>area</code> 和 <code>station</code> 没有做一个比较好的连接,
+  还需要手动去匹配, 确实是目前的一个坑. 然后也没有进行过抗压测试与特殊情况的全面测试,
+  不能保证完全能用就是了&#8230;</p>
+<h1>一个好看好用的前端</h1>
+<p>这部分将使用 ncurses 来实现, 这里是使用 <a href="https://github.com/naryl/cl-tui">naryl/cl-tui</a> 来写这个前端,
+  目标是写一个类似于下面这样的一个界面:</p>
+<pre class="example">
+┌─Rajiko───────────────────────────────────────────┐
+│                                                  │
+│Region     [r]: zenkoku                           │
+│Station    [s]: JOAK-FM                           │
+│Client     [a]: 熊本                              │
+│Status [Space]: paused                            │
+│                                                  │
+└──────────────────────────────────────────────────┘
+┌Select Region─────────────────────────────────────┐
+│&gt; zenkoku                                         │
+│  kyushu                                          │
+│  chugoku-shikoku                                 │
+│  kinki                                           │
+│  chubu                                           │
+│                                                  │
+└──────────────────────────────────────────────────┘
+</pre>
+<p>最终出来的效果我感觉还行, 只是代码写得太烂了.</p>
+<h1>Port to iPhone and iPad [NOT FINISH YET]</h1>
+<p>本来打算用 <a href="https://github.com/ish-app/ish">iSH</a> 上的 SBCL 直接运行, 结果发现更新了之后的源里面的 SBCL 没法运行了&#8230;
+  同理, 源里面的 ECL 也不能使用 (运行都有问题&#8230; ).</p>
+<p>使用 QEMU (为什么不是 i386/alpine 的 docker 呢? 因为用 OrbStack 的 docker,
+  貌似提供的 QEMU 缺指令无法运行一些命令? ) 模拟 alpine, 然后编译 ECL 和 SBCL
+  并拷贝到手机上, 仍然有问题:</p>
+<ul>
+  <li>SBCL 仍然无法运行: 应该是缺指令?</li>
+  <li>用 ECL 会有一个 SSL 证书登陆的 Bug, 在 QEMU 模拟时也遇到过,
+    但是忘了怎么解决的了&#8230;</li>
+</ul>
+<p>所以结论就是暂时还用不了.</p>
+<h2>[update] 2024/9/15</h2>
+<p>SSL 的 Bug, 呃, 我怀疑是 <code>ca-certificate</code> 这个包的问题,
+  由于在 QEMU 上跑的版本和 iSH 的版本不同, 所以导致了出现了一些小小的问题.</p>
+<p>但是很显然, 如果我不让 QEMU 和 iSH 的版本进行一个对应, 我就必须用源里提供的软件,
+  因为在 iSH 上编译程序太慢了. (也许 M 系列的芯片会好一些? 但是与我无关就是了)</p>
+<p>不过好消息是, 源里面的 ECL 不能使用的原因倒是发现了:</p>
+<div class="highlight"><pre><span></span>apk<span class="w"> </span>add<span class="w"> </span>ecl
+</pre></div>
+<p>这个命令装的依赖不全, 只能说完全没法用 ECL 编一些稍大的项目. 正确的安装姿势应该是:</p>
+<div class="highlight"><pre><span></span>apk<span class="w"> </span>add<span class="w"> </span>curl<span class="w"> </span>curl-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>gmp<span class="w"> </span>gmp-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ncurses<span class="w"> </span>ncurses-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>gc-dev<span class="w"> </span>gcc<span class="w"> </span>g++<span class="w"> </span>make<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>ecl<span class="w"> </span>ecl-dev<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>libffi-dev
+</pre></div>
+<p>然后载入 Quicklisp 即可. 不过不得不说, ECL 是真的慢&#8230; (虽然 iSH 也有锅,
+  但是如果是 SBCL 的话就好了&#8230; )</p>
+<p>(但是编译完了之后发现没有声音输出的能力, 所以就寄了, 感觉估计还得是 Swift
+  去写原生的程序会更加靠谱一些. )</p>
+<h1>后记</h1>
+<p>至少目前电脑上可以用了, 就没有那么多动力去修改了, 之后有时间的话,
+  会考虑重新写一个更加通用的 TUI 框架, 然后修一下电台和 client
+  之间的对应关系.</p>
+<p>repo: <a href="https://github.com/li-yiyang/rajiko">li-yiyang/rajiko</a>.</p>
+
+  </div><a class="u-url" href="/lisp/hi-radiko/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

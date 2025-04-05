@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Cat For Ai | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Cat For Ai" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 这是一个 Categories for AI 的快速阅读笔记, 目标是写一个简单的实现以检验我自己真的学会了. 注: 为了快速了解, 我没有选择看视频而是看 Slides 与对应的 paper. 可能会有部分内容有缺漏或者不正确. 免责声明: 不是数学系的, 也不是计算机系的, 所以数学证明或者相关的部分讲究一个差不多得了和一眼 obvious, 计算机部分讲究一个能跑就行别问太多. 全文省流版 Theory Category = Object + Morphism \(&rarr;\) 提供高层的抽象 Fuctor: Cat \(&rarr;\) Cat Monoidal: abstract for parallel process 2. 3. Essential Building Blocks Category Therory 省流版: 范畴 = 对象 + 对象间的映射关系 (morphism) 四要素: [identity, compose, id compose, (h * (g * f)) = (h * g) * f] 不同种类的 object initial object I -&gt; {a1, a2, a3} terminal object {a1, a2, a3} -&gt; T 不同种类的 morphism epimorphism (满射) monomorphism (单射) 函子: 范畴间的映射 小节 哦, 对了, 这学期开始的时候貌似还想要​读点范畴论的数学书? 虽然最后鸽了&#8230; 不过这就当作我已经差不多读完了范畴论的书了吧. Category = Objects + Morphisms b首先是一个范畴论的快速入门? Category Definition: a category is a universe of objects, and morphisms between them, s.t.: 所谓的​_范畴_​包含了​*对象*​以及对象间的​*映射(态射)*​关系, 其满足: \(&forall; A\) (\(A\) is an object), there is a unique identity morphism \(\mathrm{id}_A : A &rarr; A\) \(&forall; f : A &rarr; B, g : B &rarr; C\) (\(f\) and \(g\) is morphism), there is a composition \(g &circ; f : A &rarr; C\) \(&forall; f : A &rarr; B\), it holds that \(\mathrm{id}_B &circ; f = f &circ; \mathrm{id}_A = f\) \(&forall; f, g, h\), we have \(h &circ; (g &circ; f) = (h &circ; g) &circ; f\) (结合律) 不正确的简单解释考虑这样的一个有向图: 所有的节点都有从自己出发回到自己的通路 若从一个节点出发可以到达另一个节点, 那么这两个节点就该被连在一起 了解, 咱研究的是对象间的关系而非对象本身. Definition: the collection of morphisms between \(A\) and \(B\) is often denoted \(\mathrm{Hom}(A, B)\) (read as home-set). 通常使用交换图 (commutative diagrams) 描述 研究的是结构的关系 (connections) 而非对象的性质 (do not assume knowledge of what&#39;s in the objects) Definition: the opposite category \(C^{\mathrm{op}}\) for a given category \(C\) is: objects 相同 \(&forall; f : A &rarr; B\) in \(C\), \(&exist; f : B &rarr; A\) in \(C^{\mathrm{op}}\) \(&forall; g &circ; f : A &rarr; C\) in \(C\), \(&exist; f &circ; g : C &rarr; A\) in \(C^{\mathrm{op}}\) 相当于是交换图上把箭头全部反向 Example: set category and some implementation objects are sets morphisms are functions between them Definition: a unit is a set with one element, denoted as \(()\) \(f : A_i &rarr; ()\) \(g_i : () &rarr; B\) (使得 \(()\) 的元素映射到 \(B\) 上, 类似于 \(\{ g_i () \} &cong; B\)). 为什么用 set (集合) 来作为例子? 因为熟, 并且范畴和对象无关, 所以用集合来理解完全没问题. 那么我们可以用程序来进行一个类比: objects are values sets of different types, for example, in CL: (unsigned-byte 32) double-float integer null (Note: (class-of nil) got me common-lisp:null in SBCL) &#8230; morphisms are functions on objects, for example: (lambda (x) x) ; id morphism morphism composition (defun compose (f g) ; morphism compose (lambda (&amp;rest args) (funcall f (apply g args)))) example from cats4progs compose: (str:words &quot;Lucky Me&quot;) ; =&gt; (&quot;Lucky&quot; &quot;Me&quot;)" />
+<meta property="og:description" content="About 这是一个 Categories for AI 的快速阅读笔记, 目标是写一个简单的实现以检验我自己真的学会了. 注: 为了快速了解, 我没有选择看视频而是看 Slides 与对应的 paper. 可能会有部分内容有缺漏或者不正确. 免责声明: 不是数学系的, 也不是计算机系的, 所以数学证明或者相关的部分讲究一个差不多得了和一眼 obvious, 计算机部分讲究一个能跑就行别问太多. 全文省流版 Theory Category = Object + Morphism \(&rarr;\) 提供高层的抽象 Fuctor: Cat \(&rarr;\) Cat Monoidal: abstract for parallel process 2. 3. Essential Building Blocks Category Therory 省流版: 范畴 = 对象 + 对象间的映射关系 (morphism) 四要素: [identity, compose, id compose, (h * (g * f)) = (h * g) * f] 不同种类的 object initial object I -&gt; {a1, a2, a3} terminal object {a1, a2, a3} -&gt; T 不同种类的 morphism epimorphism (满射) monomorphism (单射) 函子: 范畴间的映射 小节 哦, 对了, 这学期开始的时候貌似还想要​读点范畴论的数学书? 虽然最后鸽了&#8230; 不过这就当作我已经差不多读完了范畴论的书了吧. Category = Objects + Morphisms b首先是一个范畴论的快速入门? Category Definition: a category is a universe of objects, and morphisms between them, s.t.: 所谓的​_范畴_​包含了​*对象*​以及对象间的​*映射(态射)*​关系, 其满足: \(&forall; A\) (\(A\) is an object), there is a unique identity morphism \(\mathrm{id}_A : A &rarr; A\) \(&forall; f : A &rarr; B, g : B &rarr; C\) (\(f\) and \(g\) is morphism), there is a composition \(g &circ; f : A &rarr; C\) \(&forall; f : A &rarr; B\), it holds that \(\mathrm{id}_B &circ; f = f &circ; \mathrm{id}_A = f\) \(&forall; f, g, h\), we have \(h &circ; (g &circ; f) = (h &circ; g) &circ; f\) (结合律) 不正确的简单解释考虑这样的一个有向图: 所有的节点都有从自己出发回到自己的通路 若从一个节点出发可以到达另一个节点, 那么这两个节点就该被连在一起 了解, 咱研究的是对象间的关系而非对象本身. Definition: the collection of morphisms between \(A\) and \(B\) is often denoted \(\mathrm{Hom}(A, B)\) (read as home-set). 通常使用交换图 (commutative diagrams) 描述 研究的是结构的关系 (connections) 而非对象的性质 (do not assume knowledge of what&#39;s in the objects) Definition: the opposite category \(C^{\mathrm{op}}\) for a given category \(C\) is: objects 相同 \(&forall; f : A &rarr; B\) in \(C\), \(&exist; f : B &rarr; A\) in \(C^{\mathrm{op}}\) \(&forall; g &circ; f : A &rarr; C\) in \(C\), \(&exist; f &circ; g : C &rarr; A\) in \(C^{\mathrm{op}}\) 相当于是交换图上把箭头全部反向 Example: set category and some implementation objects are sets morphisms are functions between them Definition: a unit is a set with one element, denoted as \(()\) \(f : A_i &rarr; ()\) \(g_i : () &rarr; B\) (使得 \(()\) 的元素映射到 \(B\) 上, 类似于 \(\{ g_i () \} &cong; B\)). 为什么用 set (集合) 来作为例子? 因为熟, 并且范畴和对象无关, 所以用集合来理解完全没问题. 那么我们可以用程序来进行一个类比: objects are values sets of different types, for example, in CL: (unsigned-byte 32) double-float integer null (Note: (class-of nil) got me common-lisp:null in SBCL) &#8230; morphisms are functions on objects, for example: (lambda (x) x) ; id morphism morphism composition (defun compose (f g) ; morphism compose (lambda (&amp;rest args) (funcall f (apply g args)))) example from cats4progs compose: (str:words &quot;Lucky Me&quot;) ; =&gt; (&quot;Lucky&quot; &quot;Me&quot;)" />
+<link rel="canonical" href="/reading/cat-for-ai/" />
+<meta property="og:url" content="/reading/cat-for-ai/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-14T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Cat For Ai" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-12-14T00:00:00+00:00","datePublished":"2024-12-14T00:00:00+00:00","description":"About 这是一个 Categories for AI 的快速阅读笔记, 目标是写一个简单的实现以检验我自己真的学会了. 注: 为了快速了解, 我没有选择看视频而是看 Slides 与对应的 paper. 可能会有部分内容有缺漏或者不正确. 免责声明: 不是数学系的, 也不是计算机系的, 所以数学证明或者相关的部分讲究一个差不多得了和一眼 obvious, 计算机部分讲究一个能跑就行别问太多. 全文省流版 Theory Category = Object + Morphism \\(&rarr;\\) 提供高层的抽象 Fuctor: Cat \\(&rarr;\\) Cat Monoidal: abstract for parallel process 2. 3. Essential Building Blocks Category Therory 省流版: 范畴 = 对象 + 对象间的映射关系 (morphism) 四要素: [identity, compose, id compose, (h * (g * f)) = (h * g) * f] 不同种类的 object initial object I -&gt; {a1, a2, a3} terminal object {a1, a2, a3} -&gt; T 不同种类的 morphism epimorphism (满射) monomorphism (单射) 函子: 范畴间的映射 小节 哦, 对了, 这学期开始的时候貌似还想要​读点范畴论的数学书? 虽然最后鸽了&#8230; 不过这就当作我已经差不多读完了范畴论的书了吧. Category = Objects + Morphisms b首先是一个范畴论的快速入门? Category Definition: a category is a universe of objects, and morphisms between them, s.t.: 所谓的​_范畴_​包含了​*对象*​以及对象间的​*映射(态射)*​关系, 其满足: \\(&forall; A\\) (\\(A\\) is an object), there is a unique identity morphism \\(\\mathrm{id}_A : A &rarr; A\\) \\(&forall; f : A &rarr; B, g : B &rarr; C\\) (\\(f\\) and \\(g\\) is morphism), there is a composition \\(g &circ; f : A &rarr; C\\) \\(&forall; f : A &rarr; B\\), it holds that \\(\\mathrm{id}_B &circ; f = f &circ; \\mathrm{id}_A = f\\) \\(&forall; f, g, h\\), we have \\(h &circ; (g &circ; f) = (h &circ; g) &circ; f\\) (结合律) 不正确的简单解释考虑这样的一个有向图: 所有的节点都有从自己出发回到自己的通路 若从一个节点出发可以到达另一个节点, 那么这两个节点就该被连在一起 了解, 咱研究的是对象间的关系而非对象本身. Definition: the collection of morphisms between \\(A\\) and \\(B\\) is often denoted \\(\\mathrm{Hom}(A, B)\\) (read as home-set). 通常使用交换图 (commutative diagrams) 描述 研究的是结构的关系 (connections) 而非对象的性质 (do not assume knowledge of what&#39;s in the objects) Definition: the opposite category \\(C^{\\mathrm{op}}\\) for a given category \\(C\\) is: objects 相同 \\(&forall; f : A &rarr; B\\) in \\(C\\), \\(&exist; f : B &rarr; A\\) in \\(C^{\\mathrm{op}}\\) \\(&forall; g &circ; f : A &rarr; C\\) in \\(C\\), \\(&exist; f &circ; g : C &rarr; A\\) in \\(C^{\\mathrm{op}}\\) 相当于是交换图上把箭头全部反向 Example: set category and some implementation objects are sets morphisms are functions between them Definition: a unit is a set with one element, denoted as \\(()\\) \\(f : A_i &rarr; ()\\) \\(g_i : () &rarr; B\\) (使得 \\(()\\) 的元素映射到 \\(B\\) 上, 类似于 \\(\\{ g_i () \\} &cong; B\\)). 为什么用 set (集合) 来作为例子? 因为熟, 并且范畴和对象无关, 所以用集合来理解完全没问题. 那么我们可以用程序来进行一个类比: objects are values sets of different types, for example, in CL: (unsigned-byte 32) double-float integer null (Note: (class-of nil) got me common-lisp:null in SBCL) &#8230; morphisms are functions on objects, for example: (lambda (x) x) ; id morphism morphism composition (defun compose (f g) ; morphism compose (lambda (&amp;rest args) (funcall f (apply g args)))) example from cats4progs compose: (str:words &quot;Lucky Me&quot;) ; =&gt; (&quot;Lucky&quot; &quot;Me&quot;)","headline":"Cat For Ai","mainEntityOfPage":{"@type":"WebPage","@id":"/reading/cat-for-ai/"},"url":"/reading/cat-for-ai/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Cat For Ai</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-12-14T00:00:00+00:00" itemprop="datePublished">Dec 14, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>这是一个 <a href="https://cats.for.ai/program/">Categories for AI</a> 的快速阅读笔记,
+  目标是写一个简单的实现以检验我自己真的学会了.</p>
+<p>注: 为了快速了解, 我没有选择看视频而是看 Slides
+  与对应的 paper. 可能会有部分内容有缺漏或者不正确.</p>
+<p>免责声明: 不是数学系的, 也不是计算机系的,
+  所以数学证明或者相关的部分讲究一个差不多得了和一眼 obvious,
+  计算机部分讲究一个能跑就行别问太多.</p>
+<h1>全文省流版</h1>
+<ol>
+  <li>Theory
+    <ul>
+      <li>Category = Object + Morphism \(&rarr;\) 提供高层的抽象</li>
+      <li>Fuctor: Cat \(&rarr;\) Cat</li>
+      <li>Monoidal: abstract for parallel process</li>
+    </ul>
+  </li>
+</ol>
+<p>2.
+  3.</p>
+<h1>Essential Building Blocks</h1>
+<h2>Category Therory</h2>
+<p>省流版:</p>
+<ol>
+  <li>范畴 = 对象 + 对象间的映射关系 (morphism)
+    <p><b>四要素</b>: [identity, compose, id compose, (h * (g * f)) = (h * g) * f]</p>
+    <ul>
+      <li>不同种类的 object
+        <ul>
+          <li>initial object <code>I -&gt; {a1, a2, a3}</code></li>
+          <li>terminal object <code>{a1, a2, a3} -&gt; T</code></li>
+        </ul>
+      </li>
+      <li>不同种类的 morphism
+        <ul>
+          <li>epimorphism (满射)</li>
+          <li>monomorphism (单射)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>函子: 范畴间的映射</li>
+</ol>
+<details><summary>小节</summary>
+<p>哦, 对了, 这学期开始的时候貌似还想要​<a href="/reading/basic-category-theory/">读点范畴论的数学书</a>?
+  虽然最后鸽了&#8230; 不过这就当作我已经差不多读完了范畴论的书了吧.</p>
+</details>
+<h3>Category = Objects + Morphisms</h3>
+<p>b首先是一个范畴论的快速入门?</p>
+<h4>Category</h4>
+<ul>
+  <li><b>Definition</b>: a category is a <i>universe</i> of <b>objects</b>, and <b>morphisms</b> between them,
+    s.t.:
+    <p>所谓的​_范畴_​包含了​*对象*​以及对象间的​*映射(态射)*​关系, 其满足:</p>
+    <ul>
+      <li>\(&forall; A\) (\(A\) is an object),
+        there is a unique <b>identity</b> morphism \(\mathrm{id}_A : A &rarr; A\)</li>
+      <li>\(&forall; f : A &rarr; B, g : B &rarr; C\) (\(f\) and \(g\) is morphism),
+        there is a <b>composition</b> \(g &circ; f : A &rarr; C\)</li>
+      <li>\(&forall; f : A &rarr; B\),
+        it holds that \(\mathrm{id}_B &circ; f = f &circ; \mathrm{id}_A = f\)</li>
+      <li>\(&forall; f, g, h\),
+        we have \(h &circ; (g &circ; f) = (h &circ; g) &circ; f\) (结合律)</li>
+    </ul>
+  <details><summary>不正确的简单解释</summary>考虑这样的一个有向图:
+    <p><img src="/_img/cat-for-ai/digraph-of-category.svg" alt="/_img/cat-for-ai/digraph-of-category.svg" /></p>
+    <ul>
+      <li>所有的节点都有从自己出发回到自己的通路</li>
+      <li>若从一个节点出发可以到达另一个节点, 那么这两个节点就该被连在一起</li>
+    </ul>
+  </details>
+  </li>
+</ul>
+<p>了解, 咱研究的是对象间的关系而非对象本身.</p>
+<ul>
+  <li><b>Definition</b>: the collection of morphisms between \(A\) and \(B\)
+    is often denoted \(\mathrm{Hom}(A, B)\) (read as <span style="text-decoration:underline;">home-set</span>).</li>
+  <li>通常使用交换图 (commutative diagrams) 描述</li>
+  <li>研究的是结构的关系 (connections) 而非对象的性质 (do not assume knowledge
+    of what's in the objects)</li>
+  <li><b>Definition</b>: the <i>opposite category</i> \(C^{\mathrm{op}}\) for a given category \(C\) is:
+    <ul>
+      <li>objects 相同</li>
+      <li>\(&forall; f : A &rarr; B\) in \(C\), \(&exist; f : B &rarr; A\) in \(C^{\mathrm{op}}\)</li>
+      <li>\(&forall; g &circ; f : A &rarr; C\) in \(C\), \(&exist; f &circ; g : C &rarr; A\) in \(C^{\mathrm{op}}\)</li>
+    </ul>
+    <p>相当于是交换图上把箭头全部反向</p>
+  </li>
+</ul>
+<details><summary>Example: set category and some implementation</summary>
+<ul>
+  <li>objects are sets</li>
+  <li>morphisms are functions between them</li>
+  <li><b>Definition</b>: a <span style="text-decoration:underline;">unit</span> is a set with one element, denoted as \(()\)
+    <ul>
+      <li>\(f : A_i &rarr; ()\)</li>
+      <li>\(g_i : () &rarr; B\) (使得 \(()\) 的元素映射到 \(B\) 上,
+        类似于 \(\{ g_i () \} &cong; B\)).</li>
+    </ul>
+  </li>
+</ul>
+<p>为什么用 set (集合) 来作为例子? 因为熟, 并且范畴和对象无关,
+  所以用集合来理解完全没问题.</p>
+<p>那么我们可以用程序来进行一个类比:</p>
+<ul>
+  <li>objects are values sets of different types, for example,
+    in CL:
+    <ul>
+      <li><code>(unsigned-byte 32)</code></li>
+      <li><code>double-float</code></li>
+      <li><code>integer</code></li>
+      <li><code>null</code> (Note: <code>(class-of nil)</code> got me <code>common-lisp:null</code> in SBCL)</li>
+      <li>&#8230;</li>
+    </ul>
+  </li>
+  <li>morphisms are functions on objects, for example:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w">                          </span><span class="c1">; id morphism</span>
+</pre></div>
+  </li>
+  <li>morphism composition
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nb">compose</span><span class="w"> </span><span class="p">(</span><span class="nf">f</span><span class="w"> </span><span class="nv">g</span><span class="p">)</span><span class="w">                    </span><span class="c1">; morphism compose</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>example from cats4progs <b>compose</b>:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">str:words</span><span class="w"> </span><span class="s">&quot;Lucky Me&quot;</span><span class="p">)</span><span class="w">                  </span><span class="c1">; =&gt; (&quot;Lucky&quot; &quot;Me&quot;)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">concat</span><span class="w"> </span><span class="p">(</span><span class="nf">strings</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">str:join</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">strings</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;Lucky&quot;</span><span class="w"> </span><span class="s">&quot;Me&quot;</span><span class="p">))</span><span class="w">                </span><span class="c1">; =&gt; &quot;LuckyMe&quot;</span>
+
+<span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nb">compose</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;concat</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;str:words</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;Lucky Me&quot;</span><span class="p">)</span><span class="w"> </span><span class="c1">; &quot;LuckyMe&quot;</span>
+<span class="c1">;; equal to (concat (str:words &quot;Lucky Me&quot;))</span>
+</pre></div>
+    <p>虽然可能看起来非常的奇怪, 但是在 CLOS 中的 <code>:after</code> 方法就类似这样的操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">print-object</span><span class="w"> </span><span class="nv">:after</span><span class="w"> </span><span class="p">((</span><span class="nf">hist</span><span class="w"> </span><span class="nv">histogram</span><span class="p">)</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;Hello World will be print afer&quot;</span><span class="p">))</span>
+</pre></div>
+    <p>或者你也可以用 <code>:around</code> 或者 Python 中的 decorator 来模拟类似的操作:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">compose_with</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compose</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">h</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">g</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">h</span>
+    <span class="k">return</span> <span class="n">compose</span>
+
+<span class="k">def</span> <span class="nf">one_plus</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="nd">@compose_with</span><span class="p">(</span><span class="n">one_plus</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">two_times</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+
+<span class="n">two_times</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>                    <span class="c1"># =&gt; 5</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<h4>Objects</h4>
+<ul>
+  <li><b>Definition</b>: \(T\) is a <b>terminal object</b> in category \(C\) if,
+    \(&forall; A &isin; C, &exist;! f : A &rarr; T\), aka., \(|Hom(A, T)| = 1\).
+    <ul>
+      <li>unit set is a terminal object in set</li>
+    </ul>
+  </li>
+  <li><b>Definition</b>: \(I\) is an <b>initial object</b> in category \(C\) if,
+    \(&forall; A &isin; C, &exist;! f : I &rarr; A\), aka., \(|Hom(I, A)| = 1\).
+    <ul>
+      <li>\(&empty; &rarr; A\) is a initial object in set, though it is not callable</li>
+    </ul>
+  </li>
+</ul>
+<details><summary>不一定正确的理解</summary>
+<p>从图上看, 大概所有点都汇聚 (指向) \(T\), 从 \(I\) 指向所有点, 但是只有一条.</p>
+<p><img src="/_img/cat-for-ai/digraph-terminal-initial.svg" alt="/_img/cat-for-ai/digraph-terminal-initial.svg" /></p>
+</details>
+<ul>
+  <li><b>Definition</b>: object operations
+    <ul>
+      <li>cartesian product (笛卡尔积) \(A, B &isin; \boldsymbol{C}, A &times; B &isin; \boldsymbol{C}\)
+        <ul>
+          <li>projection morphisms \(p_A : A &times; B &rarr; A, p_B : A &times; B &rarr; B\)</li>
+          <li>coproduct \(A \coprod B\)</li>
+        </ul>
+        <p><img src="/_img/cat-for-ai/cartesian-product.svg" alt="/_img/cat-for-ai/cartesian-product.svg" /></p>
+      </li>
+      <li>exponential object: \(B^A\)
+        <p><img src="/_img/cat-for-ai/exponential-objects.svg" alt="/_img/cat-for-ai/exponential-objects.svg" /></p>
+        <p>where:</p>
+        <ul>
+          <li>\(v : B^A &times; A &rarr; B\)</li>
+          <li>\(e : X &times; A &rarr; B\)</li>
+          <li>unique morphism \(u : X &rarr; B^A\)</li>
+        </ul>
+        <p>example:</p>
+        <ul>
+          <li>Currying: \(f : X &times; Y &rarr; Z, f_c : X &rarr; Z^Y\)
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">curry-rest-args</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Curry arguments with `args&#39;.</span>
+
+<span class="s">Example:</span>
+
+<span class="s">     ##################</span>
+<span class="s">     #         +---+  #</span>
+<span class="s"> arg ----------*   |  #</span>
+<span class="s">     #         | f *------ result</span>
+<span class="s">     # args ---*   |  #</span>
+<span class="s">     #         +---+  #</span>
+<span class="s">     ##################</span>
+<span class="s">  (curry-rest-args f args)</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">arg</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+
+<span class="c1">;; Example:</span>
+<span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nf">curry-rest-args</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">2*</span><span class="w"> </span><span class="p">(</span><span class="nf">curry-rest-args</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;*</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nb">1+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nb">1+</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">2*</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">2*</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+            <pre class="example">
+(2 3 2 4)
+            </pre>
+      <details><summary>一个想法</summary>所以应该是学会了数学再去学应用, 还是学会了应用再去学数学呢?
+            虽然我现在总有一种: 感觉不如先学点理论对应的实物再去接触理论.
+            比如在看了 SDF (<a href="https://mitpress.mit.edu/9780262045490/software-design-for-flexibility/">Software Designed for Flexibility</a>) 的第一章后,
+            感觉对这个 curry 完全可以理解, 反而是直接看理论的说明看不懂&#8230;
+            <p>可是难道不看这个理论, 我会想到有这种联系?</p>
+      </details>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<details><summary>Examples</summary>
+<p>object (type) 的运算 (example from cats4progs):</p>
+<ul>
+  <li>tuple types
+    <p>能让我想到的大概就两个:</p>
+    <ul>
+      <li>list of values</li>
+      <li>multiple-values</li>
+    </ul>
+  </li>
+  <li>sum types
+    <p>能让我想到的:</p>
+    <ul>
+      <li>class and superclasses
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="p">(</span><span class="nf">a1</span><span class="w"> </span><span class="nv">a2</span><span class="w"> </span><span class="nv">a3</span><span class="p">)</span><span class="w"> </span><span class="p">())</span>
+</pre></div>
+      </li>
+      <li>type declaration
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">((</span><span class="k">or</span><span class="w"> </span><span class="nb">symbol</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">  </span><span class="c1">;; ...</span>
+<span class="w">  </span><span class="nv">x</span><span class="p">)</span>
+</pre></div>
+        <p>当然也可以用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">deftype</span><span class="w"> </span><span class="nv">basic-component</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">symbol</span><span class="w"> </span><span class="nb">list</span><span class="p">))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+</ul>
+<p>不过虽然在 <a href="http://brendanfong.com/programmingcats_files/cats4progs-DRAFT.pdf">Programming with Categories</a> 这本书里面用的是 Haskell,
+  并且感觉里面注重的内容是强调 Haskell 的 type 是 object.
+  实际上范畴的概念应该可以用到各种地方吧.</p>
+<ul>
+  <li>exponential objects
+    <ul>
+      <li>如上, 是 <code>carray</code></li>
+      <li>同理, 有 <code>uncarray</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">uncarray</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;uncarray : (x -&gt; (y -&gt; z)) -&gt; ((x, y) -&gt; z)&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h4>Morphisms</h4>
+<ul>
+  <li><b>Definition</b>: A morphism \(f : A &rarr; B\) is an <b>epimorphism</b> (epic morphism) if,
+    for any morphism pair \(g, h : B &rarr; C\):
+    <p>\[(h &circ; f = g &circ; f) &rArr; (h = g) \]</p>
+  </li>
+  <li><b>Definition</b>: A morphism \(f : A &rarr; B\) is an <b>monomorphism</b> if,
+    for any morphism pair \(g, h : B &rarr; C\):
+    <p>\[(f &circ; h = f &circ; g) &rArr; (h = g)\]</p>
+  </li>
+  <li>\(C\) 和 \(C^{op}\) 中, epimorphism 和 monomorphism 互相对应
+  <details><summary>set category 中的例子</summary>
+    <ul>
+      <li>epimorphism 就是满射 (surjections)</li>
+      <li>monomorphism 就是单射 (injections)</li>
+    </ul>
+    <p><img src="/_img/cat-for-ai/set-surjections-and-injections.svg" alt="/_img/cat-for-ai/set-surjections-and-injections.svg" /></p>
+    <p>所以这里的操作就相当于是在用范畴论的方式把集合范畴中的满射和单射一般化.
+      但是需要注意的是, 因为范畴, 或者关系图中的箭头是单方向有向的,
+      所以并不显然存在 &#8220;反&#8221; 向的箭头, 即不存在显然的 &#8220;一一映射&#8221; (isomorphism)</p>
+  </details>
+  </li>
+</ul>
+<h4>Examples</h4>
+<details><summary>Examples</summary>
+<ul>
+  <li><b>Definition</b>: category <b>Rel</b>
+    <ul>
+      <li>objects \(&larr;\) <b>sets</b></li>
+      <li>morphisms \(&larr;\) <b>relations</b> between sets</li>
+      <li>\(&rArr;\) initial and terminal objects is \(&empty;\)</li>
+    </ul>
+  </li>
+  <li><b>Definition</b>: category <b>Groups</b></li>
+  <li><b>Definition</b>: category <b>Vect</b>
+    <ul>
+      <li>objects are sets \(V\) (<b>linear space</b>) of vectors \(\boldsymbol{v}\)</li>
+      <li>morphisms are <b>linear transformations</b> between these spaces</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h3>Functors</h3>
+<ul>
+  <li><b>Definition</b>: \(F : \boldsymbol{C} &rarr; \boldsymbol{D}\) maps objects in \(\boldsymbol{C}\) to \(\boldsymbol{D}\).
+    <ul>
+      <li>\(F(\mathrm{id}_A) = \mathrm{id}_{F(A)}\)</li>
+      <li>\(F(g &circ; f) = F(g) &circ; F(f)\)</li>
+    </ul>
+    <p><img src="/_img/cat-for-ai/category-functor.svg" alt="/_img/cat-for-ai/category-functor.svg" /></p>
+  </li>
+</ul>
+<details><summary>Example: implementation in CL (from cats4prog)</summary>
+<ul>
+  <li>a functor maps types to types, and functions to functions
+<div class="highlight"><pre><span></span><span class="c1">;; F: f -&gt; F(f)</span>
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">F</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="nv">function</span><span class="p">))</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1">;; F: integer -&gt; F(integer)</span>
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">F</span><span class="w"> </span><span class="p">((</span><span class="nf">x</span><span class="w"> </span><span class="nv">integer</span><span class="p">))</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1">;; which is equal to</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">functor</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">typecase</span><span class="w"> </span><span class="nv">x</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">function</span><span class="w">  </span><span class="o">...</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">integer</span><span class="w">   </span><span class="o">...</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; else</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">otherwise</span><span class="w"> </span><span class="o">...</span><span class="p">)))</span>
+</pre></div>
+    <ul>
+      <li><b>Definition</b>: bifunctor \(\mathcal{C} &times; \mathcal{C} &rarr; \mathcal{C}\) (假设对于 \(\mathcal{C}\) 中所有的对象都存在 product)
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">bifunctor</span><span class="w"> </span><span class="p">(</span><span class="nf">product</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="nv">g</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Bifunctor:</span>
+
+<span class="s">    ###########</span>
+<span class="s"> a --- f -+   #</span>
+<span class="s">    #     |   #</span>
+<span class="s">    # product ---&gt;</span>
+<span class="s">    #     |   #</span>
+<span class="s"> b --- g -+   #</span>
+<span class="s">    ###########</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">product</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">b</span><span class="p">))))</span>
+
+<span class="c1">;; equal to (+ (1+ 2) (2* 3))</span>
+<span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">bifunctor</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1+</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;2*</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; 9</span>
+</pre></div>
+        <p>一个简单的例子:</p>
+        <p><img src="/_img/cat-for-ai/bifunctor-example.svg" alt="/_img/cat-for-ai/bifunctor-example.svg" /></p>
+      </li>
+      <li><b>Definition</b>: profunctors</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h2>Message passing, categorically \(&larr;\) Graph Neural Networks are Dynamic Programmers</h2>
+<p>注: 这部分是 <a href="https://docs.google.com/presentation/d/1z8QmCWsImykggqrHt6pGoQ2pW1_qfHwdX1BnqqpnCdM/">Slide</a> + <a href="https://arxiv.org/abs/2203.15544">Paper</a> 的组合, 不过感觉在</p>
+<p>省流版:</p>
+<ol>
+  <li>monoidal categories 用于描述 parallel process</li>
+</ol>
+<h1>Categorical Dataflow</h1>
+<p>该部分是 <a href="https://cats.for.ai/assets/slides/MonoidalCatsLensesOptics.pdf">Slide</a> + <a href="https://arxiv.org/abs/2103.01931">Paper</a> + <a href="https://github.com/statusfailed/numeric-optics-python/">Implementation</a> 的组合,
+  我应该会着重 implementation 的复刻.</p>
+<p>注: 虽然但是, 为了能够看懂这个 Monoidal 确实很花时间.</p>
+<h2>Monoidal Theory</h2>
+<p>注: 我到现在还是不太理解 Monoidal 的这个概念.
+  是一个局域闭包用于状态/变量值的传递/储存?</p>
+<h3>Monoial</h3>
+<ul>
+  <li><b>Definition</b>: string diagrams as category
+    <ul>
+      <li>objects: <b>strings</b></li>
+      <li>morphisms: <b>boxes</b></li>
+    </ul>
+  </li>
+</ul>
+<details><summary>Example: but for programming</summary>
+<ul>
+  <li>将 <b>string</b> 视为输入的参数</li>
+  <li>将 <b>boxes</b> 视为对参数进行运算的函数</li>
+  <li>哦, 你说多返回值? <code>(values v1 v2 v3)</code></li>
+</ul>
+<p>其他的一些 string 的类型:</p>
+<ul>
+  <li>string 不会缠绕 (就算缠在一起也视为直接连接两点)</li>
+  <li>split strings
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">split-call</span><span class="w"> </span><span class="p">(</span><span class="nf">f</span><span class="w"> </span><span class="nv">g</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Split string.</span>
+
+<span class="s">     ########</span>
+<span class="s">     #      #</span>
+<span class="s">     # +- f --- out</span>
+<span class="s"> in ---+    #</span>
+<span class="s">     # +- g --- out</span>
+<span class="s">     ########</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">in</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">split-call</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1+</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;2*</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w">      </span><span class="c1">; =&gt; 3, 4</span>
+</pre></div>
+  </li>
+  <li>end strings
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">string-terminate</span><span class="w"> </span><span class="p">(</span><span class="nf">input</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;End string.</span>
+
+<span class="s">  input ----[*]&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">input</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>start strings
+    <pre class="example">
+in 1 ------+
+           +----- out
+in 2 ------+
+    </pre>
+  </li>
+</ul>
+</details>
+<ul>
+  <li><b>Definition</b>: a monodial category is a tuple
+    <p>\[(\boldsymbol{C}, &otimes;, \boldsymbol{1}, &alpha;, &lambda;, &rho;)\]</p>
+    <p>consisting of</p>
+    <ul>
+      <li>category \(\boldsymbol{C}\)</li>
+      <li>functor \(&otimes;\)</li>
+      <li>object \(\boldsymbol{1} &isin; \boldsymbol{C}\) called <i>monoidal unit</i></li>
+      <li><b>associativity isomorphism</b> \(&alpha;\) :
+        <p>\[(X &otimes; Y) &otimes; Z \xrightarrow[&cong;]{&alpha;_{X,Y,Z}} X &otimes; (Y &otimes; Z)\]</p>
+      </li>
+      <li><b>left/right unit isomorphism</b> \(&lambda;_X, &rho;_X\)
+        <p>\[\boldsymbol{1} &otimes; X \xrightarrow[&cong;]{&lambda;_x} X \ \mathrm{and} \ X &otimes; \boldsymbol{1} \xrightarrow[&cong;]{&rho;_X} X\]</p>
+      </li>
+    </ul>
+    <p>s.t.:</p>
+    <ul>
+      <li><b>Unity Axioms</b>:
+        <p><img src="/_img/cat-for-ai/unity-aximons.svg" alt="/_img/cat-for-ai/unity-aximons.svg" /></p>
+        <p>Note that \(&lambda;_{\boldsymbol{1}} = &rho;_{\boldsymbol{1}} : \boldsymbol{1} &otimes; \boldsymbol{1} \xrightarrow{&cong;} \boldsymbol{1}\).</p>
+    <details><summary>Examples</summary>
+        <p>一些图示:</p>
+        <ul>
+          <li>\((X &otimes; Y) &otimes; W \xrightarrow{f &otimes; \boldsymbol{1}_W} Z &otimes; W \xrightarrow{g} M\)
+            <p><img src="/_img/cat-for-ai/moncat-example.svg" alt="/_img/cat-for-ai/moncat-example.svg" /></p>
+          </li>
+          <li>\((f &circ; g) &otimes; (h &circ; i) = (f &otimes; h) &circ; (g &otimes; i)\)
+            <p><img src="/_img/cat-for-ai/moncat-is-functor.svg" alt="/_img/cat-for-ai/moncat-is-functor.svg" /></p>
+          </li>
+        </ul>
+    </details>
+      </li>
+      <li><b>Pentagon Axiom</b>:
+        <p><img src="/_img/cat-for-ai/pentagon-digram.svg" alt="/_img/cat-for-ai/pentagon-digram.svg" /></p>
+      </li>
+    </ul>
+  </li>
+  <li><b>Definition</b>: comonoid</li>
+</ul>
+<details><summary>注 & Examples Graphs</summary>
+<p>这部分我感觉比 cat4prog 写得要好. 感觉学习 Haskell 的同学真难啊,
+  既要学一门新语言的语法, 还要学范畴论, 真是不容易啊 (笑).</p>
+<p>Examples:</p>
+<ul>
+  <li><b>List</b>
+    <ul>
+      <li>\(&otimes; : \mathrm{list} &times; \mathrm{list} &rarr; \mathrm{list}\) <code>append</code></li>
+      <li>\(\boldsymbol{1} : \mathrm{list}\) <code>()</code></li>
+    </ul>
+  </li>
+  <li>\((\mathbb{R}, +, 0)\) and \((\mathbb{R}, &times;, 1)\) (实数域上的加法和乘法)</li>
+  <li>\((\mathbb{B}, &and;, \mathrm{TRUE})\) (布尔代数)</li>
+  <li>\((\mathrm{Euc}, &times;, \boldsymbol{1})\) (Euclid 空间) \(\mathbb{R}^N &times; \mathbb{R}^K \xrightarrow{f &times; g} \mathbb{R}^M &times; \mathbb{R}^L\)</li>
+  <li>范畴 FinStoch
+    <ul>
+      <li>objects: finite sets</li>
+      <li>morphisms: Markov kernels</li>
+      <li>\((\mathrm{FinStoch}, &otimes;, \boldsymbol{1})\)</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h3>Lens Category</h3>
+<ul>
+  <li><b>Definition</b>: the category \(\mathrm{Len}(\mathcal{C})\)
+    <p><img src="/_img/cat-for-ai/lens-graph.svg" alt="/_img/cat-for-ai/lens-graph.svg" /></p>
+    <ul>
+      <li><b>objects</b>: pairs \(\left( \begin{matrix}A &#92; A'\end{matrix} \right)\) of objects in \(\mathcal{C}\)</li>
+      <li><b>morphism</b>: \(\left( \begin{matrix}A &#92; A'\end{matrix} \right) &rarr; \left( \begin{matrix}B &#92; B'\end{matrix} \right)\) is a pair \(\left( \mathrm{view}, \mathrm{upd} \right)\) where:
+        \(\begin{matrix} \mathrm{view} : A &rarr; B &#92; \mathrm{and} &#92; \mathrm{upd} : A &times; B' &rarr; A' \end{matrix}\) are morphisms in \(\mathcal{C}\).</li>
+    </ul>
+    <p>将其记为 \(\left( \begin{matrix}A &#92; A'\end{matrix} \right) \xrightarrow{\mathrm{view}, \mathrm{upd}} \left( \begin{matrix}B &#92; B'\end{matrix} \right)\).</p>
+    <ul>
+      <li><b>compositiion</b>: \(\left( \left( \begin{matrix}A &#92; A'\end{matrix} \right) \xrightarrow{(v_1, u_1)} \left( \begin{matrix}B &#92; B'\end{matrix} \right) \right) &circ; \left( \left( \begin{matrix}B &#92; B'\end{matrix} \right) \xrightarrow{(v_2, u_2)} \left( \begin{matrix}C &#92; C'\end{matrix} \right) \right) = \left( \begin{matrix}A &#92; A'\end{matrix} \right) \xrightarrow{(v, u)} \left( \begin{matrix}C &#92; C'\end{matrix} \right)\)
+        <ul>
+          <li>\(v = v_2 &circ; v_1\)</li>
+          <li>\(u(a, c) = u_1(a, u_2(v_1(a), c))\)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Lens category is a category where morphisms have a forward
+    and a backward component
+    <p>差不多的感觉就是 Lens 包含前向和反向.</p>
+  </li>
+</ul>
+<p>好了, 理论到此为止, 来点实际应用的:</p>
+<p>X as Lens</p>
+<ul>
+  <li><b>Derivatives</b> as Lens: \(\left( \begin{matrix} \mathbb{R}^2 &#92; \mathbb{R}^2 \end{matrix} \right) \xrightarrow{(f, &nabla; f)} \left( \begin{matrix} \mathbb{R} &#92; \mathbb{R} \end{matrix} \right)\)
+    <ul>
+      <li><b>Chain Rule</b> as Lens composition</li>
+      <li><b>Backprop</b>: functor \(\mathrm{Euc} &rarr; \mathrm{Lens}(\mathrm{Euc})\)</li>
+    </ul>
+  </li>
+  <li><b>Optimisers</b> as Lens: \(\left( \begin{matrix}\mathbb{R}^p &times; \mathbb{R}^p &#92; \mathbb{R}^p &times; \mathbb{R}^p\end{matrix} \right) \xrightarrow{(v, u)} \left( \begin{matrix}\mathbb{R}^p &#92; \mathbb{R}^p\end{matrix} \right)\)
+    <ul>
+      <li>Gradient Descent
+        <ul>
+          <li>\(v(w) = w\)</li>
+          <li>\(u(w, &Delta; w) = w - &alpha; &Delta; w\)</li>
+        </ul>
+      </li>
+      <li>Momentum
+        <ul>
+          <li>\(\mathrm{view}(v_{t-1}, w_t) = w_t - &gamma; v_{t - 1}\)</li>
+          <li>\(\mathrm{upd}(v_{t-1}, w_t, &Delta; w_t) = (v_t, w_{t+1})\)</li>
+          <li>\(v_t = &gamma; v_{t-1} + d &Delta; w_t\)</li>
+          <li>\(w_{t+1} = w_t - v_t\)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<details><summary>If you want to implement Lens</summary>
+<p>感觉实现 Lens 并不是一个非常困难的事情, 虽然理论听起来很复杂,
+  但是实现起来竟然异常的简单:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">lens</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">view</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:view</span>
+<span class="w">         </span><span class="nv">:initform</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Missing :view&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="nv">:documentation</span><span class="w"> </span><span class="s">&quot;view : A → B&quot;</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">upd</span><span class="w">  </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:upd</span>
+<span class="w">         </span><span class="nv">:initform</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Missing `:upd&#39;&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="nv">:documentation</span><span class="w"> </span><span class="s">&quot;upd : A × B&#39; → A&#39;&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span>
+<span class="w">   </span><span class="s">&quot;Monomorphic lenses, stored as a pair of maps. &quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">lens</span><span class="w"> </span><span class="p">(</span><span class="nf">view</span><span class="w"> </span><span class="nv">upd</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a `lens&#39; object. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="nv">view</span><span class="w"> </span><span class="nv">upd</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;lens</span><span class="w"> </span><span class="nv">:view</span><span class="w"> </span><span class="nv">view</span><span class="w"> </span><span class="nv">:upd</span><span class="w"> </span><span class="nv">upd</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">let-lens</span><span class="w"> </span><span class="p">(</span><span class="nf">bindings</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Bindings like (view upd lens). &quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">v</span><span class="w"> </span><span class="nv">u</span><span class="w"> </span><span class="nv">lens</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">bindings</span>
+<span class="w">               </span><span class="nv">collect</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">v</span><span class="w"> </span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="o">,</span><span class="nv">lens</span><span class="w"> </span><span class="ss">&#39;view</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">collect</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">u</span><span class="w"> </span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="o">,</span><span class="nv">lens</span><span class="w"> </span><span class="ss">&#39;upd</span><span class="p">)))</span>
+<span class="w">     </span><span class="o">,@</span><span class="nv">body</span><span class="p">))</span>
+
+<span class="c1">;; f ○ g = f(g(x))</span>
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nb">compose</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="nv">function</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">g</span><span class="w"> </span><span class="nv">function</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">x</span><span class="p">))))</span>
+
+<span class="c1">;; Lens1 ○ Lens2 : v = v2 ○ v1; u(a, c&#39;) = u1(a, u2(v1(a), c))</span>
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nb">compose</span><span class="w"> </span><span class="p">((</span><span class="nf">lens1</span><span class="w"> </span><span class="nv">lens</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">lens2</span><span class="w"> </span><span class="nv">lens</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">let-lens</span><span class="w"> </span><span class="p">((</span><span class="nf">v1</span><span class="w"> </span><span class="nv">u1</span><span class="w"> </span><span class="nv">lens1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">v2</span><span class="w"> </span><span class="nv">u2</span><span class="w"> </span><span class="nv">lens2</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">lens</span><span class="w"> </span><span class="p">(</span><span class="nb">compose</span><span class="w"> </span><span class="nv">v2</span><span class="w"> </span><span class="nv">v1</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">u1</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">u2</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">v1</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="nv">y</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">call</span><span class="w"> </span><span class="p">((</span><span class="nf">lens</span><span class="w"> </span><span class="nv">lens</span><span class="p">)</span><span class="w"> </span><span class="nv">pair</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">let-lens</span><span class="w"> </span><span class="p">((</span><span class="nf">v</span><span class="w"> </span><span class="nv">u</span><span class="w"> </span><span class="nv">lens</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">a</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pair</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">b</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">pair</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">v</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">u</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)))))</span>
+</pre></div>
+<ul>
+  <li>Derivatives as lens
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="p">(</span><span class="nf">vec</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x1</span><span class="w"> </span><span class="nv">x2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">x1</span><span class="w"> </span><span class="nv">x1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="nv">x2</span><span class="p">)))</span><span class="w"> </span><span class="nv">vec</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="p">(</span><span class="nf">vec</span><span class="w"> </span><span class="nv">dy</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x1</span><span class="w"> </span><span class="nv">x2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">x2</span><span class="p">))</span>
+<span class="w">                  </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="nv">x1</span><span class="w"> </span><span class="nv">dy</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="nv">dy</span><span class="p">)))</span>
+<span class="w">                </span><span class="nv">vec</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">call</span><span class="w"> </span><span class="p">(</span><span class="nf">lens</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;f</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;df</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="mf">0.1</span><span class="p">)))</span><span class="w"> </span><span class="c1">; (17 . (0.7 0.1))</span>
+</pre></div>
+  </li>
+  <li>Chain rule as lens composition
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="p">(</span><span class="nf">vec</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x1</span><span class="w"> </span><span class="nv">x2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">x1</span><span class="w"> </span><span class="nv">x1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="nv">x2</span><span class="p">)))</span><span class="w"> </span><span class="nv">vec</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="p">(</span><span class="nf">vec</span><span class="w"> </span><span class="nv">dy</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x1</span><span class="w"> </span><span class="nv">x2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">x2</span><span class="p">))</span>
+<span class="w">                  </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="nv">x1</span><span class="w"> </span><span class="nv">dy</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="nv">dy</span><span class="p">)))</span>
+<span class="w">                </span><span class="nv">vec</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">dcos</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">dy</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">sin</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="nv">dy</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">call</span><span class="w"> </span><span class="p">(</span><span class="nb">compose</span><span class="w"> </span><span class="p">(</span><span class="nf">lens</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;f</span><span class="w">   </span><span class="o">#</span><span class="ss">&#39;df</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">lens</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cos</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;dcos</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="mf">0.1</span><span class="p">)))</span><span class="w"> </span><span class="c1">; (-0.27516335 . (-0.5768385 -0.6729783))</span>
+</pre></div>
+  </li>
+  <li>即想要构造一个 backprop, 只需要构造:
+    <p><img src="/_img/cat-for-ai/backprop-and-lens.svg" alt="/_img/cat-for-ai/backprop-and-lens.svg" /></p>
+  </li>
+  <li>Optimisers as lenses</li>
+</ul>
+<p>注: 但是我并不觉得这个的实现做得比较好, 之后还是得想点方法来重新实现一下.
+  不过这种写法你完全可以直接迁移到其他编程语言, 比如 <code>C</code> 语言中去:</p>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">lens</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">view</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">upd</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">);</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Lens</span><span class="p">;</span>
+</pre></div>
+<p>虽然感觉会很麻烦就是了.</p>
+<p>注: 这里的实现并不好用, 实际使用的实现见 <a href="https://github.com/li-yiyang/cat4ai">cat4ai</a>.</p>
+</details>
+<h3>Optics Category</h3>
+<ul>
+  <li><b>Definition</b>: the category \(\mathrm{Optic}(\mathcal{C})\)
+    <ul>
+      <li><b>objects</b>: pairs \(\left( \begin{matrix}A &#92; A'\end{matrix} \right)\) of objects in \(\mathcal{C}\)</li>
+      <li><b>morphism</b>: \(\left( \begin{matrix}A &#92; A'\end{matrix} \right) \xrightarrow{(M, f, l)} \left( \begin{matrix}B &#92; B'\end{matrix} \right)\)
+        <ul>
+          <li>\(M &isin; \mathcal{C}\) object of \(\mathcal{C}\)</li>
+          <li>\(f : A &rarr; M &otimes; B\) morphisms</li>
+          <li>\(l : M &otimes; B' &rarr; A'\) morphisms</li>
+        </ul>
+      </li>
+      <li><b>compose</b>:
+        <ul>
+          <li>\((M_1, f_1, l_1) &circ; (M_2, f_2, l_2) &rArr; (M_1 &otimes; M_2, f_1 &circ; (f_2 &otimes; M), (M &otimes; l_2) &circ; l_1)\)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><b>WHY</b> Optics?
+    <ul>
+      <li>probabilitst bidrectional transformations</li>
+      <li>bidirectional transformations with side-effect</li>
+      <li>bidirectional transformations that operate on containers</li>
+    </ul>
+  </li>
+  <li>Examples</li>
+</ul>
+<h2>Categorical Foundations of Gradient-Based Learning</h2>
+<p>接下来的具体的代码实现可以参考 <a href="https://github.com/li-yiyang/cat4ai">cat4ai</a> 仓库.</p>
+<ul>
+  <li><b>Definition</b>: <b>Parametrized Category</b> <code>para</code>
+    <p><img src="/_img/cat-for-ai/para-cat-plot.svg" alt="/_img/cat-for-ai/para-cat-plot.svg" /></p>
+  </li>
+  <li><b>Definition</b>: <b>Lenses Category</b> <code>lens</code></li>
+</ul>
+<ul>
+  <li><b>Definition</b>: <b>Parametric Lenses Category</b> <code>param-lens</code></li>
+</ul>
+<h1>其他吐槽</h1>
+<ul>
+  <li>理论理论大好き?
+    <p>在导师点评的时候我意识到了这样的一个 &#8220;理论之所以学起来痛苦&#8221; 原因.
+      大家想要知道/学的东西是那种非常具体的东西. 比如说,
+      有人说自己搞出了万物理论, 或者做了很牛逼的东西.</p>
+    <p>但是在向你介绍的时候, 每快要逼近这个最终的结论的时候, 就要说一句:
+      &#8220;等等, 先让我介绍一下原理/前提&#8221;. 哇, 这种也太痛苦了&#8230;</p>
+    <p>这简直就是拼多多的再砍一刀啊. 这么搞很容易就会让大家失去兴趣了&#8230;
+      要是有能够将理论和实践结合起来的方法就好了. 比如讲完实例后,
+      再说: &#8220;欸, 其实我们刚刚做的东西的背后是这个理论. &#8220;, 然后再举几个例子,
+      最后再一般化&#8230;</p>
+    <p>但是感觉要求很高&#8230; 而且感觉, 尤其是数学方面折腾的例子,
+      感觉和 &#8220;应用&#8221; 和 &#8220;事例&#8221; 关系并不大. 真是难呢.</p>
+  </li>
+</ul>
+<h1>File Configures</h1>
+<h2>Graphviz Configures</h2>
+<div class="highlight"><pre><span></span><span class="na">rankdir</span><span class="p">=</span><span class="s">LR</span><span class="p">;</span>
+<span class="na">bgcolor</span><span class="p">=</span><span class="s2">&quot;transparent&quot;</span><span class="p">;</span>
+<span class="na">fontname</span><span class="p">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">;</span>
+<span class="na">color</span><span class="p">=</span><span class="s2">&quot;#888888&quot;</span><span class="p">;</span>
+<span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="p">=</span><span class="s2">&quot;circle&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">fontname</span><span class="p">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">color</span><span class="p">=</span><span class="s2">&quot;#888888&quot;</span><span class="p">];</span>
+<span class="k">edge</span><span class="w"> </span><span class="p">[</span><span class="na">fontname</span><span class="p">=</span><span class="s2">&quot;Arial&quot;</span><span class="p">,</span><span class="w"> </span><span class="na">color</span><span class="p">=</span><span class="s2">&quot;#888888&quot;</span><span class="p">];</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="na">color</span><span class="p">=</span><span class="s2">&quot;#888888:invis:#888888&quot;</span>
+</pre></div>
+<p>感觉自己纯手工敲这些 Graphviz 的绘图代码实在是太蠢了,
+  不过感觉自己以后应该也用不上画交换图这种技能,
+  这里暂时就忍了.</p>
+
+  </div><a class="u-url" href="/reading/cat-for-ai/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
