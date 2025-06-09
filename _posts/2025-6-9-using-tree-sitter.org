@@ -1,0 +1,605 @@
+#+title: Using Tree-sitter in Emacs
+#+date: 2025-06-09
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: emacs
+* About
+在写 [[https://cffi.common-lisp.dev/manual/cffi-manual.html][CFFI]] 的时候手动写一堆的 =cffi:defcfun= 实在是头痛,
+而使用 [[https://github.com/rpav/c2ffi][c2ffi]] 却并没有那么的省心.
+
+不过话又说回来了, 反正都是从 =*.h= 文件中读取函数的定义,
+然后按照一定的规则去生成代码 =cffi:defcfun=.
+一个简单的想法是写一个 parser, 然后把函数名和类型等提取,
+最后根据规则进行代码的生成 -- 但是为什么不直接利用 Emacs
+的 [[https://tree-sitter.github.io/tree-sitter/][Tree-sitter]] 的集成 ([[https://www.gnu.org/software/emacs/manual/html_node/elisp/Parsing-Program-Source.html][Parsing Program Source]]) 呢?
+
+* Requirement
+首先需要确保 Tree-sitter 在 Emacs 中是可用的:
+
+#+name: tree-sitter
+#+begin_src emacs-lisp :exports both
+  (treesit-available-p)
+#+end_src
+
+#+RESULTS: tree-sitter
+: t
+
+并且 C parser 已经被正确地安装了:
+
+#+name: tree-siter-install-c
+#+begin_src emacs-lisp
+  (treesit-install-language-grammar 'c)
+#+end_src
+
+注: 在 Emacs 29 之后 Tree-sitter 就已经被内置在了 Emacs 中,
+假如你的 Emacs 版本较早, 可以参考 [[https://emacs-tree-sitter.github.io/][emacs-tree-sitter]] 进行配置.
+
+* =*.h= \(\rightarrow\) =*.lisp= via Tree-sitter
+** Parse =*.h=
+假设有一个 =foo.h= 头文件被打开了 (其 buffer 名称为 =foo.h=),
+创建一个 Tree-sitter 的 parser:
+
+#+begin_html
+<details><summary>foo.h</summary>
+#+end_html
+
+#+begin_src c
+  #include "stdio.h"
+
+  typedef int bar;
+
+  void print_help_and_exit();
+
+  int some_funcions(bar *foo);
+#+end_src
+
+#+begin_html
+</details>
+#+end_html
+
+#+name: create-parser
+#+begin_src emacs-lisp
+  (defvar parser (treesit-parser-create 'c (get-buffer "foo.h")))
+#+end_src
+
+#+RESULTS: create-parser
+: parser
+
+注: 更多请参考 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Parser.html][Using Tree-sitter Parser]].
+
+** Extract infomation from Tree
+这里差不多用到了 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Retrieving-Nodes.html][Retrieving Nodes]] 和 [[https://www.gnu.org/software/emacs/manual/html_node/elisp/Accessing-Node-Information.html][Accessing Node Information]]
+这两个文档中说明的特性.
+
+使用 =treesit-node-children= 可以很方便地实现一个 =node= 的历遍:
+
+#+begin_src emacs-lisp
+  (defun treesit-node-sexp (node)
+    "Turn Tree-sitter NODE as S-expression. "
+    (let ((children (treesit-node-children node)))
+      (if (null children)
+          (list (treesit-node-type node)
+                (substring-no-properties (treesit-node-text node)))
+        (cons (treesit-node-type node)
+              (mapcar #'treesit-node-sexp children)))))
+#+end_src
+
+#+RESULTS:
+: treesit-node-sexp
+
+#+begin_html
+<details><summary>其效果类似如下</summary>
+#+end_html
+
+#+begin_src emacs-lisp :results pp :exports both
+  (treesit-node-sexp (treesit-parser-root-node parser))
+#+end_src
+
+#+RESULTS:
+#+begin_example
+("translation_unit"
+ ("preproc_include" ("#include" "#include")
+  ("string_literal" ("\"" "\"") ("string_content" "stdio.h")
+   ("\"" "\"")))
+ ("type_definition" ("typedef" "typedef") ("primitive_type" "int")
+  ("type_identifier" "bar") (";" ";"))
+ ("declaration" ("primitive_type" "void")
+  ("function_declarator" ("identifier" "print_help_and_exit")
+   ("parameter_list" ("(" "(") (")" ")")))
+  (";" ";"))
+ ("declaration" ("primitive_type" "int")
+  ("pointer_declarator" ("*" "*")
+   ("function_declarator" ("identifier" "some_funcions")
+    ("parameter_list" ("(" "(")
+     ("parameter_declaration" ("type_identifier" "bar")
+      ("pointer_declarator" ("*" "*") ("identifier" "foo")))
+     ("," ",")
+     ("parameter_declaration"
+      ("storage_class_specifier" ("static" "static"))
+      ("type_qualifier" ("const" "const")) ("primitive_type" "int")
+      ("identifier" "num"))
+     (")" ")"))))
+  (";" ";")))
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+不过其实也可以在 Buffer 中使用 =treesit-explore-mode= 来进行预览.
+
+#+begin_html
+<details><summary>效果如下</summary>
+#+end_html
+
+#+begin_example
+  (translation_unit
+   (preproc_include #include
+    path: (string_literal " (string_content) "))
+   (declaration type: (primitive_type)
+    declarator:
+     (function_declarator declarator: (identifier)
+      parameters: (parameter_list ( )))
+    ;)
+   (declaration type: (primitive_type)
+    declarator:
+     (function_declarator declarator: (identifier)
+      parameters:
+       (parameter_list (
+        (parameter_declaration type: (primitive_type)
+         declarator: (pointer_declarator * declarator: (identifier)))
+        )))
+    ;))
+#+end_example
+
+#+begin_html
+</details>
+#+end_html
+
+但是不经过筛选的 node 的处理有点麻烦, 虽然在前面的历遍函数上面添加一些判断,
+也能够让结果比较好用. 但是考虑到为啥不直接用现成的 =treesit-query-capture= 呢?
+
+#+begin_src emacs-lisp :results verbatim :exports both
+  (mapcar (lambda (query)
+            (let ((func (cdr query)))
+              (substring-no-properties (treesit-node-text func))))
+          (treesit-query-capture (treesit-parser-root-node parser)
+                                 '((declaration) @declaration)))
+#+end_src
+
+#+RESULTS:
+: ("void print_help_and_exit();" "int some_funcions(bar *foo);")
+
+现在你已经学会了从最简单的 tree 中提取节点了, 那么使用更加复杂一些的规则:
+
+#+begin_src emacs-lisp :results pp :exports both
+  (treesit-query-capture (treesit-parser-root-node parser)
+                         '((declaration
+                            declarator: (_ declarator: (_)))
+                           @declaration))
+#+end_src
+
+#+RESULTS:
+: ((declaration . #<treesit-node declaration in 39-66>)
+:  (declaration . #<treesit-node declaration in 68-119>))
+
+#+begin_html
+<details><summary>一个小小的 Tip</summary>
+#+end_html
+
+可以使用 =treesit-query-validate= 来对 =query= 进行合法性进行判断:
+
+#+begin_src emacs-lisp :exports both
+  (treesit-query-validate 'c
+                          '((declaration
+                             declarator: (function_declarator !body))
+                            @declaration))
+#+end_src
+
+#+RESULTS:
+: QUERY is valid
+
+#+begin_html
+</details>
+#+end_html
+
+既然已经能够写出这样稍微复杂一些的 query 规则...
+于是就可以写一个简单的函数来提取一个头文件中的所有函数定义,
+即对于找到的 =declaration=, 提取其中的函数返回类型, 函数名称以及函数参数.
+
+#+begin_example
+(type function &rest (type name))
+#+end_example
+
+这里有一个需要注意的点: 因为 Tree-sitter 会把 =*func= 变成
+=(pointer_declarator * declarator: (_))= 的形式,
+所以需要做一个简单的操作来把函数的类型 =type= 变成 =(:pointer type)= 这样的形式.
+
+#+begin_src emacs-lisp
+  (defun treesit-c--ptr-type (type declarator)
+    "Return pointer noted TYPE and DECLARATOR. "
+    (let ((pointer-p (string= "*" (treesit-node-text
+                                   (treesit-node-child declarator 0)))))
+      (if pointer-p
+          (treesit-c--ptr-type
+           (list :pointer type)
+           (treesit-node-child-by-field-name declarator "declarator"))
+        (cons type declarator))))
+#+end_src
+
+#+RESULTS:
+: treesit-c--ptr-type
+
+以及一些信息的提取:
+
+#+begin_src emacs-lisp
+  (defun treesit-node-text-no-property (node)
+    (substring-no-properties (treesit-node-text node)))
+#+end_src
+
+于是如下实现:
+
+#+begin_src emacs-lisp
+  (lexical-let ((func-query (treesit-query-compile
+                             'c
+                             '((declaration
+                                type:       (_)                 @type
+                                declarator: (_ declarator: (_)) @declarator))))
+                (para-query (treesit-query-compile 'c
+                                                   '((parameter_declaration
+                                                      type: (_)       @type
+                                                      declarator: (_) @declarator)))))
+    (defun treesit-c--function-declarations (root)
+      (cl-loop with matched = (treesit-query-capture root func-query)
+               for ((_ . type) (_ . declarator)) on matched by #'cddr
+               for (type* . declare) = (treesit-c--ptr-type
+                                        (treesit-node-text-no-property type)
+                                        declarator)
+               for name  = (treesit-node-child-by-field-name declare "declarator")
+               for params =
+               (cl-loop with p* = (treesit-query-capture declare para-query)
+                        for ((_ . type) (_ . declarator)) on p* by #'cddr
+                        for (type* . declare) = (treesit-c--ptr-type
+                                                 (treesit-node-text-no-property type)
+                                                  declarator)
+                        collect (list type* (treesit-node-text-no-property declare)))
+               collect `(,type*
+                         ,(treesit-node-text-no-property name)
+                         ,@params))))
+#+end_src
+
+#+RESULTS:
+: treesit-c--function-declarations
+
+于是最终的效果就如下所示:
+
+#+begin_src emacs-lisp :results pp :exports both
+  (treesit-c--function-declarations (treesit-parser-root-node parser))
+#+end_src
+
+#+RESULTS:
+: (("void" "print_help_and_exit")
+:  ((:pointer "int") "some_funcions" ((:pointer "bar") "foo")
+:   ("int" "num")))
+
+** Tree to =cffi:defcfun=
+于是就可以用这样的规则来生成 =cffi:defcfun= 的函数定义了:
+
+#+name: gen-cffi-defcfun
+#+header: :var definitions=(treesit-c--function-declarations (treesit-parser-root-node parser))
+#+begin_src emacs-lisp :wrap "src lisp" :exports both
+  (mapconcat
+   (lambda (definition)
+     (cl-destructuring-bind (type name . params) definition
+       (concat (format "(cffi:defcfun (%s %S) %s"
+                       (string-param-case name) name
+                       (c-type-to-lisp-name type))
+               (if params "\n" "")
+               (string-join (cl-loop for (type var) in params
+                                     collect (format "  (%s %s)"
+                                                     (string-param-case   var)
+                                                     (c-type-to-lisp-name type)))
+                            "\n")
+               ")")))
+   definitions
+   "\n\n")
+#+end_src
+
+#+RESULTS:
+#+begin_src lisp
+(cffi:defcfun (print_help_and_exit "print_help_and_exit") :void)
+
+(cffi:defcfun (some_funcions "some_funcions") (:pointer :int)
+  (foo (:pointer bar))
+  (num :int))
+#+end_src
+
+#+begin_html
+<details><summary>这里用到的一些其他的函数</summary>
+#+end_html
+
+#+begin_src emacs-lisp
+  (defvar c-type-lisp-name-alist
+    '(("int"   . :int)
+      ("float" . :float)
+      ("void"  . :void)
+      ("char"  . :char)
+      ("size_t" . :size)))
+
+  (defun c-type-to-lisp-name (type)
+    (if (atom type)
+        (or (cdr (assoc type c-type-lisp-name-alist #'string=))
+            type)
+      (list (car type) (c-type-to-lisp-name (cadr type)))))
+
+  ;; TODO
+  (defun string-param-case (string) string)
+#+end_src
+
+#+RESULTS:
+: string-param-case
+
+注: 这里参考 [[https://cffi.common-lisp.dev/manual/cffi-manual.html#Built_002dIn-Types][6.1 Built-In Types]] 作为 =c-type-lisp-name-alist= 的定义.
+
+#+begin_html
+</details>
+#+end_html
+
+实际上的效果还行, 如果愿意处理一下更多的边缘条件的话, 感觉可以做得更好一些.
+
+#+begin_html
+<details><summary>那么挑战一下稍微复杂一些的真实环境中的头文件的解析</summary>
+#+end_html
+
+这里用的是苹果的 [[https://github.com/ml-explore/mlx-c/blob/main/mlx/c/array.h][MLX]] (一个接下来想做的东西) 作为测试例子:
+
+#+begin_src emacs-lisp
+  (setq parser (treesit-parser-create 'c (get-buffer "array.h")))
+#+end_src
+
+#+RESULTS:
+: #<treesit-parser for c>
+
+最终的效果如下:
+
+#+call: gen-cffi-defcfun[:exports results]()
+
+#+begin_src lisp
+(cffi:defcfun (mlx_dtype_size "mlx_dtype_size") :size
+  (dtype mlx_dtype))
+
+(cffi:defcfun (mlx_array_tostring "mlx_array_tostring") :int
+  (str (:pointer mlx_string))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_new "mlx_array_new") mlx_array)
+
+(cffi:defcfun (mlx_array_free "mlx_array_free") :int
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_new_bool "mlx_array_new_bool") mlx_array
+  (val bool))
+
+(cffi:defcfun (mlx_array_new_int "mlx_array_new_int") mlx_array
+  (val :int))
+
+(cffi:defcfun (mlx_array_new_float32 "mlx_array_new_float32") mlx_array
+  (val :float))
+
+(cffi:defcfun (mlx_array_new_float "mlx_array_new_float") mlx_array
+  (val :float))
+
+(cffi:defcfun (mlx_array_new_float64 "mlx_array_new_float64") mlx_array
+  (val double))
+
+(cffi:defcfun (mlx_array_new_double "mlx_array_new_double") mlx_array
+  (val double))
+
+(cffi:defcfun (mlx_array_new_complex "mlx_array_new_complex") mlx_array
+  (real_val :float)
+  (imag_val :float))
+
+(cffi:defcfun (mlx_array_new_data "mlx_array_new_data") mlx_array
+  (data (:pointer :void))
+  (shape (:pointer :int))
+  (dim :int)
+  (dtype mlx_dtype))
+
+(cffi:defcfun (mlx_array_set "mlx_array_set") :int
+  (arr (:pointer mlx_array))
+  (src mlx_array))
+
+(cffi:defcfun (mlx_array_set_bool "mlx_array_set_bool") :int
+  (arr (:pointer mlx_array))
+  (val bool))
+
+(cffi:defcfun (mlx_array_set_int "mlx_array_set_int") :int
+  (arr (:pointer mlx_array))
+  (val :int))
+
+(cffi:defcfun (mlx_array_set_float32 "mlx_array_set_float32") :int
+  (arr (:pointer mlx_array))
+  (val :float))
+
+(cffi:defcfun (mlx_array_set_float "mlx_array_set_float") :int
+  (arr (:pointer mlx_array))
+  (val :float))
+
+(cffi:defcfun (mlx_array_set_float64 "mlx_array_set_float64") :int
+  (arr (:pointer mlx_array))
+  (val double))
+
+(cffi:defcfun (mlx_array_set_double "mlx_array_set_double") :int
+  (arr (:pointer mlx_array))
+  (val double))
+
+(cffi:defcfun (mlx_array_set_complex "mlx_array_set_complex") :int
+  (arr (:pointer mlx_array))
+  (real_val :float)
+  (imag_val :float))
+
+(cffi:defcfun (mlx_array_set_data "mlx_array_set_data") :int
+  (arr (:pointer mlx_array))
+  (data (:pointer :void))
+  (shape (:pointer :int))
+  (dim :int)
+  (dtype mlx_dtype))
+
+(cffi:defcfun (mlx_array_itemsize "mlx_array_itemsize") :size
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_size "mlx_array_size") :size
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_nbytes "mlx_array_nbytes") :size
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_ndim "mlx_array_ndim") :size
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_shape "mlx_array_shape") (:pointer :int)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_strides "mlx_array_strides") (:pointer :size)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_dim "mlx_array_dim") :int
+  (arr mlx_array)
+  (dim :int))
+
+(cffi:defcfun (mlx_array_dtype "mlx_array_dtype") mlx_dtype
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_eval "mlx_array_eval") :int
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_bool "mlx_array_item_bool") :int
+  (res (:pointer bool))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_uint8 "mlx_array_item_uint8") :int
+  (res (:pointer uint8_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_uint16 "mlx_array_item_uint16") :int
+  (res (:pointer uint16_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_uint32 "mlx_array_item_uint32") :int
+  (res (:pointer uint32_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_uint64 "mlx_array_item_uint64") :int
+  (res (:pointer uint64_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_int8 "mlx_array_item_int8") :int
+  (res (:pointer int8_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_int16 "mlx_array_item_int16") :int
+  (res (:pointer int16_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_int32 "mlx_array_item_int32") :int
+  (res (:pointer int32_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_int64 "mlx_array_item_int64") :int
+  (res (:pointer int64_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_float32 "mlx_array_item_float32") :int
+  (res (:pointer :float))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_float64 "mlx_array_item_float64") :int
+  (res (:pointer double))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_complex64 "mlx_array_item_complex64") :int
+  (res (:pointer :float))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_float16 "mlx_array_item_float16") :int
+  (res (:pointer float16_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_item_bfloat16 "mlx_array_item_bfloat16") :int
+  (res (:pointer bfloat16_t))
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_bool "mlx_array_data_bool") (:pointer bool)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_uint8 "mlx_array_data_uint8") (:pointer uint8_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_uint16 "mlx_array_data_uint16") (:pointer uint16_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_uint32 "mlx_array_data_uint32") (:pointer uint32_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_uint64 "mlx_array_data_uint64") (:pointer uint64_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_int8 "mlx_array_data_int8") (:pointer int8_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_int16 "mlx_array_data_int16") (:pointer int16_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_int32 "mlx_array_data_int32") (:pointer int32_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_int64 "mlx_array_data_int64") (:pointer int64_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_float32 "mlx_array_data_float32") (:pointer :float)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_float64 "mlx_array_data_float64") (:pointer double)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_complex64 "mlx_array_data_complex64") (:pointer :float)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_float16 "mlx_array_data_float16") (:pointer float16_t)
+  (arr mlx_array))
+
+(cffi:defcfun (mlx_array_data_bfloat16 "mlx_array_data_bfloat16") (:pointer bfloat16_t)
+  (arr mlx_array))
+
+(cffi:defcfun (_mlx_array_is_available "_mlx_array_is_available") :int
+  (res (:pointer bool))
+  (arr mlx_array))
+
+(cffi:defcfun (_mlx_array_wait "_mlx_array_wait") :int
+  (arr mlx_array))
+
+(cffi:defcfun (_mlx_array_is_contiguous "_mlx_array_is_contiguous") :int
+  (res (:pointer bool))
+  (arr mlx_array))
+
+(cffi:defcfun (_mlx_array_is_row_contiguous "_mlx_array_is_row_contiguous") :int
+  (res (:pointer bool))
+  (arr mlx_array))
+
+(cffi:defcfun (_mlx_array_is_col_contiguous "_mlx_array_is_col_contiguous") :int
+  (res (:pointer bool))
+  (arr mlx_array))
+#+end_src
+
+感觉挺好的, 这样的话, 只需要进行一些简单的例外处理即可,
+而对应的数据类型 (比如 =mlx_array=) 可以自己做 wrapping,
+这样的话就会比 c2ffi 多一些自由度了.
+
+#+begin_html
+</details>
+#+end_html
+
+* Ending
+花了一天多才写好的简单小功能, 感觉最近编程的动力极其的弱... 啥也不想干,
+这毕设真是害人啊, 坏了我的作息也磨灭了我的心情... 
