@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Make A Turing Machine Yourself | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Make A Turing Machine Yourself" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Make A Turing Machine Yourself What’s Turing Machine? Purely formally a Turing machine can be specified as a quadruple $T = (Q, \Sigma, s, \delta)$ where: $Q$ is a finite set of states $q$ $\Sigma$ is a finite set of symbols $s$ is the initial state, $s \in Q$ $\delta$ is a transition function determining the next move: \(\delta : (Q \times \Sigma) \rightarrow (\Sigma \times \{L, R\} \times Q)\) The transition function for the machine T is a function from computation states to computation states. If $\delta (q_i, S_i) = (S_{i, j}, D, q_{i, j})$, then when the machine’s state is $q_j$, reading the symbol $S_j, T$ replaces $S_j$ by $S_{i, j}$, moves in direction $D \in {L, R}$ and goes to state $q_{i, j}$. Turing Machines form Stanford Encyclopedia of Philosophy" />
+<meta property="og:description" content="Make A Turing Machine Yourself What’s Turing Machine? Purely formally a Turing machine can be specified as a quadruple $T = (Q, \Sigma, s, \delta)$ where: $Q$ is a finite set of states $q$ $\Sigma$ is a finite set of symbols $s$ is the initial state, $s \in Q$ $\delta$ is a transition function determining the next move: \(\delta : (Q \times \Sigma) \rightarrow (\Sigma \times \{L, R\} \times Q)\) The transition function for the machine T is a function from computation states to computation states. If $\delta (q_i, S_i) = (S_{i, j}, D, q_{i, j})$, then when the machine’s state is $q_j$, reading the symbol $S_j, T$ replaces $S_j$ by $S_{i, j}$, moves in direction $D \in {L, R}$ and goes to state $q_{i, j}$. Turing Machines form Stanford Encyclopedia of Philosophy" />
+<link rel="canonical" href="/ruby/turing-machine/" />
+<meta property="og:url" content="/ruby/turing-machine/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-04-25T05:02:15+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Make A Turing Machine Yourself" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-04-25T05:02:15+00:00","datePublished":"2022-04-25T05:02:15+00:00","description":"Make A Turing Machine Yourself What’s Turing Machine? Purely formally a Turing machine can be specified as a quadruple $T = (Q, \\Sigma, s, \\delta)$ where: $Q$ is a finite set of states $q$ $\\Sigma$ is a finite set of symbols $s$ is the initial state, $s \\in Q$ $\\delta$ is a transition function determining the next move: \\(\\delta : (Q \\times \\Sigma) \\rightarrow (\\Sigma \\times \\{L, R\\} \\times Q)\\) The transition function for the machine T is a function from computation states to computation states. If $\\delta (q_i, S_i) = (S_{i, j}, D, q_{i, j})$, then when the machine’s state is $q_j$, reading the symbol $S_j, T$ replaces $S_j$ by $S_{i, j}$, moves in direction $D \\in {L, R}$ and goes to state $q_{i, j}$. Turing Machines form Stanford Encyclopedia of Philosophy","headline":"Make A Turing Machine Yourself","mainEntityOfPage":{"@type":"WebPage","@id":"/ruby/turing-machine/"},"url":"/ruby/turing-machine/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Make A Turing Machine Yourself</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-04-25T05:02:15+00:00" itemprop="datePublished">Apr 25, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="make-a-turing-machine-yourself">Make A Turing Machine Yourself</h1>
+<h2 id="whats-turing-machine">What’s Turing Machine?</h2>
+<blockquote>
+  <p>Purely formally a Turing machine can be specified as a quadruple $T = (Q, \Sigma, s, \delta)$ where:</p>
+  <ul>
+    <li>$Q$ is a finite set of states $q$</li>
+    <li>$\Sigma$ is a finite set of symbols</li>
+    <li>$s$ is the initial state, $s \in Q$</li>
+    <li>$\delta$ is a transition function determining the next move:     <br />
+\(\delta : (Q \times \Sigma) \rightarrow (\Sigma \times \{L, R\} \times Q)\)</li>
+  </ul>
+
+  <p>The transition function for the machine T is a function from computation states to computation states. If $\delta (q_i, S_i) = (S_{i, j}, D, q_{i, j})$, then when the machine’s state is $q_j$, reading the symbol $S_j, T$ replaces $S_j$ by $S_{i, j}$, moves in direction $D \in {L, R}$ and goes to state $q_{i, j}$.</p>
+
+  <p><a href="https://plato.stanford.edu/entries/turing-machine/">Turing Machines form Stanford Encyclopedia of Philosophy</a></p>
+</blockquote>
+
+<blockquote>
+  <p>Note: there are also a similar but little different formal <a href="https://en.wikipedia.org/wiki/Turing_machine">definition</a>.</p>
+
+  <p>I won’t cover much of the history about Turing Machine, so if you like, please refer to the wiki for its history.</p>
+</blockquote>
+
+<p>呃, 看起来也许有一种不明觉历的庄严感, 但是实际上图灵机(Turing Machine)是一种非常简单的计算机模型.</p>
+
+<p>(注: 这个简单更应该说是结构简单. 但是虽然结构很简单很基础, 但是并不代表给它编写程序会是一种让人愉悦的事情. 我不会强调和注重编写程序的效率和速度之类的东西, 毕竟这些还是交给计算机系的人来卷吧. 我们的目标就是能动的图灵机! )</p>
+
+<h2 id="先把图灵机形式化的定义扔到一边">先把图灵机形式化的定义扔到一边</h2>
+<p>(假如你觉得图灵机的形式化定义非常容易理解的话, 那么还是直接跳过看看代码的实现吧. 因为我觉得代码就足够具有表现力了. )</p>
+
+<h3 id="三点一线的生活">三点一线的生活</h3>
+<p>我记得曾经有一种非常文艺地表现自己生活单调贫瘠的说法: 宿舍 - 食堂 - 教室, “三点一线的生活”. 这里就体现了一个过程: 从一个状态变化到下一个状态. 每一个状态下都会执行相应的动作. 做完了动作就会移动到下一个状态.</p>
+
+<p>虽然不愿意这样说, 但是这样的生活就是一种简单的”计算机”. 稍微用形式化的书写来表达就是:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>宿舍: 摆大烂 -&gt; 食堂
+食堂: 吃饭   -&gt; 教室
+教室: 上课   -&gt; 宿舍
+</code></pre></div></div>
+
+<p>我们会发现, 将我们的状态首尾相接, 就组成了一个类似于环状的结构. 于是就像是土拨鼠之日一样, 我们就处于一个循环的状态.</p>
+
+<p><img src="/_img/computer-toys/turing-machine/01.png" alt="状态转移图" title="我们管这样的图叫做状态转移图, 用来直观地表现状态之间的转移关系." /></p>
+
+<h3 id="all-works-and-no-play">All Works And No Play…</h3>
+<p>但是除了上课, 我们实际上还有放假啊. 假如说每天你在宿舍里都会检查一下今天的日程表, 假如期盼的假期终于来到, 那么你就打算一直在宿舍里面摆大烂. 除非你的美好假期在光影如梭中消失不见.</p>
+
+<p>这个时候, 我们做了一个读取信息的操作. 于是上面的故事就需要稍微修改一下了: 在寝室, 读取日历, 如果是”weekends”, 就在寝室一直摆烂; 如果是”weekdays”, 就去食堂… 那么形式化的写法就是:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>寝室, read weekends: 摆烂 -&gt; 寝室
+寝室, read weekdays: 摆烂 -&gt; 食堂
+食堂, read #: 吃饭   -&gt; 教室
+教室, read #: 上课   -&gt; 宿舍
+</code></pre></div></div>
+
+<p>(其中为了格式一致, 我们在原来的食堂和教室后面也加上了<code class="language-plaintext highlighter-rouge">read</code>的标志. )</p>
+
+<p>这个时候, 我们就相当于实现了一个条件判断. 在原来的基础上, 我们通过条件的分支在原来的基础新加入了一个循环(双循环可还行).</p>
+
+<p><img src="/_img/computer-toys/turing-machine/02.png" alt="状态转移图" title="注意观察里面有两个环状的结构, 也就是在'寝室'这个分支节点上生长出了两个循环的结构." /></p>
+
+<h3 id="开始与结束">开始与结束</h3>
+<p>其实我们的人生并不是这么可怕的土拨鼠之日的循环的, (像这样的无限循环能否迎来终结之日的问题, 叫做图灵停机问题, 比如说是Alan Turing为了研究哥德尔不完备性定理想出的一个东西. 这里我们就不必这么高大上地介绍了. ) 一件合理点的事情, 总该是有开始, 也总该是有结束的. 同理, 我们的”计算机”也应该有开始和结束.</p>
+
+<p>让我们加入一点点的新的状态:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>开始(开学), read enrollment: 去学校 -&gt; 寝室
+寝室, read weekends: 摆烂 -&gt; 寝室
+寝室, read weekdays: 摆烂 -&gt; 食堂
+寝室, read schoolend: 回家 -&gt; 结束
+食堂, read #: 吃饭   -&gt; 教室
+教室, read #: 上课   -&gt; 宿舍
+</code></pre></div></div>
+
+<p>请思考这两个状态有什么用. <del>我不会告诉你我在图片上面加了一个注释, 里面写了一些我自己的理解的.</del></p>
+
+<p><img src="/_img/computer-toys/turing-machine/03.png" alt="状态转移图" title="现在我们有了两个特殊的状态叫做开始和结束, 对于这两个状态, 一个是一开始就处于的状态, 另外一个这是处于结束状态的时候, 我们就会一直停止在这个状态, 也就是所谓的停机问题. " /></p>
+
+<h3 id="那么能不能把你做了什么说得更加清楚一些呢">那么能不能把你做了什么说得更加清楚一些呢?</h3>
+<p>其实上面我做了什么实在是有点, 怎么说呢, 太抽象了. 假如计算机能够理解的话, 估计人工智能系的那帮人要肝好久了. 那么我们就写得详细一点吧:</p>
+
+<p>什么是摆烂呢? 就是在日程表上写下”时光飞逝, 我在摆烂”, 然后看着时间流逝把你的日程表从此刻拨到下一刻:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>寝室, read weekends: write "时光飞逝, 我在摆烂", move next_schedule -&gt; 寝室
+</code></pre></div></div>
+
+<p>那么这个时候, 我们相当于就已经实现了一个”完整”的图灵机了. 虽然格式不太严格, 但是总归来说还算是该有的都有了. 那么总结一下:</p>
+<ul>
+  <li>我们的所有操作都是在一个”日程表”(或者也可以叫纸带什么的)上进行的
+    <ul>
+      <li>我们可以从日程表上读取<code class="language-plaintext highlighter-rouge">read</code>数据</li>
+      <li>我们也可以在日程表上写入<code class="language-plaintext highlighter-rouge">write</code>数据</li>
+      <li>在每次操作(读和写)后, 我们可以选择在日程表上移动, 也就是对应着一个日程表上的位置.</li>
+    </ul>
+  </li>
+  <li>我们操作以及操作的规则是由我们的状态和读取的规则来确定的, 就好像是在<code class="language-plaintext highlighter-rouge">寝室</code>这个状态, 读取到的<code class="language-plaintext highlighter-rouge">weekends</code>的数据, 就决定了我们的<code class="language-plaintext highlighter-rouge">write</code>和<code class="language-plaintext highlighter-rouge">move</code>的具体的行为.</li>
+</ul>
+
+<p>那么假如我们想要制作一个图灵机, 我们只需要制作一个能够按照规则, 从纸带上读取, 写入, 移动, 然后转换状态的机器即可.</p>
+
+<h2 id="用ruby制作一个图灵机">用Ruby制作一个图灵机</h2>
+<p>为了简单, 我们将会把上面的例子里面的图灵机做一个简化, 把命令形式改写成如下形式:</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>状态, 读取, 写入, 移动, 下一个状态
+</code></pre></div></div>
+
+<p>并且限制我们的图灵机每次只能够读取和写入1个字符. (就是为了体现一个未经世事的图灵机的感觉. )</p>
+
+<h3 id="读取并识别规则集">读取并识别规则集</h3>
+<p>我们肯定希望能够每次读取一个已经写好的规则(因为怎么说呢, 图灵机的规则输入还是挺麻烦的, 最好是能够保存在一个文本文件里面, 然后每次载入一个规则集. )</p>
+
+<p>那么我们就写一个读取的函数:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+  <span class="c1"># 返回的指令集为 instructions</span>
+  <span class="n">instructions</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="c1"># 读取文件的每一行</span>
+  <span class="no">File</span><span class="p">.</span><span class="nf">open</span><span class="p">(</span><span class="n">path</span><span class="p">).</span><span class="nf">each_line</span> <span class="k">do</span> <span class="o">|</span><span class="n">line</span><span class="o">|</span>
+    <span class="c1"># 去掉空白符和换行符</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">.</span><span class="nf">strip</span><span class="p">.</span><span class="nf">gsub</span><span class="p">(</span><span class="s2">" "</span><span class="p">,</span> <span class="s2">""</span><span class="p">).</span><span class="nf">split</span><span class="p">(</span><span class="s2">","</span><span class="p">)</span>
+    <span class="c1"># 只选择符合条件的命令输入</span>
+    <span class="k">if</span> <span class="n">line</span><span class="p">.</span><span class="nf">length</span> <span class="o">==</span> <span class="mi">5</span>
+      <span class="c1"># 多赋值, 只是一个小技巧而已</span>
+      <span class="n">key</span><span class="p">,</span> <span class="n">sub_key</span><span class="p">,</span> <span class="o">*</span><span class="n">value</span> <span class="o">=</span> <span class="o">*</span><span class="n">line</span>
+      <span class="c1"># 初始化状态</span>
+      <span class="n">instructions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span> <span class="k">unless</span> <span class="n">instructions</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+      <span class="c1"># 写入读取的规则</span>
+      <span class="n">instructions</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">sub_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">end</span>
+  <span class="k">end</span>
+  <span class="c1"># 返回处理过后的数据</span>
+  <span class="k">return</span> <span class="n">instructions</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>假如我们讲读取的规则储存在<code class="language-plaintext highlighter-rouge">instructions = read_file("code.txt")</code>中, 这样我们就可以通过<code class="language-plaintext highlighter-rouge">write, move, next_state = instrcutions[state][read]</code>这样的方法来读取写入的数据, 移动的方向和下一个的状态名称了.</p>
+
+<h3 id="执行机器">执行机器</h3>
+<p>我们不妨设计这样的一个机器, 它初始化的时候, 处于<code class="language-plaintext highlighter-rouge">"q0"</code>状态, 也就是我们的开始状态. 初始化的时候会读取一个规则集. 然后初始化的时候, 我们会有一条纸带. (这里不妨设纸带一开始就是空的).</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Machine</span>
+  <span class="c1"># 新建一个图灵机, 默认纸带为空</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">string</span> <span class="o">=</span> <span class="s2">""</span><span class="p">)</span>
+    <span class="c1"># 规则集</span>
+    <span class="vi">@instructions</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># 初始化</span>
+    <span class="n">set</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 设置纸带上原本就有的内容, 初始化</span>
+  <span class="k">def</span> <span class="nf">set</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+    <span class="c1"># 初始状态为 "q0"</span>
+    <span class="vi">@state</span> <span class="o">=</span> <span class="s2">"q0"</span>
+    <span class="c1"># 初始在纸带上的位置</span>
+    <span class="vi">@head</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="vi">@strings</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># 将纸带写成{:"0" =&gt; "B", :"1" =&gt; "B"}的形式</span>
+    <span class="c1"># 如果输入是空的话, 就变成不处理了</span>
+    <span class="n">string</span><span class="p">.</span><span class="nf">length</span><span class="p">.</span><span class="nf">times</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+      <span class="vi">@strings</span><span class="p">[</span><span class="n">i</span><span class="p">.</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">string</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">end</span> <span class="k">if</span> <span class="n">string</span> <span class="o">!=</span> <span class="s2">""</span>
+  <span class="k">end</span>
+
+  <span class="c1"># 从文件中读取规则集</span>
+  <span class="k">def</span> <span class="nf">read_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>注意到上面我们定义了纸带的储存方法, 我们定义假如纸带上读到了没有写数据的地方的话, 就返回一个特殊字符叫做<code class="language-plaintext highlighter-rouge">"B"</code>, 这个字符可以表示这里什么也没有. 于是我们就可以构造<code class="language-plaintext highlighter-rouge">read</code>和<code class="language-plaintext highlighter-rouge">write</code>命令. 不过先把这个东西放在一边, 我们先构造一个最基本的规则实现的函数吧:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">step</span>
+  <span class="c1"># read() 返回 @head 所在的位置的 @strings 上的数据</span>
+  <span class="n">write_char</span><span class="p">,</span> <span class="n">move_to</span><span class="p">,</span> <span class="vi">@state</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="vi">@instructions</span><span class="p">[</span><span class="vi">@state</span><span class="p">][</span><span class="n">read</span><span class="p">()])</span>
+  <span class="c1"># write(char) 会在 @head 所在的位置写入 char</span>
+  <span class="n">write</span><span class="p">(</span><span class="n">write_char</span><span class="p">)</span>
+  <span class="c1"># move_to(forward) 会根据 forward 来移动 @head</span>
+  <span class="n">move</span><span class="p">(</span><span class="n">move_to</span><span class="p">)</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>然后我们根据上面的规定来写出一点点的读写代码:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">read</span>
+  <span class="c1"># 把 @head 转换为 @strings 中的标签</span>
+  <span class="n">head</span> <span class="o">=</span> <span class="vi">@head</span><span class="p">.</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_sym</span>
+  <span class="c1"># 假如没有数据, 就是 "B"</span>
+  <span class="k">if</span> <span class="vi">@strings</span><span class="p">.</span><span class="nf">include?</span> <span class="n">head</span>
+    <span class="k">return</span> <span class="vi">@strings</span><span class="p">[</span><span class="n">head</span><span class="p">]</span>
+  <span class="k">else</span>
+    <span class="k">return</span> <span class="vi">@strings</span><span class="p">[</span><span class="n">head</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"B"</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+  <span class="vi">@strings</span><span class="p">[</span><span class="vi">@head</span><span class="p">.</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_sym</span><span class="p">]</span> <span class="o">=</span> <span class="n">char</span>
+<span class="k">end</span>
+
+<span class="k">def</span> <span class="nf">move</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span>
+  <span class="c1"># 只有两种移动方式, 向左, 向右, 否则就报错</span>
+  <span class="k">if</span> <span class="n">forward</span> <span class="o">==</span> <span class="s2">"L"</span>
+    <span class="vi">@head</span> <span class="o">-=</span> <span class="mi">1</span>
+  <span class="k">elsif</span> <span class="n">forward</span> <span class="o">==</span> <span class="s2">"R"</span>
+    <span class="vi">@head</span> <span class="o">+=</span> <span class="mi">1</span>
+  <span class="k">else</span>
+    <span class="k">raise</span> <span class="s2">"Error when moving! "</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>于是我们就完成了最基本的图灵机的部分了.</p>
+
+<p>在irb中尝试一下, 其中的<code class="language-plaintext highlighter-rouge">code.txt</code>里面是一个将等号前面所有的<code class="language-plaintext highlighter-rouge">1</code>移动到等号后面的一个图灵机程序, (虽然我们课上叫它一进制加法, 乐).</p>
+
+<details>
+<summary> 其中, 我们的图灵机代码储存在"main.rb"里面, 而我们的"code.txt"里面是一个将等号前面所有的"1"移动到等号后面的一个图灵机程序, 虽然我们课上叫它一进制加法, 乐. (点击展开查看) </summary>
+
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">q0, +, +, R, q0
+q0, =, =, R, qa
+q0, 1, e, R, q1
+q0, E, E, L, qa
+q1, 1, 1, R, q1
+q1, +, +, R, q1
+q1, =, =, R, q1
+q1, B, 1, L, q2
+q2, 1, 1, L, q2
+q2, +, +, L, q2
+q2, =, =, L, q2
+q2, e, 1, R, q0</code></pre></figure>
+
+</details>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">001</span> <span class="o">&gt;</span> <span class="nb">load</span> <span class="s2">"main.rb"</span>
+ <span class="o">=&gt;</span> <span class="kp">true</span> 
+<span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">002</span> <span class="o">&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="no">Machine</span><span class="p">.</span><span class="nf">new</span> <span class="s2">"code.txt"</span><span class="p">,</span> <span class="s2">"11+111="</span>
+ <span class="o">=&gt;</span> <span class="c1">#&lt;Machine:0x0000000120866138 @instructions={"q0"=&gt;{"+"=&gt;["+", "R", "q0... </span>
+<span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">003</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="nf">step</span>
+ <span class="o">=&gt;</span> <span class="mi">1</span> 
+</code></pre></div></div>
+
+<p>坏了, 我们忘记了给这个东西写一个漂亮的输出了!</p>
+
+<p>现在补救还来得及, 但是既然准备上手了, 为什么不试试看给它来点高级的功能呢?</p>
+
+<details>
+<summary>高级代码, 点击就送. (啊, 999999!!!! 你砍了我好多刀啊. )</summary>
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="c1"># step 的缩写, 是带有输出的step</span>
+<span class="k">def</span> <span class="nf">s</span>
+  <span class="n">step</span><span class="p">()</span>
+  <span class="nb">puts</span> <span class="n">output</span><span class="p">()</span>
+<span class="k">end</span>
+
+<span class="c1"># 输出一个字符串</span>
+ <span class="k">def</span> <span class="nf">output</span>
+  <span class="c1"># 防止 @head 在的地方什么也没有, </span>
+  <span class="c1"># 所以先读一次, 至少写一个 "B" 进去</span>
+  <span class="n">read</span><span class="p">()</span>
+  <span class="c1"># 输出 @head 头的位置</span>
+  <span class="n">num</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="c1"># 输出的值</span>
+  <span class="n">res</span> <span class="o">=</span> <span class="s2">""</span>
+  <span class="c1"># 按照 key 的数值大小来排序</span>
+  <span class="vi">@strings</span><span class="p">.</span><span class="nf">to_a</span><span class="p">.</span><span class="nf">sort_by</span><span class="p">{</span><span class="o">|</span><span class="n">item</span><span class="o">|</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_i</span> <span class="p">}.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">item</span><span class="o">|</span>
+    <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="n">item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># 找到了 @head 头的位置</span>
+    <span class="n">num</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_i</span> <span class="k">if</span> <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">to_s</span><span class="p">.</span><span class="nf">to_i</span> <span class="o">==</span> <span class="vi">@head</span>
+  <span class="k">end</span>
+  <span class="c1"># 输出一个指向符号, 也就是 @head 在的位置</span>
+  <span class="n">res</span> <span class="o">&lt;&lt;</span> <span class="s2">"</span><span class="se">\n</span><span class="s2">"</span> <span class="o">+</span> <span class="s2">" "</span> <span class="o">*</span> <span class="n">num</span> <span class="o">+</span> <span class="s2">"^"</span>
+<span class="k">end</span>
+
+<span class="c1"># 运行, 通过设置speed来调整速度</span>
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">speed</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="n">interveral_time</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">speed</span>
+  <span class="k">while</span> <span class="vi">@state</span> <span class="o">!=</span> <span class="s2">"qa"</span>
+    <span class="n">s</span><span class="p">()</span>
+    <span class="nb">sleep</span> <span class="n">interveral_time</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="c1"># 运行直接到结束, 但是只在最后一次输出</span>
+<span class="c1"># debug 来选择是否每次输出</span>
+<span class="k">def</span> <span class="nf">finish</span><span class="p">(</span><span class="n">debug</span> <span class="o">=</span> <span class="kp">false</span><span class="p">)</span>
+  <span class="n">debug</span> <span class="p">?</span> <span class="n">s</span> <span class="p">:</span> <span class="n">step</span> <span class="k">while</span> <span class="vi">@state</span> <span class="o">!=</span> <span class="s2">"qa"</span>
+  <span class="nb">puts</span> <span class="n">output</span>
+<span class="k">end</span></code></pre></figure>
+
+
+</details>
+
+<p>重新在irb里面载入代码:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">004</span> <span class="o">&gt;</span> <span class="nb">load</span> <span class="s2">"test.rb"</span>
+ <span class="o">=&gt;</span> <span class="kp">true</span> 
+<span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">005</span> <span class="o">&gt;</span> <span class="n">m</span> <span class="o">=</span> <span class="no">Machine</span><span class="p">.</span><span class="nf">new</span> <span class="s2">"code.txt"</span><span class="p">,</span> <span class="s2">"11+111="</span>
+ <span class="o">=&gt;</span> <span class="c1">#&lt;Machine:0x0000000115847d38 @instructions={"q0"=&gt;{"+"=&gt;["+", "R", "q0... </span>
+<span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">006</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="nf">s</span>
+<span class="n">e1</span><span class="o">+</span><span class="mi">111</span><span class="o">=</span>
+ <span class="o">^</span>
+ <span class="o">=&gt;</span> <span class="kp">nil</span> 
+<span class="mf">3.0</span><span class="o">.</span><span class="mi">0</span> <span class="p">:</span><span class="mo">006</span> <span class="o">&gt;</span> <span class="n">m</span><span class="p">.</span><span class="nf">finish</span>
+ <span class="o">=&gt;</span> 
+<span class="mi">11</span><span class="o">+</span><span class="mi">1111</span><span class="o">=</span><span class="mi">111111</span>
+        <span class="o">^</span> 
+</code></pre></div></div>
+
+<p>为了让这个程序看起来更加好一点, 你可以做一些更多的事情, 比如修改<code class="language-plaintext highlighter-rouge">inspect</code>之类的方法等等… 就是你的喜好啦.</p>
+
+<p>(又, 为了防止你照抄我的代码, 我在我的Ruby代码里面留了一些小错误. <del>其实是一开始直接在markdown里面写代码, 运行的时候调了调, 忘了自己有没有改过来了. 不过我不管, 这就算是检查你学没学会把. 乐.</del>)</p>
+
+<h2 id="what-to-do-next">What to do next?</h2>
+<p>这个东西我还会继续写, 不过现在我将会结束这一部分了. 接下去我会介绍如何构造图灵机的代码, 以及如何将这个黑乎乎的命令行的玩意儿放到网页上. (虽然前面的例子里面就相当于是一个如何构造的例子了. )</p>
+
+<h2 id="ok-update-lets-do-some-coding">OK, Update! Let’s do some coding…</h2>
+<p>其实我觉得叫做<strong>coding</strong>, 其实有点名不副实, 因为code在英文里面的的解释更像是加密或者编码. 尽管某种程度上来说, 又臭又长的代码看起来确实人人迷幻, 给人一种加密的感觉. (误)</p>
+
+<blockquote>
+  <p>a system of words, letters, or signs used to represent a message in secret form, or a system of numbers, letters, or signals used to represent something in a shorter or more convenient form.   <br />
+<a href="https://dictionary.cambridge.org/dictionary/english/code">cambridge dictionary</a></p>
+</blockquote>
+
+<p>好吧, 不扯淡了. 其实编写程序的时候, 我们更像是通过一些方法来将我们对过程的描述通过特定的方式编码成计算机能够理解的形式. 那么如何才能够将过程”轻松”地转换成计算机程序呢?</p>
+
+<h3 id="我们会用到的简单的形式">我们会用到的简单的形式</h3>
+<h4 id="直线">直线</h4>
+<p>据说恐龙都是单线程的动物, 它们一次只能够执行一件事情. 追着猎物, 抓到猎物, 吃掉猎物, 排泄… 啊. 其实我们也可以用图灵机来实现这样的事情, 即编写一个单线程的程序. 而我们所要做的不过就是从一个状态变为另一个状态, 最后结束. 仅此而已.</p>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>state A -&gt; state B -&gt; state C
+</code></pre></div></div>
+
+<p>那么举个例子, 我们现在想要在纸带上输出一个字符串: “Lucky_Me!”, 那么我们思考一下, 现在需要做什么? 答案是先写一个”L”, 再写一个”u”, 然后如此继续直到写下”!”结束. 所以很容易构造出其所对应的过程.</p>
+
+<p><img src="/_img/computer-toys/turing-machine/04.png" alt="状态转移图" title="因为形式很像是一条线, 所以我叫它直线. " /></p>
+
+<details>
+<summary>点击查看答案代码. </summary>
+
+<figure class="highlight"><pre><code class="language-text" data-lang="text">q0, B, L, R, q1
+q1, B, u, R, q2
+q2, B, c, R, q3
+q3, B, k, R, q4
+q4, B, y, R, q5
+q5, B, _, R, q6
+q6, B, M, R, q7
+q7, B, e, R, q8
+q8, B, !, R, qa</code></pre></figure>
+
+
+并且, 其实你会发现这样的过程是非常容易形式化地去描述的, 也就是说, 如果我们想要生成这样的代码的话, 只需要: 
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">turing_machine_print</span><span class="p">(</span><span class="n">str</span><span class="p">)</span>
+  <span class="n">str</span><span class="p">.</span><span class="nf">length</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="s2">"q</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">, B, </span><span class="si">#{</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">, R, q</span><span class="si">#{</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">str</span><span class="p">.</span><span class="nf">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">?</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="s2">"a"</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+
+(其实上面的代码就是这样生成的. )
+</details>
+
+<p>并且我们可以在直线的基础上加入一些分支, 这样就可以做到条件判断的方式了.</p>
+
+<p><img src="/_img/computer-toys/turing-machine/06.png" alt="状态转移图" title="一些分支" /></p>
+
+<p>举个例子, 假如我们有一个想要一个能够根据提前设置的纸带上的内容来格式化输出东西的程序. 比如一开始的纸带上的内容上的内容是”bBbBbbbBB”之类的, 然后我们输入的是”lucky”, 如果看到”b”的话就用大写来输出, 如果是”B”, 也就是什么也没有的话, 就用小写来输出.</p>
+
+<details>
+<summary>来试试看吗? </summary>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">condition_print</span><span class="p">(</span><span class="n">str</span><span class="p">)</span>
+  <span class="n">str</span><span class="p">.</span><span class="nf">length</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="s2">"q</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">, B, </span><span class="si">#{</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="nf">downcase</span><span class="si">}</span><span class="s2">, R, q</span><span class="si">#{</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">str</span><span class="p">.</span><span class="nf">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">?</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="s2">"a"</span><span class="si">}</span><span class="s2">"</span>
+    <span class="nb">puts</span> <span class="s2">"q</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">, b, </span><span class="si">#{</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="nf">upcase</span><span class="si">}</span><span class="s2">, R, q</span><span class="si">#{</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">str</span><span class="p">.</span><span class="nf">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">?</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="s2">"a"</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+</details>
+
+<h4 id="环形">环形</h4>
+<p>据说fushojo们特别喜欢那些掰弯的情节… 我们不妨为了迎合受众, 来点喜闻乐见的情节: 把上面的状态图给”掰弯”, 然后收尾相接, 那么我们就得到了一个环啦!</p>
+
+<p><img src="/_img/computer-toys/turing-machine/05.png" alt="状态转移图" title="嘿, 弯成了一个环啦! " /></p>
+
+<p>(诶, 讲一个题外话, 突然发现, 如果把单位元的一次运算看作是在图灵机的状态从一个状态转移到下一个状态. 那么一个环, 比如$\mathbb{Z}/p\mathbb{Z}$就像是一个有$p$个元素组成的大致结构和上图类似的环. 而$\mathbb{Z}/p_1\mathbb{Z} \cup \mathbb{Z}/p_2\mathbb{Z}$则有点像是两个有交点的环的结构. 嗯, 鉴定完毕, 可以用代数来处理了. 那么来吧, 伟大的代数学家们! 我跑路了. )</p>
+
+<p>但是只是简单的一个环其实还是不太行的. 假如一直在一个环上运转, 那么不就像是陷入了无穷的循环了吗? 所以我们还是需要结束的方式, 来从这样的无限循环中解脱出来.</p>
+
+<p>这里举一个例子. 假如我们想要在一个能够按照输入来重复填充东西的程序. 比如说输入是”bbbbbbbbbbbbbbb”(15个”b”), 然后我们要用”lucky”重复填充. 那么是不是相当于就只要反复地输出”lucky”, 即执行同样的代码一次一次又一次… 那么思考一下:</p>
+
+<details>
+<summary>来看看? </summary>
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">multi_print</span><span class="p">(</span><span class="n">str</span><span class="p">)</span>
+  <span class="n">str</span><span class="p">.</span><span class="nf">length</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span> <span class="o">|</span><span class="n">i</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="s2">"q</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">, b, </span><span class="si">#{</span><span class="n">str</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">, R, q</span><span class="si">#{</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">str</span><span class="p">.</span><span class="nf">length</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">?</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="s2">"0"</span><span class="si">}</span><span class="s2">"</span>
+    <span class="nb">puts</span> <span class="s2">"q</span><span class="si">#{</span><span class="n">i</span><span class="si">}</span><span class="s2">, B, B, L, qa"</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+
+</details>
+
+<p><img src="/_img/computer-toys/turing-machine/07.png" alt="状态转移图" title="其实差不多就是这个样子的样子. " /></p>
+
+<h4 id="寄存器其实并不是什么新的东西-只是我觉得很有意思所以写了上去-因为是我自己想到并且命名的-总是要有点成就感的吧-欸-标题不应该写这么长的-23333">寄存器(其实并不是什么新的东西, 只是我觉得很有意思所以写了上去, 因为是我自己想到并且命名的. 总是要有点成就感的吧… 欸, 标题不应该写这么长的. 23333)</h4>
+<p>其实这个不过是条件分支的一些花里胡哨的用法啦. 我们可以通过不同的状态来储存信息, 然后通过在状态之间的不断切换来达到一个内存的保存的功能. 举一个例子, 假如我们想要把纸带上的内容向右移动一格, 在原来的地方写上新的东西. 假设纸带上的字符集为”0”, “1”. 那么我们现在想要写下一个零, 然后把原来的东西全部向右移动:</p>
+
+<p><img src="/_img/computer-toys/turing-machine/08.png" alt="状态转移图" title="图灵机的代码我就不放了. " /></p>
+
+<details>
+<summary>那么, 如果我们将其扩张为任意字符集... </summary>
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">shift_right</span><span class="p">(</span><span class="n">write</span><span class="p">,</span> <span class="n">charset</span><span class="p">)</span>
+  <span class="n">charset</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">c</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="s2">"q0, </span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">write</span><span class="si">}</span><span class="s2">, R, qc</span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+  <span class="n">charset</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">c</span><span class="o">|</span>
+    <span class="n">charset</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">next_c</span><span class="o">|</span>
+      <span class="nb">puts</span> <span class="s2">"qc</span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">next_c</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, R, qc</span><span class="si">#{</span><span class="n">next_c</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">end</span>
+    <span class="nb">puts</span> <span class="s2">"qc</span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, B, </span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, R, qa"</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+
+这样的话, 假如你想要一个负数, 就只需要执行一段`shift_right("-", ("0".."9").to_a)`代码就能够自动生成相应的代码了. 
+
+</details>
+
+<p>(这个结构是我从电路里面的寄存器得到的相应的启发. 不过不知道有没有人早就想过了. 嘛, 不管它了. )</p>
+
+<h3 id="我们会用到的简单技巧">我们会用到的简单技巧</h3>
+<h4 id="化抽象为具象">化抽象为具象</h4>
+<p>尽管图灵机只能够做到读取一位, 写入一位, 移动的简单的操作. 相当于我们能干的事情被具体化限制到了非常狭隘的具体的一个区域里面. 我们如果想要做一些非常”抽象”的操作的时候, 就会让我们感到十分吃力. 因为我们可能没办法立刻把我们平时习以为常的一些操作一下子变成图灵机的操作.</p>
+
+<p>但是没关系, 我们可以用一种叫做逐步具象的方式来构筑我们的程序. 也就是说, 我们的思路大概是这样的: 人是一个整体, 但是整体里面有各种的部分, 不妨拿脑子为例, 脑子是人的身体的一部分. 这个时候, 我们就完成了一次分解. 然后脑子其实还可以被分解成大脑, 小脑, 脑干, 这样我们又完成了一次分解. 然后大脑可以分解成一些中枢… 最终分解成细胞, 分子, 原子… 最后我们面对了一堆基本粒子. 这个时候, 这些基本粒子, 不论他们是否能够分解, 我们已经都已经到了一个不需要继续分解的地步了.</p>
+
+<p>(这个时候我们不妨讨论一下”取一杆, 日折其半, 百世不竭”还是”终有一尽”的问题了吗? 哈哈, 不必要这样吧… 因为我认为计算机像是一种约定主义, 我们已经约定了最小的计算单元, 所以假如可以分解的话, 我们应该是能够分解的. 但是假如是一种无法分解的东西, 比如 <em>“这种东西的分解是那样的东西, 使得其的分解就是这种东西本身…”</em> 坏, 别认为这东西只是数学废话啦. 我记得罗素悖论里面也有类似的东西. )</p>
+
+<p>举一个例子, 假如我们想要做一个按位异或的程序, 并且假设输入的纸带类似这样: “0101^0011=”, 也就是左右等长的呢.</p>
+
+<p>那么我们不妨思考一下, 这个问题可以如何分解: 什么是<a href="https://zh.wikipedia.org/wiki/位操作#按位异或（XOR）">按位异或</a>? 那么只需要每次取一位, 然后将其运算的结果写入即可. 于是过程初步分解为: 取第一个数的第一位 -&gt; 取第二个数的第一位 -&gt; 在最后写入计算的结果 -&gt; 回到开头 -&gt; 取第一个数的第二位 -&gt; … -&gt; 取第n位…</p>
+
+<p><img src="/_img/computer-toys/turing-machine/09.png" alt="初步分解" title="哈哈哈, 是不是就这么简单啦. " /></p>
+
+<p>于是我们只需要思考如何能够实现里面的每一个小步骤即可了. 以取第一个数的第一位为例: 我们一开始就位于纸带的开头, 也就是第一个数的可能的位置, 但是当我们做了操作之后, 第二个数才是要被读的东西… 既然我们的图灵机可以做标记, 那么不妨我们使用标记的方式来达到这个目的. 于是这个找到第一个数的方式就变成了一个条件分支:</p>
+
+<p><img src="/_img/computer-toys/turing-machine/10.png" alt="初步分解" title="没错, 就是这样. " /></p>
+
+<h4 id="化具象为抽象">化具象为抽象</h4>
+<p>其实除了分解, 我们也能够通过组合的方式来构造一个宏大的程序.</p>
+
+<p>(很多时候, 这样的构造方法其实也是非常的简单的构造方法. 只要把过程按顺序连接在一起就能够合成一个新的大的过程. 然后因为我们构造了这样的过程, 我们只需要知道其根据输入会有怎么样的输出, 就可以用黑箱方法, 不必要计较内部的具体实现. 这个时候, 就相当于是一种对过程的抽象调用了. )</p>
+
+<p>方法是这样, 那么实际应用的时候其实也差不多就是这样. 那我就不介绍啦, <del>读者自证不难…</del></p>
+
+<details>
+<summary>一个例子</summary>
+假如我们要实现一个从任一状态出发, 滚动到纸带最开头的代码. 然后调用一个状态. 那么我们可以这样设计: 
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">roll_to_empty</span><span class="p">(</span><span class="n">q_start</span><span class="p">,</span> <span class="n">q_end</span><span class="p">,</span> <span class="n">charset</span><span class="p">,</span> <span class="n">forward</span> <span class="o">=</span> <span class="s2">"L"</span><span class="p">,</span> <span class="n">end_char</span> <span class="o">=</span> <span class="s2">"B"</span><span class="p">)</span>
+  <span class="n">charset</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">c</span><span class="o">|</span>
+    <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">q_start</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">c</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">forward</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">q_start</span><span class="si">}</span><span class="s2">"</span>
+  <span class="k">end</span>
+  <span class="nb">puts</span> <span class="s2">"</span><span class="si">#{</span><span class="n">q_start</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">end_char</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">end_char</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">forward</span> <span class="o">==</span> <span class="s1">'L'</span> <span class="p">?</span> <span class="s1">'R'</span> <span class="p">:</span> <span class="s1">'L'</span><span class="si">}</span><span class="s2">, </span><span class="si">#{</span><span class="n">q_end</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">end</span></code></pre></figure>
+
+
+于是我们不妨设置这样的一个过程: 先让我们移动到纸带末尾, 然后移动到纸带开头. 
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="n">roll_to_empty</span><span class="p">(</span><span class="s2">"q0"</span><span class="p">,</span> <span class="s2">"q1"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"0"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">],</span> <span class="s2">"R"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)</span>
+<span class="n">roll_to_empty</span><span class="p">(</span><span class="s2">"q1"</span><span class="p">,</span> <span class="s2">"qa"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"0"</span><span class="p">,</span> <span class="s2">"1"</span><span class="p">],</span> <span class="s2">"L"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">)</span></code></pre></figure>
+
+
+</details>
+
+<h4 id="优化-简化-美化-debug等等">优化, 简化, 美化, debug等等</h4>
+<p>呃, 其实怎么说呢, 对我来说, 美化比优化和简化可能更加重要一些. 毕竟我是一个无聊的人. 并且其实这些方法也不是和上面的方法独立的方法, 所以我就把它们和在一起介绍了.</p>
+
+<p>(这并不是说它们不重要啊, <del>只是我懒得写了</del>, 嘛, 这不就像是一本合理的教材一样嘛: 例题结论简单普适, 习题考题却是巨难无比. 突然想起离散数学的老师讲的一句话, 搞数学的这帮人总是喜欢简单的东西, 他们在自己脑子里面举的例子大概的规模就是1, 2, 3. 所以他们脑子里面很清晰. 但是搞计算机的人就很苦逼, 因为他们面对的都是双十一的服务器的工作量的级别的关系. )</p>
+
+<ul>
+  <li>优化与简化: 其实就是想方法把原本的过程进行简化, 让它跑得更快一些, 或者用的状态数更少一些. 这个时候奇技淫巧就很多了, 但是我比较笨, 所以不太会.</li>
+  <li>美化: 其实美化有时候会导致程序变得更加复杂. 但是这并不是一个非常难以忍受的事情. 比如苹果的设计和其对性能的影响…</li>
+  <li>debug: 其实debug的过程在编写代码的时候就已经开始了.  <br />
+在编写代码的时候, 我们可以在边上留下注释, 这样就可以方便后期的回看和调试. 毕竟知道了本来应该干什么, 但是却不像原来应该干的那样干了. 显然就是那一块出现了问题. (当然, 也有可能是前面或者后面的哪里出了错, 但是人总是懒惰的, 先检查一个点和先检查一个面相比, 肯定是前者啊. )  <br />
+假如找到了bug, 想要修改程序, 与其推倒重来, 不如就在原本的基础上进行修改. (不过这样可能就要求你原本的程序有比较好的结构和分块. )</li>
+</ul>
+
+<p><img src="/_img/computer-toys/turing-machine/11.jpg" alt="举个例子" title="这个是我上课的作业的一个魔改版, 作业的要求是实现一个加法器, 然后在课堂展示的过程中, 被问到了如果要实现减法, 需要在原本代码的基础上做什么. 啊, 当时太突然了, 所以答得很草率, 甚至是非常错误的. 最后回到台下立刻就发现自己在乱说, 所以为了防止被打脸, 于是做了这个. " /></p>
+
+<h2 id="接下去搞什么">接下去搞什么?</h2>
+<p>接下去… 我有几个无聊的想法:</p>
+<ul>
+  <li>能不能像之前的<a href="../ri-lang">りlang</a>一样, 为图灵机制作一门高级语言, 毕竟哪怕上面我已经介绍了这么多方法, 实际人来构造的时候还是挺麻烦的.</li>
+  <li>能不能做一个图形化的状态图编辑程序, 比如在线画状态图, 然后一键导出图灵机代码</li>
+  <li>能不能做一个可视化的图灵机状态转移图</li>
+  <li>…</li>
+</ul>
+
+<p>不过, 还是先放着吧. 以后再来.</p>
+
+  </div><a class="u-url" href="/ruby/turing-machine/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
