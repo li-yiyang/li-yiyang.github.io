@@ -1,0 +1,496 @@
+#+title: [Reading] A CLOS Protocol for Editor Buffers
+#+date: 2025-08-05
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+虽然前一篇还是 [[{{ site.github.url }}/lem/lem-0/][Lem]] 这样的新生编辑器, 这篇就又回到了想如何去自己来写一个.
+那么具体是为什么呢? 一个是我在魔改 Lem 的代码的时候发现,
+作者真的好喜欢分包... (感觉是一个文件分一个包 =defpackage=)
+这样不是很喜欢, 并且做了太多的抽象导致一个 =terminal-input= 包装了三层.
+虽然维护上来说是好了一些, 但是感觉还是不太习惯.
+
+以及虽然去模仿了 Emacs 的一些设计, 但是自己做了好多 “小巧思”,
+虽然说不上坏, 但是我用下来还是有点不太习惯 (已经成为 Emacs 的形状哩).
+不过最破防的还是没啥文档, 毕竟感觉 Emacs 里面的 =C-h f=, =C-h v=
+这些小文档才是一个 “可以编辑” 的编辑器的核心竞争力.
+
+Lem 的缺点 (目前来看) 主要就是缺少文档, 想要魔改的话比较费劲.
+以及 (Emacs 也有), 缺少一个代码设计的说明, 改底层感觉很难.
+不过好处是我可以把 Emacs 的 [[https://github.com/larsbrinkhoff/emacs-history][历史版本]] 的代码拿来抄 (bushi),
+可以大概地了解一些基本的设计思路.
+
+那么还是先搞清楚我想要啥: 一个类似 Emacs 一样 “可以拓展” 的编辑器.
+
+为了可以 *拓展*, 所以我需要:
++ 很好的文档 (self-documentation)
+  + 每个函数 (尽量) 都需要有: 类型标注 (core and lowlevel), 文档
+  + 代码中需要有注释来标注设计思路
++ 接口设计 (protocol)
+  + buffer 我需要借鉴 [[https://github.com/robert-strandh/Cluffer/][Cluffer]]
+  + frontend 我需要借鉴 Lem, 将前后端分离,
+    但是最好需要将对 buffer 的操作可以视为类似 Emacs 的单线程策略,
+    即对于单个 buffer 的一系列操作应当可以被视为一个 queue 队列.
+
+    因为在写 lem 的终端模拟的时候被坑到了, update 的 thread 会让整个编辑器崩掉,
+    感觉有点不太合理了.
+  + API 需要尽可能和 Emacs 相同
+    (如果能折腾出一套兼容层就好了, 虽然感觉不太现实)
++ 尽可能的代码复用,
+  Lem 中频繁的建新包的缺点我觉得就是让代码复用变得比较痛苦
+  (也有可能是有一些我不知道的小巧思)
++ 争取之后可以自举 (自己编辑自己吧)
+
+那么这篇文章是阅读 Cluffer 的会议论文: A CLOS Protocol for Editor Buffers
+的一个阅读笔记, 希望能够帮助我更好地抄他的代码 (bushi).
+
+* A CLOS Protocol for Editor Buffers
+** Two Control Loops
++ *innermost loop*:
+  + insert, delete items in buffer
+  + cursor movement
++ *outer loop*:
+  + updating the views of the buffer
+  + incremental paring
+
+    cite: Incremental Parsing of Common Lisp Code
+
+    这个之后再慢慢看
+
+** Representing items in a buffer
+主要是知道有哪些, 具体的实现详见下文
+
++ Line oriented
+
+  将 buffer 看作是 list of vector line.
+
+  #+begin_src lisp :eval no
+    (defclass line () ((buff :initarg :buff)))
+    (defun make-line (str)
+      (declare (type string str))
+      (make-instance 'line :buff (coerce str 'simple-vector)))
+
+    ;; lines should be a list of line
+    (defclass buff () ((lines :initarg :lines :initform ())))
+  #+end_src
+
+  也有用 ring of vector line 来做储存的 (方便从尾回到头之类的跳转),
+  或者 double linked list (方便上下滚动).
++ [[https://en.wikipedia.org/wiki/Gap_buffer][Gap buffer]]
+
+  一种特殊的 vector line 可以如下实现 ([[https://en.wikipedia.org/wiki/Dynamic_array][dynamic array]]):
+  把 vector 后面用空空间进行填充, 这样可以方便插入和修改.
+
+  #+begin_src lisp :eval no
+    (defun make-line (str)
+      (declare (type string str))
+      (let* ((len (* (ceiling (length str) +line-size+) +line-size+))
+             (arr (coerce (make-array len :element-type 'character)
+                          'simple-vector)))
+        (dotimes (i len) (setf (svref arr i) (aref str i)))
+        (make-instance 'line :buff arr)))
+  #+end_src
+
+  这样的 vector line 可以看作是一种特殊的 gap buffer (gap 全在后面).
+  一般是 gap 在 pointer 的附近 (方便插入).
+
+  不过有意思的是看到了一个叫做 [[https://en.wikipedia.org/wiki/Zipper_(data_structure)][Zipper]] 的数据抽象 (gap buffer),
+  估计可以仔细看看.
+
+  cite: [[https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf][The Zipper]]
+
+下面是一些论文里面并没有介绍的内容:
++ [[https://en.wikipedia.org/wiki/Rope_(data_structure)][Rope]]
+
+  一个二叉树来储存 vector piece.
+
+  cite: [[https://www.cs.tufts.edu/comp/150FP/archive/hans-boehm/ropes.pdf][Ropes: an Alternative to Strings]]
++ [[https://en.wikipedia.org/wiki/Piece_table][Piece Table]]
+
+  原 buffer 视为 immutable 的 buffer, 修改储存在 piece table 中.
+
+  不过好像缺少很多的说明, 估计只能抄抄别人的代码实现了.
++ ...
+
+** Protocol
+下面这种基本就看代码了, 不一定全, 并且代码里面也没有文档, 难受.
+
+*** Inner Protocol
+几个概念:
+
++ =buffer=: 嗯, 就叫 buffer ([[https://www.gnu.org/software/emacs/manual/html_node/emacs/Buffers.html][Buffers, Emacs Manual]])
++ =line=: 行抽象
++ =cursor=: 当前编辑的位置
++ =dock=: 将 =line= 和 =buffer= 连接在一起
+
+*** Outter Protocol
++ Update
+  + =(update buffer time sync skip modify create)=
++ Edit
+
+  从用户的角度来看, 一个 =buffer= 由一堆 =line= 组成,
+  一个 =line= 由一堆 =item= 组成, =cursor= 在 =line= 上编辑.
+  这里的 =item= 算是一个对字符, 图像之类的任意的玩意的一个抽象.
+
+  一些我觉得比较 misc 的设计
+  + =(line-count buffer)=
+
+    返回 =buffer= 中的行数
+  + =(item-count entity)=
+
+    计数 =entity= (=buffer=, =line=, =cursor=) 中的元素
+  + =(line-number entity)=
+
+    得到 =entity= (=line=, =item=, =cursor=) 所在的行
+  + =(join-line entity)=
+
+    合并行 (感觉这个不知道为啥设计)
+  + =(items entity &key start end)=
+
+    以 =vector= 的形式返回区域内的内容
+  + =(buffer entity)=
+
+    返回 =entity= 对应的 =buffer=
+
+  在 =line= 上提供了一些这样的 protocol:
+  + Position
+    + =(first-line-p line)=
+    + =(last-line-p line)=
+  + Reading
+    + =(item-at-position line position)=
+    + =(find-line buffer line-number)=
+  + Writing
+    + =(insert-item-at-position line item position)=
+    + =(delete-item-at-position line position)=
+    + =(split-line-at-position line position)=
+
+  =cursor= 有如下的抽象:
+  + Position
+
+    =cursor= 应当附在 =line= 上,
+    若没有附在 =line= 上的 =cursor= 被执行读写或者其他操作的时候,
+    就应当抛出 =cursor-detached= 信号.
+    + =(cursor-attached-p cursor)=
+    + =(attach-cursor cursor line &optional position)=
+    + =(detach-cursor cursor)=
+
+    位置的判定:
+    + =(cursor-position cursor)=
+    + =(beginning-of-line-p cursor)=
+    + =(end-of-line-p cursor)=
+    + =(line cursor)=
+    + =(cursor=/2 cursor1 cursor2)=
+    + =(cursor</2 cursor1 cursor2)=
+    + ~(cursor/= cursor &rest more-cursors)~
+  + Moving
+    + =(beginning-of-line cursor)=
+    + =(end-of-line cursor)=
+    + =(forward-item cursor)=
+    + =(backward-item cursor)=
+  + Reading
+    + =(item-before-cursor cursor)=
+    + =(item-after-cursor cursor)=
+  + Writing
+    + =(insert-item cursor item)=
+    + =(delete-item cursor)=
+    + =(erase-item cursor)=
+    + =(split-line cursor)=
+
+** Supplied implementations
+具体的实现不太重要, 这里会只挑 Cluffer 中的标准实现,
+
+*** Line
++ 区分 =open-line= 和 =closed-line=
+  + =open-line= 使用 gap buffer 来保证可编辑
+  + =closed-line= 即为一个 =(simple-vector item)=
+  + 通过 =close-line= 和 =open-line= 函数来相互转换
+
+*** Buffer
+
+* The Zipper
+** TLDR*
+#+begin_quote
+the tree is turned inside-out like a returned glove, pointers from the
+root to the current position being reversed in a path structure. The
+current location holds both the downward current subtree and the
+upward path. All navigation and modification primitives operate on the
+location structure. Going up and down in the structure is analogous to
+closing and opening a zipper in a piece of clothing, whence the name.
+#+end_quote
+
+可以参考 [[https://www.slideshare.net/slideshow/zippers-presentation/28611495][Zippers presentation]] 这个 Slide 里面的一个演示:
+
+假如有一个 =list=:
+
+#+begin_example
+  (1 2 3 4 5 6 7 8 9 10)
+#+end_example
+
+#+begin_quote
+Zipper is a functional cursor into a data structure.
+#+end_quote
+
+即, 当 =cursor= 在 =list= 上进行移动的时候:
+
+#+begin_src example
+  1 (2 3 4 5 6 7 8 9 10)    ;; 0
+  ^
+
+  (1) 2 (3 4 5 6 7 8 9 10)  ;; 1
+      ^
+
+  (2 1) 3 (4 5 6 7 8 9 10)  ;; 2
+        ^
+
+  (3 2 1) 4 (5 6 7 8 9 10)  ;; 3
+          ^
+#+end_src
+
+就像是在拉拉链一样进行滑动, 同时在 =cursor= 处插入和删除的效率是 =O(1)=.
+
+妙啊, 相当于是一个 gap 无限大的 gap buffer.
+
+(吐槽: 喵的函数式那帮人写代码都跟写数学公式一样,
+简直就是在用一堆不严谨 (indeterminate) 的鬼画符 (数学),
+去描述一个严谨的 (determinate) 的东西...
+
+** A Trivial Implementation
+:PROPERTIES:
+:header-args:lisp: :package trivial-zipper :results silent
+:END:
+
+#+name: trivial-zipper.defpackage
+#+begin_src lisp
+  (defpackage #:trivial-zipper
+    (:use :cl)
+    (:export
+     #:zipper))
+
+  (in-package :trivial-zipper)
+#+end_src
+
+*** =zipper= structure
+#+name: zipper-structure
+#+begin_src lisp
+  (defstruct zipper
+    "The trivial Zipper implementation. "
+    (unfold () :type list)
+    cursor
+    (folded () :type list))
+#+end_src
+
+如上文所说, 将 =zipper= 的数据结构分为 =unfold=, =cursor=, =folded= 三个部分:
+
+#+begin_example
+  (3 2 1)   4     (5 6 7 8 9 10)
+  unfold  cursor      folded
+#+end_example
+
+*** Allocation and Reading
+**** =(zipper<- sequence)= \(\rightarrow\) turn =sequence= to =zipper=
+将 =sequence= 转换为 =zipper= 数据结构
+
+#+name: zipper<-
+#+begin_src lisp
+  (defgeneric zipper<- (sequence)
+    (:documentation "Turn SEQUENCE to `zipper' structure. ")
+    (:method ((seq sequence))
+      (when (zerop (length seq))
+        (error "~A is empty. " seq))
+      (let ((list (coerce seq 'list)))
+        (make-zipper :folded (cdr list)
+                     :cursor (car list)
+                     :unfold ()))))
+#+end_src
+
+**** =(print-object zipper stream)=
+这里用类似 =#<unfold cursor folded>= 的形式来显示 =zipper= 数据结构:
+
+#+name: print-object.zipper
+#+begin_src lisp
+  (defmethod print-object ((zipper zipper) stream)
+    (print-unreadable-object (zipper stream)
+      (format stream "~A ~A ~A"
+              (zipper-unfold zipper)
+              (zipper-cursor zipper)
+              (zipper-folded zipper))))
+#+end_src
+
+例:
+
+#+begin_src lisp :tangle no :results replace :exports both
+  (zipper<- "Hello World")
+#+end_src
+
+#+RESULTS:
+: #<nil H (e l l o   W o r l d)>
+
+**** =(zipper-length zipper)= \(\rightarrow\) length of zipper data
+类似于 =length= 的一个简单函数:
+
+#+name: zipper-length
+#+begin_src lisp
+  (defun zipper-length (zipper)
+    "Return ZIPPER length. "
+    (declare (type zipper zipper))
+    (the unsigned-byte
+         (+ (length (zipper-unfold zipper))
+            (length (zipper-folded zipper))
+            1)))
+#+end_src
+
+**** =(string<-zipper zipper)= \(\rightarrow\) turn =zipper= as =string=
+类似于 =print-object=, 但是以更加常见的形式去输出这个 =zipper= 元素:
+
+#+name: string<-zipper
+#+begin_src lisp
+  (defun string<-zipper (zipper)
+    "Return ZIPPER as string. "
+    (concatenate 'string
+                 (reverse (zipper-unfold zipper))
+                 (list (zipper-cursor zipper))
+                 (zipper-folded zipper)))
+#+end_src
+
+注: 如果 =zipper= 中的 =element= 并非 =character=,
+我觉得可以做一个简单的预处理之类的.
+这样可以支持更多的 =item= 类型.
+
+**** =(zipper-cursor-position zipper)= \(\rightarrow\) return cursor position
+当前 =cursor= 的位置
+
+#+name: zipper-cursor-position
+#+begin_src lisp
+  (defun zipper-cursor-position (zipper)
+    "Return ZIPPER cursor position. "
+    (declare (type zipper zipper))
+    (length (zipper-unfold zipper)))
+#+end_src
+
+*** Transforming
+这里使用 =zipper-forward=, =zipper-backward= 来进行滑移:
+
+**** =(zipper-forward zipper)=
+#+name: zipper-forward
+#+begin_src lisp
+  (defun zipper-forward (zipper)
+    "Move ZIPPER cursor forward.
+  Return t if success, nil otherwise.
+
+  Side Effect:
+  ZIPPER cursor position would be moved. "
+    (declare (type zipper zipper))
+    (the boolean
+         (when (zipper-folded zipper)
+           (let (prev)
+             (shiftf prev (zipper-cursor zipper) (pop (zipper-folded zipper)))
+             (push prev (zipper-unfold zipper))
+             t))))
+#+end_src
+
+**** =(zipper-backward zipper)=
+#+name: zipper-backward
+#+begin_src lisp
+  (defun zipper-backward (zipper)
+    "Move ZIPPER cursor backward.
+  Return t if success, nil otherwise.
+
+  Side Effect:
+  ZIPPER cursor position would be moved. "
+    (declare (type zipper zipper))
+    (the boolean
+         (when (zipper-unfold zipper)
+           (let (next)
+             (shiftf next (zipper-cursor zipper) (pop (zipper-unfold zipper)))
+             (push next (zipper-folded zipper))
+             t))))
+#+end_src
+
+**** =(zipper-move-cursor zipper position)=
+#+name: zipper-move-cursor
+#+begin_src lisp
+  (defun zipper-cursor-move (zipper position)
+    "Move ZIPPER cursor to POSITION.
+  Return t if moved successfully, nil otherwise. "
+    (declare (type zipper zipper)
+             (type unsigned-byte position))
+    (let ((pos (zipper-cursor-position zipper)))
+      (cond ((< pos position)
+             (loop :repeat (- position pos)
+                   :unless (zipper-forward zipper)
+                     :return nil
+                   :finally (return t)))
+            ((> pos position)
+             (loop :repeat (- pos position)
+                   :unless (zipper-backward zipper)
+                     :return nil
+                   :finally (return t)))
+            (t t))))
+#+end_src
+
+*** Writing
+**** =(zipper-insert zipper elem)=
+#+name: zipper-insert
+#+begin_src lisp
+  (defgeneric zipper-insert (zipper elem)
+    (:documentation
+     "Insert ELEM before ZIPPER cursor.
+  Return ZIPPER. ")
+    (:method :around (zipper elem)
+      (call-next-method)
+      zipper)
+    (:method ((zipper zipper) (char character))
+      (push char (zipper-unfold zipper)))
+    (:method ((zipper zipper) (seq sequence))
+      (map nil (lambda (elem) (push elem (zipper-unfold zipper))) seq)))
+#+end_src
+
+**** =(zipper-insert-after zipper elem)=
+#+name: zipper-insert-after
+#+begin_src lisp
+  (defgeneric zipper-insert-after (zipper elem)
+    (:documentation
+     "Insert ELEM after ZIPPER cursor.
+  Return ZIPPER itself. ")
+    (:method :around (zipper elem)
+      (call-next-method)
+      zipper)
+    (:method ((zipper zipper) (char character))
+      (push char (zipper-folded zipper)))
+    (:method ((zipper zipper) (seq sequence))
+      (setf (zipper-folded zipper)
+            (concatenate 'list seq (zipper-folded zipper)))))
+#+end_src
+
+**** =(zipper-delete zipper &optional repeat)=
+#+name: zipper-delete
+#+begin_src lisp
+  (defgeneric zipper-delete (zipper &optional repeat)
+    (:documentation
+     "Delete ZIPPER element at cursor REPEAT times.
+  Return t if success, nil otherwise. ")
+    (:method :around (zipper &optional (repeat 1))
+      (declare (type unsigned-byte repeat))
+      (loop :repeat repeat
+            :unless (call-next-method zipper)
+              :return nil
+            :finally (return t)))
+    (:method ((zipper zipper) &optional repeat)
+      (declare (ignore repeat))
+      (when (zipper-folded zipper)
+        (shiftf (zipper-cursor zipper) (pop (zipper-folded zipper)))
+        t)))
+#+end_src
+
+**** ...
+
+*** Ending
+其实基本上已经实现了大部分的增删查改了? 也许吧.
+假如不实现嵌套的 (nested) 数据结构的话, 感觉其实非常好实现,
+完全可以作为编程入门课来教学的感觉.
+
+(C 那一套还是害人不浅啊... )
+
+当然, 你也可以说, 那么代价呢? 用 =list= 作为数据结构必然要付出相比
+=array= 这样可以随机寻址的数据结构更多的代价. 这只能说算是一种取舍了吧?
