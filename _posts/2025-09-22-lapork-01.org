@@ -1,0 +1,179 @@
+#+title: LapTop Ork (01: Introduction)
+#+date: 2025-09-22
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lapork
+* About
+选了一门叫做笔记本乐队的音乐课程, 真有意思.
+用博客的方式记录一下, 不然感觉最近的东西都要花好久才能有结果,
+没啥东西好写博客了.
+
+** 免责声明
+这里我还是按照自己的 XP, 换上了邪恶括号语言 Lisp ([[https://github.com/byulparan/cl-collider][byulparan/cl-collider]]),
+而不是使用 [[https://github.com/supercollider/supercollider][SuperCollider]] 自己的语言.
+
+不过说实话, 还是想要 [[https://opusmodus.com/][Opusmodus]], 不知道会不会有什么好心人看到我这句话,
+然后大发善心给我 250 欧让我买教育版.
+
+(嘶... 明明都是在做天上掉馅饼的美梦了, 竟然还是教育版而不是个人版么
+
+理论上来说, 大致的内容和 SuperCollider 是没啥区别的,
+但是毕竟会写程序加一些奇奇怪怪的个人 XP 进去,
+所以不保证之后完全和课上讲的东西是一致的.
+
+(但是保证会有课上有的所有功能并且会多加入自己的私货
+
+* 对这种 Expermental 音乐的个人理解
+根据 Logic of Expermentation 中的描述, 传统的西方音乐往往被认为是:
+
+#+begin_quote
+performance is the moment for the concrete sonic representation
+of an already known sound structure
+#+end_quote
+
+即是按照曲谱的重现, 而所谓的 expermental 将其视为 problematisation
+(问题的处理? 问题化? )
+
+高情商: 在少量规则制约下由于随机过程自发涌现的秩序感与美感.
+同时表达的媒介并不局限于单一的音频, 而是结合了计算机多媒体技术,
+产生的一种非传统 replay 的音乐范式.
+
+低情商: 看了一圈感觉更像是高级的骰子音乐? 但是我们的骰子比较有意思,
+可能是宇宙线信号, 可能是无意义的生物电动作, 可能是各种奇奇怪怪的东西.
+同时我们的乐器本身也就是 play 的一环. 但是为了防止完全的随机变成噪声,
+通过简单的程序规约的范式来让声音变得好听一点.
+
+一些可能可行的例子:
++ 训练一个马尔可夫链 (MCMC) 去在不同的音符状态之间去跳转,
+  然后通过外界的一些东西去加入一个热噪声
+  (比如更改每个状态节点之间的概率权重, 或是更容易或更不容易跳转),
+  这样就能够实现一个有意思的 automatic compose
++ ...
+
+* Tools
+** Installation (via homebrew)
+假如你像我一样在使用 macOS, 或是使用带包管理器的 linux (or other
+unix-like system), 你可以使用你的包管理器快速地安装好以下的环境:
++ [[https://en.wikipedia.org/wiki/Common_Lisp][Common Lisp]] ([[https://www.sbcl.org/][SBCL]] with [[https://www.quicklisp.org/][Quicklisp]])
++ [[https://supercollider.github.io][SuperCollider]]
+
+详情请参考 [[https://github.com/byulparan/cl-collider][byulparan/cl-collider]].
+
+** Server Boot
++ 新建一个服务器 =(make-external-server "name" :host ip-addr :port port)=
++ 启动这个服务器 =(server-boot *s*)=
++ Common Lisp 通过 OSC ([[https://en.wikipedia.org/wiki/Open_Sound_Control][Open Sound Control]]) 向 SuperCollider
+  服务器发送指令, 后者将其渲染成音频信号进行播放
+
+#+html: <details><summary>折叠了, 有点普通</summary>
+
+#+header: :package :sc-user
+#+begin_src lisp
+  (ql:quickload :cl-collider)
+  (in-package :sc-user)
+
+  (defparameter *s*
+    (make-external-server "name-of-server"
+                          :host "127.0.0.1"
+                          :port "4444")
+    "新建一个 SuperCollider 的服务器声明. ")
+
+  ;; 启动这个 SuperCollider 音频服务器
+  (server-boot *s*)
+#+end_src
+
+#+html: </details>
+
+** Play
++ =(sin-osc.ar freq phase mul add)=
+
+  创建了一个以 =freq= 频率振动的正弦波, 其相位为 =phase=, 增幅为 =mul=,
+  偏移为 =add=, 使用 =play= 可以将其在 SuperCollider 服务器上播放.
+
+  用 =(stop)= 可以停止声音播放.
+
+  + 拍频的例子 I
+
+    #+begin_quote
+    两个频率不同的信号进行合波后得到频率为两者之差的新信号.
+    cite: [[https://zh.wikipedia.org/zh-cn/拍频][Wikipedia]]
+    #+end_quote
+
+    #+begin_src lisp
+      (play (sin-osc.ar 440.0 0.0 0.2))
+      (play (sin-osc.ar 440.5 0.0 0.2))
+      (sleep 5)
+      (stop)
+    #+end_src
+
++ =(white-noise.ar mul add)=
+
+  创建一个 [[https://en.wikipedia.org/wiki/White_noise][白噪声]]
++ =(mouse-x.kr min max warp lag)=
+
+  创建一个由鼠标控制的, 其值在 =min= 到 =max= 之间,
+  由 =wrap= (默认 =:linear=) 进行映射, 值变化有一个 =lag= 的动态变量.
+
+  + 拍频的例子 II
+
+    #+begin_src lisp
+      (play (sin-osc.ar 440.0 0 0.1))
+      (play (sin-osc.ar (mouse-x.kr 425 455 :linear 0.4) 0 0.1))
+    #+end_src
+
+    如上, 就可以实现一个简单控制了.
+
+* Homework
+作业是读一篇 [[https://www.cambridge.org/core/journals/organised-sound][Organised Sound]] 期刊的文章并做一个小小的笔记.
+我选择了一些比较偏游戏和计算机方向的文章 -- 感觉那些哲学性的文章,
+完全符合我对文科的一般刻板印象.
+
+** TAO: a physical modelling system and related issues
+#+begin_quote
+TAO consists of two disinct components, a synthesis engine
+based on a new physical modelling technique called
+*cellular sound synthesis* (CSS) and a text-based interface ...
+#+end_quote
+
+这个 Cellular Sound Synthesis 感觉有点意思, 找了一篇别的:
+[[https://hal.science/hal-03112191v1/document][Evolving Complex Sounds with Cellular Automata: an Approach to Granular Synthesis]].
+里面说的东西大概能够如下解释 (只看第 4 章即可, 其他的都是前摇):
+
+用原胞自动机去生成一个随机状态, 然后用这个随机状态去控制 OSC.
+
+不过原文 (TAO) 里面的这个 CSS, 怎么看都感觉更像是一个
+FEM ([[https://en.wikipedia.org/wiki/Finite_element_method][Finite Element Method]]), 跑了一个声学振动模式的仿真,
+然后用来产生声音. (真的能实时吗? 在当时的计算机条件下? )
+
+doi: [[https://doi.org/10.1017/S1355771896000167]]
+
+注: 更新的应该是英伟达的那个网格模拟.
+
+** The creation of an audio environment as part of a computer game world: the design for Jurassic Park -- Operation Genesis on the XBOX as a broad concept for surround installation creation
+这个功能像是早期的空间音频, 通过计算观察者 (听者) 距离音源的距离,
+然后去计算一个不同音源的影响成分. 同时考虑一个环境的影响.
+相当于是一个简化计算, 现在游戏里面的大部分是声线追踪.
+
+doi: [[https://doi.org/10.1017/S1355771803000074]]
+
+** Interactive Interfaces: Installations produced at ZKM | IMA
+感觉像是把电子音乐作为交互装置来做了, 很帅, 虽然那个头有点瘆人就是了.
+
+doi: [[https://doi.org/10.1017/S1355771809990100]]
+
+** MISC
+感觉早期 (我挑的这几篇都是好早期的文章了) 的上面都是比较有意思的技术分享,
+虽然不一定是啥很尖端的技术, 但是有点像是 -- 欸, 这玩意我可以试试,
+然后往里面加, 做成了, 加一点点升华, 就放进来了.
+
+后面的一些文章就感觉开始上强度了... 什么哲学的视角,
+教育学的视角 (这个教育学的视角我可有话说了, 之前宇宙线会议那里也有教育的部分,
+本来还以为是啥从小孩开始忽悠进来做研究的课程设计 (类似于逆转裁判,
+琉璃的宝石之类的), 没想到就是一个制作得非常简陋的 Corsika VR 簇射可视化)
+都统统来了, 根本看不懂一点.
+
+不过有几个从结构化的角度来做音乐生成的感觉挺有意思的,
+相当于是把一片音乐片段融进来?
+
+最新那几个好像是从非西方音乐中找灵感.
