@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Org-mode and Jekyll | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Org-mode and Jekyll" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="来点有意思的, 没错, 就是 Org-mode 作为一个虚假的 Emacer, 我最近被 org-mode 种草了. 于是我想要在之后好好了解一下 org-mode 以及用它来写博客, 而不是 markdown. (嘿嘿嘿&#8230; ) 于是我做了一些小小的配置, 主要参考的是: org-mode で blog 这个网站. 其中使用到的插件为 jekyll-org, 并且最后加上我的一点点丢人现眼的, 微不足道的配置和测试. 配置 Jekyll Side 只需要做两件事情: 修改 _config.yml 文件 在 plugins 下面添加一行: jekyll-org 即可 plugins: - jekyll-org (optional) 为 org-mode 添加 liquid tag 支持: org: liquid: true 等价于为每个文件都启用 #+liquid: enabled 的 prompt. 修改 Gemfile 文件 添加 gem &#39;jekyll-org&#39;, &#39;&gt;= 1.1.0&#39; gem &quot;pygments.rb&quot;, &quot;~&gt; 2.3&quot; # optional for syntax highlighting 或者可以直接命令行运行: bundle add jekyll pygments.rb 关于语法高亮, 因为 minima 主题 (就是我用的这个) 自带高亮, 所以只确保 bundle add pygments.rb. 然后就是快乐的使用体验了. Org-mode 相比 markdown 的 yaml 配置: layout: post title: Title date: 2022-12-04 12:00:00 +0800 math: true categories: notes 在 org 下, 和一般 tag 一样: #+layout: post #+title: Org-mode and Jekyll #+date: 2022-12-05 #+math: true #+categories: jekyll 一些其他的配置 站内链接 这个目前我还不知道该如何实现. 因为在 markdown 方面, 我使用的方式是 site.github.url 来指出网页的根地址, 然后写相对地址. 目前的方式仍然是用老的那一套, 缺点就是没法在本地很好地处理相对跳转. (就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. ) 数学公式 可以参考之前的一个笔记: 考完后的katex小教程. 然后在文档中添加: #+math: true. Github Pages and Github Actions 结果我发现, 问题并没有我想得那么简单就是了&#8230; 推送到 Github Page 上后, 发现了一个非常尴尬的问题: Github Page 因为安全性考虑, 所以对可以使用的 plugin 设置了一个白名单, 而恰好, 这个白名单极其的狭窄, 并不包含我所使用的 jekyll-org 插件. 难道就无解了么? 一开始想要使用 这篇文章 中提到的方法来实现. 但是发现这样太麻烦了, 根本不好用. 所以打算走别的路线: 通过 Github Actions 来 build, 然后放到 gh-page branch, 让 Github Pages 到 gh-page 来生成网页. 原理是这样的, 但是实际操作还是很头疼, 因为一些不知道为什么的原因, 我没法在我的电脑上安装 jekyll 环境, 所以我使用的是 docker 镜像来实现的. 虽然并不知道是否是镜像的问题, 我在尝试现成的 Github Actions Workflow 的时候, 不是遇到 Ruby 和 Gem 版本不对, 就是遇到虽然成功了, 但是貌似渲染出了问题, 总之这样乱七八糟的, 让我很是不爽. 于是我打算了解一下如何自己写一个 Github Actions. 本地环境 每次测试都提交到 Github 上也未免有些尴尬&#8230; 所以换到本地先进行测试通过后再放到远程. 需要安装: nektos/act: 本地的 Github Actions, brew install act docker: 我已经有了 (不过尴尬的是: 在我电脑上会报错的操作, 在服务器端并不会&#8230; 害, 那么就造作服务器也可以. ) 基本的逻辑是这样的: 配置环境, 使用的是 actions/checkout 和 ruby/setup-ruby 这两个已经写好了的 Action. 生成静态网站, 也就是 _site: bundle exec jekyll build 然后将这个静态网站推送到 gh-pages 分支, 也就是 Github Pages 去查看的分支. 其中有一个坑就是, 因为一开始我使用 Jekyll 的时候, 将图片文件地址写成了 _img, 而 Jekyll 默认不包含 _ 开头的文件, 并且 Github Pages 默认使用 Jekyll 来生成网页. 于是就会导致我的网页图片无法正常显示&#8230; 一个曲线救国的方式就是在 gh-pages 中加入一个 .nojekyll 的文件, 让 Github Pages 默认不使用 Jekyll. 具体的代码可以查看我的 仓库. 测试 因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分. 数学公式 $$A + B = C$$ 以及行内公式 $x = f(x)$. 代码 5.times do |i| puts &quot;I am lucky!&quot; end 图片插入 链接跳转, 跳转至 测试, 貌似不行&#8230; Org-mode 让我来介绍一下为什么我会想要使用 org-mode 吧. 契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素, 基本就是运行个代码就能够解决的问题. 所以我写了一个程序, 能够自动读取 (生成) 代码, 然后将运行的结果输出, 最后用 pdf 导出的一个程序. (看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题, 但是我写的十分的丑陋, 并且还很难用. 如果有)" />
+<meta property="og:description" content="来点有意思的, 没错, 就是 Org-mode 作为一个虚假的 Emacer, 我最近被 org-mode 种草了. 于是我想要在之后好好了解一下 org-mode 以及用它来写博客, 而不是 markdown. (嘿嘿嘿&#8230; ) 于是我做了一些小小的配置, 主要参考的是: org-mode で blog 这个网站. 其中使用到的插件为 jekyll-org, 并且最后加上我的一点点丢人现眼的, 微不足道的配置和测试. 配置 Jekyll Side 只需要做两件事情: 修改 _config.yml 文件 在 plugins 下面添加一行: jekyll-org 即可 plugins: - jekyll-org (optional) 为 org-mode 添加 liquid tag 支持: org: liquid: true 等价于为每个文件都启用 #+liquid: enabled 的 prompt. 修改 Gemfile 文件 添加 gem &#39;jekyll-org&#39;, &#39;&gt;= 1.1.0&#39; gem &quot;pygments.rb&quot;, &quot;~&gt; 2.3&quot; # optional for syntax highlighting 或者可以直接命令行运行: bundle add jekyll pygments.rb 关于语法高亮, 因为 minima 主题 (就是我用的这个) 自带高亮, 所以只确保 bundle add pygments.rb. 然后就是快乐的使用体验了. Org-mode 相比 markdown 的 yaml 配置: layout: post title: Title date: 2022-12-04 12:00:00 +0800 math: true categories: notes 在 org 下, 和一般 tag 一样: #+layout: post #+title: Org-mode and Jekyll #+date: 2022-12-05 #+math: true #+categories: jekyll 一些其他的配置 站内链接 这个目前我还不知道该如何实现. 因为在 markdown 方面, 我使用的方式是 site.github.url 来指出网页的根地址, 然后写相对地址. 目前的方式仍然是用老的那一套, 缺点就是没法在本地很好地处理相对跳转. (就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. ) 数学公式 可以参考之前的一个笔记: 考完后的katex小教程. 然后在文档中添加: #+math: true. Github Pages and Github Actions 结果我发现, 问题并没有我想得那么简单就是了&#8230; 推送到 Github Page 上后, 发现了一个非常尴尬的问题: Github Page 因为安全性考虑, 所以对可以使用的 plugin 设置了一个白名单, 而恰好, 这个白名单极其的狭窄, 并不包含我所使用的 jekyll-org 插件. 难道就无解了么? 一开始想要使用 这篇文章 中提到的方法来实现. 但是发现这样太麻烦了, 根本不好用. 所以打算走别的路线: 通过 Github Actions 来 build, 然后放到 gh-page branch, 让 Github Pages 到 gh-page 来生成网页. 原理是这样的, 但是实际操作还是很头疼, 因为一些不知道为什么的原因, 我没法在我的电脑上安装 jekyll 环境, 所以我使用的是 docker 镜像来实现的. 虽然并不知道是否是镜像的问题, 我在尝试现成的 Github Actions Workflow 的时候, 不是遇到 Ruby 和 Gem 版本不对, 就是遇到虽然成功了, 但是貌似渲染出了问题, 总之这样乱七八糟的, 让我很是不爽. 于是我打算了解一下如何自己写一个 Github Actions. 本地环境 每次测试都提交到 Github 上也未免有些尴尬&#8230; 所以换到本地先进行测试通过后再放到远程. 需要安装: nektos/act: 本地的 Github Actions, brew install act docker: 我已经有了 (不过尴尬的是: 在我电脑上会报错的操作, 在服务器端并不会&#8230; 害, 那么就造作服务器也可以. ) 基本的逻辑是这样的: 配置环境, 使用的是 actions/checkout 和 ruby/setup-ruby 这两个已经写好了的 Action. 生成静态网站, 也就是 _site: bundle exec jekyll build 然后将这个静态网站推送到 gh-pages 分支, 也就是 Github Pages 去查看的分支. 其中有一个坑就是, 因为一开始我使用 Jekyll 的时候, 将图片文件地址写成了 _img, 而 Jekyll 默认不包含 _ 开头的文件, 并且 Github Pages 默认使用 Jekyll 来生成网页. 于是就会导致我的网页图片无法正常显示&#8230; 一个曲线救国的方式就是在 gh-pages 中加入一个 .nojekyll 的文件, 让 Github Pages 默认不使用 Jekyll. 具体的代码可以查看我的 仓库. 测试 因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分. 数学公式 $$A + B = C$$ 以及行内公式 $x = f(x)$. 代码 5.times do |i| puts &quot;I am lucky!&quot; end 图片插入 链接跳转, 跳转至 测试, 貌似不行&#8230; Org-mode 让我来介绍一下为什么我会想要使用 org-mode 吧. 契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素, 基本就是运行个代码就能够解决的问题. 所以我写了一个程序, 能够自动读取 (生成) 代码, 然后将运行的结果输出, 最后用 pdf 导出的一个程序. (看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题, 但是我写的十分的丑陋, 并且还很难用. 如果有)" />
+<link rel="canonical" href="/jekyll/org-test/" />
+<meta property="og:url" content="/jekyll/org-test/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-12-10T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Org-mode and Jekyll" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-12-10T00:00:00+00:00","datePublished":"2022-12-10T00:00:00+00:00","description":"来点有意思的, 没错, 就是 Org-mode 作为一个虚假的 Emacer, 我最近被 org-mode 种草了. 于是我想要在之后好好了解一下 org-mode 以及用它来写博客, 而不是 markdown. (嘿嘿嘿&#8230; ) 于是我做了一些小小的配置, 主要参考的是: org-mode で blog 这个网站. 其中使用到的插件为 jekyll-org, 并且最后加上我的一点点丢人现眼的, 微不足道的配置和测试. 配置 Jekyll Side 只需要做两件事情: 修改 _config.yml 文件 在 plugins 下面添加一行: jekyll-org 即可 plugins: - jekyll-org (optional) 为 org-mode 添加 liquid tag 支持: org: liquid: true 等价于为每个文件都启用 #+liquid: enabled 的 prompt. 修改 Gemfile 文件 添加 gem &#39;jekyll-org&#39;, &#39;&gt;= 1.1.0&#39; gem &quot;pygments.rb&quot;, &quot;~&gt; 2.3&quot; # optional for syntax highlighting 或者可以直接命令行运行: bundle add jekyll pygments.rb 关于语法高亮, 因为 minima 主题 (就是我用的这个) 自带高亮, 所以只确保 bundle add pygments.rb. 然后就是快乐的使用体验了. Org-mode 相比 markdown 的 yaml 配置: layout: post title: Title date: 2022-12-04 12:00:00 +0800 math: true categories: notes 在 org 下, 和一般 tag 一样: #+layout: post #+title: Org-mode and Jekyll #+date: 2022-12-05 #+math: true #+categories: jekyll 一些其他的配置 站内链接 这个目前我还不知道该如何实现. 因为在 markdown 方面, 我使用的方式是 site.github.url 来指出网页的根地址, 然后写相对地址. 目前的方式仍然是用老的那一套, 缺点就是没法在本地很好地处理相对跳转. (就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. ) 数学公式 可以参考之前的一个笔记: 考完后的katex小教程. 然后在文档中添加: #+math: true. Github Pages and Github Actions 结果我发现, 问题并没有我想得那么简单就是了&#8230; 推送到 Github Page 上后, 发现了一个非常尴尬的问题: Github Page 因为安全性考虑, 所以对可以使用的 plugin 设置了一个白名单, 而恰好, 这个白名单极其的狭窄, 并不包含我所使用的 jekyll-org 插件. 难道就无解了么? 一开始想要使用 这篇文章 中提到的方法来实现. 但是发现这样太麻烦了, 根本不好用. 所以打算走别的路线: 通过 Github Actions 来 build, 然后放到 gh-page branch, 让 Github Pages 到 gh-page 来生成网页. 原理是这样的, 但是实际操作还是很头疼, 因为一些不知道为什么的原因, 我没法在我的电脑上安装 jekyll 环境, 所以我使用的是 docker 镜像来实现的. 虽然并不知道是否是镜像的问题, 我在尝试现成的 Github Actions Workflow 的时候, 不是遇到 Ruby 和 Gem 版本不对, 就是遇到虽然成功了, 但是貌似渲染出了问题, 总之这样乱七八糟的, 让我很是不爽. 于是我打算了解一下如何自己写一个 Github Actions. 本地环境 每次测试都提交到 Github 上也未免有些尴尬&#8230; 所以换到本地先进行测试通过后再放到远程. 需要安装: nektos/act: 本地的 Github Actions, brew install act docker: 我已经有了 (不过尴尬的是: 在我电脑上会报错的操作, 在服务器端并不会&#8230; 害, 那么就造作服务器也可以. ) 基本的逻辑是这样的: 配置环境, 使用的是 actions/checkout 和 ruby/setup-ruby 这两个已经写好了的 Action. 生成静态网站, 也就是 _site: bundle exec jekyll build 然后将这个静态网站推送到 gh-pages 分支, 也就是 Github Pages 去查看的分支. 其中有一个坑就是, 因为一开始我使用 Jekyll 的时候, 将图片文件地址写成了 _img, 而 Jekyll 默认不包含 _ 开头的文件, 并且 Github Pages 默认使用 Jekyll 来生成网页. 于是就会导致我的网页图片无法正常显示&#8230; 一个曲线救国的方式就是在 gh-pages 中加入一个 .nojekyll 的文件, 让 Github Pages 默认不使用 Jekyll. 具体的代码可以查看我的 仓库. 测试 因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分. 数学公式 $$A + B = C$$ 以及行内公式 $x = f(x)$. 代码 5.times do |i| puts &quot;I am lucky!&quot; end 图片插入 链接跳转, 跳转至 测试, 貌似不行&#8230; Org-mode 让我来介绍一下为什么我会想要使用 org-mode 吧. 契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素, 基本就是运行个代码就能够解决的问题. 所以我写了一个程序, 能够自动读取 (生成) 代码, 然后将运行的结果输出, 最后用 pdf 导出的一个程序. (看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题, 但是我写的十分的丑陋, 并且还很难用. 如果有)","headline":"Org-mode and Jekyll","mainEntityOfPage":{"@type":"WebPage","@id":"/jekyll/org-test/"},"url":"/jekyll/org-test/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Org-mode and Jekyll</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-12-10T00:00:00+00:00" itemprop="datePublished">Dec 10, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>来点有意思的, 没错, 就是 Org-mode</h1>
+<p>作为一个虚假的 Emacer, 我最近被 org-mode 种草了.
+  于是我想要在之后好好了解一下 org-mode 以及用它来写博客,
+  而不是 markdown. (嘿嘿嘿&#8230; )</p>
+<p>于是我做了一些小小的配置, 主要参考的是: <a href="https://ifritjp.github.io/blog/site/2019/01/17/setup-jekyll.html">org-mode で blog</a> 这个网站.
+  其中使用到的插件为 <a href="https://github.com/eggcaker/jekyll-org">jekyll-org</a>, 并且最后加上我的一点点丢人现眼的,
+  微不足道的配置和测试.</p>
+<h2>配置</h2>
+<h3>Jekyll Side</h3>
+<p>只需要做两件事情:</p>
+<ol>
+  <li>修改 <code>_config.yml</code> 文件
+    <ul>
+      <li>在 <code>plugins</code> 下面添加一行: <code>jekyll-org</code> 即可
+<div class="highlight"><pre><span></span><span class="nt">plugins</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">jekyll-org</span>
+</pre></div>
+      </li>
+      <li>(optional) 为 org-mode 添加 liquid tag 支持:
+<div class="highlight"><pre><span></span><span class="nt">org</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">liquid</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+        <p>等价于为每个文件都启用 <code>#+liquid: enabled</code> 的 prompt.</p>
+      </li>
+    </ul>
+  </li>
+  <li>修改 <code>Gemfile</code> 文件
+    <ul>
+      <li>添加
+<div class="highlight"><pre><span></span><span class="n">gem</span><span class="w"> </span><span class="s1">&#39;jekyll-org&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;&gt;= 1.1.0&#39;</span>
+<span class="n">gem</span><span class="w"> </span><span class="s2">&quot;pygments.rb&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;~&gt; 2.3&quot;</span><span class="w"> </span><span class="c1"># optional for syntax highlighting</span>
+</pre></div>
+        <p>或者可以直接命令行运行: <code>bundle add jekyll pygments.rb</code></p>
+      </li>
+      <li>关于语法高亮, 因为 <code>minima</code> 主题 (就是我用的这个) 自带高亮,
+        所以只确保 <code>bundle add pygments.rb</code>.</li>
+    </ul>
+  </li>
+</ol>
+<p>然后就是快乐的使用体验了.</p>
+<h3>Org-mode</h3>
+<p>相比 markdown 的 yaml 配置:</p>
+<div class="highlight"><pre><span></span><span class="nt">layout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">post</span>
+<span class="nt">title</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Title</span>
+<span class="nt">date</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2022-12-04 12:00:00 +0800</span>
+<span class="nt">math</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">categories</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">notes</span>
+</pre></div>
+<p>在 org 下, 和一般 tag 一样:</p>
+<div class="highlight"><pre><span></span>#+layout: post
+#+title: Org-mode and Jekyll
+#+date: 2022-12-05
+#+math: true
+#+categories: jekyll
+</pre></div>
+<h3>一些其他的配置</h3>
+<h4>站内链接</h4>
+<p>这个目前我还不知道该如何实现.
+  因为在 markdown 方面, 我使用的方式是
+  <code>site.github.url</code> 来指出网页的根地址,
+  然后写相对地址.</p>
+<p>目前的方式仍然是用老的那一套,
+  缺点就是没法在本地很好地处理相对跳转.</p>
+<p>(就是很丑, 不过也无所谓了. 希望之后可以解决这个问题. )</p>
+<h4>数学公式</h4>
+<p>可以参考之前的一个笔记: <a href="/notes/analysis-for-test/#考完后的katex小教程">考完后的katex小教程</a>.
+  然后在文档中添加: <code>#+math: true</code>.</p>
+<h3>Github Pages and Github Actions</h3>
+<p>结果我发现, 问题并没有我想得那么简单就是了&#8230;</p>
+<p>推送到 Github Page 上后, 发现了一个非常尴尬的问题:</p>
+<p>Github Page 因为安全性考虑, 所以对可以使用的 plugin 设置了一个白名单,
+  而恰好, 这个白名单极其的狭窄, 并不包含我所使用的 <code>jekyll-org</code> 插件.</p>
+<p>难道就无解了么?</p>
+<p>一开始想要使用 <a href="https://taoalpha.github.io/blog/2015/05/29/tech-use-jekyll-plugin-with-github-page/">这篇文章</a> 中提到的方法来实现.
+  但是发现这样太麻烦了, 根本不好用. 所以打算走别的路线:
+  通过 Github Actions 来 build, 然后放到 gh-page branch,
+  让 Github Pages 到 gh-page 来生成网页.</p>
+<p>原理是这样的, 但是实际操作还是很头疼, 因为一些不知道为什么的原因,
+  我没法在我的电脑上安装 jekyll 环境, 所以我使用的是 docker 镜像来实现的.
+  虽然并不知道是否是镜像的问题, 我在尝试现成的 Github Actions Workflow
+  的时候, 不是遇到 Ruby 和 Gem 版本不对, 就是遇到虽然成功了, 但是貌似渲染出了问题,
+  总之这样乱七八糟的, 让我很是不爽.</p>
+<p>于是我打算了解一下如何自己写一个 Github Actions.</p>
+<h4>本地环境</h4>
+<p>每次测试都提交到 Github 上也未免有些尴尬&#8230;
+  所以换到本地先进行测试通过后再放到远程. 需要安装:</p>
+<ul>
+  <li><a href="https://github.com/nektos/act">nektos/act</a>: 本地的 Github Actions, <code>brew install act</code></li>
+  <li>docker: 我已经有了</li>
+</ul>
+<p>(不过尴尬的是: 在我电脑上会报错的操作, 在服务器端并不会&#8230;
+  害, 那么就造作服务器也可以. )</p>
+<p>基本的逻辑是这样的:</p>
+<ol>
+  <li>配置环境, 使用的是 <code>actions/checkout</code> 和 <code>ruby/setup-ruby</code>
+    这两个已经写好了的 Action.</li>
+  <li>生成静态网站, 也就是 <code>_site</code>: <code>bundle exec jekyll build</code></li>
+  <li>然后将这个静态网站推送到 <code>gh-pages</code> 分支,
+    也就是 Github Pages 去查看的分支.
+    <p>其中有一个坑就是, 因为一开始我使用 Jekyll 的时候,
+      将图片文件地址写成了 <code>_img</code>, 而 Jekyll 默认不包含 <code>_</code> 开头的文件,
+      并且 Github Pages 默认使用 Jekyll 来生成网页.</p>
+    <p>于是就会导致我的网页图片无法正常显示&#8230;</p>
+    <p>一个曲线救国的方式就是在 <code>gh-pages</code> 中加入一个 <code>.nojekyll</code> 的文件,
+      让 Github Pages 默认不使用 Jekyll.</p>
+  </li>
+</ol>
+<p>具体的代码可以查看我的 <a href="https://github.com/li-yiyang/li-yiyang.github.io/blob/main/.github/workflows/build-jekyll.yml">仓库</a>.</p>
+<h1>测试</h1>
+<p>因为我才刚开始使用 Org-mode, 所以我只能测试很小的一部分.</p>
+<ul>
+  <li>数学公式
+    <p>$$A + B = C$$</p>
+    <p>以及行内公式 $x = f(x)$.</p>
+  </li>
+  <li>代码
+<div class="highlight"><pre><span></span><span class="mi">5</span><span class="o">.</span><span class="n">times</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">i</span><span class="o">|</span>
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;I am lucky!&quot;</span>
+<span class="k">end</span>
+</pre></div>
+  </li>
+  <li>图片插入
+    <p><img src="/_img/meme/see-isnt-these-what-you-want.png" alt="/_img/meme/see-isnt-these-what-you-want.png" /></p>
+  </li>
+  <li>链接跳转, 跳转至 <a href="test">测试</a>, 貌似不行&#8230;</li>
+</ul>
+<h1>Org-mode</h1>
+<p>让我来介绍一下为什么我会想要使用 org-mode 吧.</p>
+<p>契机是这个学期的 C 语言课程 (雾), 课程的作业及其朴素,
+  基本就是运行个代码就能够解决的问题. 所以我写了一个程序,
+  能够自动读取 (生成) 代码, 然后将运行的结果输出,
+  最后用 pdf 导出的一个程序.</p>
+<p>(看到这里的大佬估计可以认出这就是一个 org-babel 就能够解决的问题,
+  但是我写的十分的丑陋, 并且还很难用. 如果有)</p>
+
+  </div><a class="u-url" href="/jekyll/org-test/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
