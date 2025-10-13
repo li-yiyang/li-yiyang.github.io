@@ -1,0 +1,476 @@
+:PROPERTIES:
+:header-args:lisp: :results silent
+:END:
+#+title: LapTop Ork (02: Synth, Network)
+#+date: 2025-09-29
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lapork
+* About
++有点想把名字改成今日声+ (有点神经了)
+
+** 太长不看版
+本期看点:
++ 小伙定义了一个合成器, 竟对波形如此如此, 那般那般
++ 利用 [[https://en.wikipedia.org/wiki/Open_Sound_Control][OSC]] 进行一个赛博音乐会
+
+* Synth
+** 正弦波
+[[{{ site.github.url }}/lapork/lapork-01/][上期]] 说到, 可以用波形来描述声音, 比如最简单的正弦波
+
+#+begin_src lisp
+  (sin-osc.ar 440 0.0 0.5)                ; (play *)
+#+end_src
+
+以及拍频的叠加:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440 0 0.5))
+  (play (sin-osc.ar 442 0 0.5))
+#+end_src
+
+效果如图所示:
+
+[[{{ site.github.url }}/_img/lapork/02/wav-440.jpg]]
+
+即, 通过叠加不同的正弦波信号, 可以产生不同 (波形) 的声音.
+于是比较聪明的一个方法就是用一组正弦波去合成一个任意的周期性信号
+(可以参考 Mathematica 函数 [[https://reference.wolfram.com/language/ref/FourierDST.html][FourierDST]]).
+
+#+html: <details><summary>一个简单的示例代码</summary>
+
+#+begin_src mathematica
+  Module[{
+    n = 10, xg, fg, coef,
+    f = Function[{x}, If[Abs[x] < 0.5, 1, 0]]
+   },
+   xg = Table[s, {s, 0., 1., 1./n}];
+   fg = f /@ xg;
+   coef = FourierDST[fg, 1]/Sqrt[n/2];
+   Show[
+    {
+     ListPlot[Transpose[{xg, fg}], PlotRange -> All],
+     Plot[Sum[coef[[i]] * Sin[Pi * i * x], {i, n - 1}], {x, -1, 1},
+      PlotRange -> All]
+     },
+    PlotRange -> All]]
+#+end_src
+
+[[{{ site.github.url }}/_img/lapork/02/fourierdst.jpg]]
+
+诶? 那如果我直接输出信号波形岂不是更快? 甚至还能够任意地拟合.
+你说的对, 请参考 [[https://www.wolframcloud.com/obj/liyiyang21a/Published/img2wav.nb][img2wav.nb]] 来尝试用声音画图片吧.
+
+#+html: </details>
+
+那假如把一个正弦波的信号的两个参数 (增幅, 频率) 视为一个可以变化的量,
+比如:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.0 0.2)))
+#+end_src
+
+即增幅是一个随时间变化的量, 出来的效果其实和前面的叠拍频的效果差不多:
+
+[[{{ site.github.url }}/_img/lapork/02/wav-amp.jpg]]
+
+(注: 为了方便打印, 这里用的是 =(sin-osc.ar 440.0 0.0 (sin-osc.ar 10.0 0.0 0.2))=)
+
+** 包络
+上面的思路相当于给原始的正弦波波形添加了一个正弦波包络,
+直接思路打开, 为什么不叠加任意形状的包络呢?
+比如一个被蛇吞掉的大象:
+
+#+begin_src lisp
+  (play (* (sin-osc.ar 440.0 0.0 0.8)
+           (env-gen.kr
+            (env '(0    0.1     1.0     0.8     0.9     1.0     0.1   0)
+                 '( 0.5     0.1     0.1     0.5     0.1     0.1    0.5))
+            :act :free)))
+#+end_src
+
+效果如下:
+
+[[{{ site.github.url }}/_img/lapork/02/elemphant-in-snake.jpg]]
+
+解释:
++ =env= 用来构造一个 *Env*​olope (包络) 对象, 其参数如下说明:
+
+  #+begin_example
+    (env levels times &optional (curve :lin) (release-node -99) (loop-node -99))
+  #+end_example
+
+  其中:
+  + =levels= 和 =times= 相当于是描述了一个包络的 XY 图像,
+    但是用的是一个比较 “别扭的” 的方式进行的
+
+    #+begin_example
+    levels: 第一段的幅值                            第二段的幅值 ...
+    times:               第一段和第二段之间的时间差              第二段和第三段之间的时间差 ...
+    curves:           第一段和第二段之间变换的波形类型           ...
+    #+end_example
+
+    即, =times= 是每段 =level= 之间的事件间隔持续的时间长度
+
+    假如你觉得这种方式有点奇奇怪怪的, 不妨看看 [[{{ site.github.io }}/jekyll/little-sound-dj/][LSDj]] 中对波形的定义吧
+  + =curve= 和 =times= 同理, 可以是一个间隔之间的变换方式,
+    也可以直接是一个全部区间的变形方式, 常见的有:
+    + =:lin= 线性 (默认的)
+    + =:exp= 指数 (幂律) (但是试了之后效果一般)
+    + =:sin= 正弦 (试试看, 会发现波形在抖)
+  + 其他的还没试过, 可以自己看 [[https://doc.sccode.org/Classes/Env.html][文档]]
++ =env-gen.kr= 根据 =env= 对象来构造一个控制信号,
+  这个控制信号就可以像一般的振幅一样来用了 (包络信号嘛)
+
+  + =act=: 控制在包络结束的时候干什么, 比如:
+    + =:free= 将整个信号清除,
+      这就会导致上面的信号在播放后不会像之前的 =sin-osc= 一样一直在吵
+    + =:no-action= 啥也不干,
+      一般需要手动 =free= 掉
+    + 其他见 [[https://doc.sccode.org/Classes/Done.html][Done]] 的文档
+
+*** 预制包络
+显然, 一个个手动构造包络 (=env=) 也有点太麻烦了. 并且也有点没必要,
+为什么不试试用那些已经构造好的信号形状来去构造包络呢?
+
+#+begin_src lisp
+  (play (blip.ar 200 10 (env-gen.kr (sine 1.5 1.0) :act :free)))
+#+end_src
+
+[[{{ site.github.io }}/_img/lapork/02/dumpling.jpg]]
+
+(我愿称之为饺子音)
+
+解释:
++ =(blip.ar &optional freq nharm mul add)=
+  在一个周期里面产生 =nharm= 个峰, 第 =0= 个峰为脉冲峰
+
+  [[{{ site.github.io }}/_img/lapork/02/blip.jpg]]
++ =(sine &optional dur amp)= 产生一个持续时间为 =dur= (s),
+  幅值为 =amp= 的一个 \(\pi / 2\) 波形的包络
+
+那么是否还有其他的包络呢? 也许是有的吧, 但是没有用过.
+
+*** ADSR (*A*​ttack, *D*​ecay, *S*​ustain, *R*​elease)
+这个是我在合成器中看到的概念,
+大概是早期模拟合成器里面用来描述和控制包络的一种 “语言”.
+
+即:
+
+[[{{ site.github.io }}/_img/lapork/02/ADSR_Parameter.svg]]
+
+(图片来源于 [[https://en.wikipedia.org/wiki/Envelope_(music)][Wikipedia]])
+
+#+html: <details><summary>那么来试试吧...</summary>
+
+按照 Wikipedia 上的定义, 并不难给出这样的一个表示:
+
+#+begin_src lisp
+  (defun adsr-env (attack decay sustain release
+                   &key
+                     (sustain-level 0.5)
+                     (peak-level    1.0)
+                     (curve :lin))
+    "Create a ADSR envolope. "
+    (let ((sustain* (sc::mul sustain-level peak-level)))
+      (env (list 0      peak-level     sustain*       sustain*       0)
+           (list  attack          decay        sustain        release)
+           curve)))
+#+end_src
+
+于是可以测试一下:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440 0 (env-gen.kr (adsr-env 0.3 0.2 0.4 0.3))))
+#+end_src
+
+以下是不同的 =curve= 时的包络的形状:
+
+[[{{ site.github.io }}/_img/lapork/02/adsr.jpg]]
+
+注: 虽然也有一个函数叫做 [[https://github.com/byulparan/cl-collider/blob/cc05bfb2ecfa34b9cd0660d19a638434f447be5c/ugens/EnvGen.lisp#L181][=adsr=]], 但是其 =sustain= 的行为是按下后等待一个
+=release= 的信号, 和简单的 ADSR 稍微有一点点区别. (吗? )
+
+#+html: </details>
+
+** All you need is Synth
+上面的例子中, 用包络和基底的波形 (=sin-osc=, =blip=) 可以构造出比较有趣的声音,
+如果习惯编程的话, 应该会下意识地想要用函数来简化声音的构造, 比如:
+
+#+begin_src lisp
+  (defun play-note (&key (freq 440.0) (duration 1))
+    (play (sin-osc.ar freq 0.0
+                      (env-gen.kr (adsr-env 0.2 0.3 (* duration 0.4) 0.6
+                                            :curve :sin)))))
+#+end_src
+
+于是你就可以用:
+
+#+begin_src lisp
+  (loop :for (freq dur sleep) :in '((200 10 5)
+                                    (210 20 5)
+                                    (300 10 5))
+        :do (play-note :freq freq :duration dur)
+        :do (sleep sleep))
+#+end_src
+
+这样的方式来演奏了呢~
+
+但是如果在合成器的视角来看的话, 其实还有一种方式:
+
++ 把每个 Lisp 的 S-expression 看作是一个信号单元, 比如
+  =sin-osc= 是一个振荡器单元, 它的参数是从其他单元连过来的线,
+  它的输出是连接到一个 (加法器) 的输出单元 (DSP)
++ 那么把这些单元串在一起, 你就得到了一个 “Synthesizer” (合成器) 啦
++ 比如你可以在播放音乐的时候去改变一些参数, 就像是扭旋钮一样,
+  去改变这个声音出来的感觉
+
+#+html: <details><summary>一些例子</summary>
+
++ 比如我觉得比较帅的 [[https://mirack.app][miRack]]
++ 或者如果你觉得比较贵的话, 可以试试看 [[https://vcvrack.com/Rack][VCV Rack]]
++ 或者你觉得太便宜的话, 可以去试试看实体的 [[https://en.wikipedia.org/wiki/Eurorack][Eurorack Synthesizer]]
+
+#+html: </details>
+
+但是毕竟是编程嘛, 咱也并不不需要去扭旋扭和连线, 只需要:
+
+#+begin_src lisp
+  (defsynth snake-elemphant ((freq 440) (duration 10) (out 0) (amp 0.5)
+                             (attack 0.1) (decay 1.0) (hold 1.0) (curve :lin)
+                             (bais 0.05) (sustain 0.95))
+    (let* ((env (env (list 0   bais   1.0   sustain  sustain  1.0   bais   0)
+                     (list  hold attack attack duration attack attack decay)
+                     curve))
+           (sig (sin-osc.ar freq 0.0 (env-gen.kr env :act :free))))
+      (out.ar out (* amp sig))))
+#+end_src
+
+解释:
++ =defsynth= 定义了一个名字叫做 =snake-elemphant= 的合成器, 默认的参数是用 =&key= 的形式
++ =out.ar= 将输出的信号发送到 =out= (=0= 表示左声道, =1= 表示右声道, 其他的看你的设备了)
+  信道的缓冲区 (buffer) 中, 可以想像成把连好的线都接到耳机/音箱上
+
+于是就可以用:
+
+#+begin_src lisp
+  (synth 'snake-elemphant)
+#+end_src
+
+来播放一段声音了.
+
+是不是觉得有点普通?
+
+#+begin_src lisp
+  (synth 'snake-elemphant :freq 200 :duration 20 :curve :sin)
+#+end_src
+
+是不是感觉还是有点普通?
+
+#+begin_src lisp
+  (let ((node (synth 'snake-elemphant :freq 200 :duration 10)))
+    (loop :for freq :from 100 :upto 400 :by 50
+          :do (sleep 1)
+          :do (ctrl node :freq freq)
+          :finally (free node)))
+#+end_src
+
+相当于是在合成器工作的时候也能扭旋扭改变其参数.
+
+* OSC
+** Course Specific Softwares
+课上用了这样的一个工作流:
++ [[https://hexler.net/touchosc][TouchOSC]] 用于构建一个虚拟的 “旋钮” 控制板,
+  用可视化拖拽的方式可以去构建一堆的仪表 (按钮, 滑块等),
+  然后通过交互仪表的方式, 通过 OSC 协议去向服务器发送控制信号
++ [[https://hexler.net/protokolhttps://hexler.net/protokol][Protokol]] 可以看作是一个用于 OSC 协议的 “电流表”,
+  相当于是本地监听, 然后转发给其他的服务器/端口
++ [[https://docs.supercollider.online/Classes/OSCdef.html][SuperCollider OSCDef]] 用来连接到 OSC 服务器上去接受 OSC 控制信号,
+  然后通过这个控制信号去 =ctrl= 合成器的表现
++ OscGroupClient 一个看起来像是本地端口转发的一个东西,
+  看了一下 =.app= 的构成像是一个简单的 Python + Tk 做的软件,
+  简单逆向了一下好像是用的 Python =osc=, 具体啥功能暂时没细看
+
+那么实际上上面的这些完全可以 All in Lisp 了呢.
+
+** Behind The Scene
+这里参考 [[https://github.com/zzkt/osc/blob/core/osc-examples.lisp][osc-examples.lisp]] 来做一个简单的说明:
+
+*** OSCDef
+OSCDef 相当于构建了一个简单 OSC 协议的监听,
+然后根据接受到的 OSC 控制信号来控制 synth.
+
+#+html: <details><summary>于是可以编写如下的简单控制代码</summary>
+
+#+begin_src lisp
+  (defparameter *oscdef-table* (make-hash-table :test 'equal)
+    "A rule mapping table of OSC control definition.
+
+  Dev Note:
+  The table use string as name key, and a list of functions
+  as control process. ")
+
+  (defparameter *osc-debug* nil
+    "Set to non-nil to debug the OSC messages. ")
+
+  (declaim (type (integer 0) *osc-in-port*))
+  (defparameter *osc-in-port* 2333
+    "Listening port of OSC. ")
+
+  (declaim (type (or null bt:thread) *osc-listening-thread*))
+  (defparameter *osc-listening-thread* nil
+    "`bt:thread' to listening OSC control input")
+
+  (defun osc-running-p ()
+    "Status/Control of if running OSC listening server. "
+    (and *osc-listening-thread*
+         (bt:thread-alive-p *osc-listening-thread*)))
+
+  (defun (setf osc-running-p) (status)
+    (if status
+        (start-osc-listening)
+        (stop-osc-listening)))
+
+  (defun stop-osc-listening ()
+    "Stop OSC listening server. "
+    (when (osc-running-p)
+      (bt:destroy-thread *osc-listening-thread*)))
+
+  (defun start-osc-listening (&key (port *osc-in-port*) (buffer 1024) force
+                              &aux (force? (or force (/= port *osc-in-port*))))
+    "Start a new OSC listening server.
+
+  Parameters:
+  + PORT: if changed, will update `*osc-in-port*'
+  + FORCE: if non-nil, will close existing server
+  "
+    (declare (type (integer 0) port))
+    (when force? (stop-osc-listening))
+    (setf *osc-in-port* port
+          ,*osc-listening-thread*
+          (bt:make-thread
+           (lambda ()
+             (let ((s    (usocket:socket-connect nil nil
+                                                 :local-port port
+                                                 :local-host #(127 0 0 1)
+                                                 :protocol :datagram
+                                                 :element-type '(unsigned-byte 8)))
+                   (buff (make-sequence '(vector (unsigned-byte 8)) buffer)))
+               (unwind-protect
+                    (loop :for osc-msg := (progn
+                                            (usocket:socket-receive s buff buffer)
+                                            (osc:decode-bundle buff))
+                          :for name  := (osc:command osc-msg)
+                          :for args  := (osc:args    osc-msg)
+                          :for ctrls := (gethash name *oscdef-table*)
+                          ;; TODO: log?
+                          ;; TODO: make ctrl into other thread?
+                          :do (when *osc-debug*
+                                (format t "~A(~{~A~^, ~})~%" name args))
+                          :do (ignore-errors
+                               (dolist (ctrl ctrls) (apply ctrl args)))
+                          :do (force-output))
+                 (when s (usocket:socket-close s))))))))
+
+  (defmacro oscdef (name lambda-list &body body)
+    "Define a OSC command of NAME and LAMBDA-LIST.
+  This would add new method to `*oscdef-table*' of the NAME. "
+    (declare (type string name))
+    `(push (lambda ,lambda-list ,@body)
+           (gethash ,name *oscdef-table*)))
+
+  (defmacro oscdef-clear (&optional name)
+    "Clear all the previous OSC method of NAME. "
+    (setf (gethash name *oscdef-table*) ()))
+#+end_src
+
+#+html: </details>
+
+实际的使用效果如下:
+
+#+begin_src lisp
+  (start-osc-listening :port 2333)
+
+  (oscdef-clear "/test")
+  (oscdef "/test" (&rest args)
+    (format t "Got ~{~A~^, ~}~%" args))
+#+end_src
+
+那么稍微改变一下:
+
+#+begin_src lisp
+  (defsynth sining ((freq 440) (out 0) (amp 0.8))
+    (out.ar out (* amp (sin-osc.ar freq))))
+
+  (defparameter note (synth 'sining :freq 440))
+
+  (oscdef "/freq" (freq)
+    (ctrl note :freq (+ (* freq 100) 200)))
+#+end_src
+
+于是你就可以用简单的 TouchOSC 来控制你的合成器了呢.
+不错, 这下就没有什么后顾之忧了.
+理论上来说我可以把所有的东西都用 Common Lisp 来做了.
+
+安心です...
+
+* Misc
+** Some Wired Bugs and Fixs
+*** 在 =(server-boot *s*)= 的时候出现 =libc++abi: terminating=
+在 debug 的时候发现了调用的外部程序 (=scsynth=) 出现的报错:
+
+#+begin_example
+WARNING: Input sample rate is 24000, but output is 48000. Attempting to set input sample rate to match the output.
+ERROR: Setting sample rate failed. OSStatus epon
+Possible solutions:
+- explicitly set the sample rate to one supported by both devices:
+    s.options.sampleRate = <rate>;
+- or, in your system's "Audio MIDI Setup", set sample rate to the same value on both the input and output devices
+- or, disable input completely:
+    s.options.numInputBusChannels = 0;
+could not initialize audio.
+libc++abi: terminating
+#+end_example
+
+嗯, 所以 AirPods 的输入 (Input: 24kHz) 和输出 (Output: 48kHz) 并不匹配.
+只好在 MIDI Setting 里面把 AirPods 的输出降成 (24 kHz) 了.
+
+不过效果并不好, 采样率降了一半了之后有些声音听起来怪怪的.
+
+最终的解决办法是用 Loopback 新建了一个虚拟设备, 强制输入和输出都是
+(48 kHz) 的采样率了, 然后在 MIDI Setting 里面将其设置为输入和输出.
+
+(这样的好处是可以多输入和多输出, 方便用耳机监听的同时给示波器输出了呢)
+
+*** 在播放的时候发现声音之后单声道
+比如:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 5.0 0.0 0.8)))
+#+end_src
+
+的时候, 会发现只有左边的耳机出声 -- 这个时候, 只需要指定参数:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 5.0 0.0 0.8)) :out-bus 1)
+#+end_src
+
+就可以在右边发声了呢.
+
+注: 这里你可以用 =pharse= 参数来控制左右声道的波形的同步.
+比如可以试试看:
+
+#+begin_src lisp
+  (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.0 0.8)) :out-bus 0)
+  (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.5 0.8)) :out-bus 1)
+#+end_src
+
+会感觉魔音贯耳, 有一个从左到右 (或者从右到左) 的一个嗡嗡嗡声.
+
+
+*** KR, AR 啥玩意?
+会发现有 =sin-osc.ar= 和 =sin-osc.kr= 两种东西, 但是这有什么区别么?
+
++ =ar= 代表 *A*​udio Rate, 一般用来生成音频信号, 比如波形之类的
++ =kr= 代表 *C*​ontrol Rate, 一半用来生成控制信号, 比如包络之类的
