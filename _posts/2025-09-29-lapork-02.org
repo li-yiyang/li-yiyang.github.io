@@ -380,9 +380,11 @@ OSCDef 相当于构建了一个简单 OSC 协议的监听,
     `(push (lambda ,lambda-list ,@body)
            (gethash ,name *oscdef-table*)))
 
-  (defmacro oscdef-clear (&optional name)
+  (defun oscdef-clear (&optional name)
     "Clear all the previous OSC method of NAME. "
-    (setf (gethash name *oscdef-table*) ()))
+    (if name
+        (setf (gethash name *oscdef-table*) ())
+        (clhash *oscdef-table*)))
 #+end_src
 
 #+html: </details>
