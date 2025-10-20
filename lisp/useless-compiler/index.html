@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Useless Program Graph Drawer | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Useless Program Graph Drawer" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 数电要画 ASM, 但是 Graphviz 的编写有点点麻烦, 于是选择尝试写一个没啥用的绘图程序. 主要的思路 目标 希望能够像这样来把一个程序来进行绘图. 绘图方案 最终的后端使用 Graphviz 来进行绘制, 这里定义一个简单的封装 (记作 eazy-graphviz, 参考 eazy-gnuplot). 具体代码就折叠掉了, 毕竟不是重点 (虽然花了很久来写就是了&#8230;) 具体的代码 调用方案 使用 uiop:run-program 来实现对 graphviz 的程序 dot 的调用. (UIOP 文档: 13 UIOP/RUN-PROGRAM, Graphviz 的 Command Line 文档) 接下来进行一个绑定, 目标是基础功能, 而不是完全的命令行绑定: (defun run-dot (input output &amp;key (type :svg) &amp;allow-other-keys) &quot;Run dot program." />
+<meta property="og:description" content="About 数电要画 ASM, 但是 Graphviz 的编写有点点麻烦, 于是选择尝试写一个没啥用的绘图程序. 主要的思路 目标 希望能够像这样来把一个程序来进行绘图. 绘图方案 最终的后端使用 Graphviz 来进行绘制, 这里定义一个简单的封装 (记作 eazy-graphviz, 参考 eazy-gnuplot). 具体代码就折叠掉了, 毕竟不是重点 (虽然花了很久来写就是了&#8230;) 具体的代码 调用方案 使用 uiop:run-program 来实现对 graphviz 的程序 dot 的调用. (UIOP 文档: 13 UIOP/RUN-PROGRAM, Graphviz 的 Command Line 文档) 接下来进行一个绑定, 目标是基础功能, 而不是完全的命令行绑定: (defun run-dot (input output &amp;key (type :svg) &amp;allow-other-keys) &quot;Run dot program." />
+<link rel="canonical" href="/lisp/useless-compiler/" />
+<meta property="og:url" content="/lisp/useless-compiler/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-11-28T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Useless Program Graph Drawer" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-11-28T00:00:00+00:00","datePublished":"2023-11-28T00:00:00+00:00","description":"About 数电要画 ASM, 但是 Graphviz 的编写有点点麻烦, 于是选择尝试写一个没啥用的绘图程序. 主要的思路 目标 希望能够像这样来把一个程序来进行绘图. 绘图方案 最终的后端使用 Graphviz 来进行绘制, 这里定义一个简单的封装 (记作 eazy-graphviz, 参考 eazy-gnuplot). 具体代码就折叠掉了, 毕竟不是重点 (虽然花了很久来写就是了&#8230;) 具体的代码 调用方案 使用 uiop:run-program 来实现对 graphviz 的程序 dot 的调用. (UIOP 文档: 13 UIOP/RUN-PROGRAM, Graphviz 的 Command Line 文档) 接下来进行一个绑定, 目标是基础功能, 而不是完全的命令行绑定: (defun run-dot (input output &amp;key (type :svg) &amp;allow-other-keys) &quot;Run dot program.","headline":"Useless Program Graph Drawer","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/useless-compiler/"},"url":"/lisp/useless-compiler/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Useless Program Graph Drawer</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-11-28T00:00:00+00:00" itemprop="datePublished">Nov 28, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>数电要画 ASM, 但是 Graphviz 的编写有点点麻烦,
+  于是选择尝试写一个没啥用的绘图程序.</p>
+<h1>主要的思路</h1>
+<h2>目标</h2>
+<p>希望能够像这样来把一个程序来进行绘图.</p>
+<h2>绘图方案</h2>最终的后端使用 <a href="https://graphviz.org">Graphviz</a> 来进行绘制, 这里定义一个简单的封装 (记作 <code>eazy-graphviz</code>,
+  参考 <a href="https://github.com/guicho271828/eazy-gnuplot">eazy-gnuplot</a>).
+<p>具体代码就折叠掉了, 毕竟不是重点 (虽然花了很久来写就是了&#8230;)</p>
+<details><summary>具体的代码</summary>
+<h3>调用方案</h3>
+<p>使用 <code>uiop:run-program</code> 来实现对 graphviz 的程序 <code>dot</code> 的调用.
+  (UIOP 文档: <a href="https://asdf.common-lisp.dev/uiop.html#UIOP_002fRUN_002dPROGRAM">13 UIOP/RUN-PROGRAM</a>, Graphviz 的 <a href="https://graphviz.org/doc/info/command.html">Command Line 文档</a>)</p>
+<p>接下来进行一个绑定, 目标是基础功能, 而不是完全的命令行绑定:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">run-dot</span><span class="w"> </span><span class="p">(</span><span class="nf">input</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">:svg</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Run dot program.</span>
+
+<span class="s">The `input&#39; and `output&#39; should follow `uiop:run-program&#39; flavor.</span>
+<span class="s">The `type&#39; could be `:svg&#39;, `:png&#39;, and so on, it would be overwritten</span>
+<span class="s">if the output is a path name indicating its file type.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">graph-type</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;-T~A&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">pathnamep</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">                                               </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">output</span><span class="p">))</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">pathname-type</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">                                           </span><span class="nv">type</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">uiop:run-program</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="s">&quot;dot&quot;</span><span class="w"> </span><span class="o">,</span><span class="nv">graph-type</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:input</span><span class="w"> </span><span class="nv">input</span>
+<span class="w">                      </span><span class="nv">:output</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pathname</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span><span class="w"> </span><span class="nv">output</span><span class="p">))))</span>
+</pre></div>
+<h3>帮助函数</h3>
+<p>因为如果要进行展开的话, 为了让代码更加简洁, 所以做一些帮助函数来简化代码.
+  (虽然说不上能不能真的简化代码就是了). 因为这些函数部分是用于宏展开的,
+  所以需要在编译期进行执行.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">eval-when</span><span class="w"> </span><span class="p">(</span><span class="nf">:compile-toplevel</span><span class="w"> </span><span class="nv">:load-toplevel</span><span class="w"> </span><span class="nv">:execute</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; `plist-remove-key&#39; is used to avoid naming conflicts in keys</span>
+<span class="w">  </span><span class="nv">&lt;&lt;plist-remove-key&gt;&gt;</span>
+
+<span class="w">  </span><span class="c1">;; `dot-args&#39; is used to transform common lisp plist into dot args</span>
+<span class="w">  </span><span class="nv">&lt;&lt;dot-args&gt;&gt;</span>
+
+<span class="w">  </span><span class="c1">;; `escape-dot-expr&#39; is used to add the missing output dot stream</span>
+<span class="w">  </span><span class="c1">;; mainly for `with-dot&#39; and `defdot&#39; two macros.</span>
+<span class="w">  </span><span class="nv">&lt;&lt;escape-dot-expr&gt;&gt;</span>
+<span class="w">  </span><span class="p">)</span>
+</pre></div>
+<p>具体的帮助函数这里暂时不展开, 在这里仅仅做其功能的简单描述:</p>
+<ul>
+  <li><code>(plist-remove-key plist &amp;rest keys)</code>:
+    从 <code>plist</code> 中根据 <code>keys</code> 移除所有对应的键值对.</li>
+  <li><code>(dot-args args)</code>:
+    根据 <code>args</code> (plist) 生成一个 dot 中的 <code>[key=value]</code> 形式的参数</li>
+  <li><code>(escape-dot-expr stream expr)</code>:
+    如果 <code>expr</code> 是基本 dot 函数或者是 <code>defdot</code> 得到的函数,
+    那么向其第一个参数位置插入 <code>stream</code>.</li>
+</ul>
+<details><summary>具体的详细定义</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plist-remove-key</span><span class="w"> </span><span class="p">(</span><span class="nf">plist</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Remove `keys&#39; in `plist&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">k</span><span class="w"> </span><span class="nv">v</span><span class="p">)</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="nv">plist</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cddr</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="nv">k</span><span class="w"> </span><span class="nv">keys</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">collect</span><span class="w"> </span><span class="nv">k</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">v</span><span class="p">))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">dot-args</span><span class="w"> </span><span class="p">(</span><span class="nf">args</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Generate graphviz arg brackets.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot; [~{~a=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">~^, ~}]&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+</pre></div>
+<p>对于 <code>dot-args</code> 这个函数, 目前是强制把所有的参数都用字符串的形式进行输出.
+  实际上可能是有点问题的, 尽管目前还没有遇到, 但是应该对于不同的输入值类型,
+  进行一个处理才对&#8230; 之后再说.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;All the dot methods name should be within `*dot-namespace*&#39;.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*dot-alias*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">node</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">%dot-node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">arc</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">%dot-arc</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">set</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">%dot-set</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">subgraph</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">%dot-subgraph</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Alias of dot commands&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">-&gt;dot-sym</span><span class="w"> </span><span class="p">(</span><span class="nb">symbol</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make `symbol&#39; under `eazy-graphviz&#39; namespace.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">intern</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-name</span><span class="w"> </span><span class="nb">symbol</span><span class="p">)</span><span class="w"> </span><span class="nv">:eazy-graphviz</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">escape-dot-expr</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;The `expr&#39; should be escaped if the method is within `*dot-namespace*&#39;.</span>
+
+<span class="s">  For example:</span>
+
+<span class="s">    (method name &amp;rest keys) --&gt; (method stream name &amp;rest keys)</span>
+<span class="s">  &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">method</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">args</span><span class="w">   </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">expr</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">)</span>
+<span class="w">                </span><span class="c1">;; Expand dot functions</span>
+<span class="w">                </span><span class="o">`</span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;,method</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">))</span>
+<span class="w">                          </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">diredp</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="p">(</span><span class="nf">-&gt;dot-sym</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="nv">*dot-alias*</span><span class="p">)</span>
+<span class="w">                    </span><span class="c1">;; Replace dot alias and expand the function</span>
+<span class="w">                    </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="p">(</span><span class="nf">-&gt;dot-sym</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="nv">*dot-alias*</span><span class="p">))</span>
+<span class="w">                      </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">diredp</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">                                         </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">                          </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">      </span><span class="nv">expr</span><span class="p">))</span>
+</pre></div>
+<p>这里的缺陷是可能需要把符号全部放到 <code>*dot-namespace*</code> 里面, 可能会有点点问题,
+  但是应该不会太多, 就先这么使用算了.</p>
+</details>
+<h3>基本函数和组合函数</h3>
+<p>首先是一些最基本的绘图函数 (类似于 Lisp 的 7 个基本函数):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">%dot-node</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a node with `name&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">diredp</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">~a;&quot;</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="p">(</span><span class="nf">dot-args</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">%dot-arc</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a arc `from&#39; and `to&#39;, digraph arc if `diredp&#39; otherwise graph arc.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> ~a </span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">~a;&quot;</span>
+<span class="w">          </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="s">&quot;-&gt;&quot;</span><span class="w"> </span><span class="s">&quot;--&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nf">dot-args</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">%dot-set</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">slot</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Set graphviz `slot&#39; properties by `args&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">diredp</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;~a~a;&quot;</span><span class="w"> </span><span class="nv">slot</span><span class="w"> </span><span class="p">(</span><span class="nf">dot-args</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">%dot-subgraph</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">                         </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Expand graphviz subgraph.&quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;subgraph </span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> {&quot;</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~{~&amp;~a=~a;~}&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;}&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>认为这四个函数 (宏) 是标准不可重定义的函数.
+  在这四个函数的基础上, 对其的组合的函数就可以如下得到:</p>
+<div class="highlight"><pre><span></span><span class="nv">&lt;&lt;defdot-helper&gt;&gt;</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">defdot</span><span class="w"> </span><span class="p">(</span><span class="nf">dot-name</span><span class="w"> </span><span class="nv">lambda-list</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Define a graphviz function.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w"> </span><span class="nv">dot-name</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*dot-alias*</span><span class="p">)</span>
+<span class="w">          </span><span class="c1">;; Avoid user to define function conflicts with `*dot-alias*&#39;.</span>
+<span class="w">          </span><span class="o">`</span><span class="p">(</span><span class="nb">warn</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a conflicts with *dot-alias*.&quot;</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="p">))</span>
+<span class="w">          </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">             </span><span class="c1">;; Warn user of redefining dot function</span>
+<span class="w">             </span><span class="c1">;; make sure user won&#39;t overwrite the preserved function</span>
+<span class="w">             </span><span class="o">,</span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">%dot-node</span><span class="w"> </span><span class="nv">%dot-arc</span><span class="w"> </span><span class="nv">%dot-subgraph</span><span class="w"> </span><span class="nv">%dot-set</span><span class="p">))</span>
+<span class="w">                  </span><span class="o">`</span><span class="p">(</span><span class="nb">warn</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a is preserved&quot;</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+<span class="w">                  </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">declare-dot-function</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;,name</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">))</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">diredp</span><span class="w"> </span><span class="o">,@</span><span class="nv">lambda-list</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignorable</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">diredp</span><span class="p">))</span>
+<span class="w">                             </span><span class="o">,@</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">                                        </span><span class="nv">body</span><span class="p">)))))</span>
+<span class="w">             </span><span class="ss">&#39;,dot-name</span><span class="p">)))))</span>
+</pre></div>
+<p>即: 一个标准的 dot 函数应有如下约定: 第一个参数为 <code>stream</code>, 第二个参数为 <code>diredp</code>,
+  其他的参数为正常的参数, 可以被用来作为图形绘制的参数.</p>
+<details><summary>更加详细的一个说明和一些辅助的函数</summary>
+<p>实际上在这里我实现了两个命名空间, 一个是 <code>*dot-namespace*</code>, 即 dot function
+  的命名空间; 另一个这是 <code>*dot-alias*</code>, 即别名空间. 前者用于函数的运行与展开,
+  后者用于函数名称的替换和展开.</p>
+<p>其实真正重要的一个命名空间还是 <code>*dot-namespace*</code>, 但是这就有一个小小的问题,
+  那就是如果想要定义那些相互引用的函数的话, 那么可能就不是很容易实现,
+  一个简单的做法就是类似 C 语言的 function prototype, 提前进行一个函数声明.</p>
+<p>接下来就是一些简单的 <code>defdot</code> 的帮助函数:</p>
+<p>比如可以定义一个叫做 <code>declare-dot-function</code> 的宏来进行这个操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">declare-dot-function</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">names</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Declare `names&#39; are dot function.&quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">     </span><span class="o">,@</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">)</span>
+<span class="w">                      </span><span class="c1">;; warn user of redefining dot function</span>
+<span class="w">                      </span><span class="o">`</span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;,name</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">)))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nb">warn</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a is already a dot function.&quot;</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">                      </span><span class="o">`</span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="ss">&#39;,name</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">)))</span>
+<span class="w">                </span><span class="nv">names</span><span class="p">)))</span>
+</pre></div>
+<p>当然, 可能还会有一个大胆的想法就是删除某些/全部的 dot 函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">delete-dot-function</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">names</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Delete `names&#39; of dot function, if `names&#39; is nil, delete all dot functions.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">names</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="w"> </span><span class="o">&#39;</span><span class="p">())</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">delete-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pair</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pair</span><span class="p">)</span><span class="w"> </span><span class="nv">names</span><span class="p">))</span><span class="w"> </span><span class="nv">*dot-namespace*</span><span class="p">)))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">test-dot-function</span><span class="w"> </span><span class="p">((</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">diredp</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                              </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">                             </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Test dot function within `body&#39;, default output `stream&#39; is `*standard-output*&#39;.&quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">,@</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span><span class="w"> </span><span class="nv">body</span><span class="p">)))</span>
+</pre></div>
+</details>
+<h3>绘图过程</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-dot</span><span class="w"> </span><span class="p">((</span><span class="nf">output</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">keys</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">diredp</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="nv">debug</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Expand with `run-dot&#39; to draw a graph.</span>
+
+<span class="s">To define a graph, the following command could be used:</span>
+
+<span class="s">  (set property &amp;rest definations)</span>
+<span class="s">  (node name &amp;rest definations)</span>
+<span class="s">  (arc from to &amp;rest definations)</span>
+<span class="s">  (subgraph (name &amp;rest definations)</span>
+<span class="s">    ...)</span>
+
+<span class="s">For example:</span>
+
+<span class="s">  (with-dot (output-path :type :svg)</span>
+<span class="s">    (set node :shape :rect)</span>
+<span class="s">    (node :a :label </span><span class="se">\&quot;</span><span class="s">start</span><span class="se">\&quot;</span><span class="s">))</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="p">(</span><span class="nf">make-string-output-stream</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="s">&quot;digraph {&quot;</span><span class="w"> </span><span class="s">&quot;graph {&quot;</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;~{~a=~a;~}&quot;</span>
+<span class="w">               </span><span class="ss">&#39;,</span><span class="p">(</span><span class="nf">plist-remove-key</span><span class="w"> </span><span class="nv">keys</span><span class="w"> </span><span class="nv">:diredp</span><span class="w"> </span><span class="nv">:debug</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">escape-dot-expr</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">diredp</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">                        </span><span class="nv">body</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~&amp;}&quot;</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">with-input-from-string</span>
+<span class="w">           </span><span class="p">(</span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">debug</span>
+<span class="w">                     </span><span class="o">`</span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="p">(</span><span class="nf">get-output-stream-string</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">)</span><span class="w"> </span><span class="nv">*error-output*</span><span class="p">)</span>
+<span class="w">                     </span><span class="o">`</span><span class="p">(</span><span class="nf">get-output-stream-string</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">run-dot</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="o">,</span><span class="nv">output</span><span class="w"> </span><span class="o">,@</span><span class="nv">keys</span><span class="p">)))))</span>
+</pre></div>
+<p>注: 我对于现在这个实现结果并不是很满意, 因为实际上还是有很多的不足之处.
+  但是不论怎么说, 至少是能用的水平, 就先这样将就着用吧&#8230; 到时候整理一下,
+  之后作为一个单独的库来用估计也不是不行.</p>
+<p>最终的效果可能如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-dot</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="w"> </span><span class="nv">:rankdir</span><span class="w"> </span><span class="s">&quot;LR&quot;</span><span class="w"> </span><span class="nv">:diredp</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">10</span>
+<span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;node ~a&quot;</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a -&gt; ~a&quot;</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)))))</span>
+</pre></div>
+<p>输出的结果如下:</p>
+<p><img src="/_img/lisp/misc/prog-to-graph/eazy-graphviz-example.png" alt="/_img/lisp/misc/prog-to-graph/eazy-graphviz-example.png" /></p>
+<p>或者是更加有趣一些的自定义函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">plain-arcs</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">node-chain</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a plain chain.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">node-chain</span><span class="p">))</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">node-chain</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">node-chain</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">with-dot</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">plain-arcs</span><span class="w"> </span><span class="nv">:a</span><span class="w"> </span><span class="nv">:b</span><span class="w"> </span><span class="nv">:c</span><span class="p">))</span>
+</pre></div>
+<p>输出的结果如下:</p>
+<p><img src="/_img/lisp/misc/prog-to-graph/eazy-graphviz-example-defdot.png" alt="/_img/lisp/misc/prog-to-graph/eazy-graphviz-example-defdot.png" /></p>
+<p>先这么样吧&#8230;</p>
+</details>
+<h1>可能的实现</h1>
+<p>首先是定义一个 package, 记作 <code>prog-to-graph</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="nv">prog-to-graph</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:cl</span><span class="w"> </span><span class="nv">:eazy-graphviz</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:import-from</span><span class="w"> </span><span class="nv">:alexandria</span>
+<span class="w">                </span><span class="nv">:with-gensyms</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:export</span><span class="w"> </span><span class="nv">:prog-&gt;graph</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;Make graph of a program.&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">prog-to-graph</span><span class="p">)</span>
+</pre></div>
+<h2>绘制入口和出口</h2>
+<p>绘制 ASM 的思路如下:</p>
+<ol>
+  <li>将程序包裹在 RESET -&gt; 程序 -&gt; RESET 这样的一个形式里面.</li>
+  <li>对于不同的程序 (AST), 主要分为顺序 <code>draw-seq</code>, 分支 <code>draw-cond</code>,
+    执行语句 <code>draw-func</code>; 临时环境 <code>draw-env</code>, 赋值 <code>draw-assign</code> 这几种类型:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">declare-dot-function</span><span class="w"> </span><span class="nv">draw-assign</span><span class="w"> </span><span class="nv">draw-if</span><span class="w"> </span><span class="nv">draw-env</span><span class="w"> </span><span class="nv">draw-seq</span><span class="w"> </span><span class="nv">draw-code</span>
+<span class="w">                      </span><span class="nv">draw-normal-function</span><span class="p">)</span>
+</pre></div>
+  </li>
+  <li>约定: 绘制除了有意义的参数外, 为当前节点和下一个节点,
+    从前一节点到当前节点的边由函数调用者绘制,
+    从节点到下一个节点的边由被调用者绘制.
+    <p>(没准可以用宏来实现, 不过可能有点费脑, 还是算了)</p>
+  </li>
+</ol>
+<p>对于这些不同的逻辑:</p>
+<ul>
+  <li><code>(draw-assign key-value-plist assign out-node)</code>
+    绘制成 <code>key ← value</code> 这样的形式:
+<div class="highlight"><pre><span></span><span class="c1">;;; render into the following form:</span>
+<span class="c1">;;;</span>
+<span class="c1">;;;     (in-node)</span>
+<span class="c1">;;;  .______|______(assign)</span>
+<span class="c1">;;;  |  key ← value |</span>
+<span class="c1">;;;  |  key ← value |</span>
+<span class="c1">;;;  +------+-------+</span>
+<span class="c1">;;;         |</span>
+<span class="c1">;;;     (out-node)</span>
+<span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nf">key-value-plist</span><span class="w"> </span><span class="nv">assign</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">assign</span>
+<span class="w">        </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~{~a ← ~a~^</span><span class="se">\\</span><span class="s">n~}&quot;</span><span class="w"> </span><span class="nv">key-value-plist</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:rect</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">assign</span><span class="w"> </span><span class="nv">out-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li><code>(draw-if condition true-branch false-branch in-node out-node)</code>
+    绘制一个分支的形式:
+<div class="highlight"><pre><span></span><span class="c1">;;; render into the following form:</span>
+<span class="c1">;;;</span>
+<span class="c1">;;;     (in-node)</span>
+<span class="c1">;;;        |</span>
+<span class="c1">;;;   &lt; condition &gt;</span>
+<span class="c1">;;;     T/    \F     (if-node)</span>
+<span class="c1">;;;  (true)  (false)</span>
+<span class="c1">;;;      \    /</span>
+<span class="c1">;;;    (out-node)</span>
+<span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-if</span><span class="w"> </span><span class="p">(</span><span class="nf">condition</span><span class="w"> </span><span class="nv">true</span><span class="w"> </span><span class="nv">false</span><span class="w"> </span><span class="nv">if-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">t-node</span><span class="w"> </span><span class="nv">f-node</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; TODO: in the future sould support more complex condition graph expand</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">if-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a&quot;</span><span class="w"> </span><span class="nv">condition</span><span class="p">)</span><span class="w"> </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:diamond</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; arcs to branch</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">if-node</span><span class="w"> </span><span class="nv">t-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;T&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">if-node</span><span class="w"> </span><span class="nv">f-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;F&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; true / false prog</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">true</span><span class="p">)</span><span class="w">  </span><span class="nv">t-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">false</span><span class="p">)</span><span class="w"> </span><span class="nv">f-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li><code>(draw-env key-value-alist body in-node out-node)</code>
+    绘制成 subgraph 的形式:
+<div class="highlight"><pre><span></span><span class="c1">;;; render into subgraph</span>
+<span class="c1">;;;  draw-assign -&gt; draw-seq</span>
+<span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-env</span><span class="w"> </span><span class="p">(</span><span class="nf">key-value-alist</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="nv">env-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">env-name</span><span class="w"> </span><span class="nv">body-in-node</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">subgraph</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">env-name</span><span class="w"> </span><span class="nv">:cluster</span><span class="w"> </span><span class="nv">:true</span><span class="w"> </span><span class="nv">:style</span><span class="w"> </span><span class="nv">:dashed</span><span class="p">)</span>
+<span class="w">     </span><span class="c1">;; </span>
+<span class="w">     </span><span class="p">(</span><span class="nf">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">key</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">key-value-alist</span>
+<span class="w">                        </span><span class="nv">collect</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">env-node</span><span class="w"> </span><span class="nv">body-in-node</span><span class="p">)</span>
+<span class="w">     </span><span class="c1">;; subenv prog</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="nv">body-in-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li><code>(draw-seq program in-node out-node)</code>
+    根据每个的内容不同进行绘制:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-seq</span><span class="w"> </span><span class="p">(</span><span class="nf">program</span><span class="w"> </span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">program</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">        </span><span class="c1">;; in-node -- seq-node -- out-node</span>
+<span class="w">        </span><span class="c1">;;   [ ]   --     *    --   [ ]</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:point</span><span class="p">)</span>
+<span class="w">        </span><span class="c1">;; finish arc</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">out-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">code</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">program</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">program</span><span class="p">)))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">out</span><span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">endp</span><span class="w"> </span><span class="nv">out-node</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;OUT&quot;</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">out</span><span class="p">)</span>
+<span class="w">            </span><span class="c1">;; (method . args)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">draw-code</span><span class="w"> </span><span class="nv">code</span><span class="w"> </span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">out</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">endp</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">program</span><span class="p">)</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)))))</span>
+</pre></div>
+  </li>
+  <li><code>(draw-code code code-node out-node)</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-code</span><span class="w"> </span><span class="p">(</span><span class="nf">code</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; (values ... ... ...)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~{~a~^ ~}&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)))</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; (return-from name value)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">return-from</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; (setf/setq [key value])</span>
+<span class="w">    </span><span class="p">((</span><span class="nf">setf</span><span class="w"> </span><span class="nv">setq</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-assign</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; (if condition true false)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-if</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">third</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">fourth</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; (let [binding] body)</span>
+<span class="w">    </span><span class="p">((</span><span class="k">let</span><span class="w"> </span><span class="k">let*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-env</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cddr</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; (progn body)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; normal code</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">otherwise</span>
+<span class="w">     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolp</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">code</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">macro-function</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">code</span><span class="p">))))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">draw-normal-function</span><span class="w"> </span><span class="nv">code</span><span class="w"> </span><span class="nv">code-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)))))</span>
+</pre></div>
+  </li>
+</ul>
+<details><summary>一些肮脏的摸索</summary>
+<p>对于函数调用: <code>(func arg1 arg2 arg3 ...)</code>, 假设计算顺序是从左到右约化求值 <code>arg</code>.
+  那么在表达式中理应对其进行一个表达. 所以这里需要进行一个顺序展开:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">static-args</span><span class="w"> </span><span class="p">(</span><span class="nf">code-form</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return precalculated code and dummy static args in `code-form&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code-form</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">dummy</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;ARG&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">          </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">dummy</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">pre-code-pair</span>
+<span class="w">        </span><span class="nv">collect</span><span class="w"> </span><span class="nv">dummy</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">dummy-args</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">pre-code-pair</span><span class="w"> </span><span class="nv">dummy-args</span><span class="p">))))</span>
+
+<span class="c1">;;; The normal function (func arg) shall be draw like</span>
+<span class="c1">;;;</span>
+<span class="c1">;;;         (in-node)  [dummy-arg &lt;- pre-code]</span>
+<span class="c1">;;;             |      /</span>
+<span class="c1">;;;    +--------+---------+</span>
+<span class="c1">;;;    | func(dummy-args) |</span>
+<span class="c1">;;;    +--------+---------+</span>
+<span class="c1">;;;             |</span>
+<span class="c1">;;;         (out-node)</span>
+<span class="p">(</span><span class="nf">defdot</span><span class="w"> </span><span class="nv">draw-normal-function</span><span class="w"> </span><span class="p">(</span><span class="nf">func-code</span><span class="w"> </span><span class="nv">func-node</span><span class="w"> </span><span class="nv">out-node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">pre-code-pair</span><span class="w"> </span><span class="nv">dummy-args</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">static-args</span><span class="w"> </span><span class="nv">func-code</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">pre-code-pair</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">func-node</span>
+<span class="w">              </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a(~{~a~^, ~})&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">func-code</span><span class="p">)</span><span class="w"> </span><span class="nv">dummy-args</span><span class="p">)</span>
+<span class="w">              </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:rect</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">subgraph</span>
+<span class="w">         </span><span class="p">((</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;SUBGRAPH&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:style</span><span class="w"> </span><span class="nv">:dashed</span><span class="w"> </span><span class="nv">:cluster</span><span class="w"> </span><span class="nv">:true</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">func-node</span>
+<span class="w">               </span><span class="nv">:label</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a(~{~a~^, ~})&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">func-code</span><span class="p">)</span><span class="w"> </span><span class="nv">dummy-args</span><span class="p">)</span>
+<span class="w">               </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:rect</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">dummy</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">pre-code-pair</span>
+<span class="w">               </span><span class="nv">for</span><span class="w"> </span><span class="nv">index</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">pre-code-pair</span><span class="p">)</span>
+<span class="w">               </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-code</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a ← ~a&quot;</span><span class="w"> </span><span class="nv">dummy</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">code</span><span class="p">))</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">))</span>
+<span class="w">                             </span><span class="nv">dummy</span><span class="w"> </span><span class="nv">func-node</span><span class="p">))))</span>
+
+<span class="w">    </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="nv">func-node</span><span class="w"> </span><span class="nv">out-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)))</span>
+</pre></div>
+</details>
+<h2>最后</h2>
+<p>于是只需要:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">prog-&gt;graph</span><span class="w"> </span><span class="p">((</span><span class="nf">output</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">:svg</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">debug</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Trun a program into digraph and plot it out.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">reset</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="nv">seq-node</span><span class="p">)</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="nf">with-dot</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">output</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="o">,</span><span class="nv">debug</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="o">,</span><span class="nv">type</span><span class="w"> </span><span class="nv">:diredp</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">:splines</span><span class="w"> </span><span class="nv">:ortho</span>
+<span class="w">                        </span><span class="nv">:nodesep</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="nv">:fontname</span><span class="w"> </span><span class="nv">:Arial</span><span class="w"> </span><span class="nv">:forcelabels</span><span class="w"> </span><span class="nv">:true</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">reset</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="o">,</span><span class="nv">out</span><span class="w"> </span><span class="o">,</span><span class="nv">seq-node</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">set</span><span class="w"> </span><span class="nv">:node</span><span class="w"> </span><span class="nv">:fontname</span><span class="w"> </span><span class="nv">:Arial</span><span class="w"> </span><span class="nv">:fontcolor</span><span class="w"> </span><span class="nv">:black</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">set</span><span class="w"> </span><span class="nv">:edge</span><span class="w"> </span><span class="nv">:fontname</span><span class="w"> </span><span class="nv">:monospace</span><span class="w"> </span><span class="nv">:fontcolor</span><span class="w"> </span><span class="nv">:black</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="o">,</span><span class="nv">reset</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;RESET&quot;</span><span class="w"> </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:plain</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w">  </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:point</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="o">,</span><span class="nv">out</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">:shape</span><span class="w"> </span><span class="nv">:point</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="o">,</span><span class="nv">reset</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="o">,</span><span class="nv">seq-node</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">draw-seq</span><span class="w"> </span><span class="ss">&#39;,body</span><span class="w"> </span><span class="o">,</span><span class="nv">seq-node</span><span class="w"> </span><span class="o">,</span><span class="nv">out</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">arc</span><span class="w"> </span><span class="o">,</span><span class="nv">out</span><span class="w"> </span><span class="o">,</span><span class="nv">in</span><span class="w"> </span><span class="nv">:label</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="nv">:constraint</span><span class="w"> </span><span class="nv">:false</span><span class="p">)))))</span>
+</pre></div>
+<h3>简单的测试</h3>这里的测试不一定完善, 可能还需要很多的异常处理, 不过至少 <code>eazy-graphviz</code> 完事了.
+<p>简单的赋值:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">prog-&gt;graph</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">money</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">money</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="nv">:fun</span><span class="w"> </span><span class="nv">:not-fun</span><span class="p">))</span>
+</pre></div>
+<p><img src="/_img/lisp/misc/prog-to-graph/prog-to-graph-test.png" alt="/_img/lisp/misc/prog-to-graph/prog-to-graph-test.png" /></p>
+<p>简单的函数调用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">prog-&gt;graph</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">graph-type</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;-T~A&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">pathnamep</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">                                               </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">output</span><span class="p">))</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">pathname-type</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">                                           </span><span class="nv">type</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">uiop:run-program</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="s">&quot;dot&quot;</span><span class="w"> </span><span class="nv">graph-type</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:input</span><span class="w"> </span><span class="nv">input</span>
+<span class="w">                      </span><span class="nv">:output</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pathname</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span><span class="w"> </span><span class="nv">output</span><span class="p">))))</span>
+</pre></div>
+<p><img src="/_img/lisp/misc/prog-to-graph/prog-to-graph-test-2.png" alt="/_img/lisp/misc/prog-to-graph/prog-to-graph-test-2.png" /></p>
+<p>有点点丑. 还是先去写作业先.</p>
+<p>目前还是不能自举, 希望之后有时间可以把这个问题给解决.</p>
+<p>(不过现在写程序速度稍微快一些了, 这两个部分分别各花了一天的忙里偷忙的时间)</p>
+
+  </div><a class="u-url" href="/lisp/useless-compiler/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

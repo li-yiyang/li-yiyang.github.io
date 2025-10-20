@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>LapTop Ork (02: Synth, Network) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="LapTop Ork (02: Synth, Network)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 有点想把名字改成今日声 (有点神经了) 太长不看版 本期看点: 小伙定义了一个合成器, 竟对波形如此如此, 那般那般 利用 OSC 进行一个赛博音乐会 Synth 正弦波 上期 说到, 可以用波形来描述声音, 比如最简单的正弦波 (sin-osc.ar 440 0.0 0.5) ; (play *) 以及拍频的叠加: (play (sin-osc.ar 440 0 0.5)) (play (sin-osc.ar 442 0 0.5)) 效果如图所示: 即, 通过叠加不同的正弦波信号, 可以产生不同 (波形) 的声音. 于是比较聪明的一个方法就是用一组正弦波去合成一个任意的周期性信号 (可以参考 Mathematica 函数 FourierDST). 一个简单的示例代码 Module[{ n = 10, xg, fg, coef, f = Function[{x}, If[Abs[x] &lt; 0.5, 1, 0]] }, xg = Table[s, {s, 0., 1., 1./n}]; fg = f /@ xg; coef = FourierDST[fg, 1]/Sqrt[n/2]; Show[ { ListPlot[Transpose[{xg, fg}], PlotRange -&gt; All], Plot[Sum[coef[[i]] * Sin[Pi * i * x], {i, n - 1}], {x, -1, 1}, PlotRange -&gt; All] }, PlotRange -&gt; All]] 诶? 那如果我直接输出信号波形岂不是更快? 甚至还能够任意地拟合. 你说的对, 请参考 img2wav.nb 来尝试用声音画图片吧. 那假如把一个正弦波的信号的两个参数 (增幅, 频率) 视为一个可以变化的量, 比如: (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.0 0.2))) 即增幅是一个随时间变化的量, 出来的效果其实和前面的叠拍频的效果差不多: (注: 为了方便打印, 这里用的是 (sin-osc.ar 440.0 0.0 (sin-osc.ar 10.0 0.0 0.2))) 包络 上面的思路相当于给原始的正弦波波形添加了一个正弦波包络, 直接思路打开, 为什么不叠加任意形状的包络呢? 比如一个被蛇吞掉的大象: (play (* (sin-osc.ar 440.0 0.0 0.8) (env-gen.kr (env &#39;(0 0.1 1.0 0.8 0.9 1.0 0.1 0) &#39;( 0.5 0.1 0.1 0.5 0.1 0.1 0.5)) :act :free))) 效果如下: 解释: env 用来构造一个 *Env*​olope (包络) 对象, 其参数如下说明: (env levels times &amp;optional (curve :lin) (release-node -99) (loop-node -99)) 其中: levels 和 times 相当于是描述了一个包络的 XY 图像, 但是用的是一个比较 “别扭的” 的方式进行的 levels: 第一段的幅值 第二段的幅值 ... times: 第一段和第二段之间的时间差 第二段和第三段之间的时间差 ... curves: 第一段和第二段之间变换的波形类型 ... 即, times 是每段 level 之间的事件间隔持续的时间长度 假如你觉得这种方式有点奇奇怪怪的, 不妨看看 LSDj 中对波形的定义吧 curve 和 times 同理, 可以是一个间隔之间的变换方式, 也可以直接是一个全部区间的变形方式, 常见的有: :lin 线性 (默认的) :exp 指数 (幂律) (但是试了之后效果一般) :sin 正弦 (试试看, 会发现波形在抖) 其他的还没试过, 可以自己看 文档 env-gen.kr 根据 env 对象来构造一个控制信号, 这个控制信号就可以像一般的振幅一样来用了 (包络信号嘛) act: 控制在包络结束的时候干什么, 比如: :free 将整个信号清除, 这就会导致上面的信号在播放后不会像之前的 sin-osc 一样一直在吵 :no-action 啥也不干, 一般需要手动 free 掉 其他见 Done 的文档 预制包络 显然, 一个个手动构造包络 (env) 也有点太麻烦了. 并且也有点没必要, 为什么不试试用那些已经构造好的信号形状来去构造包络呢? (play (blip.ar 200 10 (env-gen.kr (sine 1.5 1.0) :act :free))) (我愿称之为饺子音) 解释: (blip.ar &amp;optional freq nharm mul add) 在一个周期里面产生 nharm 个峰, 第 0 个峰为脉冲峰 (sine &amp;optional dur amp) 产生一个持续时间为 dur (s), 幅值为 amp 的一个 \(&pi; / 2\) 波形的包络 那么是否还有其他的包络呢? 也许是有的吧, 但是没有用过. ADSR (*A*​ttack, *D*​ecay, *S*​ustain, *R*​elease) 这个是我在合成器中看到的概念, 大概是早期模拟合成器里面用来描述和控制包络的一种 “语言”. 即: (图片来源于 Wikipedia) 那么来试试吧&#8230; 按照 Wikipedia 上的定义, 并不难给出这样的一个表示: (defun adsr-env (attack decay sustain release &amp;key (sustain-level 0.5) (peak-level 1.0) (curve :lin)) &quot;Create a ADSR envolope. &quot; (let ((sustain* (sc::mul sustain-level peak-level))) (env (list 0 peak-level sustain* sustain* 0) (list attack decay sustain release) curve))) 于是可以测试一下: (play (sin-osc.ar 440 0 (env-gen.kr (adsr-env 0.3 0.2 0.4 0.3)))) 以下是不同的 curve 时的包络的形状: 注: 虽然也有一个函数叫做 =adsr=, 但是其 sustain 的行为是按下后等待一个 release 的信号, 和简单的 ADSR 稍微有一点点区别. (吗? ) All you need is Synth 上面的例子中, 用包络和基底的波形 (sin-osc, blip) 可以构造出比较有趣的声音, 如果习惯编程的话, 应该会下意识地想要用函数来简化声音的构造, 比如: (defun play-note (&amp;key (freq 440.0) (duration 1)) (play (sin-osc.ar freq 0.0 (env-gen.kr (adsr-env 0.2 0.3 (* duration 0.4) 0.6 :curve :sin))))) 于是你就可以用: (loop :for (freq dur sleep) :in &#39;((200 10 5) (210 20 5) (300 10 5)) :do (play-note :freq freq :duration dur) :do (sleep sleep)) 这样的方式来演奏了呢~ 但是如果在合成器的视角来看的话, 其实还有一种方式: 把每个 Lisp 的 S-expression 看作是一个信号单元, 比如 sin-osc 是一个振荡器单元, 它的参数是从其他单元连过来的线, 它的输出是连接到一个 (加法器) 的输出单元 (DSP) 那么把这些单元串在一起, 你就得到了一个 “Synthesizer” (合成器) 啦 比如你可以在播放音乐的时候去改变一些参数, 就像是扭旋钮一样, 去改变这个声音出来的感觉 一些例子 比如我觉得比较帅的 miRack 或者如果你觉得比较贵的话, 可以试试看 VCV Rack 或者你觉得太便宜的话, 可以去试试看实体的 Eurorack Synthesizer 但是毕竟是编程嘛, 咱也并不不需要去扭旋扭和连线, 只需要: (defsynth snake-elemphant ((freq 440) (duration 10) (out 0) (amp 0.5) (attack 0.1) (decay 1.0) (hold 1.0) (curve :lin) (bais 0.05) (sustain 0.95)) (let* ((env (env (list 0 bais 1.0 sustain sustain 1.0 bais 0) (list hold attack attack duration attack attack decay) curve)) (sig (sin-osc.ar freq 0.0 (env-gen.kr env :act :free)))) (out.ar out (* amp sig)))) 解释: defsynth 定义了一个名字叫做 snake-elemphant 的合成器, 默认的参数是用 &amp;key 的形式 out.ar 将输出的信号发送到 out (0 表示左声道, 1 表示右声道, 其他的看你的设备了) 信道的缓冲区 (buffer) 中, 可以想像成把连好的线都接到耳机/音箱上 于是就可以用: (synth &#39;snake-elemphant) 来播放一段声音了. 是不是觉得有点普通? (synth &#39;snake-elemphant :freq 200 :duration 20 :curve :sin) 是不是感觉还是有点普通? (let ((node (synth &#39;snake-elemphant :freq 200 :duration 10))) (loop :for freq :from 100 :upto 400 :by 50 :do (sleep 1) :do (ctrl node :freq freq) :finally (free node))) 相当于是在合成器工作的时候也能扭旋扭改变其参数. OSC Course Specific Softwares 课上用了这样的一个工作流: TouchOSC 用于构建一个虚拟的 “旋钮” 控制板, 用可视化拖拽的方式可以去构建一堆的仪表 (按钮, 滑块等), 然后通过交互仪表的方式, 通过 OSC 协议去向服务器发送控制信号 Protokol 可以看作是一个用于 OSC 协议的 “电流表”, 相当于是本地监听, 然后转发给其他的服务器/端口 SuperCollider OSCDef 用来连接到 OSC 服务器上去接受 OSC 控制信号, 然后通过这个控制信号去 ctrl 合成器的表现 OscGroupClient 一个看起来像是本地端口转发的一个东西, 看了一下 .app 的构成像是一个简单的 Python + Tk 做的软件, 简单逆向了一下好像是用的 Python osc, 具体啥功能暂时没细看 那么实际上上面的这些完全可以 All in Lisp 了呢. Behind The Scene 这里参考 osc-examples.lisp 来做一个简单的说明: OSCDef OSCDef 相当于构建了一个简单 OSC 协议的监听, 然后根据接受到的 OSC 控制信号来控制 synth. 于是可以编写如下的简单控制代码 (defparameter *oscdef-table* (make-hash-table :test &#39;equal) &quot;A rule mapping table of OSC control definition." />
+<meta property="og:description" content="About 有点想把名字改成今日声 (有点神经了) 太长不看版 本期看点: 小伙定义了一个合成器, 竟对波形如此如此, 那般那般 利用 OSC 进行一个赛博音乐会 Synth 正弦波 上期 说到, 可以用波形来描述声音, 比如最简单的正弦波 (sin-osc.ar 440 0.0 0.5) ; (play *) 以及拍频的叠加: (play (sin-osc.ar 440 0 0.5)) (play (sin-osc.ar 442 0 0.5)) 效果如图所示: 即, 通过叠加不同的正弦波信号, 可以产生不同 (波形) 的声音. 于是比较聪明的一个方法就是用一组正弦波去合成一个任意的周期性信号 (可以参考 Mathematica 函数 FourierDST). 一个简单的示例代码 Module[{ n = 10, xg, fg, coef, f = Function[{x}, If[Abs[x] &lt; 0.5, 1, 0]] }, xg = Table[s, {s, 0., 1., 1./n}]; fg = f /@ xg; coef = FourierDST[fg, 1]/Sqrt[n/2]; Show[ { ListPlot[Transpose[{xg, fg}], PlotRange -&gt; All], Plot[Sum[coef[[i]] * Sin[Pi * i * x], {i, n - 1}], {x, -1, 1}, PlotRange -&gt; All] }, PlotRange -&gt; All]] 诶? 那如果我直接输出信号波形岂不是更快? 甚至还能够任意地拟合. 你说的对, 请参考 img2wav.nb 来尝试用声音画图片吧. 那假如把一个正弦波的信号的两个参数 (增幅, 频率) 视为一个可以变化的量, 比如: (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.0 0.2))) 即增幅是一个随时间变化的量, 出来的效果其实和前面的叠拍频的效果差不多: (注: 为了方便打印, 这里用的是 (sin-osc.ar 440.0 0.0 (sin-osc.ar 10.0 0.0 0.2))) 包络 上面的思路相当于给原始的正弦波波形添加了一个正弦波包络, 直接思路打开, 为什么不叠加任意形状的包络呢? 比如一个被蛇吞掉的大象: (play (* (sin-osc.ar 440.0 0.0 0.8) (env-gen.kr (env &#39;(0 0.1 1.0 0.8 0.9 1.0 0.1 0) &#39;( 0.5 0.1 0.1 0.5 0.1 0.1 0.5)) :act :free))) 效果如下: 解释: env 用来构造一个 *Env*​olope (包络) 对象, 其参数如下说明: (env levels times &amp;optional (curve :lin) (release-node -99) (loop-node -99)) 其中: levels 和 times 相当于是描述了一个包络的 XY 图像, 但是用的是一个比较 “别扭的” 的方式进行的 levels: 第一段的幅值 第二段的幅值 ... times: 第一段和第二段之间的时间差 第二段和第三段之间的时间差 ... curves: 第一段和第二段之间变换的波形类型 ... 即, times 是每段 level 之间的事件间隔持续的时间长度 假如你觉得这种方式有点奇奇怪怪的, 不妨看看 LSDj 中对波形的定义吧 curve 和 times 同理, 可以是一个间隔之间的变换方式, 也可以直接是一个全部区间的变形方式, 常见的有: :lin 线性 (默认的) :exp 指数 (幂律) (但是试了之后效果一般) :sin 正弦 (试试看, 会发现波形在抖) 其他的还没试过, 可以自己看 文档 env-gen.kr 根据 env 对象来构造一个控制信号, 这个控制信号就可以像一般的振幅一样来用了 (包络信号嘛) act: 控制在包络结束的时候干什么, 比如: :free 将整个信号清除, 这就会导致上面的信号在播放后不会像之前的 sin-osc 一样一直在吵 :no-action 啥也不干, 一般需要手动 free 掉 其他见 Done 的文档 预制包络 显然, 一个个手动构造包络 (env) 也有点太麻烦了. 并且也有点没必要, 为什么不试试用那些已经构造好的信号形状来去构造包络呢? (play (blip.ar 200 10 (env-gen.kr (sine 1.5 1.0) :act :free))) (我愿称之为饺子音) 解释: (blip.ar &amp;optional freq nharm mul add) 在一个周期里面产生 nharm 个峰, 第 0 个峰为脉冲峰 (sine &amp;optional dur amp) 产生一个持续时间为 dur (s), 幅值为 amp 的一个 \(&pi; / 2\) 波形的包络 那么是否还有其他的包络呢? 也许是有的吧, 但是没有用过. ADSR (*A*​ttack, *D*​ecay, *S*​ustain, *R*​elease) 这个是我在合成器中看到的概念, 大概是早期模拟合成器里面用来描述和控制包络的一种 “语言”. 即: (图片来源于 Wikipedia) 那么来试试吧&#8230; 按照 Wikipedia 上的定义, 并不难给出这样的一个表示: (defun adsr-env (attack decay sustain release &amp;key (sustain-level 0.5) (peak-level 1.0) (curve :lin)) &quot;Create a ADSR envolope. &quot; (let ((sustain* (sc::mul sustain-level peak-level))) (env (list 0 peak-level sustain* sustain* 0) (list attack decay sustain release) curve))) 于是可以测试一下: (play (sin-osc.ar 440 0 (env-gen.kr (adsr-env 0.3 0.2 0.4 0.3)))) 以下是不同的 curve 时的包络的形状: 注: 虽然也有一个函数叫做 =adsr=, 但是其 sustain 的行为是按下后等待一个 release 的信号, 和简单的 ADSR 稍微有一点点区别. (吗? ) All you need is Synth 上面的例子中, 用包络和基底的波形 (sin-osc, blip) 可以构造出比较有趣的声音, 如果习惯编程的话, 应该会下意识地想要用函数来简化声音的构造, 比如: (defun play-note (&amp;key (freq 440.0) (duration 1)) (play (sin-osc.ar freq 0.0 (env-gen.kr (adsr-env 0.2 0.3 (* duration 0.4) 0.6 :curve :sin))))) 于是你就可以用: (loop :for (freq dur sleep) :in &#39;((200 10 5) (210 20 5) (300 10 5)) :do (play-note :freq freq :duration dur) :do (sleep sleep)) 这样的方式来演奏了呢~ 但是如果在合成器的视角来看的话, 其实还有一种方式: 把每个 Lisp 的 S-expression 看作是一个信号单元, 比如 sin-osc 是一个振荡器单元, 它的参数是从其他单元连过来的线, 它的输出是连接到一个 (加法器) 的输出单元 (DSP) 那么把这些单元串在一起, 你就得到了一个 “Synthesizer” (合成器) 啦 比如你可以在播放音乐的时候去改变一些参数, 就像是扭旋钮一样, 去改变这个声音出来的感觉 一些例子 比如我觉得比较帅的 miRack 或者如果你觉得比较贵的话, 可以试试看 VCV Rack 或者你觉得太便宜的话, 可以去试试看实体的 Eurorack Synthesizer 但是毕竟是编程嘛, 咱也并不不需要去扭旋扭和连线, 只需要: (defsynth snake-elemphant ((freq 440) (duration 10) (out 0) (amp 0.5) (attack 0.1) (decay 1.0) (hold 1.0) (curve :lin) (bais 0.05) (sustain 0.95)) (let* ((env (env (list 0 bais 1.0 sustain sustain 1.0 bais 0) (list hold attack attack duration attack attack decay) curve)) (sig (sin-osc.ar freq 0.0 (env-gen.kr env :act :free)))) (out.ar out (* amp sig)))) 解释: defsynth 定义了一个名字叫做 snake-elemphant 的合成器, 默认的参数是用 &amp;key 的形式 out.ar 将输出的信号发送到 out (0 表示左声道, 1 表示右声道, 其他的看你的设备了) 信道的缓冲区 (buffer) 中, 可以想像成把连好的线都接到耳机/音箱上 于是就可以用: (synth &#39;snake-elemphant) 来播放一段声音了. 是不是觉得有点普通? (synth &#39;snake-elemphant :freq 200 :duration 20 :curve :sin) 是不是感觉还是有点普通? (let ((node (synth &#39;snake-elemphant :freq 200 :duration 10))) (loop :for freq :from 100 :upto 400 :by 50 :do (sleep 1) :do (ctrl node :freq freq) :finally (free node))) 相当于是在合成器工作的时候也能扭旋扭改变其参数. OSC Course Specific Softwares 课上用了这样的一个工作流: TouchOSC 用于构建一个虚拟的 “旋钮” 控制板, 用可视化拖拽的方式可以去构建一堆的仪表 (按钮, 滑块等), 然后通过交互仪表的方式, 通过 OSC 协议去向服务器发送控制信号 Protokol 可以看作是一个用于 OSC 协议的 “电流表”, 相当于是本地监听, 然后转发给其他的服务器/端口 SuperCollider OSCDef 用来连接到 OSC 服务器上去接受 OSC 控制信号, 然后通过这个控制信号去 ctrl 合成器的表现 OscGroupClient 一个看起来像是本地端口转发的一个东西, 看了一下 .app 的构成像是一个简单的 Python + Tk 做的软件, 简单逆向了一下好像是用的 Python osc, 具体啥功能暂时没细看 那么实际上上面的这些完全可以 All in Lisp 了呢. Behind The Scene 这里参考 osc-examples.lisp 来做一个简单的说明: OSCDef OSCDef 相当于构建了一个简单 OSC 协议的监听, 然后根据接受到的 OSC 控制信号来控制 synth. 于是可以编写如下的简单控制代码 (defparameter *oscdef-table* (make-hash-table :test &#39;equal) &quot;A rule mapping table of OSC control definition." />
+<link rel="canonical" href="/lapork/lapork-02/" />
+<meta property="og:url" content="/lapork/lapork-02/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-09-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="LapTop Ork (02: Synth, Network)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-09-29T00:00:00+00:00","datePublished":"2025-09-29T00:00:00+00:00","description":"About 有点想把名字改成今日声 (有点神经了) 太长不看版 本期看点: 小伙定义了一个合成器, 竟对波形如此如此, 那般那般 利用 OSC 进行一个赛博音乐会 Synth 正弦波 上期 说到, 可以用波形来描述声音, 比如最简单的正弦波 (sin-osc.ar 440 0.0 0.5) ; (play *) 以及拍频的叠加: (play (sin-osc.ar 440 0 0.5)) (play (sin-osc.ar 442 0 0.5)) 效果如图所示: 即, 通过叠加不同的正弦波信号, 可以产生不同 (波形) 的声音. 于是比较聪明的一个方法就是用一组正弦波去合成一个任意的周期性信号 (可以参考 Mathematica 函数 FourierDST). 一个简单的示例代码 Module[{ n = 10, xg, fg, coef, f = Function[{x}, If[Abs[x] &lt; 0.5, 1, 0]] }, xg = Table[s, {s, 0., 1., 1./n}]; fg = f /@ xg; coef = FourierDST[fg, 1]/Sqrt[n/2]; Show[ { ListPlot[Transpose[{xg, fg}], PlotRange -&gt; All], Plot[Sum[coef[[i]] * Sin[Pi * i * x], {i, n - 1}], {x, -1, 1}, PlotRange -&gt; All] }, PlotRange -&gt; All]] 诶? 那如果我直接输出信号波形岂不是更快? 甚至还能够任意地拟合. 你说的对, 请参考 img2wav.nb 来尝试用声音画图片吧. 那假如把一个正弦波的信号的两个参数 (增幅, 频率) 视为一个可以变化的量, 比如: (play (sin-osc.ar 440.0 0.0 (sin-osc.ar 1.0 0.0 0.2))) 即增幅是一个随时间变化的量, 出来的效果其实和前面的叠拍频的效果差不多: (注: 为了方便打印, 这里用的是 (sin-osc.ar 440.0 0.0 (sin-osc.ar 10.0 0.0 0.2))) 包络 上面的思路相当于给原始的正弦波波形添加了一个正弦波包络, 直接思路打开, 为什么不叠加任意形状的包络呢? 比如一个被蛇吞掉的大象: (play (* (sin-osc.ar 440.0 0.0 0.8) (env-gen.kr (env &#39;(0 0.1 1.0 0.8 0.9 1.0 0.1 0) &#39;( 0.5 0.1 0.1 0.5 0.1 0.1 0.5)) :act :free))) 效果如下: 解释: env 用来构造一个 *Env*​olope (包络) 对象, 其参数如下说明: (env levels times &amp;optional (curve :lin) (release-node -99) (loop-node -99)) 其中: levels 和 times 相当于是描述了一个包络的 XY 图像, 但是用的是一个比较 “别扭的” 的方式进行的 levels: 第一段的幅值 第二段的幅值 ... times: 第一段和第二段之间的时间差 第二段和第三段之间的时间差 ... curves: 第一段和第二段之间变换的波形类型 ... 即, times 是每段 level 之间的事件间隔持续的时间长度 假如你觉得这种方式有点奇奇怪怪的, 不妨看看 LSDj 中对波形的定义吧 curve 和 times 同理, 可以是一个间隔之间的变换方式, 也可以直接是一个全部区间的变形方式, 常见的有: :lin 线性 (默认的) :exp 指数 (幂律) (但是试了之后效果一般) :sin 正弦 (试试看, 会发现波形在抖) 其他的还没试过, 可以自己看 文档 env-gen.kr 根据 env 对象来构造一个控制信号, 这个控制信号就可以像一般的振幅一样来用了 (包络信号嘛) act: 控制在包络结束的时候干什么, 比如: :free 将整个信号清除, 这就会导致上面的信号在播放后不会像之前的 sin-osc 一样一直在吵 :no-action 啥也不干, 一般需要手动 free 掉 其他见 Done 的文档 预制包络 显然, 一个个手动构造包络 (env) 也有点太麻烦了. 并且也有点没必要, 为什么不试试用那些已经构造好的信号形状来去构造包络呢? (play (blip.ar 200 10 (env-gen.kr (sine 1.5 1.0) :act :free))) (我愿称之为饺子音) 解释: (blip.ar &amp;optional freq nharm mul add) 在一个周期里面产生 nharm 个峰, 第 0 个峰为脉冲峰 (sine &amp;optional dur amp) 产生一个持续时间为 dur (s), 幅值为 amp 的一个 \\(&pi; / 2\\) 波形的包络 那么是否还有其他的包络呢? 也许是有的吧, 但是没有用过. ADSR (*A*​ttack, *D*​ecay, *S*​ustain, *R*​elease) 这个是我在合成器中看到的概念, 大概是早期模拟合成器里面用来描述和控制包络的一种 “语言”. 即: (图片来源于 Wikipedia) 那么来试试吧&#8230; 按照 Wikipedia 上的定义, 并不难给出这样的一个表示: (defun adsr-env (attack decay sustain release &amp;key (sustain-level 0.5) (peak-level 1.0) (curve :lin)) &quot;Create a ADSR envolope. &quot; (let ((sustain* (sc::mul sustain-level peak-level))) (env (list 0 peak-level sustain* sustain* 0) (list attack decay sustain release) curve))) 于是可以测试一下: (play (sin-osc.ar 440 0 (env-gen.kr (adsr-env 0.3 0.2 0.4 0.3)))) 以下是不同的 curve 时的包络的形状: 注: 虽然也有一个函数叫做 =adsr=, 但是其 sustain 的行为是按下后等待一个 release 的信号, 和简单的 ADSR 稍微有一点点区别. (吗? ) All you need is Synth 上面的例子中, 用包络和基底的波形 (sin-osc, blip) 可以构造出比较有趣的声音, 如果习惯编程的话, 应该会下意识地想要用函数来简化声音的构造, 比如: (defun play-note (&amp;key (freq 440.0) (duration 1)) (play (sin-osc.ar freq 0.0 (env-gen.kr (adsr-env 0.2 0.3 (* duration 0.4) 0.6 :curve :sin))))) 于是你就可以用: (loop :for (freq dur sleep) :in &#39;((200 10 5) (210 20 5) (300 10 5)) :do (play-note :freq freq :duration dur) :do (sleep sleep)) 这样的方式来演奏了呢~ 但是如果在合成器的视角来看的话, 其实还有一种方式: 把每个 Lisp 的 S-expression 看作是一个信号单元, 比如 sin-osc 是一个振荡器单元, 它的参数是从其他单元连过来的线, 它的输出是连接到一个 (加法器) 的输出单元 (DSP) 那么把这些单元串在一起, 你就得到了一个 “Synthesizer” (合成器) 啦 比如你可以在播放音乐的时候去改变一些参数, 就像是扭旋钮一样, 去改变这个声音出来的感觉 一些例子 比如我觉得比较帅的 miRack 或者如果你觉得比较贵的话, 可以试试看 VCV Rack 或者你觉得太便宜的话, 可以去试试看实体的 Eurorack Synthesizer 但是毕竟是编程嘛, 咱也并不不需要去扭旋扭和连线, 只需要: (defsynth snake-elemphant ((freq 440) (duration 10) (out 0) (amp 0.5) (attack 0.1) (decay 1.0) (hold 1.0) (curve :lin) (bais 0.05) (sustain 0.95)) (let* ((env (env (list 0 bais 1.0 sustain sustain 1.0 bais 0) (list hold attack attack duration attack attack decay) curve)) (sig (sin-osc.ar freq 0.0 (env-gen.kr env :act :free)))) (out.ar out (* amp sig)))) 解释: defsynth 定义了一个名字叫做 snake-elemphant 的合成器, 默认的参数是用 &amp;key 的形式 out.ar 将输出的信号发送到 out (0 表示左声道, 1 表示右声道, 其他的看你的设备了) 信道的缓冲区 (buffer) 中, 可以想像成把连好的线都接到耳机/音箱上 于是就可以用: (synth &#39;snake-elemphant) 来播放一段声音了. 是不是觉得有点普通? (synth &#39;snake-elemphant :freq 200 :duration 20 :curve :sin) 是不是感觉还是有点普通? (let ((node (synth &#39;snake-elemphant :freq 200 :duration 10))) (loop :for freq :from 100 :upto 400 :by 50 :do (sleep 1) :do (ctrl node :freq freq) :finally (free node))) 相当于是在合成器工作的时候也能扭旋扭改变其参数. OSC Course Specific Softwares 课上用了这样的一个工作流: TouchOSC 用于构建一个虚拟的 “旋钮” 控制板, 用可视化拖拽的方式可以去构建一堆的仪表 (按钮, 滑块等), 然后通过交互仪表的方式, 通过 OSC 协议去向服务器发送控制信号 Protokol 可以看作是一个用于 OSC 协议的 “电流表”, 相当于是本地监听, 然后转发给其他的服务器/端口 SuperCollider OSCDef 用来连接到 OSC 服务器上去接受 OSC 控制信号, 然后通过这个控制信号去 ctrl 合成器的表现 OscGroupClient 一个看起来像是本地端口转发的一个东西, 看了一下 .app 的构成像是一个简单的 Python + Tk 做的软件, 简单逆向了一下好像是用的 Python osc, 具体啥功能暂时没细看 那么实际上上面的这些完全可以 All in Lisp 了呢. Behind The Scene 这里参考 osc-examples.lisp 来做一个简单的说明: OSCDef OSCDef 相当于构建了一个简单 OSC 协议的监听, 然后根据接受到的 OSC 控制信号来控制 synth. 于是可以编写如下的简单控制代码 (defparameter *oscdef-table* (make-hash-table :test &#39;equal) &quot;A rule mapping table of OSC control definition.","headline":"LapTop Ork (02: Synth, Network)","mainEntityOfPage":{"@type":"WebPage","@id":"/lapork/lapork-02/"},"url":"/lapork/lapork-02/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">LapTop Ork (02: Synth, Network)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-09-29T00:00:00+00:00" itemprop="datePublished">Sep 29, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p><del>有点想把名字改成今日声</del> (有点神经了)</p>
+<h2>太长不看版</h2>
+<p>本期看点:</p>
+<ul>
+  <li>小伙定义了一个合成器, 竟对波形如此如此, 那般那般</li>
+  <li>利用 <a href="https://en.wikipedia.org/wiki/Open_Sound_Control">OSC</a> 进行一个赛博音乐会</li>
+</ul>
+<h1>Synth</h1>
+<h2>正弦波</h2>
+<p><a href="/lapork/lapork-01/">上期</a> 说到, 可以用波形来描述声音, 比如最简单的正弦波</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">440</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w">                </span><span class="c1">; (play *)</span>
+</pre></div>
+<p>以及拍频的叠加:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">440</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mf">0.5</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">442</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mf">0.5</span><span class="p">))</span>
+</pre></div>
+<p>效果如图所示:</p>
+<p><img src="/_img/lapork/02/wav-440.jpg" alt="/_img/lapork/02/wav-440.jpg" /></p>
+<p>即, 通过叠加不同的正弦波信号, 可以产生不同 (波形) 的声音.
+  于是比较聪明的一个方法就是用一组正弦波去合成一个任意的周期性信号
+  (可以参考 Mathematica 函数 <a href="https://reference.wolfram.com/language/ref/FourierDST.html">FourierDST</a>).</p>
+<details><summary>一个简单的示例代码</summary>
+<div class="highlight"><pre><span></span><span class="n">Module</span><span class="p">[{</span>
+<span class="w">  </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="n">xg</span><span class="p">,</span><span class="w"> </span><span class="n">fg</span><span class="p">,</span><span class="w"> </span><span class="n">coef</span><span class="p">,</span>
+<span class="w">  </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Function</span><span class="p">[{</span><span class="n">x</span><span class="p">},</span><span class="w"> </span><span class="n">If</span><span class="p">[</span><span class="n">Abs</span><span class="p">[</span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">]]</span>
+<span class="w"> </span><span class="p">},</span>
+<span class="w"> </span><span class="n">xg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Table</span><span class="p">[</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="mf">0.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">1.</span><span class="o">/</span><span class="n">n</span><span class="p">}];</span>
+<span class="w"> </span><span class="n">fg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">/@</span><span class="w"> </span><span class="n">xg</span><span class="p">;</span>
+<span class="w"> </span><span class="n">coef</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FourierDST</span><span class="p">[</span><span class="n">fg</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">Sqrt</span><span class="p">[</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">];</span>
+<span class="w"> </span><span class="n">Show</span><span class="p">[</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">   </span><span class="n">ListPlot</span><span class="p">[</span><span class="n">Transpose</span><span class="p">[{</span><span class="n">xg</span><span class="p">,</span><span class="w"> </span><span class="n">fg</span><span class="p">}],</span><span class="w"> </span><span class="n">PlotRange</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">],</span>
+<span class="w">   </span><span class="n">Plot</span><span class="p">[</span><span class="n">Sum</span><span class="p">[</span><span class="n">coef</span><span class="p">[[</span><span class="n">i</span><span class="p">]]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Sin</span><span class="p">[</span><span class="n">Pi</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">}],</span><span class="w"> </span><span class="p">{</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">},</span>
+<span class="w">    </span><span class="n">PlotRange</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">]</span>
+<span class="w">   </span><span class="p">},</span>
+<span class="w">  </span><span class="n">PlotRange</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">]]</span>
+</pre></div>
+<p><img src="/_img/lapork/02/fourierdst.jpg" alt="/_img/lapork/02/fourierdst.jpg" /></p>
+<p>诶? 那如果我直接输出信号波形岂不是更快? 甚至还能够任意地拟合.
+  你说的对, 请参考 <a href="https://www.wolframcloud.com/obj/liyiyang21a/Published/img2wav.nb">img2wav.nb</a> 来尝试用声音画图片吧.</p>
+</details>
+<p>那假如把一个正弦波的信号的两个参数 (增幅, 频率) 视为一个可以变化的量,
+  比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.2</span><span class="p">)))</span>
+</pre></div>
+<p>即增幅是一个随时间变化的量, 出来的效果其实和前面的叠拍频的效果差不多:</p>
+<p><img src="/_img/lapork/02/wav-amp.jpg" alt="/_img/lapork/02/wav-amp.jpg" /></p>
+<p>(注: 为了方便打印, 这里用的是 <code>(sin-osc.ar 440.0 0.0 (sin-osc.ar 10.0 0.0 0.2))</code>)</p>
+<h2>包络</h2>
+<p>上面的思路相当于给原始的正弦波波形添加了一个正弦波包络,
+  直接思路打开, 为什么不叠加任意形状的包络呢?
+  比如一个被蛇吞掉的大象:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.8</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">env</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w">    </span><span class="mf">0.1</span><span class="w">     </span><span class="mf">1.0</span><span class="w">     </span><span class="mf">0.8</span><span class="w">     </span><span class="mf">0.9</span><span class="w">     </span><span class="mf">1.0</span><span class="w">     </span><span class="mf">0.1</span><span class="w">   </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">               </span><span class="o">&#39;</span><span class="p">(</span><span class="w"> </span><span class="mf">0.5</span><span class="w">     </span><span class="mf">0.1</span><span class="w">     </span><span class="mf">0.1</span><span class="w">     </span><span class="mf">0.5</span><span class="w">     </span><span class="mf">0.1</span><span class="w">     </span><span class="mf">0.1</span><span class="w">    </span><span class="mf">0.5</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">:act</span><span class="w"> </span><span class="nv">:free</span><span class="p">)))</span>
+</pre></div>
+<p>效果如下:</p>
+<p><img src="/_img/lapork/02/elemphant-in-snake.jpg" alt="/_img/lapork/02/elemphant-in-snake.jpg" /></p>
+<p>解释:</p>
+<ul>
+  <li><code>env</code> 用来构造一个 *Env*​olope (包络) 对象, 其参数如下说明:
+    <pre class="example">
+(env levels times &amp;optional (curve :lin) (release-node -99) (loop-node -99))
+    </pre>
+    <p>其中:</p>
+    <ul>
+      <li><code>levels</code> 和 <code>times</code> 相当于是描述了一个包络的 XY 图像,
+        但是用的是一个比较 “别扭的” 的方式进行的
+        <pre class="example">
+levels: 第一段的幅值                            第二段的幅值 ...
+times:               第一段和第二段之间的时间差              第二段和第三段之间的时间差 ...
+curves:           第一段和第二段之间变换的波形类型           ...
+        </pre>
+        <p>即, <code>times</code> 是每段 <code>level</code> 之间的事件间隔持续的时间长度</p>
+        <p>假如你觉得这种方式有点奇奇怪怪的, 不妨看看 <a href="/jekyll/little-sound-dj/">LSDj</a> 中对波形的定义吧</p>
+      </li>
+      <li><code>curve</code> 和 <code>times</code> 同理, 可以是一个间隔之间的变换方式,
+        也可以直接是一个全部区间的变形方式, 常见的有:
+        <ul>
+          <li><code>:lin</code> 线性 (默认的)</li>
+          <li><code>:exp</code> 指数 (幂律) (但是试了之后效果一般)</li>
+          <li><code>:sin</code> 正弦 (试试看, 会发现波形在抖)</li>
+        </ul>
+      </li>
+      <li>其他的还没试过, 可以自己看 <a href="https://doc.sccode.org/Classes/Env.html">文档</a></li>
+    </ul>
+  </li>
+  <li><code>env-gen.kr</code> 根据 <code>env</code> 对象来构造一个控制信号,
+    这个控制信号就可以像一般的振幅一样来用了 (包络信号嘛)
+    <ul>
+      <li><code>act</code>: 控制在包络结束的时候干什么, 比如:
+        <ul>
+          <li><code>:free</code> 将整个信号清除,
+            这就会导致上面的信号在播放后不会像之前的 <code>sin-osc</code> 一样一直在吵</li>
+          <li><code>:no-action</code> 啥也不干,
+            一般需要手动 <code>free</code> 掉</li>
+          <li>其他见 <a href="https://doc.sccode.org/Classes/Done.html">Done</a> 的文档</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h3>预制包络</h3>
+<p>显然, 一个个手动构造包络 (<code>env</code>) 也有点太麻烦了. 并且也有点没必要,
+  为什么不试试用那些已经构造好的信号形状来去构造包络呢?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">blip</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span><span class="w"> </span><span class="p">(</span><span class="nf">sine</span><span class="w"> </span><span class="mf">1.5</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="nv">:act</span><span class="w"> </span><span class="nv">:free</span><span class="p">)))</span>
+</pre></div>
+<p><img src="/_img/lapork/02/dumpling.jpg" alt="/_img/lapork/02/dumpling.jpg" /></p>
+<p>(我愿称之为饺子音)</p>
+<p>解释:</p>
+<ul>
+  <li><code>(blip.ar &amp;optional freq nharm mul add)</code>
+    在一个周期里面产生 <code>nharm</code> 个峰, 第 <code>0</code> 个峰为脉冲峰
+    <p><img src="/_img/lapork/02/blip.jpg" alt="/_img/lapork/02/blip.jpg" /></p>
+  </li>
+  <li><code>(sine &amp;optional dur amp)</code> 产生一个持续时间为 <code>dur</code> (s),
+    幅值为 <code>amp</code> 的一个 \(&pi; / 2\) 波形的包络</li>
+</ul>
+<p>那么是否还有其他的包络呢? 也许是有的吧, 但是没有用过.</p>
+<h3>ADSR (*A*​ttack, *D*​ecay, *S*​ustain, *R*​elease)</h3>
+<p>这个是我在合成器中看到的概念,
+  大概是早期模拟合成器里面用来描述和控制包络的一种 “语言”.</p>
+<p>即:</p>
+<p><img src="/_img/lapork/02/ADSR_parameter.svg" alt="/_img/lapork/02/ADSR_parameter.svg" /></p>
+<p>(图片来源于 <a href="https://en.wikipedia.org/wiki/Envelope_(music)">Wikipedia</a>)</p>
+<details><summary>那么来试试吧&#8230;</summary>
+<p>按照 Wikipedia 上的定义, 并不难给出这样的一个表示:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">adsr-env</span><span class="w"> </span><span class="p">(</span><span class="nf">attack</span><span class="w"> </span><span class="nv">decay</span><span class="w"> </span><span class="nv">sustain</span><span class="w"> </span><span class="nv">release</span>
+<span class="w">                 </span><span class="nv">&amp;key</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">sustain-level</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">peak-level</span><span class="w">    </span><span class="mf">1.0</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">curve</span><span class="w"> </span><span class="nv">:lin</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Create a ADSR envolope. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sustain*</span><span class="w"> </span><span class="p">(</span><span class="nf">sc::mul</span><span class="w"> </span><span class="nv">sustain-level</span><span class="w"> </span><span class="nv">peak-level</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">env</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="mi">0</span><span class="w">      </span><span class="nv">peak-level</span><span class="w">     </span><span class="nv">sustain*</span><span class="w">       </span><span class="nv">sustain*</span><span class="w">       </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">list</span><span class="w">  </span><span class="nv">attack</span><span class="w">          </span><span class="nv">decay</span><span class="w">        </span><span class="nv">sustain</span><span class="w">        </span><span class="nv">release</span><span class="p">)</span>
+<span class="w">         </span><span class="nv">curve</span><span class="p">)))</span>
+</pre></div>
+<p>于是可以测试一下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">440</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span><span class="w"> </span><span class="p">(</span><span class="nf">adsr-env</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="mf">0.4</span><span class="w"> </span><span class="mf">0.3</span><span class="p">))))</span>
+</pre></div>
+<p>以下是不同的 <code>curve</code> 时的包络的形状:</p>
+<p><img src="/_img/lapork/02/adsr.jpg" alt="/_img/lapork/02/adsr.jpg" /></p>
+<p>注: 虽然也有一个函数叫做 <a href="https://github.com/byulparan/cl-collider/blob/cc05bfb2ecfa34b9cd0660d19a638434f447be5c/ugens/EnvGen.lisp#L181">=adsr=</a>, 但是其 <code>sustain</code> 的行为是按下后等待一个
+  <code>release</code> 的信号, 和简单的 ADSR 稍微有一点点区别. (吗? )</p>
+</details>
+<h2>All you need is Synth</h2>
+<p>上面的例子中, 用包络和基底的波形 (<code>sin-osc</code>, <code>blip</code>) 可以构造出比较有趣的声音,
+  如果习惯编程的话, 应该会下意识地想要用函数来简化声音的构造, 比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">play-note</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">freq</span><span class="w"> </span><span class="mf">440.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">duration</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">freq</span><span class="w"> </span><span class="mf">0.0</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span><span class="w"> </span><span class="p">(</span><span class="nf">adsr-env</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="mf">0.3</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">duration</span><span class="w"> </span><span class="mf">0.4</span><span class="p">)</span><span class="w"> </span><span class="mf">0.6</span>
+<span class="w">                                          </span><span class="nv">:curve</span><span class="w"> </span><span class="nv">:sin</span><span class="p">)))))</span>
+</pre></div>
+<p>于是你就可以用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="p">(</span><span class="nf">freq</span><span class="w"> </span><span class="nv">dur</span><span class="w"> </span><span class="nb">sleep</span><span class="p">)</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="mi">200</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="mi">210</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="mi">300</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">5</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nf">play-note</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="nv">freq</span><span class="w"> </span><span class="nv">:duration</span><span class="w"> </span><span class="nv">dur</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="nb">sleep</span><span class="p">))</span>
+</pre></div>
+<p>这样的方式来演奏了呢~</p>
+<p>但是如果在合成器的视角来看的话, 其实还有一种方式:</p>
+<ul>
+  <li>把每个 Lisp 的 S-expression 看作是一个信号单元, 比如
+    <code>sin-osc</code> 是一个振荡器单元, 它的参数是从其他单元连过来的线,
+    它的输出是连接到一个 (加法器) 的输出单元 (DSP)</li>
+  <li>那么把这些单元串在一起, 你就得到了一个 “Synthesizer” (合成器) 啦</li>
+  <li>比如你可以在播放音乐的时候去改变一些参数, 就像是扭旋钮一样,
+    去改变这个声音出来的感觉</li>
+</ul>
+<details><summary>一些例子</summary>
+<ul>
+  <li>比如我觉得比较帅的 <a href="https://mirack.app">miRack</a></li>
+  <li>或者如果你觉得比较贵的话, 可以试试看 <a href="https://vcvrack.com/Rack">VCV Rack</a></li>
+  <li>或者你觉得太便宜的话, 可以去试试看实体的 <a href="https://en.wikipedia.org/wiki/Eurorack">Eurorack Synthesizer</a></li>
+</ul>
+</details>
+<p>但是毕竟是编程嘛, 咱也并不不需要去扭旋扭和连线, 只需要:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defsynth</span><span class="w"> </span><span class="nv">snake-elemphant</span><span class="w"> </span><span class="p">((</span><span class="nf">freq</span><span class="w"> </span><span class="mi">440</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">duration</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">out</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">amp</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">attack</span><span class="w"> </span><span class="mf">0.1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">decay</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">hold</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">curve</span><span class="w"> </span><span class="nv">:lin</span><span class="p">)</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">bais</span><span class="w"> </span><span class="mf">0.05</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sustain</span><span class="w"> </span><span class="mf">0.95</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">env</span><span class="w"> </span><span class="p">(</span><span class="nf">env</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="mi">0</span><span class="w">   </span><span class="nv">bais</span><span class="w">   </span><span class="mf">1.0</span><span class="w">   </span><span class="nv">sustain</span><span class="w">  </span><span class="nv">sustain</span><span class="w">  </span><span class="mf">1.0</span><span class="w">   </span><span class="nv">bais</span><span class="w">   </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nb">list</span><span class="w">  </span><span class="nv">hold</span><span class="w"> </span><span class="nv">attack</span><span class="w"> </span><span class="nv">attack</span><span class="w"> </span><span class="nv">duration</span><span class="w"> </span><span class="nv">attack</span><span class="w"> </span><span class="nv">attack</span><span class="w"> </span><span class="nv">decay</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">curve</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">sig</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">freq</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span><span class="w"> </span><span class="nv">env</span><span class="w"> </span><span class="nv">:act</span><span class="w"> </span><span class="nv">:free</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">out</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">amp</span><span class="w"> </span><span class="nv">sig</span><span class="p">))))</span>
+</pre></div>
+<p>解释:</p>
+<ul>
+  <li><code>defsynth</code> 定义了一个名字叫做 <code>snake-elemphant</code> 的合成器, 默认的参数是用 <code>&amp;key</code> 的形式</li>
+  <li><code>out.ar</code> 将输出的信号发送到 <code>out</code> (<code>0</code> 表示左声道, <code>1</code> 表示右声道, 其他的看你的设备了)
+    信道的缓冲区 (buffer) 中, 可以想像成把连好的线都接到耳机/音箱上</li>
+</ul>
+<p>于是就可以用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">synth</span><span class="w"> </span><span class="ss">&#39;snake-elemphant</span><span class="p">)</span>
+</pre></div>
+<p>来播放一段声音了.</p>
+<p>是不是觉得有点普通?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">synth</span><span class="w"> </span><span class="ss">&#39;snake-elemphant</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="nv">:duration</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="nv">:curve</span><span class="w"> </span><span class="nv">:sin</span><span class="p">)</span>
+</pre></div>
+<p>是不是感觉还是有点普通?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">node</span><span class="w"> </span><span class="p">(</span><span class="nf">synth</span><span class="w"> </span><span class="ss">&#39;snake-elemphant</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="nv">:duration</span><span class="w"> </span><span class="mi">10</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="nv">freq</span><span class="w"> </span><span class="nv">:from</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="nv">:upto</span><span class="w"> </span><span class="mi">400</span><span class="w"> </span><span class="nv">:by</span><span class="w"> </span><span class="mi">50</span>
+<span class="w">        </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="nv">freq</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">:finally</span><span class="w"> </span><span class="p">(</span><span class="nf">free</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+</pre></div>
+<p>相当于是在合成器工作的时候也能扭旋扭改变其参数.</p>
+<h1>OSC</h1>
+<h2>Course Specific Softwares</h2>
+<p>课上用了这样的一个工作流:</p>
+<ul>
+  <li><a href="https://hexler.net/touchosc">TouchOSC</a> 用于构建一个虚拟的 “旋钮” 控制板,
+    用可视化拖拽的方式可以去构建一堆的仪表 (按钮, 滑块等),
+    然后通过交互仪表的方式, 通过 OSC 协议去向服务器发送控制信号</li>
+  <li><a href="https://hexler.net/protokolhttps://hexler.net/protokol">Protokol</a> 可以看作是一个用于 OSC 协议的 “电流表”,
+    相当于是本地监听, 然后转发给其他的服务器/端口</li>
+  <li><a href="https://docs.supercollider.online/Classes/OSCdef.html">SuperCollider OSCDef</a> 用来连接到 OSC 服务器上去接受 OSC 控制信号,
+    然后通过这个控制信号去 <code>ctrl</code> 合成器的表现</li>
+  <li>OscGroupClient 一个看起来像是本地端口转发的一个东西,
+    看了一下 <code>.app</code> 的构成像是一个简单的 Python + Tk 做的软件,
+    简单逆向了一下好像是用的 Python <code>osc</code>, 具体啥功能暂时没细看</li>
+</ul>
+<p>那么实际上上面的这些完全可以 All in Lisp 了呢.</p>
+<h2>Behind The Scene</h2>
+<p>这里参考 <a href="https://github.com/zzkt/osc/blob/core/osc-examples.lisp">osc-examples.lisp</a> 来做一个简单的说明:</p>
+<h3>OSCDef</h3>
+<p>OSCDef 相当于构建了一个简单 OSC 协议的监听,
+  然后根据接受到的 OSC 控制信号来控制 synth.</p>
+<details><summary>于是可以编写如下的简单控制代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*oscdef-table*</span><span class="w"> </span><span class="p">(</span><span class="nb">make-hash-table</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="ss">&#39;equal</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;A rule mapping table of OSC control definition.</span>
+
+<span class="s">Dev Note:</span>
+<span class="s">The table use string as name key, and a list of functions</span>
+<span class="s">as control process. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*osc-debug*</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">  </span><span class="s">&quot;Set to non-nil to debug the OSC messages. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">declaim</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">integer</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">*osc-in-port*</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*osc-in-port*</span><span class="w"> </span><span class="mi">2333</span>
+<span class="w">  </span><span class="s">&quot;Listening port of OSC. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">declaim</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">null</span><span class="w"> </span><span class="nv">bt:thread</span><span class="p">)</span><span class="w"> </span><span class="nv">*osc-listening-thread*</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*osc-listening-thread*</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">  </span><span class="s">&quot;`bt:thread&#39; to listening OSC control input&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">osc-running-p</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;Status/Control of if running OSC listening server. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">*osc-listening-thread*</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">bt:thread-alive-p</span><span class="w"> </span><span class="nv">*osc-listening-thread*</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">osc-running-p</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">status</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">status</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">start-osc-listening</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">stop-osc-listening</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">stop-osc-listening</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;Stop OSC listening server. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">osc-running-p</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">bt:destroy-thread</span><span class="w"> </span><span class="nv">*osc-listening-thread*</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">start-osc-listening</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">port</span><span class="w"> </span><span class="nv">*osc-in-port*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">buffer</span><span class="w"> </span><span class="mi">1024</span><span class="p">)</span><span class="w"> </span><span class="nb">force</span>
+<span class="w">                            </span><span class="nv">&amp;aux</span><span class="w"> </span><span class="p">(</span><span class="nf">force?</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">force</span><span class="w"> </span><span class="p">(</span><span class="nf">/=</span><span class="w"> </span><span class="nv">port</span><span class="w"> </span><span class="nv">*osc-in-port*</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;Start a new OSC listening server.</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ PORT: if changed, will update `*osc-in-port*&#39;</span>
+<span class="s">+ FORCE: if non-nil, will close existing server</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">integer</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">port</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">force?</span><span class="w"> </span><span class="p">(</span><span class="nf">stop-osc-listening</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*osc-in-port*</span><span class="w"> </span><span class="nv">port</span>
+<span class="w">        </span><span class="nv">*osc-listening-thread*</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">bt:make-thread</span>
+<span class="w">         </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span>
+<span class="w">           </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">s</span><span class="w">    </span><span class="p">(</span><span class="nf">usocket:socket-connect</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                                               </span><span class="nv">:local-port</span><span class="w"> </span><span class="nv">port</span>
+<span class="w">                                               </span><span class="nv">:local-host</span><span class="w"> </span><span class="o">#</span><span class="p">(</span><span class="mi">127</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                               </span><span class="nv">:protocol</span><span class="w"> </span><span class="nv">:datagram</span>
+<span class="w">                                               </span><span class="nv">:element-type</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">unsigned-byte</span><span class="w"> </span><span class="mi">8</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">buff</span><span class="w"> </span><span class="p">(</span><span class="nf">make-sequence</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">vector</span><span class="w"> </span><span class="p">(</span><span class="nf">unsigned-byte</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span><span class="w"> </span><span class="nv">buffer</span><span class="p">)))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">unwind-protect</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="nv">osc-msg</span><span class="w"> </span><span class="nv">:=</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">usocket:socket-receive</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="nv">buff</span><span class="w"> </span><span class="nv">buffer</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">osc:decode-bundle</span><span class="w"> </span><span class="nv">buff</span><span class="p">))</span>
+<span class="w">                        </span><span class="nv">:for</span><span class="w"> </span><span class="nv">name</span><span class="w">  </span><span class="nv">:=</span><span class="w"> </span><span class="p">(</span><span class="nf">osc:command</span><span class="w"> </span><span class="nv">osc-msg</span><span class="p">)</span>
+<span class="w">                        </span><span class="nv">:for</span><span class="w"> </span><span class="nv">args</span><span class="w">  </span><span class="nv">:=</span><span class="w"> </span><span class="p">(</span><span class="nf">osc:args</span><span class="w">    </span><span class="nv">osc-msg</span><span class="p">)</span>
+<span class="w">                        </span><span class="nv">:for</span><span class="w"> </span><span class="nv">ctrls</span><span class="w"> </span><span class="nv">:=</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*oscdef-table*</span><span class="p">)</span>
+<span class="w">                        </span><span class="c1">;; TODO: log?</span>
+<span class="w">                        </span><span class="c1">;; TODO: make ctrl into other thread?</span>
+<span class="w">                        </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">*osc-debug*</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A(~{~A~^, ~})~%&quot;</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                        </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore-errors</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">ctrls</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">ctrl</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                        </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nb">force-output</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="p">(</span><span class="nf">usocket:socket-close</span><span class="w"> </span><span class="nv">s</span><span class="p">))))))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">oscdef</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">lambda-list</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Define a OSC command of NAME and LAMBDA-LIST.</span>
+<span class="s">This would add new method to `*oscdef-table*&#39; of the NAME. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="o">,</span><span class="nv">lambda-list</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="w"> </span><span class="nv">*oscdef-table*</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">oscdef-clear</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Clear all the previous OSC method of NAME. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*oscdef-table*</span><span class="p">)</span><span class="w"> </span><span class="p">())</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">clrhash</span><span class="w"> </span><span class="nv">*oscdef-table*</span><span class="p">)))</span>
+</pre></div>
+</details>
+<p>实际的使用效果如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">start-osc-listening</span><span class="w"> </span><span class="nv">:port</span><span class="w"> </span><span class="mi">2333</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">oscdef-clear</span><span class="w"> </span><span class="s">&quot;/test&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="s">&quot;/test&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;Got ~{~A~^, ~}~%&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+</pre></div>
+<p>那么稍微改变一下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defsynth</span><span class="w"> </span><span class="nv">sining</span><span class="w"> </span><span class="p">((</span><span class="nf">freq</span><span class="w"> </span><span class="mi">440</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">out</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">amp</span><span class="w"> </span><span class="mf">0.8</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">out</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">amp</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">freq</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">note</span><span class="w"> </span><span class="p">(</span><span class="nf">synth</span><span class="w"> </span><span class="ss">&#39;sining</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="mi">440</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="s">&quot;/freq&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">freq</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">note</span><span class="w"> </span><span class="nv">:freq</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">freq</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span><span class="w"> </span><span class="mi">200</span><span class="p">)))</span>
+</pre></div>
+<p>于是你就可以用简单的 TouchOSC 来控制你的合成器了呢.
+  不错, 这下就没有什么后顾之忧了.
+  理论上来说我可以把所有的东西都用 Common Lisp 来做了.</p>
+<p>安心です&#8230;</p>
+<h1>Misc</h1>
+<h2>Some Wired Bugs and Fixs</h2>
+<h3>在 <code>(server-boot *s*)</code> 的时候出现 <code>libc++abi: terminating</code></h3>
+<p>在 debug 的时候发现了调用的外部程序 (<code>scsynth</code>) 出现的报错:</p>
+<pre class="example">
+WARNING: Input sample rate is 24000, but output is 48000. Attempting to set input sample rate to match the output.
+ERROR: Setting sample rate failed. OSStatus epon
+Possible solutions:
+- explicitly set the sample rate to one supported by both devices:
+    s.options.sampleRate = &lt;rate&gt;;
+- or, in your system&#39;s &quot;Audio MIDI Setup&quot;, set sample rate to the same value on both the input and output devices
+- or, disable input completely:
+    s.options.numInputBusChannels = 0;
+could not initialize audio.
+libc++abi: terminating
+</pre>
+<p>嗯, 所以 AirPods 的输入 (Input: 24kHz) 和输出 (Output: 48kHz) 并不匹配.
+  只好在 MIDI Setting 里面把 AirPods 的输出降成 (24 kHz) 了.</p>
+<p>不过效果并不好, 采样率降了一半了之后有些声音听起来怪怪的.</p>
+<p>最终的解决办法是用 Loopback 新建了一个虚拟设备, 强制输入和输出都是
+  (48 kHz) 的采样率了, 然后在 MIDI Setting 里面将其设置为输入和输出.</p>
+<p>(这样的好处是可以多输入和多输出, 方便用耳机监听的同时给示波器输出了呢)</p>
+<h3>在播放的时候发现声音之后单声道</h3>
+<p>比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">5.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.8</span><span class="p">)))</span>
+</pre></div>
+<p>的时候, 会发现只有左边的耳机出声 &#8211; 这个时候, 只需要指定参数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">5.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.8</span><span class="p">))</span><span class="w"> </span><span class="nv">:out-bus</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+<p>就可以在右边发声了呢.</p>
+<p>注: 这里你可以用 <code>pharse</code> 参数来控制左右声道的波形的同步.
+  比如可以试试看:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.8</span><span class="p">))</span><span class="w"> </span><span class="nv">:out-bus</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">440.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="mf">0.8</span><span class="p">))</span><span class="w"> </span><span class="nv">:out-bus</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+<p>会感觉魔音贯耳, 有一个从左到右 (或者从右到左) 的一个嗡嗡嗡声.</p>
+<h3>KR, AR 啥玩意?</h3>
+<p>会发现有 <code>sin-osc.ar</code> 和 <code>sin-osc.kr</code> 两种东西, 但是这有什么区别么?</p>
+<ul>
+  <li><code>ar</code> 代表 *A*​udio Rate, 一般用来生成音频信号, 比如波形之类的</li>
+  <li><code>kr</code> 代表 *C*​ontrol Rate, 一半用来生成控制信号, 比如包络之类的</li>
+</ul>
+
+  </div><a class="u-url" href="/lapork/lapork-02/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

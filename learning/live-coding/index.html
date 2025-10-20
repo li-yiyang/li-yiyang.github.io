@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Live Coding | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Live Coding" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Live Coding Dead Reviewing 确实, 在复习的紧要关头开始搞这种东西看起来就是在找死, 而我对明天的考试 (热统) 毫无信心. (注: 本文大部分内容都是在考完后写的, 虽然后面还有两门考试, 但是总得让我缓缓是吧. ) Live Coding 首先, 什么是 Live Coding? Live coding, sometimes referred to as on-the-fly programming, just in time programming and conversational programming, makes programming an integral part of the running program. from Wikipedia 好像确实没有问题. 尽管如果你在网络上搜索, 很有可能会搜索得到一个 &#8220;LiveCode&#8221; &#8211; 貌似是一个用来创建应用的一个软件. 或者可能会搜索到一个叫做 Live Coding 的概念, 即在编辑代码的时候可以在程序运行的时候更新代码并实时载入. (比如 UE 中的 Live Coding, 介绍内容就是在运行时重新编译并修正你的游戏二进制文件.) 好吧, 我可能一开始理解错了, 我一开始认为这个 Live 是指 &#8220;现场&#8221; (Live House, Music Live Performance) 之类的. 因为一开始我接触到这个玩意的时候, 是这个 视频 (bilibili) (不一定就是一模一样的那个视频, 大概是类似的. 视频中使用的是 Sonic Pi, 详细会在之后介绍. ) 算了, 那么就不卖关子了. 用农民的话说, 就是通过计算机编程生成音乐. 那么, 为什么玩这个? 很简单, 因为看起来很有意思. 并且我也想学一些音乐知识. 玩合成器没钱也没有精力, 玩乐器手指太笨拙, 但是写代码, 私以为应该还算是勉勉强强. 恰好最近有学习 Lisp 的一个想法, 所以在论坛划水的时候偶然间发现了这样的一个有趣的玩具: Extempore. (注: 为什么不用其他的 Live Coding 的语言呢? 比如 Sonic Pi. 实际上我之前也用过, 但是不知道是不是因为系统更新了还是我把环境给搞坏了, 最近不能开启了, 所以就只好换用了新的. 反正没有沉没成本不是. ) 不过相比 Sonic Pi, 我觉得 Extempore 的 文档 实在是少得可怜&#8230; 并且这些文档很少有一些比较农民的解释和说明, 也缺少一些技术细节的文档, 所以开始玩的时候还是挺麻烦的. 不过, 有一个比较好的 视频 (可惜比较糊) 可以用来学习入门. 或者是参考 Xinyu&#39;s Extempore tutorials. (下文主要就是这篇文章的一个转述) Extempore Installation 软件的仓库 地址 里面提供了基本的安装方法. 对于 Emacs 用户, 只需要通过 MELPA 再安装一个 extempore-mode 即可. 我的配置文件如下: (use-package extempore-mode :config (setq extempore-path &quot;/path/to/extempore/&quot;)) 然后在终端进入 /path/to/extempore 目录后, 运行 ./extempore. (这样做是为了防止出现找不到 init.xtm 的报错. 不过好像也可以直接在 Emacs 里面通过 switch-to-extempore 来运行, 默认的按键绑定是 C-c C-z. ) Extempore 的简单介绍 这部分主要参考的是 Xinyu&#39;s 那个教程, 尽管文中开头的说明是这个文档之后会合并到官方的文档里面, 但是我并没有找到对应的文档 (可能是没仔细看吧). 不过因为我没有太多的相关知识, 所以在看本文的时候, 还请就当作是一个自大的学生写的装模作样的笔记吧. 不一定对就是了. Lisp (Scheme) 的简单介绍 Extempore 用的是 Lisp 的一个方言 Scheme 魔改得到的一个语言. 其中很大一部分和 Lisp 语言有着差不多的特性. 尽管 Lisp 是一个 &#8220;该死的括号语言&#8221;. 但是它非常的好学, 并且非常的强大. 基本上没有语法, 甚至可以自己创造语法. 并且非常好懂, 所以基本不必特意去学. (指使用的时候, 除非是为了了解其中的精妙之处. 不过用过之后基本也能理解为什么妙了. ) 推荐参考资料: Little Scheme Land of Lisp 等等, 这里就不偏题介绍了. 会在之后用到的地方介绍具体的操作. 如果你了解的话, 可以跳过这一节的部分, 直接看下一部分. 观察下面的代码: (println (+ 1 2 (* 3 4))) ;; =&gt; 15 会发现, Lisp 的语法非常简单, 农民地认为它就是把函数提前, 然后在把函数的参数跟在后面, 整体用一个括号包裹即可. (上面的代码就是 println 打印输出 1 + 2 + 3 * 4 的结果. 输出可以在 extempore 的窗口中看到. ) 而在 Lisp 里面, 函数, 或者说过程, 也是一种数据, 比如说我们可以用 lambda 关键词来生成一个函数: (println ((lambda (x) (+ x 1)) 15)) ;; =&gt; 16 在形式上, 本来应该是函数的位置上现在是一个表达式. (注: 在 Lisp 里面, 每个表达式都应该会有其返回值. ) 那么这个表达式的返回值就应该是一个函数了. 这个函数接受的 (形式) 参数列表为 (x), 函数的表达式为 (+ x 1). 并且我们还能够将函数作为参数传入: (println ((lambda (f1 f2 x) (+ (f1 x) (f2 x))) ;; f1(x) + f2(x) (lambda (x) (cos x)) ;; f1: cos(x) (lambda (x) (sin x)) ;; f2: sin(x) (/ 3.1415926 2))) ;; =&gt; 1.000000 于是, 你就基本上了解完了大部分的 Lisp 编程技术了. (注: 还有一个比较重要但是没有介绍的是宏. ) Extempore 项目的基本组成 初始化 DSP 载入 乐器 和 采样器 编写音乐循环, 比如 和弦 DSP 什么是 DSP (Digital Signal Processor)? 以及它是干什么用的? A digital signal processor (DSP) is a specialized microprocessor chip, with its architecture optimized for the operational needs of digital signal processing. The goal of a DSP is usually to measure, filter or compress continuous real-world analog signals. from Wikipedia emm&#8230; 有点抽象? 不妨来看看下面这个示意图: (图片仍然来源于 Wikipedia) 那么一个农民的理解: 有点像是电吉他的效果器的感觉. (注: 我不了解电吉他, 也从来没有用过效果器, 但是没吃过猪肉, 总见过猪跑嘛不是. THE FART PEDAL (bilibili) 慎入) (注: 实际上这个不应该叫做效果器, 也许可以叫做合成器. 不过我也说不好) 不妨就拿一个效果器来学习和理解吧: ( 图片来源 Wikipedia) 可以看到, 大部分的效果器的外观都十分类似: 一个根输入线, 一根输出线, 一些控制按钮. 输入的音频信号, 比如从拾音器上读到的音频信号, 或者是从上一级效果器中传来的输出信号. 输出的信号线, 指定输出到什么通道里面. 控制按钮, 用来控制效果器是怎么工作的 那么仔细看 (营销号口吻), 下面这段声明是一个 DSP 的声明: (bind-func dsp:DSP (lambda (in time chan dat) 0.0)) 于其将其看成是一个函数, 我们不妨将其看成是一个 &#8220;效果器&#8221;. 如果你了解一些 Lisp 的编程知识的话, 那么不难知道, 在这里我们定义了一个叫做 dsp 的函数, 接受四个参数: in:SAMPLE 就像是我们的输入的信号 (sample from input device) time:i64 就是我们输入的信号的编号 (sample number) 这有点像是我们将信号量化后, 按照时间顺序存放, 然后放入一个数组, 这个数组中的编号就是这个 time, 而我们可以用 (/ (convert time) SRf) 来转换当前的输入的序号和时间. 其中, SRf 就是当前输入 (sample) 的频率. 显然, $\mathrm{d}t = \frac{1}{\mathrm{SRf}}$. chan:i64 就是我们输出的信号通道 (audio channel) dat:SAMPLE 就是用户用来控制的数据 (user data) 并且这个函数的返回值是 &lt;return&gt;=SAMPLE. 在这里, 补充一个约定, 用 &lt;var-name&gt;:TYPE 来表示 TYPE 类型的, 叫做 &lt;var-name&gt; 的变量. 其中, SAMPLE 类型的字面值在 -1.0 到 1.0 之间. 当然, 如果你只是运行那段代码的话, 并不会有任何事情发生. 毕竟你的输出始终是 0.0, 也就是没有声音. 那么先来试试看, 让这个 DSP 自己输出一个噪音: (bind-func dsp:DSP (lambda (in time chan data) (* 0.2 (random)))) 运行 (Emacs 中, 光标移动到该函数上, 执行 extempore-send-dwim, 默认按键绑定是 C-M-x) 完后, 你会在 extempore 的窗口看到如下输出: Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]*. (注: 为了更快地上手, 所以更复杂的说明会留到之后再介绍. ) 但是你可能 (一定听不到) 并没有听到任何的声音. 这是因为我们现在只是定义了有那么个东西, 并没有让其进行工作. 于是使用命令将其设置为我们当前使用的 DSP: (dsp:set! dsp) 于是你应该可以听到 &#8220;悦耳的&#8221; 噪声了. 你可以中二地认为, 你将自己刚刚定义的这个函数插上了电 (plugged in), 然后它就开始输出了. 现在来干一些更加有趣的事情: 让我们来输出一个振幅随时间正弦变化的一个声音吧: (bind-func dsp:DSP (lambda (in time chan dat) (let ((amplitude 0.2) (frequency 490.0) (amplitude-frequency 2.0) (two-pi (* 2.0 3.1415926))) (* (* amplitude (sin (/ (* amplitude-frequency two-pi (convert time)) SRf))) (sin (/ (* frequency two-pi (convert time)) SRf)))))) 嗯, 你可以自己改变其中的变量来调整自己的喜好, 不过因为我没有审美, 所以就只能随便乱选了. 不过, 这么搞实在是太麻烦了, 所以我们不可能像 C 语言一样, 从零开始写所有的东西. 所以接下来, 我们要载入一些写好的乐器库. 载入乐器 (sys:load &quot;libs/core/instruments.xtm&quot;) 现在我们载入了 Extempore 中自带的一个音乐库. 你应该可以在其输出中看到类似这样的结果: Loading xtmrational library... done in 1.032445 seconds Loading xtmaudiobuffer library... done in 0.929176 seconds Loading xtmaudio_dsp library... done in 2.779191 seconds Loading xtminstruments library... done in 10.362588 seconds sys:load notification instruments already loaded 你可以这样中二地想: 现在我们打开了一个叫做 instruments 的一个装满了乐器的库房. 然后我们从中拿出一个 fmsynth FM 合成器. 并叫其 fmsynth (或者你不妨叫做 my-fm-synth). (make-instrument my-fm-synth fmsynth) ;; SetValue: my-fm-synth &gt;&gt;&gt; [float,float,i64,i64,float*]* ;; New instrument bound as my-fm-synth in both scheme and xtlang 然后我们再将这个乐器和我们的 DSP 相连接. 不过为了简单, 我们的 DSP 是一个非常简单的程序: (即作为一个乐器来干活). (bind-func dsp:DSP (lambda (in time chan dat) (my-fm-synth in time chan dat))) ;; Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]* 现在让我们按下一个音符 (note): (play-note (now) ;; time my-fm-synth ;; inst (random 60 80) ;; pitch 80 ;; volume *second* ;; dur ) 我们会发现, 在 play-note 这个操作中, 传入了如下的参数: time 时刻 (也就是 (now) 现在), 即按下这个音符的时间. inst 乐器, 这里传入的就是我们定义的 my-fm-synth. pitch 音高 (这里是一个随机的量), 其对应的标准为 MIDI 的音符标记. volume 音量 (这里是 80, 总共是 0 到 100) dur 为持续时间 (这里是 *second*, 是一个全局变量, 表示 1 秒钟. 又: 在 Lisp 里面, 常常约定用 * 来包围全局变量. ) 当然, 我们还能够做一个循环来实现播放: (define my-loop (lambda (time) (play-note time my-fm-synth (random 60 80) 80 *second*) (callback (+ time *second*) &#39;my-loop (+ time *second*))))" />
+<meta property="og:description" content="Live Coding Dead Reviewing 确实, 在复习的紧要关头开始搞这种东西看起来就是在找死, 而我对明天的考试 (热统) 毫无信心. (注: 本文大部分内容都是在考完后写的, 虽然后面还有两门考试, 但是总得让我缓缓是吧. ) Live Coding 首先, 什么是 Live Coding? Live coding, sometimes referred to as on-the-fly programming, just in time programming and conversational programming, makes programming an integral part of the running program. from Wikipedia 好像确实没有问题. 尽管如果你在网络上搜索, 很有可能会搜索得到一个 &#8220;LiveCode&#8221; &#8211; 貌似是一个用来创建应用的一个软件. 或者可能会搜索到一个叫做 Live Coding 的概念, 即在编辑代码的时候可以在程序运行的时候更新代码并实时载入. (比如 UE 中的 Live Coding, 介绍内容就是在运行时重新编译并修正你的游戏二进制文件.) 好吧, 我可能一开始理解错了, 我一开始认为这个 Live 是指 &#8220;现场&#8221; (Live House, Music Live Performance) 之类的. 因为一开始我接触到这个玩意的时候, 是这个 视频 (bilibili) (不一定就是一模一样的那个视频, 大概是类似的. 视频中使用的是 Sonic Pi, 详细会在之后介绍. ) 算了, 那么就不卖关子了. 用农民的话说, 就是通过计算机编程生成音乐. 那么, 为什么玩这个? 很简单, 因为看起来很有意思. 并且我也想学一些音乐知识. 玩合成器没钱也没有精力, 玩乐器手指太笨拙, 但是写代码, 私以为应该还算是勉勉强强. 恰好最近有学习 Lisp 的一个想法, 所以在论坛划水的时候偶然间发现了这样的一个有趣的玩具: Extempore. (注: 为什么不用其他的 Live Coding 的语言呢? 比如 Sonic Pi. 实际上我之前也用过, 但是不知道是不是因为系统更新了还是我把环境给搞坏了, 最近不能开启了, 所以就只好换用了新的. 反正没有沉没成本不是. ) 不过相比 Sonic Pi, 我觉得 Extempore 的 文档 实在是少得可怜&#8230; 并且这些文档很少有一些比较农民的解释和说明, 也缺少一些技术细节的文档, 所以开始玩的时候还是挺麻烦的. 不过, 有一个比较好的 视频 (可惜比较糊) 可以用来学习入门. 或者是参考 Xinyu&#39;s Extempore tutorials. (下文主要就是这篇文章的一个转述) Extempore Installation 软件的仓库 地址 里面提供了基本的安装方法. 对于 Emacs 用户, 只需要通过 MELPA 再安装一个 extempore-mode 即可. 我的配置文件如下: (use-package extempore-mode :config (setq extempore-path &quot;/path/to/extempore/&quot;)) 然后在终端进入 /path/to/extempore 目录后, 运行 ./extempore. (这样做是为了防止出现找不到 init.xtm 的报错. 不过好像也可以直接在 Emacs 里面通过 switch-to-extempore 来运行, 默认的按键绑定是 C-c C-z. ) Extempore 的简单介绍 这部分主要参考的是 Xinyu&#39;s 那个教程, 尽管文中开头的说明是这个文档之后会合并到官方的文档里面, 但是我并没有找到对应的文档 (可能是没仔细看吧). 不过因为我没有太多的相关知识, 所以在看本文的时候, 还请就当作是一个自大的学生写的装模作样的笔记吧. 不一定对就是了. Lisp (Scheme) 的简单介绍 Extempore 用的是 Lisp 的一个方言 Scheme 魔改得到的一个语言. 其中很大一部分和 Lisp 语言有着差不多的特性. 尽管 Lisp 是一个 &#8220;该死的括号语言&#8221;. 但是它非常的好学, 并且非常的强大. 基本上没有语法, 甚至可以自己创造语法. 并且非常好懂, 所以基本不必特意去学. (指使用的时候, 除非是为了了解其中的精妙之处. 不过用过之后基本也能理解为什么妙了. ) 推荐参考资料: Little Scheme Land of Lisp 等等, 这里就不偏题介绍了. 会在之后用到的地方介绍具体的操作. 如果你了解的话, 可以跳过这一节的部分, 直接看下一部分. 观察下面的代码: (println (+ 1 2 (* 3 4))) ;; =&gt; 15 会发现, Lisp 的语法非常简单, 农民地认为它就是把函数提前, 然后在把函数的参数跟在后面, 整体用一个括号包裹即可. (上面的代码就是 println 打印输出 1 + 2 + 3 * 4 的结果. 输出可以在 extempore 的窗口中看到. ) 而在 Lisp 里面, 函数, 或者说过程, 也是一种数据, 比如说我们可以用 lambda 关键词来生成一个函数: (println ((lambda (x) (+ x 1)) 15)) ;; =&gt; 16 在形式上, 本来应该是函数的位置上现在是一个表达式. (注: 在 Lisp 里面, 每个表达式都应该会有其返回值. ) 那么这个表达式的返回值就应该是一个函数了. 这个函数接受的 (形式) 参数列表为 (x), 函数的表达式为 (+ x 1). 并且我们还能够将函数作为参数传入: (println ((lambda (f1 f2 x) (+ (f1 x) (f2 x))) ;; f1(x) + f2(x) (lambda (x) (cos x)) ;; f1: cos(x) (lambda (x) (sin x)) ;; f2: sin(x) (/ 3.1415926 2))) ;; =&gt; 1.000000 于是, 你就基本上了解完了大部分的 Lisp 编程技术了. (注: 还有一个比较重要但是没有介绍的是宏. ) Extempore 项目的基本组成 初始化 DSP 载入 乐器 和 采样器 编写音乐循环, 比如 和弦 DSP 什么是 DSP (Digital Signal Processor)? 以及它是干什么用的? A digital signal processor (DSP) is a specialized microprocessor chip, with its architecture optimized for the operational needs of digital signal processing. The goal of a DSP is usually to measure, filter or compress continuous real-world analog signals. from Wikipedia emm&#8230; 有点抽象? 不妨来看看下面这个示意图: (图片仍然来源于 Wikipedia) 那么一个农民的理解: 有点像是电吉他的效果器的感觉. (注: 我不了解电吉他, 也从来没有用过效果器, 但是没吃过猪肉, 总见过猪跑嘛不是. THE FART PEDAL (bilibili) 慎入) (注: 实际上这个不应该叫做效果器, 也许可以叫做合成器. 不过我也说不好) 不妨就拿一个效果器来学习和理解吧: ( 图片来源 Wikipedia) 可以看到, 大部分的效果器的外观都十分类似: 一个根输入线, 一根输出线, 一些控制按钮. 输入的音频信号, 比如从拾音器上读到的音频信号, 或者是从上一级效果器中传来的输出信号. 输出的信号线, 指定输出到什么通道里面. 控制按钮, 用来控制效果器是怎么工作的 那么仔细看 (营销号口吻), 下面这段声明是一个 DSP 的声明: (bind-func dsp:DSP (lambda (in time chan dat) 0.0)) 于其将其看成是一个函数, 我们不妨将其看成是一个 &#8220;效果器&#8221;. 如果你了解一些 Lisp 的编程知识的话, 那么不难知道, 在这里我们定义了一个叫做 dsp 的函数, 接受四个参数: in:SAMPLE 就像是我们的输入的信号 (sample from input device) time:i64 就是我们输入的信号的编号 (sample number) 这有点像是我们将信号量化后, 按照时间顺序存放, 然后放入一个数组, 这个数组中的编号就是这个 time, 而我们可以用 (/ (convert time) SRf) 来转换当前的输入的序号和时间. 其中, SRf 就是当前输入 (sample) 的频率. 显然, $\mathrm{d}t = \frac{1}{\mathrm{SRf}}$. chan:i64 就是我们输出的信号通道 (audio channel) dat:SAMPLE 就是用户用来控制的数据 (user data) 并且这个函数的返回值是 &lt;return&gt;=SAMPLE. 在这里, 补充一个约定, 用 &lt;var-name&gt;:TYPE 来表示 TYPE 类型的, 叫做 &lt;var-name&gt; 的变量. 其中, SAMPLE 类型的字面值在 -1.0 到 1.0 之间. 当然, 如果你只是运行那段代码的话, 并不会有任何事情发生. 毕竟你的输出始终是 0.0, 也就是没有声音. 那么先来试试看, 让这个 DSP 自己输出一个噪音: (bind-func dsp:DSP (lambda (in time chan data) (* 0.2 (random)))) 运行 (Emacs 中, 光标移动到该函数上, 执行 extempore-send-dwim, 默认按键绑定是 C-M-x) 完后, 你会在 extempore 的窗口看到如下输出: Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]*. (注: 为了更快地上手, 所以更复杂的说明会留到之后再介绍. ) 但是你可能 (一定听不到) 并没有听到任何的声音. 这是因为我们现在只是定义了有那么个东西, 并没有让其进行工作. 于是使用命令将其设置为我们当前使用的 DSP: (dsp:set! dsp) 于是你应该可以听到 &#8220;悦耳的&#8221; 噪声了. 你可以中二地认为, 你将自己刚刚定义的这个函数插上了电 (plugged in), 然后它就开始输出了. 现在来干一些更加有趣的事情: 让我们来输出一个振幅随时间正弦变化的一个声音吧: (bind-func dsp:DSP (lambda (in time chan dat) (let ((amplitude 0.2) (frequency 490.0) (amplitude-frequency 2.0) (two-pi (* 2.0 3.1415926))) (* (* amplitude (sin (/ (* amplitude-frequency two-pi (convert time)) SRf))) (sin (/ (* frequency two-pi (convert time)) SRf)))))) 嗯, 你可以自己改变其中的变量来调整自己的喜好, 不过因为我没有审美, 所以就只能随便乱选了. 不过, 这么搞实在是太麻烦了, 所以我们不可能像 C 语言一样, 从零开始写所有的东西. 所以接下来, 我们要载入一些写好的乐器库. 载入乐器 (sys:load &quot;libs/core/instruments.xtm&quot;) 现在我们载入了 Extempore 中自带的一个音乐库. 你应该可以在其输出中看到类似这样的结果: Loading xtmrational library... done in 1.032445 seconds Loading xtmaudiobuffer library... done in 0.929176 seconds Loading xtmaudio_dsp library... done in 2.779191 seconds Loading xtminstruments library... done in 10.362588 seconds sys:load notification instruments already loaded 你可以这样中二地想: 现在我们打开了一个叫做 instruments 的一个装满了乐器的库房. 然后我们从中拿出一个 fmsynth FM 合成器. 并叫其 fmsynth (或者你不妨叫做 my-fm-synth). (make-instrument my-fm-synth fmsynth) ;; SetValue: my-fm-synth &gt;&gt;&gt; [float,float,i64,i64,float*]* ;; New instrument bound as my-fm-synth in both scheme and xtlang 然后我们再将这个乐器和我们的 DSP 相连接. 不过为了简单, 我们的 DSP 是一个非常简单的程序: (即作为一个乐器来干活). (bind-func dsp:DSP (lambda (in time chan dat) (my-fm-synth in time chan dat))) ;; Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]* 现在让我们按下一个音符 (note): (play-note (now) ;; time my-fm-synth ;; inst (random 60 80) ;; pitch 80 ;; volume *second* ;; dur ) 我们会发现, 在 play-note 这个操作中, 传入了如下的参数: time 时刻 (也就是 (now) 现在), 即按下这个音符的时间. inst 乐器, 这里传入的就是我们定义的 my-fm-synth. pitch 音高 (这里是一个随机的量), 其对应的标准为 MIDI 的音符标记. volume 音量 (这里是 80, 总共是 0 到 100) dur 为持续时间 (这里是 *second*, 是一个全局变量, 表示 1 秒钟. 又: 在 Lisp 里面, 常常约定用 * 来包围全局变量. ) 当然, 我们还能够做一个循环来实现播放: (define my-loop (lambda (time) (play-note time my-fm-synth (random 60 80) 80 *second*) (callback (+ time *second*) &#39;my-loop (+ time *second*))))" />
+<link rel="canonical" href="/learning/live-coding/" />
+<meta property="og:url" content="/learning/live-coding/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-01-01T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Live Coding" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-01-01T00:00:00+00:00","datePublished":"2023-01-01T00:00:00+00:00","description":"Live Coding Dead Reviewing 确实, 在复习的紧要关头开始搞这种东西看起来就是在找死, 而我对明天的考试 (热统) 毫无信心. (注: 本文大部分内容都是在考完后写的, 虽然后面还有两门考试, 但是总得让我缓缓是吧. ) Live Coding 首先, 什么是 Live Coding? Live coding, sometimes referred to as on-the-fly programming, just in time programming and conversational programming, makes programming an integral part of the running program. from Wikipedia 好像确实没有问题. 尽管如果你在网络上搜索, 很有可能会搜索得到一个 &#8220;LiveCode&#8221; &#8211; 貌似是一个用来创建应用的一个软件. 或者可能会搜索到一个叫做 Live Coding 的概念, 即在编辑代码的时候可以在程序运行的时候更新代码并实时载入. (比如 UE 中的 Live Coding, 介绍内容就是在运行时重新编译并修正你的游戏二进制文件.) 好吧, 我可能一开始理解错了, 我一开始认为这个 Live 是指 &#8220;现场&#8221; (Live House, Music Live Performance) 之类的. 因为一开始我接触到这个玩意的时候, 是这个 视频 (bilibili) (不一定就是一模一样的那个视频, 大概是类似的. 视频中使用的是 Sonic Pi, 详细会在之后介绍. ) 算了, 那么就不卖关子了. 用农民的话说, 就是通过计算机编程生成音乐. 那么, 为什么玩这个? 很简单, 因为看起来很有意思. 并且我也想学一些音乐知识. 玩合成器没钱也没有精力, 玩乐器手指太笨拙, 但是写代码, 私以为应该还算是勉勉强强. 恰好最近有学习 Lisp 的一个想法, 所以在论坛划水的时候偶然间发现了这样的一个有趣的玩具: Extempore. (注: 为什么不用其他的 Live Coding 的语言呢? 比如 Sonic Pi. 实际上我之前也用过, 但是不知道是不是因为系统更新了还是我把环境给搞坏了, 最近不能开启了, 所以就只好换用了新的. 反正没有沉没成本不是. ) 不过相比 Sonic Pi, 我觉得 Extempore 的 文档 实在是少得可怜&#8230; 并且这些文档很少有一些比较农民的解释和说明, 也缺少一些技术细节的文档, 所以开始玩的时候还是挺麻烦的. 不过, 有一个比较好的 视频 (可惜比较糊) 可以用来学习入门. 或者是参考 Xinyu&#39;s Extempore tutorials. (下文主要就是这篇文章的一个转述) Extempore Installation 软件的仓库 地址 里面提供了基本的安装方法. 对于 Emacs 用户, 只需要通过 MELPA 再安装一个 extempore-mode 即可. 我的配置文件如下: (use-package extempore-mode :config (setq extempore-path &quot;/path/to/extempore/&quot;)) 然后在终端进入 /path/to/extempore 目录后, 运行 ./extempore. (这样做是为了防止出现找不到 init.xtm 的报错. 不过好像也可以直接在 Emacs 里面通过 switch-to-extempore 来运行, 默认的按键绑定是 C-c C-z. ) Extempore 的简单介绍 这部分主要参考的是 Xinyu&#39;s 那个教程, 尽管文中开头的说明是这个文档之后会合并到官方的文档里面, 但是我并没有找到对应的文档 (可能是没仔细看吧). 不过因为我没有太多的相关知识, 所以在看本文的时候, 还请就当作是一个自大的学生写的装模作样的笔记吧. 不一定对就是了. Lisp (Scheme) 的简单介绍 Extempore 用的是 Lisp 的一个方言 Scheme 魔改得到的一个语言. 其中很大一部分和 Lisp 语言有着差不多的特性. 尽管 Lisp 是一个 &#8220;该死的括号语言&#8221;. 但是它非常的好学, 并且非常的强大. 基本上没有语法, 甚至可以自己创造语法. 并且非常好懂, 所以基本不必特意去学. (指使用的时候, 除非是为了了解其中的精妙之处. 不过用过之后基本也能理解为什么妙了. ) 推荐参考资料: Little Scheme Land of Lisp 等等, 这里就不偏题介绍了. 会在之后用到的地方介绍具体的操作. 如果你了解的话, 可以跳过这一节的部分, 直接看下一部分. 观察下面的代码: (println (+ 1 2 (* 3 4))) ;; =&gt; 15 会发现, Lisp 的语法非常简单, 农民地认为它就是把函数提前, 然后在把函数的参数跟在后面, 整体用一个括号包裹即可. (上面的代码就是 println 打印输出 1 + 2 + 3 * 4 的结果. 输出可以在 extempore 的窗口中看到. ) 而在 Lisp 里面, 函数, 或者说过程, 也是一种数据, 比如说我们可以用 lambda 关键词来生成一个函数: (println ((lambda (x) (+ x 1)) 15)) ;; =&gt; 16 在形式上, 本来应该是函数的位置上现在是一个表达式. (注: 在 Lisp 里面, 每个表达式都应该会有其返回值. ) 那么这个表达式的返回值就应该是一个函数了. 这个函数接受的 (形式) 参数列表为 (x), 函数的表达式为 (+ x 1). 并且我们还能够将函数作为参数传入: (println ((lambda (f1 f2 x) (+ (f1 x) (f2 x))) ;; f1(x) + f2(x) (lambda (x) (cos x)) ;; f1: cos(x) (lambda (x) (sin x)) ;; f2: sin(x) (/ 3.1415926 2))) ;; =&gt; 1.000000 于是, 你就基本上了解完了大部分的 Lisp 编程技术了. (注: 还有一个比较重要但是没有介绍的是宏. ) Extempore 项目的基本组成 初始化 DSP 载入 乐器 和 采样器 编写音乐循环, 比如 和弦 DSP 什么是 DSP (Digital Signal Processor)? 以及它是干什么用的? A digital signal processor (DSP) is a specialized microprocessor chip, with its architecture optimized for the operational needs of digital signal processing. The goal of a DSP is usually to measure, filter or compress continuous real-world analog signals. from Wikipedia emm&#8230; 有点抽象? 不妨来看看下面这个示意图: (图片仍然来源于 Wikipedia) 那么一个农民的理解: 有点像是电吉他的效果器的感觉. (注: 我不了解电吉他, 也从来没有用过效果器, 但是没吃过猪肉, 总见过猪跑嘛不是. THE FART PEDAL (bilibili) 慎入) (注: 实际上这个不应该叫做效果器, 也许可以叫做合成器. 不过我也说不好) 不妨就拿一个效果器来学习和理解吧: ( 图片来源 Wikipedia) 可以看到, 大部分的效果器的外观都十分类似: 一个根输入线, 一根输出线, 一些控制按钮. 输入的音频信号, 比如从拾音器上读到的音频信号, 或者是从上一级效果器中传来的输出信号. 输出的信号线, 指定输出到什么通道里面. 控制按钮, 用来控制效果器是怎么工作的 那么仔细看 (营销号口吻), 下面这段声明是一个 DSP 的声明: (bind-func dsp:DSP (lambda (in time chan dat) 0.0)) 于其将其看成是一个函数, 我们不妨将其看成是一个 &#8220;效果器&#8221;. 如果你了解一些 Lisp 的编程知识的话, 那么不难知道, 在这里我们定义了一个叫做 dsp 的函数, 接受四个参数: in:SAMPLE 就像是我们的输入的信号 (sample from input device) time:i64 就是我们输入的信号的编号 (sample number) 这有点像是我们将信号量化后, 按照时间顺序存放, 然后放入一个数组, 这个数组中的编号就是这个 time, 而我们可以用 (/ (convert time) SRf) 来转换当前的输入的序号和时间. 其中, SRf 就是当前输入 (sample) 的频率. 显然, $\\mathrm{d}t = \\frac{1}{\\mathrm{SRf}}$. chan:i64 就是我们输出的信号通道 (audio channel) dat:SAMPLE 就是用户用来控制的数据 (user data) 并且这个函数的返回值是 &lt;return&gt;=SAMPLE. 在这里, 补充一个约定, 用 &lt;var-name&gt;:TYPE 来表示 TYPE 类型的, 叫做 &lt;var-name&gt; 的变量. 其中, SAMPLE 类型的字面值在 -1.0 到 1.0 之间. 当然, 如果你只是运行那段代码的话, 并不会有任何事情发生. 毕竟你的输出始终是 0.0, 也就是没有声音. 那么先来试试看, 让这个 DSP 自己输出一个噪音: (bind-func dsp:DSP (lambda (in time chan data) (* 0.2 (random)))) 运行 (Emacs 中, 光标移动到该函数上, 执行 extempore-send-dwim, 默认按键绑定是 C-M-x) 完后, 你会在 extempore 的窗口看到如下输出: Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]*. (注: 为了更快地上手, 所以更复杂的说明会留到之后再介绍. ) 但是你可能 (一定听不到) 并没有听到任何的声音. 这是因为我们现在只是定义了有那么个东西, 并没有让其进行工作. 于是使用命令将其设置为我们当前使用的 DSP: (dsp:set! dsp) 于是你应该可以听到 &#8220;悦耳的&#8221; 噪声了. 你可以中二地认为, 你将自己刚刚定义的这个函数插上了电 (plugged in), 然后它就开始输出了. 现在来干一些更加有趣的事情: 让我们来输出一个振幅随时间正弦变化的一个声音吧: (bind-func dsp:DSP (lambda (in time chan dat) (let ((amplitude 0.2) (frequency 490.0) (amplitude-frequency 2.0) (two-pi (* 2.0 3.1415926))) (* (* amplitude (sin (/ (* amplitude-frequency two-pi (convert time)) SRf))) (sin (/ (* frequency two-pi (convert time)) SRf)))))) 嗯, 你可以自己改变其中的变量来调整自己的喜好, 不过因为我没有审美, 所以就只能随便乱选了. 不过, 这么搞实在是太麻烦了, 所以我们不可能像 C 语言一样, 从零开始写所有的东西. 所以接下来, 我们要载入一些写好的乐器库. 载入乐器 (sys:load &quot;libs/core/instruments.xtm&quot;) 现在我们载入了 Extempore 中自带的一个音乐库. 你应该可以在其输出中看到类似这样的结果: Loading xtmrational library... done in 1.032445 seconds Loading xtmaudiobuffer library... done in 0.929176 seconds Loading xtmaudio_dsp library... done in 2.779191 seconds Loading xtminstruments library... done in 10.362588 seconds sys:load notification instruments already loaded 你可以这样中二地想: 现在我们打开了一个叫做 instruments 的一个装满了乐器的库房. 然后我们从中拿出一个 fmsynth FM 合成器. 并叫其 fmsynth (或者你不妨叫做 my-fm-synth). (make-instrument my-fm-synth fmsynth) ;; SetValue: my-fm-synth &gt;&gt;&gt; [float,float,i64,i64,float*]* ;; New instrument bound as my-fm-synth in both scheme and xtlang 然后我们再将这个乐器和我们的 DSP 相连接. 不过为了简单, 我们的 DSP 是一个非常简单的程序: (即作为一个乐器来干活). (bind-func dsp:DSP (lambda (in time chan dat) (my-fm-synth in time chan dat))) ;; Compiled: dsp &gt;&gt;&gt; [float,float,i64,i64,float*]* 现在让我们按下一个音符 (note): (play-note (now) ;; time my-fm-synth ;; inst (random 60 80) ;; pitch 80 ;; volume *second* ;; dur ) 我们会发现, 在 play-note 这个操作中, 传入了如下的参数: time 时刻 (也就是 (now) 现在), 即按下这个音符的时间. inst 乐器, 这里传入的就是我们定义的 my-fm-synth. pitch 音高 (这里是一个随机的量), 其对应的标准为 MIDI 的音符标记. volume 音量 (这里是 80, 总共是 0 到 100) dur 为持续时间 (这里是 *second*, 是一个全局变量, 表示 1 秒钟. 又: 在 Lisp 里面, 常常约定用 * 来包围全局变量. ) 当然, 我们还能够做一个循环来实现播放: (define my-loop (lambda (time) (play-note time my-fm-synth (random 60 80) 80 *second*) (callback (+ time *second*) &#39;my-loop (+ time *second*))))","headline":"Live Coding","mainEntityOfPage":{"@type":"WebPage","@id":"/learning/live-coding/"},"url":"/learning/live-coding/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Live Coding</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-01-01T00:00:00+00:00" itemprop="datePublished">Jan 1, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>Live Coding</h1>
+<p><del>Dead Reviewing</del></p>
+<p>确实, 在复习的紧要关头开始搞这种东西看起来就是在找死,
+  而我对明天的考试 (热统) 毫无信心.</p>
+<p>(注: 本文大部分内容都是在考完后写的, 虽然后面还有两门考试,
+  但是总得让我缓缓是吧. )</p>
+<h2>Live Coding</h2>
+<h3>首先, 什么是 Live Coding?</h3>
+<blockquote>
+  <p>Live coding, sometimes referred to as on-the-fly programming,
+    just in time programming and conversational programming, makes
+    programming an integral part of the running program.</p>
+  <p>from <a href="https://en.wikipedia.org/wiki/Live_coding">Wikipedia</a></p>
+</blockquote>
+<p>好像确实没有问题. 尽管如果你在网络上搜索,
+  很有可能会搜索得到一个 &#8220;LiveCode&#8221; &#8211; 貌似是一个用来创建应用的一个软件.
+  或者可能会搜索到一个叫做 Live Coding 的概念,
+  即在编辑代码的时候可以在程序运行的时候更新代码并实时载入.
+  (比如 <a href="https://docs.unrealengine.com/5.1/zh-CN/using-live-coding-to-recompile-unreal-engine-applications-at-runtime/">UE 中的 Live Coding</a>, 介绍内容就是在运行时重新编译并修正你的游戏二进制文件.)</p>
+<p>好吧, 我可能一开始理解错了, 我一开始认为这个 Live 是指 &#8220;现场&#8221; (Live House,
+  Music Live Performance) 之类的. 因为一开始我接触到这个玩意的时候,
+  是这个 <a href="https://www.bilibili.com/video/BV1yE411B7Xc/">视频 (bilibili)</a> (不一定就是一模一样的那个视频, 大概是类似的.
+  视频中使用的是 <a href="https://sonic-pi.net">Sonic Pi</a>, 详细会在之后介绍. )</p>
+<p>算了, 那么就不卖关子了. 用农民的话说, 就是通过计算机编程生成音乐.</p>
+<h3>那么, 为什么玩这个?</h3>
+<p>很简单, 因为看起来很有意思.</p>
+<p>并且我也想学一些音乐知识. 玩合成器没钱也没有精力,
+  玩乐器手指太笨拙, 但是写代码, 私以为应该还算是勉勉强强.
+  恰好最近有学习 Lisp 的一个想法,
+  所以在论坛划水的时候偶然间发现了这样的一个有趣的玩具: <a href="https://github.com/digego/extempore">Extempore</a>.</p>
+<p>(注: 为什么不用其他的 Live Coding 的语言呢? 比如 Sonic Pi.
+  实际上我之前也用过, 但是不知道是不是因为系统更新了还是我把环境给搞坏了,
+  最近不能开启了, 所以就只好换用了新的. 反正没有沉没成本不是. )</p>
+<p>不过相比 Sonic Pi, 我觉得 Extempore 的 <a href="https://extemporelang.github.io/docs/">文档</a> 实在是少得可怜&#8230;
+  并且这些文档很少有一些比较农民的解释和说明, 也缺少一些技术细节的文档,
+  所以开始玩的时候还是挺麻烦的. 不过,
+  有一个比较好的 <a href="https://en.wikipedia.org/wiki/File:Study_in_keith.ogv">视频 (可惜比较糊)</a> 可以用来学习入门.
+  或者是参考 <a href="https://benswift.me/blog/2019/09/18/xinyus-extempore-tutorials/">Xinyu's Extempore tutorials</a>. (下文主要就是这篇文章的一个转述)</p>
+<h3>Extempore Installation</h3>
+<p>软件的仓库 <a href="https://github.com/digego/extempore">地址</a> 里面提供了基本的安装方法. 对于 Emacs 用户,
+  只需要通过 MELPA 再安装一个 <code>extempore-mode</code> 即可. 我的配置文件如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">use-package</span><span class="w"> </span><span class="nv">extempore-mode</span>
+<span class="w">  </span><span class="nv">:config</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">extempore-path</span><span class="w"> </span><span class="s">&quot;/path/to/extempore/&quot;</span><span class="p">))</span>
+</pre></div>
+<p>然后在终端进入 <code>/path/to/extempore</code> 目录后, 运行 <code>./extempore</code>.
+  (这样做是为了防止出现找不到 <code>init.xtm</code> 的报错.
+  不过好像也可以直接在 Emacs 里面通过 <code>switch-to-extempore</code> 来运行,
+  默认的按键绑定是 <code>C-c C-z</code>. )</p>
+<h2>Extempore 的简单介绍</h2>
+<p>这部分主要参考的是 <a href="https://benswift.me/blog/2019/09/18/xinyus-extempore-tutorials/">Xinyu's</a> 那个教程,
+  尽管文中开头的说明是这个文档之后会合并到官方的文档里面,
+  但是我并没有找到对应的文档 (可能是没仔细看吧).</p>
+<p>不过因为我没有太多的相关知识, 所以在看本文的时候,
+  还请就当作是一个自大的学生写的装模作样的笔记吧.
+  不一定对就是了.</p>
+<h3>Lisp (Scheme) 的简单介绍</h3>
+<p>Extempore 用的是 Lisp 的一个方言 Scheme 魔改得到的一个语言.
+  其中很大一部分和 Lisp 语言有着差不多的特性.
+  尽管 Lisp 是一个 &#8220;该死的括号语言&#8221;. 但是它非常的好学,
+  并且非常的强大.</p>
+<p>基本上没有语法, 甚至可以自己创造语法. 并且非常好懂,
+  所以基本不必特意去学. (指使用的时候, 除非是为了了解其中的精妙之处.
+  不过用过之后基本也能理解为什么妙了. )</p>
+<p>推荐参考资料:</p>
+<ul>
+  <li>Little Scheme</li>
+  <li>Land of Lisp</li>
+  <li>等等, 这里就不偏题介绍了.
+    会在之后用到的地方介绍具体的操作.</li>
+</ul>
+<p>如果你了解的话, 可以跳过这一节的部分, 直接看下一部分.</p>
+<p>观察下面的代码:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">println</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">)))</span><span class="w"> </span><span class="c1">;; =&gt; 15</span>
+</pre></div>
+<p>会发现, Lisp 的语法非常简单, 农民地认为它就是把函数提前,
+  然后在把函数的参数跟在后面, 整体用一个括号包裹即可.
+  (上面的代码就是 <code>println</code> 打印输出 <code>1 + 2 + 3 * 4</code> 的结果.
+  输出可以在 extempore 的窗口中看到. )</p>
+<p>而在 Lisp 里面, 函数, 或者说过程, 也是一种数据,
+  比如说我们可以用 <code>lambda</code> 关键词来生成一个函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">println</span>
+<span class="w">   </span><span class="p">((</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="mi">15</span><span class="p">))</span><span class="w"> </span><span class="c1">;; =&gt; 16</span>
+</pre></div>
+<p>在形式上, 本来应该是函数的位置上现在是一个表达式.
+  (注: 在 Lisp 里面, 每个表达式都应该会有其返回值. )
+  那么这个表达式的返回值就应该是一个函数了.
+  这个函数接受的 (形式) 参数列表为 <code>(x)</code>, 函数的表达式为 <code>(+ x 1)</code>.</p>
+<p>并且我们还能够将函数作为参数传入:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">println</span>
+<span class="w"> </span><span class="p">((</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">f1</span><span class="w"> </span><span class="nv">f2</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="p">(</span><span class="nv">f1</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nv">f2</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span><span class="w"> </span><span class="c1">;; f1(x) + f2(x)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">cos</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w">                 </span><span class="c1">;; f1: cos(x)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sin</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span><span class="w">                 </span><span class="c1">;; f2: sin(x)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">/</span><span class="w"> </span><span class="mf">3.1415926</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span><span class="w">                    </span><span class="c1">;; =&gt; 1.000000</span>
+</pre></div>
+<p>于是, 你就基本上了解完了大部分的 Lisp 编程技术了.
+  (注: 还有一个比较重要但是没有介绍的是宏. )</p>
+<h3>Extempore 项目的基本组成</h3>
+<ol>
+  <li>初始化 <a href="*DSP">DSP</a></li>
+  <li>载入 <a href="*载入乐器">乐器</a> 和 <a href="*采样 Sampler">采样器</a></li>
+  <li>编写音乐循环, 比如 <a href="*和弦 Chords">和弦</a></li>
+</ol>
+<h3>DSP</h3>
+<p>什么是 DSP (Digital Signal Processor)?
+  以及它是干什么用的?</p>
+<blockquote>
+  <p>A digital signal processor (DSP) is a specialized microprocessor
+    chip, with its architecture optimized for the operational needs
+    of digital signal processing.</p>
+  <p>The goal of a DSP is usually to measure, filter or compress
+    continuous real-world analog signals.</p>
+  <p>from <a href="https://en.wikipedia.org/wiki/Digital_signal_processor">Wikipedia</a></p>
+</blockquote>
+<p>emm&#8230; 有点抽象? 不妨来看看下面这个示意图: (图片仍然来源于 <a href="https://en.wikipedia.org/wiki/Digital_signal_processor#/media/File:DSP_block_diagram.svg">Wikipedia</a>)</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/b/bc/DSP_block_diagram.svg" alt="https://upload.wikimedia.org/wikipedia/commons/b/bc/DSP_block_diagram.svg" /></p>
+<p>那么一个农民的理解: 有点像是电吉他的效果器的感觉.
+  (注: 我不了解电吉他, 也从来没有用过效果器, 但是没吃过猪肉,
+  总见过猪跑嘛不是. <a href="https://www.bilibili.com/video/BV1xr4y117RB/">THE FART PEDAL (bilibili)</a> <del>慎入</del>)</p>
+<p>(注: 实际上这个不应该叫做效果器, 也许可以叫做合成器.
+  不过我也说不好)</p>
+<p>不妨就拿一个效果器来学习和理解吧: ( 图片来源 <a href="https://en.wikipedia.org/wiki/Effects_unit">Wikipedia</a>)</p>
+<p><img src="https://upload.wikimedia.org/wikipedia/commons/d/df/Pedalboard_%28995939579%29-2.jpg" alt="https://upload.wikimedia.org/wikipedia/commons/d/df/Pedalboard_%28995939579%29-2.jpg" /></p>
+<p>可以看到, 大部分的效果器的外观都十分类似:
+  一个根输入线, 一根输出线, 一些控制按钮.</p>
+<ul>
+  <li>输入的音频信号, 比如从拾音器上读到的音频信号,
+    或者是从上一级效果器中传来的输出信号.</li>
+  <li>输出的信号线, 指定输出到什么通道里面.</li>
+  <li>控制按钮, 用来控制效果器是怎么工作的</li>
+</ul>
+<p>那么仔细看 (营销号口吻), 下面这段声明是一个 DSP 的声明:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">bind-func</span><span class="w"> </span><span class="nf">dsp</span><span class="kt">:DSP</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)</span>
+<span class="w">    </span><span class="mf">0.0</span><span class="p">))</span>
+</pre></div>
+<p>于其将其看成是一个函数, 我们不妨将其看成是一个 &#8220;效果器&#8221;.
+  如果你了解一些 Lisp 的编程知识的话, 那么不难知道,
+  在这里我们定义了一个叫做 <code>dsp</code> 的函数, 接受四个参数:</p>
+<ul>
+  <li><code>in:SAMPLE</code> 就像是我们的输入的信号 (sample from input device)</li>
+  <li><code>time:i64</code> 就是我们输入的信号的编号 (sample number)
+    <p>这有点像是我们将信号量化后, 按照时间顺序存放,
+      然后放入一个数组, 这个数组中的编号就是这个 <code>time</code>,
+      而我们可以用 <code>(/ (convert time) SRf)</code>
+      来转换当前的输入的序号和时间.</p>
+    <p>其中, <code>SRf</code> 就是当前输入 (sample) 的频率.
+      显然, $\mathrm{d}t = \frac{1}{\mathrm{SRf}}$.</p>
+  </li>
+  <li><code>chan:i64</code> 就是我们输出的信号通道 (audio channel)</li>
+  <li><code>dat:SAMPLE</code> 就是用户用来控制的数据 (user data)</li>
+</ul>
+<p>并且这个函数的返回值是 <code>&lt;return&gt;=SAMPLE</code>.
+  在这里, 补充一个约定, 用 <code>&lt;var-name&gt;:TYPE</code> 来表示 <code>TYPE</code> 类型的,
+  叫做 <code>&lt;var-name&gt;</code> 的变量. 其中, <code>SAMPLE</code> 类型的字面值在
+  <code>-1.0</code> 到 <code>1.0</code> 之间.</p>
+<p>当然, 如果你只是运行那段代码的话, 并不会有任何事情发生.
+  毕竟你的输出始终是 <code>0.0</code>, 也就是没有声音.</p>
+<p>那么先来试试看, 让这个 DSP 自己输出一个噪音:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">bind-func</span><span class="w"> </span><span class="nf">dsp</span><span class="kt">:DSP</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">data</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="mf">0.2</span><span class="w"> </span><span class="p">(</span><span class="nf">random</span><span class="p">))))</span>
+</pre></div>
+<p>运行 (Emacs 中, 光标移动到该函数上, 执行 <code>extempore-send-dwim</code>,
+  默认按键绑定是 <code>C-M-x</code>) 完后,
+  你会在 extempore 的窗口看到如下输出:
+  <code>Compiled:  dsp &gt;&gt;&gt; [float,float,i64,i64,float*]*</code>.</p>
+<p>(注: 为了更快地上手, 所以更复杂的说明会留到之后再介绍. )</p>
+<p>但是你可能 (一定听不到) 并没有听到任何的声音.
+  这是因为我们现在只是定义了有那么个东西, 并没有让其进行工作.
+  于是使用命令将其设置为我们当前使用的 DSP:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">dsp:set!</span><span class="w"> </span><span class="nv">dsp</span><span class="p">)</span>
+</pre></div>
+<p>于是你应该可以听到 &#8220;悦耳的&#8221; 噪声了.
+  你可以中二地认为, 你将自己刚刚定义的这个函数插上了电 (plugged in),
+  然后它就开始输出了.</p>
+<p>现在来干一些更加有趣的事情:
+  让我们来输出一个振幅随时间正弦变化的一个声音吧:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="p">(</span><span class="k">bind-func</span><span class="w"> </span><span class="nf">dsp</span><span class="kt">:DSP</span>
+<span class="w">   </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nv">amplitude</span><span class="w"> </span><span class="mf">0.2</span><span class="p">)</span>
+<span class="w">	    </span><span class="p">(</span><span class="nv">frequency</span><span class="w"> </span><span class="mf">490.0</span><span class="p">)</span>
+<span class="w">	    </span><span class="p">(</span><span class="nv">amplitude-frequency</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span>
+<span class="w">	    </span><span class="p">(</span><span class="nv">two-pi</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="mf">2.0</span><span class="w"> </span><span class="mf">3.1415926</span><span class="p">)))</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">amplitude</span>
+<span class="w">	      </span><span class="p">(</span><span class="nf">sin</span><span class="w"> </span><span class="p">(</span><span class="nf">/</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">amplitude-frequency</span>
+<span class="w">			 </span><span class="nv">two-pi</span>
+<span class="w">			 </span><span class="p">(</span><span class="k">convert</span><span class="w"> </span><span class="nv">time</span><span class="p">))</span><span class="w"> </span><span class="nv">SRf</span><span class="p">)))</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">sin</span><span class="w"> </span><span class="p">(</span><span class="nf">/</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">frequency</span><span class="w"> </span><span class="nv">two-pi</span><span class="w"> </span><span class="p">(</span><span class="k">convert</span><span class="w"> </span><span class="nv">time</span><span class="p">))</span><span class="w"> </span><span class="nv">SRf</span><span class="p">))))))</span>
+</pre></div>
+<p>嗯, 你可以自己改变其中的变量来调整自己的喜好,
+  不过因为我没有审美, 所以就只能随便乱选了.</p>
+<p>不过, 这么搞实在是太麻烦了, 所以我们不可能像 C 语言一样,
+  从零开始写所有的东西. 所以接下来, 我们要载入一些写好的乐器库.</p>
+<h3>载入乐器</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">sys:load</span><span class="w"> </span><span class="s">&quot;libs/core/instruments.xtm&quot;</span><span class="p">)</span>
+</pre></div>
+<p>现在我们载入了 Extempore 中自带的一个音乐库.
+  你应该可以在其输出中看到类似这样的结果:</p>
+<div class="highlight"><pre><span></span>Loading xtmrational library... done in 1.032445 seconds
+Loading xtmaudiobuffer library... done in 0.929176 seconds
+Loading xtmaudio_dsp library... done in 2.779191 seconds
+Loading xtminstruments library... done in 10.362588 seconds
+sys:load notification instruments already loaded
+</pre></div>
+<p>你可以这样中二地想: 现在我们打开了一个叫做 <code>instruments</code>
+  的一个装满了乐器的库房. 然后我们从中拿出一个 <code>fmsynth</code>
+  FM 合成器. 并叫其 <code>fmsynth</code> (或者你不妨叫做 <code>my-fm-synth</code>).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">make-instrument</span><span class="w"> </span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="nv">fmsynth</span><span class="p">)</span>
+<span class="c1">;; SetValue:  my-fm-synth &gt;&gt;&gt; [float,float,i64,i64,float*]*</span>
+<span class="c1">;; New instrument bound as my-fm-synth in both scheme and xtlang</span>
+</pre></div>
+<p>然后我们再将这个乐器和我们的 DSP 相连接.
+  不过为了简单, 我们的 DSP 是一个非常简单的程序:
+  (即作为一个乐器来干活).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">bind-func</span><span class="w"> </span><span class="nf">dsp</span><span class="kt">:DSP</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)))</span>
+<span class="c1">;; Compiled:  dsp &gt;&gt;&gt; [float,float,i64,i64,float*]*</span>
+</pre></div>
+<p>现在让我们按下一个音符 (note):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w">          </span><span class="c1">;; time</span>
+<span class="w">	     </span><span class="nv">my-fm-synth</span><span class="w">    </span><span class="c1">;; inst</span>
+<span class="w">	     </span><span class="p">(</span><span class="nf">random</span><span class="w"> </span><span class="mi">60</span><span class="w"> </span><span class="mi">80</span><span class="p">)</span><span class="w"> </span><span class="c1">;; pitch</span>
+<span class="w">	     </span><span class="mi">80</span><span class="w">             </span><span class="c1">;; volume</span>
+<span class="w">	     </span><span class="nv">*second*</span><span class="w">       </span><span class="c1">;; dur</span>
+<span class="w">	     </span><span class="p">)</span>
+</pre></div>
+<p>我们会发现, 在 <code>play-note</code> 这个操作中, 传入了如下的参数:</p>
+<ul>
+  <li><code>time</code> 时刻 (也就是 <code>(now)</code> 现在),
+    即按下这个音符的时间.</li>
+  <li><code>inst</code> 乐器, 这里传入的就是我们定义的 <code>my-fm-synth</code>.</li>
+  <li><code>pitch</code> 音高 (这里是一个随机的量), 其对应的标准为 <a href="http://www.phys.unsw.edu.au/jw/notes.html">MIDI 的音符标记</a>.</li>
+  <li><code>volume</code> 音量 (这里是 <code>80</code>, 总共是 <code>0</code> 到 <code>100</code>)</li>
+  <li><code>dur</code> 为持续时间 (这里是 <code>*second*</code>, 是一个全局变量,
+    表示 1 秒钟. 又: 在 Lisp 里面, 常常约定用 <code>*</code> 来包围全局变量. )</li>
+</ul>
+<p>当然, 我们还能够做一个循环来实现播放:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">my-loop</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">time</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="p">(</span><span class="nf">random</span><span class="w"> </span><span class="mi">60</span><span class="w"> </span><span class="mi">80</span><span class="p">)</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="nv">*second*</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;my-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nv">my-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">))</span>
+</pre></div>
+<p>于是你就拥有了一个比较 &#8220;阴沉&#8221; 的背景音乐了.
+  当然, 你也可以 <code>pitch</code> 调高一些. 比如 <code>(random 80 120)</code>,
+  现在就是一些极其尖锐的背景音乐了. 有种惊悚片中的背景配乐的感觉了.</p>
+<p>代码解释:</p>
+<ul>
+  <li><code>define</code> 是 Scheme 中定义函数的一个关键词,
+    那么和之前的 <code>bind-func</code> 的区别则是:
+    后者是 Extempore 自己添加的一个叫做 Extemporelang 的东西,
+    通过静态的编译的方式来实现的.
+    <p>emmm&#8230; 感觉这样子讲有些不太严谨和准确,
+      你可以这样理解: 在执行 <code>bind-func</code> 这些 Extemporelang
+      部分的代码的时候, Extempore 会将代码编译后等待调用.
+      而 Scheme 的代码则是动态地被执行的.</p>
+    <p>或者, 你可以中二地认为, Extemporelang
+      部分的代码得到的结果是一些 &#8220;硬件&#8221;, 而 Scheme 部分的代码,
+      得到的结果是一些 &#8220;软件&#8221;, 用来控制该怎么操控硬件.</p>
+    <p>我们可以反复调用这个函数, 就好像是多个人在反复执行这个操作.</p>
+  </li>
+  <li><code>callback</code> 传入的参数如下:
+    <ul>
+      <li><code>time</code>, 这里是 <code>(+ time *second*)</code>,
+        即在 <code>+1</code> 秒后调用 <code>my-loop</code> 这个函数.</li>
+      <li><code>closure</code>, 即调用的函数的名字.
+        这里是 ='my-loop=. 其中 ='sym= 是 <code>(quote sym)</code>
+        的一个缩写. 可以理解为, 在环境中去找叫做 <code>sym</code> 的这个符号的函数.</li>
+      <li><code>args*</code>, 这里是 <code>(+ time *second*)</code>, 也就是调用函数需要的参数.</li>
+      <li>Note: 为什么不是直接通过调用的方式来实现这件事情呢?
+        反正通过尾递归 TOC 进行优化后应该差不多.
+        <p>不过这个我也不清楚就是了.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<p>比如我们想要更加丰富一些的演奏方式, 比如可以按顺序弹奏一组音符:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="c1">;; Shift a list of notes</span>
+<span class="w"> </span><span class="c1">;; for example:</span>
+<span class="w"> </span><span class="c1">;; (shift-notes &#39;(1 2 3)) =&gt; (3 2 1)</span>
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">shift-notes</span>
+<span class="w">   </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">not</span><span class="nv">es</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nv">flatten</span><span class="w"> </span><span class="p">(</span><span class="nf">list</span><span class="w"> </span><span class="p">(</span><span class="nf">cdr</span><span class="w"> </span><span class="nv">notes</span><span class="p">)</span>
+<span class="w">		     </span><span class="p">(</span><span class="nf">car</span><span class="w"> </span><span class="nv">notes</span><span class="p">)))))</span>
+
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">my-loop</span>
+<span class="w">   </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">time</span><span class="w"> </span><span class="nv">notes</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">not</span><span class="nv">e-length</span><span class="w"> </span><span class="p">(</span><span class="nf">random</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mf">1.0</span><span class="w"> </span><span class="mf">1.5</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)))</span>
+<span class="w">	    </span><span class="p">(</span><span class="nv">wait-time</span><span class="w"> </span><span class="p">(</span><span class="nf">random</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="mf">1.5</span><span class="w"> </span><span class="mf">2.0</span><span class="p">))))</span>
+<span class="w">	</span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">my-fm-synth</span>
+<span class="w">		   </span><span class="p">(</span><span class="nf">car</span><span class="w"> </span><span class="nv">notes</span><span class="p">)</span><span class="w"> </span><span class="c1">;; the first element of notes</span>
+<span class="w">		   </span><span class="mi">80</span>
+<span class="w">		   </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">*second*</span><span class="w"> </span><span class="nv">note-length</span><span class="p">))</span>
+<span class="w">	</span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">note-length</span><span class="w"> </span><span class="nv">wait-time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">		  </span><span class="ss">&#39;my-loop</span>
+<span class="w">		  </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="nv">note-length</span><span class="w"> </span><span class="nv">wait-time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">		  </span><span class="p">(</span><span class="nv">shift-notes</span><span class="w"> </span><span class="nv">notes</span><span class="p">)))))</span>
+
+<span class="w"> </span><span class="p">(</span><span class="nv">my-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">60</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="mi">63</span><span class="w"> </span><span class="mi">70</span><span class="w"> </span><span class="mi">68</span><span class="w"> </span><span class="mi">73</span><span class="p">))</span>
+</pre></div>
+<p>代码说明: (<code>shift-notes</code>)</p>
+<ul>
+  <li>Lisp 语言, 一开始可以叫做 &#8220;LISt Processor&#8221; (<a href="https://en.wikipedia.org/wiki/Lisp_(programming_language)">Wikipedia</a>),
+    其中的一个基本的元素就是 List, 即 <code>(list exp1 exp2 ...)</code>,
+    或者 ='(sym1 sym2)=, 前者和后者的区别在于, 后者为 <code>quote</code> 语法糖,
+    被括起来的全部都会被作为符号储存, 而前者则会将表达式执行后以值的形式储存.</li>
+  <li>对于 List, 可以通过 <a href="https://www.geeksforgeeks.org/data-structures/linked-list/">Linked List (Geeksforgeeks)</a> 的方式来实现.
+    在历史上, 因为一开始的计算机实现了一个叫做高低位的储存方式,
+    即高位 <code>car</code> 一个数据 (指向), 低位 <code>cdr</code> 指向另外一个数据.
+    这样的两个数据通过 <code>cons</code> 和在一起: <code>(cons &#39;car &#39;cdr)</code>.
+    <p>而 Linked List 则通过如下图所示的方式联系在一起: (图片来源 <a href="https://en.wikipedia.org/wiki/Linked_list">Wikipedia</a>)</p>
+    <p><img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Singly-linked-list.svg" alt="https://upload.wikimedia.org/wikipedia/commons/6/6d/Singly-linked-list.svg" /></p>
+    <p>于是一个 List 就和 <code>(cons item1 (cons item2 ...))</code> 差不多.
+      所以我们对 List 做 <code>car</code> 和 <code>cdr</code> 则会分别得到第一个元素和剩余元素的列表.</p>
+  </li>
+</ul>
+<p>或者还能够再来一些奇怪的操作. 比如再加一个声音比较低的循环:
+  比如继续执行下面的这个代码:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">my-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">30</span><span class="w"> </span><span class="mi">40</span><span class="w"> </span><span class="mi">43</span><span class="w"> </span><span class="mi">48</span><span class="w"> </span><span class="mi">33</span><span class="w"> </span><span class="mi">20</span><span class="p">))</span>
+</pre></div>
+<p>(注: 上面的声音都是我乱写的, 所以不敢保证好听. 不过和我的五子棋一样,
+  有一种黑猩猩的智慧. )</p>
+<p>那么最后, 一个简单的问题, 该怎么让它停下来?
+  很简单, 我们只需要在上面的函数上做一些修改, 即可:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">*playing*</span><span class="w"> </span><span class="o">#</span><span class="nv">f</span><span class="p">)</span>
+
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">my-loop</span>
+<span class="w">   </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">time</span><span class="w"> </span><span class="nv">notes</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">*playing*</span>
+<span class="w">	    </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="o">...</span><span class="p">)))))</span>
+</pre></div>
+<h3>和弦 Chords</h3>
+<p>那么来点 chords (和弦) 吧. 在农民的眼中, 和弦把几个按键一起按:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">play-chord</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">chord</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">map</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">pitch</span><span class="p">)</span>
+<span class="w">	     </span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w"> </span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="nv">pitch</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">	   </span><span class="nv">chord</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nv">play-chord</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">72</span><span class="w"> </span><span class="mi">76</span><span class="w"> </span><span class="mi">69</span><span class="p">))</span>
+</pre></div>
+<p>代码解释:</p>
+<ul>
+  <li><code>map</code> 函数就是把一个 <code>list</code> 中的每个元素都拿出来,
+    然后过一边 <code>func</code> 函数, 得到的新的列表:
+    <code>(map func list)</code>.
+    <p>这个概念来自于数学中的 $A &rarr; B, a \mapsto b$ 这样的一个映射 (map).</p>
+    <p>不过在这里, 你可以理解为对 <code>chord</code> 中的每个音符都执行一遍 <code>play-note</code>.</p>
+  </li>
+  <li>不过也能够用类似 Ruby 中的 <code>each</code> 方法来实现:
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">play-chord</span>
+<span class="w">     </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">time</span><span class="w"> </span><span class="nv">chord</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="k">for-each</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">pitch</span><span class="p">)</span>
+<span class="w">		    </span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="nv">pitch</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">		  </span><span class="nv">chord</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+<p>于是我们就可以来弹一些简单好玩的东西了:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="c1">;; Do `chords-loop-play` for `to-loop` times</span>
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="p">(</span><span class="nv">iter-chords-loop</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chords</span><span class="w"> </span><span class="nv">to-loop</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">&gt;</span><span class="w"> </span><span class="nv">to-loop</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">	</span><span class="p">(</span><span class="k">begin</span><span class="w"> </span><span class="p">(</span><span class="nv">chords-loop-play</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chords</span><span class="p">)</span>
+<span class="w">	       </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="p">(</span><span class="nf">length</span><span class="w"> </span><span class="nv">chords</span><span class="p">)</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">			 </span><span class="ss">&#39;iter-chords-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="w"> </span><span class="p">(</span><span class="nf">length</span><span class="w"> </span><span class="nv">chords</span><span class="p">)</span><span class="w"> </span><span class="nv">*second*</span><span class="p">))</span>
+<span class="w">			 </span><span class="nv">chords</span><span class="w"> </span><span class="p">(</span><span class="nf">-</span><span class="w"> </span><span class="nv">to-loop</span><span class="w"> </span><span class="mi">1</span><span class="p">)))))</span>
+
+<span class="w"> </span><span class="c1">;; Play chords in row</span>
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="p">(</span><span class="nv">chords-loop-play</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chords</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq?</span><span class="w"> </span><span class="nv">chords</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">	</span><span class="p">(</span><span class="k">begin</span><span class="w"> </span><span class="p">(</span><span class="nv">play-chord</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="p">(</span><span class="nf">car</span><span class="w"> </span><span class="nv">chords</span><span class="p">))</span>
+<span class="w">	       </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">)</span>
+<span class="w">			 </span><span class="ss">&#39;chords-loop-play</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">*second*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">cdr</span><span class="w"> </span><span class="nv">chords</span><span class="p">)))))</span>
+
+<span class="w"> </span><span class="c1">;; Play the chords in row for four times</span>
+<span class="w"> </span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="p">(</span><span class="nv">chords-4-loop</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chords</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nv">iter-chords-loop</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chords</span><span class="w"> </span><span class="mi">4</span><span class="p">))</span>
+
+<span class="w"> </span><span class="p">(</span><span class="nv">chords-4-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="mi">72</span><span class="w"> </span><span class="mi">76</span><span class="w"> </span><span class="mi">79</span><span class="p">)(</span><span class="mi">69</span><span class="w"> </span><span class="mi">72</span><span class="w"> </span><span class="mi">76</span><span class="p">)(</span><span class="mi">65</span><span class="w"> </span><span class="mi">69</span><span class="w"> </span><span class="mi">72</span><span class="p">)(</span><span class="mi">67</span><span class="w"> </span><span class="mi">71</span><span class="w"> </span><span class="mi">74</span><span class="p">)))</span>
+</pre></div>
+<p>代码解释:</p>
+<ul>
+  <li><code>(begin &lt;exp1&gt; &lt;exp2&gt; ...)</code> 命令的作用就是将其参数的表达式依次执行.
+    <p>(注: 其实好像用 <code>list</code> 感觉也没有什么问题, 只是后者更加注重返回值罢了&#8230; )</p>
+  </li>
+  <li><code>(not (eq? chords &#39;()))</code> 的意思是, 若 <code>chords</code> 不为空列表.</li>
+  <li>代码写得不怎么样, 没能体现 Lisp 的一个简洁和优美.
+    并且现在还是有点没有理解 <code>callback</code> 和直接调用的区别.
+    <p>之后会去看一下具体的实现 (大概), 估计可以理解更好一些.
+      目前来看, <code>callback</code> 更像是 JS 里面的 <code>setTimeout()</code>.
+      不是立刻调用而是延时调用.</p>
+  </li>
+  <li><del>Lisp 里面应该是有 DocString 一说的, =(define (two-times x) (* x 1))=</del>
+    <del>应该就是一个例子. 不过可能是我把 Common Lisp 和 Scheme 的风格搞错了吧&#8230;</del></li>
+</ul>
+<h3>采样 Sampler</h3>
+<p>那么如果我们想要使用一些自己录制的音频,
+  玩玩 Sample (比如 <a href="https://www.bilibili.com/video/BV1vt4y1g7uS/">像广告一样呐 (bilibili)</a>, 好吧, 这个可能不算.
+  那么比如这个 <a href="https://www.bilibili.com/video/BV1CJ41117TM/">纯人工声音采样器 (bilibili)</a>, 以及 <a href="https://www.bilibili.com/video/BV1r7411N7cx/">OP-1 (bilibili)</a>.
+  OP-1 那个合成器真的超级帅. )</p>
+<p>这个思路就是, 将录制好的音频素材播放出来. (或者是, 经过一些处理过后导出. )</p>
+<p>那么首先就是要将素材导入到 Extempore 中.
+  使用 Extempore 自带的 Sampler:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; (sys:load &quot;libs/core/instruments.xtm&quot;) ;; if you are not loaded</span>
+<span class="p">(</span><span class="nv">sys:load</span><span class="w"> </span><span class="s">&quot;libs/external/instruments_ext.xtm&quot;</span><span class="p">)</span>
+</pre></div>
+<p>接下来载入一些素材 (这里使用的是 <a href="https://archive.org/download/SalamanderDrumkit/salamanderDrumkit.tar.bz2">Salamander Drum Kit</a>, 即鼓的素材,
+  为音乐提供一个节奏. )</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">drum-path</span><span class="w"> </span><span class="s">&quot;/Users/liyiyang/Downloads/salamanderDrumkit/OH&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">drum-path</span><span class="w"> </span><span class="s">&quot;/your/path/to/salamanderdrumkit/OH&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">make-instrument</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="nv">sampler</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;kick_OH_F_9.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-kick*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;snareStick_OH_F_9.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-side-stick*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;snare_OH_FF_9.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-snare*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;hihatClosed_OH_F_20.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-closed-hi-hat*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;hihatFoot_OH_MP_12.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-pedal-hi-hat*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;hihatOpen_OH_FF_6.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-open-hi-hat*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;loTom_OH_FF_8.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-low-floor-tom*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;hiTom_OH_FF_9.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-hi-floor-tom*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;crash1_OH_FF_6.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-crash*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;ride1_OH_FF_4.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-ride*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;china1_OH_FF_8.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-chinese*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;cowbell_FF_9.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-cowbell*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;bellchime_F_3.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-open-triangle*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">sampler-populate-slot</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="p">(</span><span class="nf">string-append</span><span class="w"> </span><span class="nv">drums-path</span><span class="w"> </span><span class="s">&quot;ride1Bell_OH_F_6.wav&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">*gm-ride-bell*</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+<p>于是一个 <code>drums</code> 便初始化完了. (注: 原文中使用的方法 <code>set-sampler-index</code>
+  应该是被弃用了. 参考 <a href="https://extemporelang.github.io/docs/guides/sampler/">官方的文档</a>, 现在使用的是 <code>sampler-populate-slot</code>.
+  其调用的参数:
+  <code>(sampler-populate-slot inst filename index offset lgth bank print?)</code>,
+  因为我们在这里将 <code>print?</code> 设为了 <code>1</code>, 所以在 Extempore
+  中应该可以看见导入的输出信息. )</p>
+<blockquote>
+  <p>A sampler is an instrument which stores chunks of audio which
+    can be triggered—played back.</p>
+  <p>You can think of a sampler as a series of ‘slots’,
+    each of which contains a sound file.</p>
+</blockquote>
+<p>可以这样理解: 将 sampler 看作是对乐器按照音阶进行索引 <code>index</code>.
+  于是之后在 <code>play-note</code> 的时候, 就会去找相应的 <code>index</code>.
+  (如果找不到的话, 就会去找最近的索引. )</p>
+<p>于是就可以进行一个鼓的敲:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="p">(</span><span class="nf">now</span><span class="p">)</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="nv">*gm-open-triangle*</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="mi">44100</span><span class="p">)</span>
+</pre></div>
+<p>不过你肯定听不到声音. 因为我们并没有将鼓连接到我们的 DSP 输出上.
+  所以这个时候, 我们不妨直接做一个加法合成器 (Addictive Synthesis,
+  不过并不是真的就是了):</p>
+<p>(注: 这样的代码并不够好, 只是能用的水平, 之后会介绍如何让其变得更加友好. )</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">bind-func</span><span class="w"> </span><span class="nf">dsp</span><span class="kt">:DSP</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="p">(</span><span class="nv">my-fm-synth</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">)</span>
+<span class="w">	 </span><span class="p">(</span><span class="nv">drums</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">chan</span><span class="w"> </span><span class="nv">dat</span><span class="p">))))</span>
+</pre></div>
+<p>然后你应该就可以尝试替换 <code>*gm-open-triangle*</code> 来听听看各种声音了.</p>
+<p>不过不要乱敲, 来点节拍: (metronome 节拍器)</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">*metro1*</span><span class="w"> </span><span class="p">(</span><span class="nv">make-metro</span><span class="w"> </span><span class="mi">120</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="nv">drum-loop</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">time</span><span class="w"> </span><span class="nv">duration</span><span class="w"> </span><span class="nv">drum</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="nv">time</span><span class="p">)</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="nv">drum</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="ss">&#39;dur</span><span class="w"> </span><span class="nv">duration</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="o">#</span><span class="nv">t</span>
+<span class="w">	  </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">duration</span><span class="p">))</span><span class="w"> </span><span class="ss">&#39;drum-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">duration</span><span class="p">)</span>
+<span class="w">		    </span><span class="nv">duration</span><span class="w"> </span><span class="nv">drum</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nv">drum-loop</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="ss">&#39;get-beat</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">*gm-hi-floor-tom*</span><span class="p">)</span>
+</pre></div>
+<p>代码解释:</p>
+<ul>
+  <li><code>make-metro</code> 函数返回了一个 <a href="https://en.wikipedia.org/wiki/Tempo">BPM (Beats Per Min)</a> 的一个节拍器.
+    这样的一个节拍器的功能就是为了方便我们对齐时间来进行打拍子.
+    <p>其中通过 <code>(&lt;metro&gt; time)</code> 的方式, 可以将当前 <code>time</code> 对齐到拍上.
+      <code>(&lt;metro&gt; &#39;dur duration)</code> 可以将 <code>duration</code> 转换为持续时间.</p>
+  </li>
+</ul>
+<p>于是可以来一段节奏:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; patterns for example:</span>
+<span class="c1">;; `((,*gm-kick* (x o x o x o x x x x))</span>
+<span class="c1">;;   (,*gm-side-stick* (x o x o x x x)))</span>
+<span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="p">(</span><span class="nv">syn-beat</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">patterns</span><span class="w"> </span><span class="nv">duration</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nv">shifted</span><span class="w"> </span><span class="p">(</span><span class="k">map</span>
+<span class="w">		    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nv">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nv">shift-beat-pattern</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">duration</span><span class="p">))</span>
+<span class="w">		    </span><span class="nv">patterns</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="o">#</span><span class="nv">t</span>
+<span class="w">	  </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">duration</span><span class="p">))</span>
+<span class="w">		    </span><span class="ss">&#39;syn-beat</span><span class="w"> </span><span class="p">(</span><span class="nf">+</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">duration</span><span class="p">)</span><span class="w"> </span><span class="nv">shifted</span><span class="w"> </span><span class="nv">duration</span><span class="p">))))</span>
+
+<span class="c1">;; return the shifted pattern</span>
+<span class="p">(</span><span class="k">define</span><span class="w"> </span><span class="p">(</span><span class="nv">shift-beat-pattern</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">duration</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">not</span><span class="nv">e</span><span class="w"> </span><span class="p">(</span><span class="nf">car</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))</span>
+<span class="w">	  </span><span class="p">(</span><span class="nv">sequences</span><span class="w"> </span><span class="p">(</span><span class="nv">shift-notes</span><span class="w"> </span><span class="p">(</span><span class="nf">cadr</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq?</span><span class="w"> </span><span class="ss">&#39;x</span><span class="w"> </span><span class="p">(</span><span class="nf">car</span><span class="w"> </span><span class="nv">sequences</span><span class="p">))</span>
+<span class="w">	  </span><span class="p">(</span><span class="nv">play-note</span><span class="w"> </span><span class="nv">time</span><span class="w"> </span><span class="nv">drums</span><span class="w"> </span><span class="nv">note</span><span class="w"> </span><span class="mi">80</span><span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="ss">&#39;dur</span><span class="w"> </span><span class="nv">duration</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">list</span><span class="w"> </span><span class="nv">note</span><span class="w"> </span><span class="nv">sequences</span><span class="p">)))</span>
+
+<span class="c1">;; let dance...</span>
+<span class="p">(</span><span class="nv">syn-beat</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">*</span><span class="nv">metro1*</span><span class="w"> </span><span class="ss">&#39;get-beat</span><span class="p">)</span>
+<span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">*gm-kick*</span><span class="w">          </span><span class="p">(</span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="o">,</span><span class="nv">*gm-side-stick*</span><span class="w">    </span><span class="p">(</span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="o">,</span><span class="nv">*gm-open-hi-hat*</span><span class="w">   </span><span class="p">(</span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="o">,</span><span class="nv">*gm-closed-hi-hat*</span><span class="w"> </span><span class="p">(</span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">o</span><span class="p">)))</span>
+<span class="w"> </span><span class="o">.</span><span class="mi">25</span><span class="p">)</span>
+</pre></div>
+<p>代码解释:</p>
+<ul>
+  <li>Lisp 中有一个叫做 Backquote 的操作, 有点类似于 Ruby 中的 formatted string:
+    =&#8221;Hello #{name}&#8221;<code>. 通过 ~`(sym sym ,&lt;exp&gt; sym)~ 的形式来将
+    =&lt;exp&gt;</code> 的值插入到列表中.
+    <p>这里通过 Backquote 的方式来得到变量的值而不是变量的名字.</p>
+  </li>
+</ul>
+<p>于是可以通过配合鼓和合成器来创造节奏韵律了.
+  不过这部分, 我做得太难听了, 所以就不把代码放上来了.</p>
+<h2>接下来?</h2>
+<p>我觉得应该分为几种方式:</p>
+<ul>
+  <li>一种是技术向的, 去读一下源码和官方的文档.
+    以及计算机音乐的知识.
+    <ul>
+      <li><a href="https://github.com/digego/extempore">官方仓库</a></li>
+      <li><a href="https://extemporelang.github.io">官方文档</a></li>
+      <li>&#8230;</li>
+    </ul>
+  </li>
+  <li>一种是音乐方向的, 去了解一下关于音乐的基本知识.
+    <p>目前想要了解的应该是:</p>
+    <ul>
+      <li><a href="https://www.youtube.com/watch?v=xpSYWd_aIiI">Codemania 2015: A Programmer's Guide To Western Music</a></li>
+      <li><a href="https://learningmusic.ableton.com/">Learning Music Ableton</a></li>
+    </ul>
+  </li>
+</ul>
+<p>之后有想法再更新.</p>
+
+  </div><a class="u-url" href="/learning/live-coding/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
