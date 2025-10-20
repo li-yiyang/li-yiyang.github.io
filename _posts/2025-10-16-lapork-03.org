@@ -1,0 +1,255 @@
+:PROPERTIES:
+:header-args:lisp: :results silent
+:END:
+#+title: LapOrk (03: A Little More on Sound Waves)
+#+date: 2025-10-16
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lapork
+#+html: <style>img { width: 400px; display: block; margin: auto; }</style>
+* About
+之后的一些代码会放到 Github 上面 ([[https://github.com/li-yiyang/lapork-lecture][li-yiyang/lapork-lecture]]),
+方便复用了.
+
+** TLDR
++ 声音是波, 一些特别的波型的产生和对他们进行一个调参数
++ 采样的播放
++ 声道, 输出的设备以及其他
+
+* Sound is Waves
+#+html: <details><summary>咬文嚼字一下</summary>
+其实严格来说, 声音是振动 \(f(t)\), 而波是声音的传播 (时空分布) \(f(x, t)\).
+不知道这样会不会更加严格一些.
+#+html: </details>
+
+比如说打开示波器, 去检查声音信号随时间的变化情况:
+
+#+begin_src lisp :package lapork
+  (play (* 0.125 (+ (sin-osc.ar 350) (sin-osc.ar 440))))
+#+end_src
+
+[[{{ site.github.url }}/_img/lapork/03/phone.png]]
+
+** 波形与频谱的显示
+*** lapork.plot
+emmm, 但是不是所有时候都能手上拿着一台示波器,
+那么是否有没有好的方法来解决这个问题呢?
+虽然在 SuperCollider 中有 [[https://doc.sccode.org/Reference/plot.html][=plot=]] 这样的函数,
+但是在 =cl-collider= 中并没有类似的功能.
+
+参考 [[https://github.com/byulparan/cl-collider/issues/81][cl-collider/issue #81]] 中的方法,
+可以用 Gnuplot 简单的实现一个绘图功能.
+
+完整的代码见 [[https://github.com/li-yiyang/lapork-lecture/tree/main/lisp/plot][lapork/plot]].
+
+#+html: <details><summary>具体思路的说明</summary>
+
++ =plot=: 相当于是在后台开了一个 [[http://www.gnuplot.info/][Gnuplot]] 程序,
+  通过生成 inline data 和 plot 命令, 可以用来绘图
++ =scope=: 例
+
+  #+begin_src lisp
+    (scope (sin-osc.ar 440) :frames 200)
+  #+end_src
++ =freqscope=: 
+
+#+html: </details>
+
+*** 各种各样的波形的显示
+在前面的几节里面已经接触过:
++ =sin-osc=: 正弦波
++ =blip=: 脉冲
++ =white-noise=: 白噪声
+
+  类似的还有:
+  + =brown-noise=: 棕噪声
+  + =pink-noise=: 粉噪声
+
+下面是一些声音种类以及其波形的形状:
+
+#+html: <style>td img { width: 200px; display: block; margin: auto; } </style>
+| 声音                                   | 波形                                                 |
+|----------------------------------------+------------------------------------------------------|
+| ~sin-osc~ 正弦波                         | [[{{ site.github.url }}/_img/lapork/03/sin.svg]]         |
+| ~blip~ 脉冲波                            | [[{{ site.github.url }}/_img/lapork/03/blip.svg]]        |
+| ~saw~ 锯齿波                             | [[{{ site.github.url }}/_img/lapork/03/saw.svg]]         |
+| ~pulse~ 方波                             | [[{{ site.github.url }}/_img/lapork/03/pulse.svg]]       |
+| ~white-noise~ 白噪声                     | [[{{ site.github.url }}/_img/lapork/03/white-noise.svg]] |
+| ~brown-noise~ 粽噪声                     | [[{{ site.github.url }}/_img/lapork/03/brown-noise.svg]] |
+| ~pink-noise~ 粉噪声                      | [[{{ site.github.url }}/_img/lapork/03/pink-noise.svg]]  |
+| ~gray-noise~ 灰噪声                      | [[{{ site.github.url }}/_img/lapork/03/gray-noise.svg]]  |
+| ~lf-tri~ 低频 (Low Frequency) 三角波     | [[{{ site.github.url }}/_img/lapork/03/lf-tri.svg]]      |
+| ~lf-pulse~ 低频 (Low Frequency) 方波     | [[{{ site.github.url }}/_img/lapork/03/lf-pulse.svg]]    |
+| ~sin-osc~ 和 ~lf-noise1~ (低频噪声) 的合成 | [[{{ site.github.url }}/_img/lapork/03/sin-noise1.svg]]  |
+
+部分解释:
++ =lf-*= 开头的 (对应 SuperCollider 中 =LF=) 开头的表示 Low Frequency,
+  用于去更好地生成一些低频的信号.
+
+  例: 比较 =pulse= 和 =lf-pulse= 的波形, 前者是通过多个正弦波 (傅立叶分解) 叠加得到的,
+  后者则是直接通过翻转值 (=0= 或 =1=) 来产生的. 在低频的情况下,
+  (通过 CPU 控制的) 直接翻转显然更优, 而高频情况下, 由于会对 CPU 产生较大的负担,
+  还是不如用声卡的输出来的方便.
++ 不同的音色
+
+** 滤波器
+
+** 你说, 我在听 -- 录音的导入和导出
+*** 导入声音
+可以导入一段声音 (sampling, 采样) 进行播放:
+
+#+begin_src lisp
+  (defparameter layer
+    (buffer-read "~/Code/lapork-lecture/samples/whispers/layer.aiff"))
+
+  (play (play-buf.ar 1 layer (buf-rate-scale.ir layer)))
+#+end_src
+
+解释:
++ =buffer-read= 可以读入一段采样音频文件
++ =play-buf.ar= 给 =layer= 这个 buffer 准备了一些预先需要知道的信息:
+
+  #+begin_src lisp
+    (play-buf.ar channels buffer-id rate)
+  #+end_src
+
+  + =channels= 有几个声道
+  + =buffer-id= 也就是读到的 =layer=
+  + =rate= 播放速率, 默认的 =rate= 不知道为啥会让速度变得非常快, 所以这里需要加上
+
+  代码调用有些不太优雅了其实
+
+#+html: <details><summary>这段采样的来历</summary>
+
+在 Lain 每一集开头都会有一段很有意思的机械合成声音,
+传说是用 Macintosh 发布会的那个问候同款的合成器制成的 (ref: [[https://www.reddit.com/r/Lain/comments/15x63rn/looking_for_the_macintosh_voice/][r/Lain]]).
+
+在今天的 macOS 里面, 其实还保留了这个神奇的声音生成工具:
+
+#+begin_src sh
+  say -v 'Whisper' 'Layer, zero two' # read
+#+end_src
+
+你可以用:
+
+#+begin_src sh
+  say -v 'Whisper' -o $OUTPUT 'Layer'
+#+end_src
+
+来生成采样.
+
+#+html: </details>
+
+*** 拿小本本记下 -- 导出声音
+
+
+** 合成声音 -- 一些应用?
+*** Phone Tones
+做这个的原因是之前听过一首歌, 开头是一段拨号, 然后是 “Hello, its me... ”,
+挺好听的, 只是我忘了具体歌名叫啥了.
+
+根据 [[https://www.itu.int/rec/T-REC-Q.23-198811-I/en][Technical features of push-button telephone sets (ITU)]] 的说明,
+可以得到一个拨号声音信号是如下定义的:
+
+在按下按钮的时候, 根据按钮的编码发送一个混合频率的声音:
+
+| Low freq \ High freq | 1209 | 1336 | 1477 | 1633 |
+|----------------------+------+------+------+------|
+|                  697 |    1 |    2 |    3 | A    |
+|                  770 |    4 |    5 |    6 | B    |
+|                  852 |    7 |    8 |    9 | C    |
+|                  941 |    * |    0 |    # | D    |
+
+这, 简单啊:
+
+#+begin_src lisp :package lapork
+  (defsynth phone-tone ((gate 1) (amp 0.5) (out 0) (low 350) (high 440))
+    (out.ar out (* 0.5 amp
+                   (+ (sin-osc.ar low)
+                      (sin-osc.ar high))
+                   (env-gen.kr (adsr 0.01 0.01 0.8 0.02) :gate gate))))
+#+end_src
+
+解释:
++ =gate= 用来作为 =ADSR= 的开启和关闭的信号, 这个可以参考后文中和 TouchOSC 联动的部分
++ =low= 和 =high= 作为拨号信号编码的两个频率
+
+  默认播放的是 =350=, =440=, 也就是常听到的拿起电话准备拨号的声音
+
+那么做一个简单的 TouchOSC 界面:
+
+#+begin_src lisp
+  (start-osc-server)
+
+  (defparameter phone (synth 'phone-tone :gate 0))
+
+  (let ((on/off 0))
+    (oscdef :tone-switch (gate)
+      (ctrl phone :gate (setf on/off gate)))
+
+    (oscdef :tone-silent (gate)
+      (if (zerop gate) ;; OFF
+          (ctrl phone :gate on/off)
+          (ctrl phone :gate 0))))
+
+  (oscdef :tone1 (on/off)
+    (if (zerop on/off) ;; OFF
+        (ctrl phone :low 350 :high 440)
+        (ctrl phone :low 697 :high 1209)))
+
+  ;;; ...
+#+end_src
+
+解释:
++ [[https://github.com/li-yiyang/lapork-lecture/blob/e0d1b28b7a39440d0ab02eda50b0cf3abfa8aee5/lisp/oscdef/oscdef.lisp#L55][=start-osc-server=]] 打开一个 OSC server 来接受控制的 OSC 指令
++ =synth= 定义了一个初始 =gate= 状态为关闭的 =phone-tone= 的合成器, 也就是我们的拨号器
++ 定义了三个 OSC 指令, 分别对应 TouchOSC 中的按钮名称:
+  + =toneSwitch=: 是否使用拨号器 (开关合成器 =phone= 的 =gate= 信号,
+    同时修改局部变量 =on/off= 的值为开或关);
+  + =toneSilent=: 一时的静音, 当 =gate= 为非 =0= 时, 将 =phone= 的 =gate= 信号设为 =0=,
+    其他的时候恢复正常状态;
+  + =tone1=: 使用按键 =1= 的声音, 若关闭, 则将声音重新置为等待拨号的呜呜声状态
+  + 其他的 =tone*= 同理
+
+#+html: <details><summary>完整的 TouchOSC 和控制代码</summary>
+
+因为手动一个个设置 =tone*= 太麻烦了, 所以这里我使用了 Common Lisp 的特性:
+
+#+begin_src lisp
+  (macrolet ((tone* (high-freqs &rest tone-table)
+               `(progn
+                  ,@(loop :for (low . tones) :in tone-table
+                          :collect
+                          (loop :for tone :in tones
+                                :for high :in high-freqs
+                                :collect
+                                `(oscdef ,(format nil "tone~A" tone) (gate)
+                                   (if (zerop gate)
+                                       (ctrl phone :low 350  :high 440)
+                                       (ctrl phone :low ,low :high ,high))))
+                            :into defs
+                          :finally (return (apply #'append defs))))))
+    (tone* (        1209 1336 1477 1633)
+           (697     1    2    3    A)
+           (770     4    5    6    B)
+           (852     7    8    9    C)
+           (941     *    0    |#|  D)))
+#+end_src
+
+解释:
++ =macrolet= 定义了一个局部的宏展开 =tone*=, 将输入的参数看作是一个表格,
+  第一行是高频信息, 剩下的行 (=&rest=) 为 =(低频信息 . 按键名称)=
+
+完整的代码见: [[https://github.com/li-yiyang/lapork-lecture/blob/main/lisp/examples/lapork-03/phone.lisp][phone.lisp]] 以及 [[https://github.com/li-yiyang/lapork-lecture/blob/main/touchosc/lecture-03/phone-calling.tosc][phone-calling.tosc]].
+
+#+html: </details>
+
+效果如下:
+
+#+html: <video controls width="600" style="display: block; margin: auto;"><source src="{{ site.github.url }}/_img/lapork/03/phone.mp4" type="video/mp4" /></video>
+
+一些鬼点子: 如果用这个生成一段随机拨号音, 然后配上 Lain 的 Whisper 采样 greeting,
+估计会有种赛博朋克的感觉.
+
+*** Fire
