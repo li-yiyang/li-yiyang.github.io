@@ -1,0 +1,170 @@
+#+title: LapOrk (OTAMATONE)
+#+date: 2025-11-02
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lapork
+* About
+作业是设计一个自己的声音,
+因为刷到了 [[https://www.bilibili.com/video/BV17z4y1e7UT/][【雫るる】电音蝌蚪演奏音乐会 开庭时带上你的蝌蚪]],
+那么就尝试用 SuperCollider 复刻试试. (虽然不一定能成)
+
+* Analyze
+从视频里面截取了一个单音, 然后在 Audacity 中 Analyze-Plot Spectrum
+查看频谱:
+
+[[{{ site.github.url }}/_img/lapork/otamatone/spectrum.png]]
+
+** Analyze I: \(\mathrm{FFT}^{-1}\)
+理论上去生成频谱然后逆变换就可以得到声音了,
+比如把频谱中的峰挑出来再合成:
+
+#+begin_src lisp :package sc-user
+  (defsynth otamatone1 ((out 0) (freq 700) (gate 1) (amp 0.9))
+    (out.ar out (* (env-gen.ar (adsr 0.01 0.01 0.95 0.01 amp -0.5) :gate gate)
+                   (klang.ar (list (list 1   2   3   4    5    6    7)
+                                   (list 0.2 0.2 0.1 0.1  0.05 0.05 0.01)
+                                   nil)
+                             freq))))
+#+end_src
+
+#+html: <details><summary>解释</summary>
+
++ [[https://doc.sccode.org/Classes/Klang.html][Klang]]: 给一组 =(频率, 增幅, 相位)= 并合成正弦波的叠加,
+  理论上等效于:
+
+  #+begin_src lisp
+    (reduce #'+ (mapcar (lambda (freq amp phr) (sin-osc.ar freq phr amp))
+                        freq amp pharses))
+  #+end_src
+
+  比如以 =700= 为基础频率, 得到:
+
+  [[{{ site.github.url }}/_img/lapork/otamatone/otamatone1.svg]]
++ =ADSR= 设计得让声音有一个没啥变化的死鱼一样地起伏:
+
+  [[{{ site.github.url }}/_img/lapork/otamatone/otamatone1-adsr.svg]]
++ 其他的都之前介绍过了
+
+#+html: </details>
+
+#+begin_src lisp
+  (defparameter *tone* (synth 'otamatone1 :gate 0))
+
+  (oscdef :freq (freq)
+    (ctrl *tone* :freq (+ (* freq 800) 100)))
+
+  (oscdef :gate (gate)
+    (ctrl *tone* :gate gate))
+#+end_src
+
+注: =Klang= 貌似并不支持控制 =freq=.
+
+#+html: <details><summary>一个暴力的修正方法</summary>
+
+#+begin_src lisp
+  (defsynth otamatone1 ((out 0) (freq 700) (gate 1) (amp 0.9))
+    (out.ar out (* (env-gen.ar (adsr 0.01 0.01 0.95 0.01 amp -0.5) :gate gate)
+                   (reduce #'sc::+~
+                           (mapcar (lambda (f a)
+                                     (sin-osc.ar (sc::*~ f freq) 0 a))
+                                   '(1   2   3   4   5    6    7)
+                                   '(0.2 0.2 0.1 0.1 0.05 0.05 0.01))))))
+#+end_src
+
+对应到 SuperCollider 中的代码如下:
+
+#+begin_src text
+   (
+   SynthDef(\otamatone1, { |out=0, gate=1, amp=0.9, freq=700|
+   	var env = EnvGen.ar(
+   		Env.adsr(0.01, 0.01, 0.95, 0.01, 1, -0.5),
+   		gate,
+   		doneAction: 2
+   	);
+   	var sig = SinOsc.ar(freq, 0.0, 0.2) +
+   	SinOsc.ar(2 * freq, 0.0, 0.2) +
+   	SinOsc.ar(3 * freq, 0.0, 0.1) +
+   	SinOsc.ar(4 * freq, 0.0, 0.1);
+   	Out.ar(out, amp * sig * env);
+   } ).add;
+   )
+#+end_src
+
+#+html: </details>
+
+Update: 稍微更聪明一点的办法:
+
+#+begin_src lisp
+  (defsynth otamatone1 ((out 0) (freq 700) (gate 1) (amp 0.9))
+    (out.ar out (* (env-gen.ar (adsr 0.01 0.01 0.95 0.01 amp -0.5) :gate gate)
+                   (dyn-klang.ar (list (sc::*~ '(1 2 3 4 5 6 7) freq)
+                                       (list 0.2 0.2 0.1 0.1 0.05 0.05 0.01)
+                                       nil)))))
+#+end_src
+
+#+html: <video controls width="600" style="display: block; margin: auto;"><source src="{{ site.github.url }}/_img/lapork/otamatone/otamatone1.mp4" type="video/mp4" /></video>
+
+(TouchOSC 文件见 [[{{ site.github.url }}/_img/lapork/otamatone1.tosc][otamatone1.tosc]])
+
+** Analyze II: WOWOWOWOWOWOWOWOWOWOWA
+上面的演示视频里面, 如果鼠标在划移的话, 听起来声音会像一些,
+但是如果只是停在某处不动的话, 就会有一种比较怪怪的感觉:
+
+如果把前面频谱分析的片段时间拉长一点, 就会看到在时间轴方向上,
+频率会有一个小小的波动:
+
+[[{{ site.github.url }}/_img/lapork/otamatone/tone.jpeg]]
+
+所以其实是需要给这个 =freq= 加上一点点的正弦的偏置的...
+
+#+begin_src lisp
+  (defsynth otamatone2 ((out 0) (freq 700) (gate 1) (amp 0.9)
+                        (wowf 2) (wowa 0.1) (wowb 0.5) (wow 0))
+    (out.ar out (* (env-gen.ar (adsr 0.01 0.01 0.95 0.01 amp -0.5) :gate gate)
+                   (dyn-klang.ar
+                    (list (sc::+~ (sc::*~ '(1 2 3 4 5 6 7) freq)
+                                  (sc::*~ wow
+                                          (sin-osc.kr wowf 0
+                                                      (sc::*~ wowa freq)
+                                                      (sc::*~ wowb freq))))
+                          (list 0.2 0.2 0.1 0.1 0.05 0.05 0.01)
+                          nil)))))
+
+  (defparameter *tone* (synth 'otamatone2 :gate 0))
+#+end_src
+
+** Analyze III: Saw
+与其做逆傅立叶变换那套, 不妨试试用信号滤波, 由伟大的 LLM 告诉我们,
+一个三角波信号的傅立叶变换为分立的频谱峰, 其峰值为 \(\frac{1}{n}\)...
+
+虽然现在的频谱峰很接近了, 但是现在的峰值显然不是 \(\frac{1}{n}\) 的分布,
+所以可以猜测里面做了一个滤波 -- 总之先试试低通:
+
+#+begin_src lisp
+  (defsynth otamatone3 ((out 0) (freq 700) (gate 1) (amp 0.9)
+                        (wowf 2) (wowa 0.1) (wowb 0.5) (wow 0))
+    (out.ar
+     out
+     (* (env-gen.ar (adsr 0.01 0.01 0.95 0.01 amp -0.5) :gate gate)
+        (hpf.ar (lpf.ar
+                 (saw.ar (sc::+~ (sc::*~ wow (sin-osc.ar wowf 0
+                                                         (sc::*~ freq wowa)
+                                                         (sc::*~ freq wowb)))
+                                 freq))
+                 freq)
+                (sc::*~ freq 2)))))
+#+end_src
+
+这样再加一个 =wow= 的控制就好了.
+
+#+begin_src lisp
+  (oscdef :wow (wow)
+    (ctrl *tone* :wow wow))
+#+end_src
+
+效果如下:
+
+#+html: <video controls width="600" style="display: block; margin: auto;"><source src="{{ site.github.url }}/_img/lapork/otamatone/otamatone3.mp4" type="video/mp4" /></video>
+
+大概就酱.
