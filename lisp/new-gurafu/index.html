@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>What if a new GURAFU | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="What if a new GURAFU" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About GURAFU 是我之前做的一个简单的绘图库, 但是现在看来里面的一些绘图 API 设计得不是那么好用. (虽然也不是不能用就是了). 假如我有时间重新构建 GURAFU 的 API 的话, 我的想法是这样的: Lowlevel gurafu.uv 底层的 API 应当建立在不同的 backend 上, 然后提供一些基础的适当抽象: *bounding-box* 看作是一个抽象的 stream, 带有 cursor-position 当前绘制的 cursor 位置 (相对位置) transform 变换规则 (#&#39;indentity) parent 父元素 u, v 之类的相对 &#8220;父元素&#8221; 的坐标信息 u-min, u-max, v-min, v-max 之类的大小信息 *color* *font* *font-size* (gurafu.uv:pixel stream uv) (gurafu.uv:point stream uv) (gurafu.uv:line stream uv1 uv2) (gurafu.uv:spline stream list-of-uv) (gurafu.uv:trig stream uv1 uv2 uv3) (gurafu.uv:rect stream uv1 uv2) (gurafu.uv:poly stream list-of-uv) (gurafu.uv:circ stream uv r) (gurafu.uv:arc stream uv r theta1 theta2) (gurafu.uv:text stream text uv) MidLevel Coordinates 这部分将做坐标的计算与变换, 比如做各种坐标系的变换: (define-transform name coordinate-list lambda-list &amp;body return transformed-coordinate) 比如: (define-transform linear (x y) (matrix base) (let-bind* ((matrix ((a11 a12) (a21 a22))) (base (b1 b2))) (list (+ (* a11 x) (* a12 y) b1) (+ (* a21 x) (* a22 y) b2)))) 对应为定义一个返回变换函数的函数. (with-translation (trans &amp;rest trans-arguments) &amp;body body) translation 或者说 transform 通过 compose 的方式在原有的变换基础上进行应用. 比如: (with-translation (gurafu:linear &#39;((1 0) (0 1)) &#39;(0 1)) (gurafu:point &#39;(2 3))) 对应为在当前 *bouding-box* 上的 translation 的基础上: (let ((*translation* (compose (linear ...) *translation*))) ...) (define-coordinate (name &amp;rest coordinate-list) lambda-list &amp;body return-uv-list) 比如: (define-coordinate (:xy x y) (umin umax vmin vmax xmin xmax ymin ymax) (progn ... (return (list u v)))) 如是会定义一个 gurafu.coord.xy 为名称的 package, 然后将所有的 gurafu.uv:pixel 之类的函数做一个中层封装. 其中 umin 之类的值由 *bounding-box* 给出. 或者感觉这个完全可以用 with-translation 的方式进行实现. Present Object (defdraw name lambda-list &amp;body body) (defpresent object-class super-class slots &amp;rest options) Color System 自动配色系统 (感觉可以参考 Material 的 Dynamic Color System) HighLevel 应当可以自动计算 x-min 之类的坐标信息 如果能够实现绘图添加 cache 并复用 cache 就好了 (gurafu:histogram (do-collect (i 10) (random 10.0))) (gurafu:scatter (do-collect (i 10) (list (random 10.0) (random 10.0)))) Ends 简化后的系统感觉实现起来应该会更加容易一些, 这段时间有空的话会考虑从 gurafu.uv 开始重构. 争取先实现更多的 backend 吧." />
+<meta property="og:description" content="About GURAFU 是我之前做的一个简单的绘图库, 但是现在看来里面的一些绘图 API 设计得不是那么好用. (虽然也不是不能用就是了). 假如我有时间重新构建 GURAFU 的 API 的话, 我的想法是这样的: Lowlevel gurafu.uv 底层的 API 应当建立在不同的 backend 上, 然后提供一些基础的适当抽象: *bounding-box* 看作是一个抽象的 stream, 带有 cursor-position 当前绘制的 cursor 位置 (相对位置) transform 变换规则 (#&#39;indentity) parent 父元素 u, v 之类的相对 &#8220;父元素&#8221; 的坐标信息 u-min, u-max, v-min, v-max 之类的大小信息 *color* *font* *font-size* (gurafu.uv:pixel stream uv) (gurafu.uv:point stream uv) (gurafu.uv:line stream uv1 uv2) (gurafu.uv:spline stream list-of-uv) (gurafu.uv:trig stream uv1 uv2 uv3) (gurafu.uv:rect stream uv1 uv2) (gurafu.uv:poly stream list-of-uv) (gurafu.uv:circ stream uv r) (gurafu.uv:arc stream uv r theta1 theta2) (gurafu.uv:text stream text uv) MidLevel Coordinates 这部分将做坐标的计算与变换, 比如做各种坐标系的变换: (define-transform name coordinate-list lambda-list &amp;body return transformed-coordinate) 比如: (define-transform linear (x y) (matrix base) (let-bind* ((matrix ((a11 a12) (a21 a22))) (base (b1 b2))) (list (+ (* a11 x) (* a12 y) b1) (+ (* a21 x) (* a22 y) b2)))) 对应为定义一个返回变换函数的函数. (with-translation (trans &amp;rest trans-arguments) &amp;body body) translation 或者说 transform 通过 compose 的方式在原有的变换基础上进行应用. 比如: (with-translation (gurafu:linear &#39;((1 0) (0 1)) &#39;(0 1)) (gurafu:point &#39;(2 3))) 对应为在当前 *bouding-box* 上的 translation 的基础上: (let ((*translation* (compose (linear ...) *translation*))) ...) (define-coordinate (name &amp;rest coordinate-list) lambda-list &amp;body return-uv-list) 比如: (define-coordinate (:xy x y) (umin umax vmin vmax xmin xmax ymin ymax) (progn ... (return (list u v)))) 如是会定义一个 gurafu.coord.xy 为名称的 package, 然后将所有的 gurafu.uv:pixel 之类的函数做一个中层封装. 其中 umin 之类的值由 *bounding-box* 给出. 或者感觉这个完全可以用 with-translation 的方式进行实现. Present Object (defdraw name lambda-list &amp;body body) (defpresent object-class super-class slots &amp;rest options) Color System 自动配色系统 (感觉可以参考 Material 的 Dynamic Color System) HighLevel 应当可以自动计算 x-min 之类的坐标信息 如果能够实现绘图添加 cache 并复用 cache 就好了 (gurafu:histogram (do-collect (i 10) (random 10.0))) (gurafu:scatter (do-collect (i 10) (list (random 10.0) (random 10.0)))) Ends 简化后的系统感觉实现起来应该会更加容易一些, 这段时间有空的话会考虑从 gurafu.uv 开始重构. 争取先实现更多的 backend 吧." />
+<link rel="canonical" href="/lisp/new-gurafu/" />
+<meta property="og:url" content="/lisp/new-gurafu/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="What if a new GURAFU" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-04T00:00:00+00:00","datePublished":"2025-03-04T00:00:00+00:00","description":"About GURAFU 是我之前做的一个简单的绘图库, 但是现在看来里面的一些绘图 API 设计得不是那么好用. (虽然也不是不能用就是了). 假如我有时间重新构建 GURAFU 的 API 的话, 我的想法是这样的: Lowlevel gurafu.uv 底层的 API 应当建立在不同的 backend 上, 然后提供一些基础的适当抽象: *bounding-box* 看作是一个抽象的 stream, 带有 cursor-position 当前绘制的 cursor 位置 (相对位置) transform 变换规则 (#&#39;indentity) parent 父元素 u, v 之类的相对 &#8220;父元素&#8221; 的坐标信息 u-min, u-max, v-min, v-max 之类的大小信息 *color* *font* *font-size* (gurafu.uv:pixel stream uv) (gurafu.uv:point stream uv) (gurafu.uv:line stream uv1 uv2) (gurafu.uv:spline stream list-of-uv) (gurafu.uv:trig stream uv1 uv2 uv3) (gurafu.uv:rect stream uv1 uv2) (gurafu.uv:poly stream list-of-uv) (gurafu.uv:circ stream uv r) (gurafu.uv:arc stream uv r theta1 theta2) (gurafu.uv:text stream text uv) MidLevel Coordinates 这部分将做坐标的计算与变换, 比如做各种坐标系的变换: (define-transform name coordinate-list lambda-list &amp;body return transformed-coordinate) 比如: (define-transform linear (x y) (matrix base) (let-bind* ((matrix ((a11 a12) (a21 a22))) (base (b1 b2))) (list (+ (* a11 x) (* a12 y) b1) (+ (* a21 x) (* a22 y) b2)))) 对应为定义一个返回变换函数的函数. (with-translation (trans &amp;rest trans-arguments) &amp;body body) translation 或者说 transform 通过 compose 的方式在原有的变换基础上进行应用. 比如: (with-translation (gurafu:linear &#39;((1 0) (0 1)) &#39;(0 1)) (gurafu:point &#39;(2 3))) 对应为在当前 *bouding-box* 上的 translation 的基础上: (let ((*translation* (compose (linear ...) *translation*))) ...) (define-coordinate (name &amp;rest coordinate-list) lambda-list &amp;body return-uv-list) 比如: (define-coordinate (:xy x y) (umin umax vmin vmax xmin xmax ymin ymax) (progn ... (return (list u v)))) 如是会定义一个 gurafu.coord.xy 为名称的 package, 然后将所有的 gurafu.uv:pixel 之类的函数做一个中层封装. 其中 umin 之类的值由 *bounding-box* 给出. 或者感觉这个完全可以用 with-translation 的方式进行实现. Present Object (defdraw name lambda-list &amp;body body) (defpresent object-class super-class slots &amp;rest options) Color System 自动配色系统 (感觉可以参考 Material 的 Dynamic Color System) HighLevel 应当可以自动计算 x-min 之类的坐标信息 如果能够实现绘图添加 cache 并复用 cache 就好了 (gurafu:histogram (do-collect (i 10) (random 10.0))) (gurafu:scatter (do-collect (i 10) (list (random 10.0) (random 10.0)))) Ends 简化后的系统感觉实现起来应该会更加容易一些, 这段时间有空的话会考虑从 gurafu.uv 开始重构. 争取先实现更多的 backend 吧.","headline":"What if a new GURAFU","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/new-gurafu/"},"url":"/lisp/new-gurafu/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">What if a new GURAFU</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-04T00:00:00+00:00" itemprop="datePublished">Mar 4, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p><a href="https://github.com/li-yiyang/gurafu">GURAFU</a> 是我之前做的一个简单的绘图库,
+  但是现在看来里面的一些绘图 API 设计得不是那么好用.
+  (虽然也不是不能用就是了).</p>
+<p>假如我有时间重新构建 GURAFU 的 API 的话,
+  我的想法是这样的:</p>
+<h1>Lowlevel <code>gurafu.uv</code></h1>
+<p>底层的 API 应当建立在不同的 backend 上,
+  然后提供一些基础的适当抽象:</p>
+<ul>
+  <li><code>*bounding-box*</code>
+    <p>看作是一个抽象的 <code>stream</code>, 带有</p>
+    <ul>
+      <li><code>cursor-position</code> 当前绘制的 <code>cursor</code> 位置 (相对位置)</li>
+      <li><code>transform</code> 变换规则 (<code>#&#39;indentity</code>)</li>
+      <li><code>parent</code> 父元素</li>
+      <li><code>u</code>, <code>v</code> 之类的相对 &#8220;父元素&#8221; 的坐标信息</li>
+      <li><code>u-min</code>, <code>u-max</code>, <code>v-min</code>, <code>v-max</code> 之类的大小信息</li>
+    </ul>
+  </li>
+  <li><code>*color*</code></li>
+  <li><code>*font*</code></li>
+  <li><code>*font-size*</code></li>
+  <li><code>(gurafu.uv:pixel stream uv)</code></li>
+  <li><code>(gurafu.uv:point stream uv)</code></li>
+  <li><code>(gurafu.uv:line stream uv1 uv2)</code></li>
+  <li><code>(gurafu.uv:spline stream list-of-uv)</code></li>
+  <li><code>(gurafu.uv:trig stream uv1 uv2 uv3)</code></li>
+  <li><code>(gurafu.uv:rect stream uv1 uv2)</code></li>
+  <li><code>(gurafu.uv:poly stream list-of-uv)</code></li>
+  <li><code>(gurafu.uv:circ stream uv r)</code></li>
+  <li><code>(gurafu.uv:arc stream uv r theta1 theta2)</code></li>
+  <li><code>(gurafu.uv:text stream text uv)</code></li>
+</ul>
+<h1>MidLevel</h1>
+<h2>Coordinates</h2>
+<p>这部分将做坐标的计算与变换, 比如做各种坐标系的变换:</p>
+<ul>
+  <li><code>(define-transform name coordinate-list lambda-list &amp;body return transformed-coordinate)</code>
+    <p>比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-transform</span><span class="w"> </span><span class="nv">linear</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">matrix</span><span class="w"> </span><span class="nv">base</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">let-bind*</span><span class="w"> </span><span class="p">((</span><span class="nf">matrix</span><span class="w"> </span><span class="p">((</span><span class="nf">a11</span><span class="w"> </span><span class="nv">a12</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">a21</span><span class="w"> </span><span class="nv">a22</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">base</span><span class="w">   </span><span class="p">(</span><span class="nf">b1</span><span class="w"> </span><span class="nv">b2</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">a11</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">a12</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="nv">b1</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">a21</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">a22</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="nv">b2</span><span class="p">))))</span>
+</pre></div>
+    <p>对应为定义一个返回变换函数的函数.</p>
+  </li>
+  <li><code>(with-translation (trans &amp;rest trans-arguments) &amp;body body)</code>
+    <p><code>translation</code> 或者说 <code>transform</code> 通过 <code>compose</code> 的方式在原有的变换基础上进行应用.</p>
+    <p>比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-translation</span><span class="w"> </span><span class="p">(</span><span class="nf">gurafu:linear</span><span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                   </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">                                 </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">gurafu:point</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">)))</span>
+</pre></div>
+    <p>对应为在当前 <code>*bouding-box*</code> 上的 <code>translation</code> 的基础上:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">*translation*</span><span class="w"> </span><span class="p">(</span><span class="nb">compose</span><span class="w"> </span><span class="p">(</span><span class="nf">linear</span><span class="w"> </span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="nv">*translation*</span><span class="p">)))</span>
+<span class="w">  </span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+  </li>
+  <li><code>(define-coordinate (name &amp;rest coordinate-list) lambda-list &amp;body return-uv-list)</code>
+    <p>比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-coordinate</span><span class="w"> </span><span class="p">(</span><span class="nf">:xy</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">umin</span><span class="w"> </span><span class="nv">umax</span><span class="w"> </span><span class="nv">vmin</span><span class="w"> </span><span class="nv">vmax</span><span class="w"> </span><span class="nv">xmin</span><span class="w"> </span><span class="nv">xmax</span><span class="w"> </span><span class="nv">ymin</span><span class="w"> </span><span class="nv">ymax</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">...</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">u</span><span class="w"> </span><span class="nv">v</span><span class="p">))))</span>
+</pre></div>
+    <p>如是会定义一个 <code>gurafu.coord.xy</code> 为名称的 package,
+      然后将所有的 <code>gurafu.uv:pixel</code> 之类的函数做一个中层封装.
+      其中 <code>umin</code> 之类的值由 <code>*bounding-box*</code> 给出.</p>
+    <p>或者感觉这个完全可以用 <code>with-translation</code> 的方式进行实现.</p>
+  </li>
+</ul>
+<h2>Present Object</h2>
+<ul>
+  <li><code>(defdraw name lambda-list &amp;body body)</code></li>
+  <li><code>(defpresent object-class super-class slots &amp;rest options)</code></li>
+</ul>
+<h2>Color System</h2>
+<ul>
+  <li>自动配色系统 (感觉可以参考 Material 的 Dynamic Color System)</li>
+</ul>
+<h1>HighLevel</h1>
+<ul>
+  <li>应当可以自动计算 <code>x-min</code> 之类的坐标信息</li>
+  <li>如果能够实现绘图添加 cache 并复用 cache 就好了</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">gurafu:histogram</span><span class="w"> </span><span class="p">(</span><span class="nf">do-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)))</span>
+<span class="p">(</span><span class="nf">gurafu:scatter</span><span class="w">   </span><span class="p">(</span><span class="nf">do-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">10.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">10.0</span><span class="p">))))</span>
+</pre></div>
+<h1>Ends</h1>
+<p>简化后的系统感觉实现起来应该会更加容易一些, 这段时间有空的话会考虑从
+  <code>gurafu.uv</code> 开始重构. 争取先实现更多的 <code>backend</code> 吧.</p>
+
+  </div><a class="u-url" href="/lisp/new-gurafu/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

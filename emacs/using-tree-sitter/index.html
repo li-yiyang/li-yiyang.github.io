@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Using Tree-sitter in Emacs | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Using Tree-sitter in Emacs" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 在写 CFFI 的时候手动写一堆的 cffi:defcfun 实在是头痛, 而使用 c2ffi 却并没有那么的省心. 不过话又说回来了, 反正都是从 *.h 文件中读取函数的定义, 然后按照一定的规则去生成代码 cffi:defcfun. 一个简单的想法是写一个 parser, 然后把函数名和类型等提取, 最后根据规则进行代码的生成 &#8211; 但是为什么不直接利用 Emacs 的 Tree-sitter 的集成 (Parsing Program Source) 呢? Requirement 首先需要确保 Tree-sitter 在 Emacs 中是可用的: (treesit-available-p) t 并且 C parser 已经被正确地安装了: (treesit-install-language-grammar &#39;c) 注: 在 Emacs 29 之后 Tree-sitter 就已经被内置在了 Emacs 中, 假如你的 Emacs 版本较早, 可以参考 emacs-tree-sitter 进行配置. *.h \(&rarr;\) *.lisp via Tree-sitter Parse *.h 假设有一个 foo.h 头文件被打开了 (其 buffer 名称为 foo.h), 创建一个 Tree-sitter 的 parser: foo.h #include &quot;stdio.h&quot;" />
+<meta property="og:description" content="About 在写 CFFI 的时候手动写一堆的 cffi:defcfun 实在是头痛, 而使用 c2ffi 却并没有那么的省心. 不过话又说回来了, 反正都是从 *.h 文件中读取函数的定义, 然后按照一定的规则去生成代码 cffi:defcfun. 一个简单的想法是写一个 parser, 然后把函数名和类型等提取, 最后根据规则进行代码的生成 &#8211; 但是为什么不直接利用 Emacs 的 Tree-sitter 的集成 (Parsing Program Source) 呢? Requirement 首先需要确保 Tree-sitter 在 Emacs 中是可用的: (treesit-available-p) t 并且 C parser 已经被正确地安装了: (treesit-install-language-grammar &#39;c) 注: 在 Emacs 29 之后 Tree-sitter 就已经被内置在了 Emacs 中, 假如你的 Emacs 版本较早, 可以参考 emacs-tree-sitter 进行配置. *.h \(&rarr;\) *.lisp via Tree-sitter Parse *.h 假设有一个 foo.h 头文件被打开了 (其 buffer 名称为 foo.h), 创建一个 Tree-sitter 的 parser: foo.h #include &quot;stdio.h&quot;" />
+<link rel="canonical" href="/emacs/using-tree-sitter/" />
+<meta property="og:url" content="/emacs/using-tree-sitter/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-06-09T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Using Tree-sitter in Emacs" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-06-09T00:00:00+00:00","datePublished":"2025-06-09T00:00:00+00:00","description":"About 在写 CFFI 的时候手动写一堆的 cffi:defcfun 实在是头痛, 而使用 c2ffi 却并没有那么的省心. 不过话又说回来了, 反正都是从 *.h 文件中读取函数的定义, 然后按照一定的规则去生成代码 cffi:defcfun. 一个简单的想法是写一个 parser, 然后把函数名和类型等提取, 最后根据规则进行代码的生成 &#8211; 但是为什么不直接利用 Emacs 的 Tree-sitter 的集成 (Parsing Program Source) 呢? Requirement 首先需要确保 Tree-sitter 在 Emacs 中是可用的: (treesit-available-p) t 并且 C parser 已经被正确地安装了: (treesit-install-language-grammar &#39;c) 注: 在 Emacs 29 之后 Tree-sitter 就已经被内置在了 Emacs 中, 假如你的 Emacs 版本较早, 可以参考 emacs-tree-sitter 进行配置. *.h \\(&rarr;\\) *.lisp via Tree-sitter Parse *.h 假设有一个 foo.h 头文件被打开了 (其 buffer 名称为 foo.h), 创建一个 Tree-sitter 的 parser: foo.h #include &quot;stdio.h&quot;","headline":"Using Tree-sitter in Emacs","mainEntityOfPage":{"@type":"WebPage","@id":"/emacs/using-tree-sitter/"},"url":"/emacs/using-tree-sitter/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Using Tree-sitter in Emacs</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-06-09T00:00:00+00:00" itemprop="datePublished">Jun 9, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>在写 <a href="https://cffi.common-lisp.dev/manual/cffi-manual.html">CFFI</a> 的时候手动写一堆的 <code>cffi:defcfun</code> 实在是头痛,
+  而使用 <a href="https://github.com/rpav/c2ffi">c2ffi</a> 却并没有那么的省心.</p>
+<p>不过话又说回来了, 反正都是从 <code>*.h</code> 文件中读取函数的定义,
+  然后按照一定的规则去生成代码 <code>cffi:defcfun</code>.
+  一个简单的想法是写一个 parser, 然后把函数名和类型等提取,
+  最后根据规则进行代码的生成 &#8211; 但是为什么不直接利用 Emacs
+  的 <a href="https://tree-sitter.github.io/tree-sitter/">Tree-sitter</a> 的集成 (<a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Parsing-Program-Source.html">Parsing Program Source</a>) 呢?</p>
+<h1>Requirement</h1>
+<p>首先需要确保 Tree-sitter 在 Emacs 中是可用的:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-available-p</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+t
+</pre>
+<p>并且 C parser 已经被正确地安装了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-install-language-grammar</span><span class="w"> </span><span class="ss">&#39;c</span><span class="p">)</span>
+</pre></div>
+<p>注: 在 Emacs 29 之后 Tree-sitter 就已经被内置在了 Emacs 中,
+  假如你的 Emacs 版本较早, 可以参考 <a href="https://emacs-tree-sitter.github.io/">emacs-tree-sitter</a> 进行配置.</p>
+<h1><code>*.h</code> \(&rarr;\) <code>*.lisp</code> via Tree-sitter</h1>
+<h2>Parse <code>*.h</code></h2>
+<p>假设有一个 <code>foo.h</code> 头文件被打开了 (其 buffer 名称为 <code>foo.h</code>),
+  创建一个 Tree-sitter 的 parser:</p>
+<details><summary>foo.h</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;stdio.h&quot;</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">print_help_and_exit</span><span class="p">();</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">some_funcions</span><span class="p">(</span><span class="n">bar</span><span class="w"> </span><span class="o">*</span><span class="n">foo</span><span class="p">);</span>
+</pre></div>
+</details>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">parser</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-create</span><span class="w"> </span><span class="ss">&#39;c</span><span class="w"> </span><span class="p">(</span><span class="nf">get-buffer</span><span class="w"> </span><span class="s">&quot;foo.h&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>注: 更多请参考 <a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Using-Parser.html">Using Tree-sitter Parser</a>.</p>
+<h2>Extract infomation from Tree</h2>
+<p>这里差不多用到了 <a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Retrieving-Nodes.html">Retrieving Nodes</a> 和 <a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Accessing-Node-Information.html">Accessing Node Information</a>
+  这两个文档中说明的特性.</p>
+<p>使用 <code>treesit-node-children</code> 可以很方便地实现一个 <code>node</code> 的历遍:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">treesit-node-sexp</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Turn Tree-sitter NODE as S-expression. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">children</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-children</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">children</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-type</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">substring-no-properties</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-text</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-type</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;treesit-node-sexp</span><span class="w"> </span><span class="nv">children</span><span class="p">)))))</span>
+</pre></div>
+<details><summary>其效果类似如下</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-node-sexp</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-root-node</span><span class="w"> </span><span class="nv">parser</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+(&quot;translation_unit&quot;
+ (&quot;preproc_include&quot; (&quot;#include&quot; &quot;#include&quot;)
+  (&quot;string_literal&quot; (&quot;\&quot;&quot; &quot;\&quot;&quot;) (&quot;string_content&quot; &quot;stdio.h&quot;)
+   (&quot;\&quot;&quot; &quot;\&quot;&quot;)))
+ (&quot;type_definition&quot; (&quot;typedef&quot; &quot;typedef&quot;) (&quot;primitive_type&quot; &quot;int&quot;)
+  (&quot;type_identifier&quot; &quot;bar&quot;) (&quot;;&quot; &quot;;&quot;))
+ (&quot;declaration&quot; (&quot;primitive_type&quot; &quot;void&quot;)
+  (&quot;function_declarator&quot; (&quot;identifier&quot; &quot;print_help_and_exit&quot;)
+   (&quot;parameter_list&quot; (&quot;(&quot; &quot;(&quot;) (&quot;)&quot; &quot;)&quot;)))
+  (&quot;;&quot; &quot;;&quot;))
+ (&quot;declaration&quot; (&quot;primitive_type&quot; &quot;int&quot;)
+  (&quot;pointer_declarator&quot; (&quot;*&quot; &quot;*&quot;)
+   (&quot;function_declarator&quot; (&quot;identifier&quot; &quot;some_funcions&quot;)
+    (&quot;parameter_list&quot; (&quot;(&quot; &quot;(&quot;)
+     (&quot;parameter_declaration&quot; (&quot;type_identifier&quot; &quot;bar&quot;)
+      (&quot;pointer_declarator&quot; (&quot;*&quot; &quot;*&quot;) (&quot;identifier&quot; &quot;foo&quot;)))
+     (&quot;,&quot; &quot;,&quot;)
+     (&quot;parameter_declaration&quot;
+      (&quot;storage_class_specifier&quot; (&quot;static&quot; &quot;static&quot;))
+      (&quot;type_qualifier&quot; (&quot;const&quot; &quot;const&quot;)) (&quot;primitive_type&quot; &quot;int&quot;)
+      (&quot;identifier&quot; &quot;num&quot;))
+     (&quot;)&quot; &quot;)&quot;))))
+  (&quot;;&quot; &quot;;&quot;)))
+</pre>
+</details>
+<p>不过其实也可以在 Buffer 中使用 <code>treesit-explore-mode</code> 来进行预览.</p>
+<details><summary>效果如下</summary>
+<pre class="example">
+(translation_unit
+ (preproc_include #include
+  path: (string_literal &quot; (string_content) &quot;))
+ (declaration type: (primitive_type)
+  declarator:
+   (function_declarator declarator: (identifier)
+    parameters: (parameter_list ( )))
+  ;)
+ (declaration type: (primitive_type)
+  declarator:
+   (function_declarator declarator: (identifier)
+    parameters:
+     (parameter_list (
+      (parameter_declaration type: (primitive_type)
+       declarator: (pointer_declarator * declarator: (identifier)))
+      )))
+  ;))
+</pre>
+</details>
+<p>但是不经过筛选的 node 的处理有点麻烦, 虽然在前面的历遍函数上面添加一些判断,
+  也能够让结果比较好用. 但是考虑到为啥不直接用现成的 <code>treesit-query-capture</code> 呢?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">query</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">substring-no-properties</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-text</span><span class="w"> </span><span class="nv">func</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">treesit-query-capture</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-root-node</span><span class="w"> </span><span class="nv">parser</span><span class="p">)</span>
+<span class="w">                               </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">declaration</span><span class="p">)</span><span class="w"> </span><span class="nv">@declaration</span><span class="p">)))</span>
+</pre></div>
+<pre class="example">
+(&quot;void print_help_and_exit();&quot; &quot;int some_funcions(bar *foo);&quot;)
+</pre>
+<p>现在你已经学会了从最简单的 tree 中提取节点了, 那么使用更加复杂一些的规则:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-query-capture</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-root-node</span><span class="w"> </span><span class="nv">parser</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">declaration</span>
+<span class="w">                          </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="w"> </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="p">)))</span>
+<span class="w">                         </span><span class="nv">@declaration</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+((declaration . #&lt;treesit-node declaration in 39-66&gt;)
+ (declaration . #&lt;treesit-node declaration in 68-119&gt;))
+</pre>
+<details><summary>一个小小的 Tip</summary>
+<p>可以使用 <code>treesit-query-validate</code> 来对 <code>query</code> 进行合法性进行判断:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-query-validate</span><span class="w"> </span><span class="ss">&#39;c</span>
+<span class="w">                        </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">declaration</span>
+<span class="w">                           </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="nf">function_declarator</span><span class="w"> </span><span class="nv">!body</span><span class="p">))</span>
+<span class="w">                          </span><span class="nv">@declaration</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+QUERY is valid
+</pre>
+</details>
+<p>既然已经能够写出这样稍微复杂一些的 query 规则&#8230;
+  于是就可以写一个简单的函数来提取一个头文件中的所有函数定义,
+  即对于找到的 <code>declaration</code>, 提取其中的函数返回类型, 函数名称以及函数参数.</p>
+<pre class="example">
+(type function &amp;rest (type name))
+</pre>
+<p>这里有一个需要注意的点: 因为 Tree-sitter 会把 <code>*func</code> 变成
+  <code>(pointer_declarator * declarator: (_))</code> 的形式,
+  所以需要做一个简单的操作来把函数的类型 <code>type</code> 变成 <code>(:pointer type)</code> 这样的形式.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">treesit-c--ptr-type</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">declarator</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return pointer noted TYPE and DECLARATOR. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">pointer-p</span><span class="w"> </span><span class="p">(</span><span class="nb">string=</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-text</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">treesit-node-child</span><span class="w"> </span><span class="nv">declarator</span><span class="w"> </span><span class="mi">0</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">pointer-p</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">treesit-c--ptr-type</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">treesit-node-child-by-field-name</span><span class="w"> </span><span class="nv">declarator</span><span class="w"> </span><span class="s">&quot;declarator&quot;</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">declarator</span><span class="p">))))</span>
+</pre></div>
+<p>以及一些信息的提取:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">treesit-node-text-no-property</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">substring-no-properties</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-text</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+</pre></div>
+<p>于是如下实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">lexical-let</span><span class="w"> </span><span class="p">((</span><span class="nf">func-query</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-query-compile</span>
+<span class="w">                           </span><span class="ss">&#39;c</span>
+<span class="w">                           </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">declaration</span>
+<span class="w">                              </span><span class="nv">type:</span><span class="w">       </span><span class="p">(</span><span class="k">_</span><span class="p">)</span><span class="w">                 </span><span class="nv">@type</span>
+<span class="w">                              </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="w"> </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="p">))</span><span class="w"> </span><span class="nv">@declarator</span><span class="p">))))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">para-query</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-query-compile</span><span class="w"> </span><span class="ss">&#39;c</span>
+<span class="w">                                                 </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">parameter_declaration</span>
+<span class="w">                                                    </span><span class="nv">type:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="p">)</span><span class="w">       </span><span class="nv">@type</span>
+<span class="w">                                                    </span><span class="nv">declarator:</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="p">)</span><span class="w"> </span><span class="nv">@declarator</span><span class="p">)))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">treesit-c--function-declarations</span><span class="w"> </span><span class="p">(</span><span class="nf">root</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">cl-loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">matched</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-query-capture</span><span class="w"> </span><span class="nv">root</span><span class="w"> </span><span class="nv">func-query</span><span class="p">)</span>
+<span class="w">             </span><span class="nv">for</span><span class="w"> </span><span class="p">((</span><span class="k">_</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">declarator</span><span class="p">))</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="nv">matched</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cddr</span>
+<span class="w">             </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">type*</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">declare</span><span class="p">)</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-c--ptr-type</span>
+<span class="w">                                      </span><span class="p">(</span><span class="nf">treesit-node-text-no-property</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                                      </span><span class="nv">declarator</span><span class="p">)</span>
+<span class="w">             </span><span class="nv">for</span><span class="w"> </span><span class="nv">name</span><span class="w">  </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-child-by-field-name</span><span class="w"> </span><span class="nv">declare</span><span class="w"> </span><span class="s">&quot;declarator&quot;</span><span class="p">)</span>
+<span class="w">             </span><span class="nv">for</span><span class="w"> </span><span class="nv">params</span><span class="w"> </span><span class="nb">=</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">cl-loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">p*</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-query-capture</span><span class="w"> </span><span class="nv">declare</span><span class="w"> </span><span class="nv">para-query</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">for</span><span class="w"> </span><span class="p">((</span><span class="k">_</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">_</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">declarator</span><span class="p">))</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="nv">p*</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cddr</span>
+<span class="w">                      </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">type*</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">declare</span><span class="p">)</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-c--ptr-type</span>
+<span class="w">                                               </span><span class="p">(</span><span class="nf">treesit-node-text-no-property</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                                                </span><span class="nv">declarator</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">type*</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-node-text-no-property</span><span class="w"> </span><span class="nv">declare</span><span class="p">)))</span>
+<span class="w">             </span><span class="nv">collect</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">type*</span>
+<span class="w">                       </span><span class="o">,</span><span class="p">(</span><span class="nf">treesit-node-text-no-property</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">,@</span><span class="nv">params</span><span class="p">))))</span>
+</pre></div>
+<p>于是最终的效果就如下所示:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">treesit-c--function-declarations</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-root-node</span><span class="w"> </span><span class="nv">parser</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+((&quot;void&quot; &quot;print_help_and_exit&quot;)
+ ((:pointer &quot;int&quot;) &quot;some_funcions&quot; ((:pointer &quot;bar&quot;) &quot;foo&quot;)
+  (&quot;int&quot; &quot;num&quot;)))
+</pre>
+<h2>Tree to <code>cffi:defcfun</code></h2>
+<p>于是就可以用这样的规则来生成 <code>cffi:defcfun</code> 的函数定义了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">mapconcat</span>
+<span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">definition</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">cl-destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">params</span><span class="p">)</span><span class="w"> </span><span class="nv">definition</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="s">&quot;(cffi:defcfun (%s %S) %s&quot;</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">string-param-case</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">c-type-to-lisp-name</span><span class="w"> </span><span class="nv">type</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">params</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">string-join</span><span class="w"> </span><span class="p">(</span><span class="nf">cl-loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">var</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">params</span>
+<span class="w">                                   </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="s">&quot;  (%s %s)&quot;</span>
+<span class="w">                                                   </span><span class="p">(</span><span class="nf">string-param-case</span><span class="w">   </span><span class="nv">var</span><span class="p">)</span>
+<span class="w">                                                   </span><span class="p">(</span><span class="nf">c-type-to-lisp-name</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">                          </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+<span class="w">             </span><span class="s">&quot;)&quot;</span><span class="p">)))</span>
+<span class="w"> </span><span class="nv">definitions</span>
+<span class="w"> </span><span class="s">&quot;</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">)</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">print_help_and_exit</span><span class="w"> </span><span class="s">&quot;print_help_and_exit&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">some_funcions</span><span class="w"> </span><span class="s">&quot;some_funcions&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">foo</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bar</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+</pre></div>
+<details><summary>这里用到的一些其他的函数</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">c-type-lisp-name-alist</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="s">&quot;int&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;float&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;void&quot;</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;char&quot;</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">:char</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;size_t&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:size</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">c-type-to-lisp-name</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">c-type-lisp-name-alist</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">c-type-to-lisp-name</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">type</span><span class="p">)))))</span>
+
+<span class="c1">;; TODO</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">string-param-case</span><span class="w"> </span><span class="p">(</span><span class="nb">string</span><span class="p">)</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span>
+</pre></div>
+<p>注: 这里参考 <a href="https://cffi.common-lisp.dev/manual/cffi-manual.html#Built_002dIn-Types">6.1 Built-In Types</a> 作为 <code>c-type-lisp-name-alist</code> 的定义.</p>
+</details>
+<p>实际上的效果还行, 如果愿意处理一下更多的边缘条件的话, 感觉可以做得更好一些.</p>
+<details><summary>那么挑战一下稍微复杂一些的真实环境中的头文件的解析</summary>
+<p>这里用的是苹果的 <a href="https://github.com/ml-explore/mlx-c/blob/main/mlx/c/array.h">MLX</a> (一个接下来想做的东西) 作为测试例子:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">parser</span><span class="w"> </span><span class="p">(</span><span class="nf">treesit-parser-create</span><span class="w"> </span><span class="ss">&#39;c</span><span class="w"> </span><span class="p">(</span><span class="nf">get-buffer</span><span class="w"> </span><span class="s">&quot;array.h&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>最终的效果如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_dtype_size</span><span class="w"> </span><span class="s">&quot;mlx_dtype_size&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:size</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">mlx_dtype</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_tostring</span><span class="w"> </span><span class="s">&quot;mlx_array_tostring&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">str</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_string</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new</span><span class="w"> </span><span class="s">&quot;mlx_array_new&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_free</span><span class="w"> </span><span class="s">&quot;mlx_array_free&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_bool</span><span class="w"> </span><span class="s">&quot;mlx_array_new_bool&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_int</span><span class="w"> </span><span class="s">&quot;mlx_array_new_int&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_float32</span><span class="w"> </span><span class="s">&quot;mlx_array_new_float32&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_float</span><span class="w"> </span><span class="s">&quot;mlx_array_new_float&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_float64</span><span class="w"> </span><span class="s">&quot;mlx_array_new_float64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">double</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_double</span><span class="w"> </span><span class="s">&quot;mlx_array_new_double&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">double</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_complex</span><span class="w"> </span><span class="s">&quot;mlx_array_new_complex&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">real_val</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">imag_val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_new_data</span><span class="w"> </span><span class="s">&quot;mlx_array_new_data&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_array</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">data</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:void</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dim</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">mlx_dtype</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set</span><span class="w"> </span><span class="s">&quot;mlx_array_set&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">src</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_bool</span><span class="w"> </span><span class="s">&quot;mlx_array_set_bool&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_int</span><span class="w"> </span><span class="s">&quot;mlx_array_set_int&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_float32</span><span class="w"> </span><span class="s">&quot;mlx_array_set_float32&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_float</span><span class="w"> </span><span class="s">&quot;mlx_array_set_float&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_float64</span><span class="w"> </span><span class="s">&quot;mlx_array_set_float64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">double</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_double</span><span class="w"> </span><span class="s">&quot;mlx_array_set_double&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">double</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_complex</span><span class="w"> </span><span class="s">&quot;mlx_array_set_complex&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">real_val</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">imag_val</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_set_data</span><span class="w"> </span><span class="s">&quot;mlx_array_set_data&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">data</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:void</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dim</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">mlx_dtype</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_itemsize</span><span class="w"> </span><span class="s">&quot;mlx_array_itemsize&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:size</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_size</span><span class="w"> </span><span class="s">&quot;mlx_array_size&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:size</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_nbytes</span><span class="w"> </span><span class="s">&quot;mlx_array_nbytes&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:size</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_ndim</span><span class="w"> </span><span class="s">&quot;mlx_array_ndim&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:size</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_shape</span><span class="w"> </span><span class="s">&quot;mlx_array_shape&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_strides</span><span class="w"> </span><span class="s">&quot;mlx_array_strides&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:size</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_dim</span><span class="w"> </span><span class="s">&quot;mlx_array_dim&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dim</span><span class="w"> </span><span class="nv">:int</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_dtype</span><span class="w"> </span><span class="s">&quot;mlx_array_dtype&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">mlx_dtype</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_eval</span><span class="w"> </span><span class="s">&quot;mlx_array_eval&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_bool</span><span class="w"> </span><span class="s">&quot;mlx_array_item_bool&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_uint8</span><span class="w"> </span><span class="s">&quot;mlx_array_item_uint8&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint8_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_uint16</span><span class="w"> </span><span class="s">&quot;mlx_array_item_uint16&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint16_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_uint32</span><span class="w"> </span><span class="s">&quot;mlx_array_item_uint32&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint32_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_uint64</span><span class="w"> </span><span class="s">&quot;mlx_array_item_uint64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint64_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_int8</span><span class="w"> </span><span class="s">&quot;mlx_array_item_int8&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int8_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_int16</span><span class="w"> </span><span class="s">&quot;mlx_array_item_int16&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int16_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_int32</span><span class="w"> </span><span class="s">&quot;mlx_array_item_int32&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int32_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_int64</span><span class="w"> </span><span class="s">&quot;mlx_array_item_int64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int64_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_float32</span><span class="w"> </span><span class="s">&quot;mlx_array_item_float32&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_float64</span><span class="w"> </span><span class="s">&quot;mlx_array_item_float64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">double</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_complex64</span><span class="w"> </span><span class="s">&quot;mlx_array_item_complex64&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:float</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_float16</span><span class="w"> </span><span class="s">&quot;mlx_array_item_float16&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">float16_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_item_bfloat16</span><span class="w"> </span><span class="s">&quot;mlx_array_item_bfloat16&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bfloat16_t</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_bool</span><span class="w"> </span><span class="s">&quot;mlx_array_data_bool&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_uint8</span><span class="w"> </span><span class="s">&quot;mlx_array_data_uint8&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint8_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_uint16</span><span class="w"> </span><span class="s">&quot;mlx_array_data_uint16&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint16_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_uint32</span><span class="w"> </span><span class="s">&quot;mlx_array_data_uint32&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint32_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_uint64</span><span class="w"> </span><span class="s">&quot;mlx_array_data_uint64&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">uint64_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_int8</span><span class="w"> </span><span class="s">&quot;mlx_array_data_int8&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int8_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_int16</span><span class="w"> </span><span class="s">&quot;mlx_array_data_int16&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int16_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_int32</span><span class="w"> </span><span class="s">&quot;mlx_array_data_int32&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int32_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_int64</span><span class="w"> </span><span class="s">&quot;mlx_array_data_int64&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">int64_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_float32</span><span class="w"> </span><span class="s">&quot;mlx_array_data_float32&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_float64</span><span class="w"> </span><span class="s">&quot;mlx_array_data_float64&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">double</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_complex64</span><span class="w"> </span><span class="s">&quot;mlx_array_data_complex64&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_float16</span><span class="w"> </span><span class="s">&quot;mlx_array_data_float16&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">float16_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">mlx_array_data_bfloat16</span><span class="w"> </span><span class="s">&quot;mlx_array_data_bfloat16&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bfloat16_t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">_mlx_array_is_available</span><span class="w"> </span><span class="s">&quot;_mlx_array_is_available&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">_mlx_array_wait</span><span class="w"> </span><span class="s">&quot;_mlx_array_wait&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">_mlx_array_is_contiguous</span><span class="w"> </span><span class="s">&quot;_mlx_array_is_contiguous&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">_mlx_array_is_row_contiguous</span><span class="w"> </span><span class="s">&quot;_mlx_array_is_row_contiguous&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">cffi:defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">_mlx_array_is_col_contiguous</span><span class="w"> </span><span class="s">&quot;_mlx_array_is_col_contiguous&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">:pointer</span><span class="w"> </span><span class="nv">bool</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="nv">mlx_array</span><span class="p">))</span>
+</pre></div>
+<p>感觉挺好的, 这样的话, 只需要进行一些简单的例外处理即可,
+  而对应的数据类型 (比如 <code>mlx_array</code>) 可以自己做 wrapping,
+  这样的话就会比 c2ffi 多一些自由度了.</p>
+</details>
+<h1>Ending</h1>
+<p>花了一天多才写好的简单小功能, 感觉最近编程的动力极其的弱&#8230; 啥也不想干,
+  这毕设真是害人啊, 坏了我的作息也磨灭了我的心情&#8230;</p>
+
+  </div><a class="u-url" href="/emacs/using-tree-sitter/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

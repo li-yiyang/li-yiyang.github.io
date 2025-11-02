@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Data structure: Linked List | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Data structure: Linked List" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 本文是给 UCAS-CTF C 语言缓速班数据结构中链表一节的讲义. Detour: 给我一块内存空间: malloc, free 一个简单的复习: 当我们使用 malloc 的时候, 我们会向系统要一个一定大小的内存空间. 比如说, 如果我们要申请一个大小是 64 个 float 的空间, 那么我们会使用: float* farr_64 = malloc(sizeof(float) * 64); 而当我们结束了这块内存空间的使用时, 又可以通过 free 的方式释放这块内存空间: free(farr_64); 如此这般申请得到的内存空间是一块连续的内存空间, 我们可以用: for (size_t i = 0; i &lt; 64; i++) *(farr_64 + i) // 指针的形式 = a_simple_function(farr_64[i]); // 类似数组的形式 来读写这个内存空间上的数据. 示例代码 #include &lt;stdlib.h&gt; #include &lt;stdio.h&gt;" />
+<meta property="og:description" content="About 本文是给 UCAS-CTF C 语言缓速班数据结构中链表一节的讲义. Detour: 给我一块内存空间: malloc, free 一个简单的复习: 当我们使用 malloc 的时候, 我们会向系统要一个一定大小的内存空间. 比如说, 如果我们要申请一个大小是 64 个 float 的空间, 那么我们会使用: float* farr_64 = malloc(sizeof(float) * 64); 而当我们结束了这块内存空间的使用时, 又可以通过 free 的方式释放这块内存空间: free(farr_64); 如此这般申请得到的内存空间是一块连续的内存空间, 我们可以用: for (size_t i = 0; i &lt; 64; i++) *(farr_64 + i) // 指针的形式 = a_simple_function(farr_64[i]); // 类似数组的形式 来读写这个内存空间上的数据. 示例代码 #include &lt;stdlib.h&gt; #include &lt;stdio.h&gt;" />
+<link rel="canonical" href="/ctf/data-structure-linked-list/" />
+<meta property="og:url" content="/ctf/data-structure-linked-list/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-05-27T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Data structure: Linked List" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-05-27T00:00:00+00:00","datePublished":"2025-05-27T00:00:00+00:00","description":"About 本文是给 UCAS-CTF C 语言缓速班数据结构中链表一节的讲义. Detour: 给我一块内存空间: malloc, free 一个简单的复习: 当我们使用 malloc 的时候, 我们会向系统要一个一定大小的内存空间. 比如说, 如果我们要申请一个大小是 64 个 float 的空间, 那么我们会使用: float* farr_64 = malloc(sizeof(float) * 64); 而当我们结束了这块内存空间的使用时, 又可以通过 free 的方式释放这块内存空间: free(farr_64); 如此这般申请得到的内存空间是一块连续的内存空间, 我们可以用: for (size_t i = 0; i &lt; 64; i++) *(farr_64 + i) // 指针的形式 = a_simple_function(farr_64[i]); // 类似数组的形式 来读写这个内存空间上的数据. 示例代码 #include &lt;stdlib.h&gt; #include &lt;stdio.h&gt;","headline":"Data structure: Linked List","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/data-structure-linked-list/"},"url":"/ctf/data-structure-linked-list/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Data structure: Linked List</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-05-27T00:00:00+00:00" itemprop="datePublished">May 27, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>本文是给 <a href="https://github.com/UCAS-CTF">UCAS-CTF</a> C 语言缓速班数据结构中链表一节的讲义.</p>
+<h1>Detour: 给我一块内存空间: <code>malloc</code>, <code>free</code></h1>
+<p>一个简单的复习: 当我们使用 <code>malloc</code> 的时候, 我们会向系统要一个一定大小的内存空间.
+  比如说, 如果我们要申请一个大小是 <code>64</code> 个 <code>float</code> 的空间, 那么我们会使用:</p>
+<div class="highlight"><pre><span></span><span class="kt">float</span><span class="o">*</span><span class="w"> </span><span class="n">farr_64</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">64</span><span class="p">);</span>
+</pre></div>
+<p>而当我们结束了这块内存空间的使用时, 又可以通过 <code>free</code> 的方式释放这块内存空间:</p>
+<div class="highlight"><pre><span></span><span class="n">free</span><span class="p">(</span><span class="n">farr_64</span><span class="p">);</span>
+</pre></div>
+<p>如此这般申请得到的内存空间是一块连续的内存空间, 我们可以用:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">64</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">  </span><span class="o">*</span><span class="p">(</span><span class="n">farr_64</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">)</span><span class="w">                     </span><span class="c1">// 指针的形式</span>
+<span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">a_simple_function</span><span class="p">(</span><span class="n">farr_64</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span><span class="w"> </span><span class="c1">// 类似数组的形式</span>
+</pre></div>
+<p>来读写这个内存空间上的数据.</p>
+<details><summary>示例代码</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="cp">#define SIZE 5</span>
+
+<span class="kt">int</span>
+<span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">float</span><span class="w"> </span><span class="o">*</span><span class="n">arr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">SIZE</span><span class="p">);</span>
+
+<span class="w">  </span><span class="c1">// init arr with random number [0, 1)</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">SIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">arr</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="kt">float</span><span class="p">)</span><span class="n">rand</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="kt">float</span><span class="p">)</span><span class="n">RAND_MAX</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">SIZE</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%.2f, &quot;</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">arr</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">));</span>
+
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">arr</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<pre class="example">
+0.00, 0.13, 0.76, 0.46, 0.53,
+</pre>
+</details>
+<p><b>问题</b>: 你现在需要储存一个用户的名字的数据,
+  你认为正常人类的名字应该可以在 <code>80</code> 个字符内搞定,
+  所以你 <code>malloc(80 * sizeof(char))</code> 作为了用户的名字的空间,
+  然后你得到了这样的名字:</p>
+<blockquote>
+  <p>寿限无寿限无扔屎机前天小新的内裤新八的人生巴尔蒙克·费扎利昂艾萨克·修奈达
+    三分之一纯情的感情的剩下三分之二是在意肉刺的感情我知道无法逃离的背叛其实
+    可以逃离离家出游鱿鱼煎鲣鱼鱼子自家粪池鲣鱼……这条鲣鱼跟刚才的不同这条
+    是池乃鲣鱼啦辣油雄帝宫王木村皇呸呸呸呸呸呸呸呸呸呸呸呸小屎丸</p>
+</blockquote>
+<p>emmm&#8230; 好吧, 那么把 <code>SIZE</code> 设为 <code>256</code> 吧, 这下足够大了吧:</p>
+<blockquote>
+  <p>Adolph Blaine Charles David Earl Frederick Gerald Hubert Irvin John Kenneth
+    Lloyd Martin Nero Oliver Paul Quincy Randolph Sherman Thomas Uncas Victor
+    William Xerxes Yancy Zeus Wolfeschlegel­steinhausen­bergerdorff­welche­
+    vor­altern­waren­gewissenhaft­schafers­wessen­schafe­waren­wohl­
+    gepflege­und­sorgfaltigkeit­beschutzen­vor­angreifen­durch­ihr­
+    raubgierig­feinde­welche­vor­altern­zwolfhundert­tausend­jahres­
+    voran­die­erscheinen­von­der­erste­erdemensch­der­raumschiff­
+    genacht­mit­tungstein­und­sieben­iridium­elektrisch­motors­gebrauch­
+    licht­als­sein­ursprung­von­kraft­gestart­sein­lange­fahrt­
+    hinzwischen­sternartig­raum­auf­der­suchen­nachbarschaft­der­stern­
+    welche­gehabt­bewohnbar­planeten­kreise­drehen­sich­und­wohin­der­
+    neue­rasse­von­verstandig­menschlichkeit­konnte­fortpflanzen­und­sich­
+    erfreuen­an­lebenslanglich­freude­und­ruhe­mit­nicht­ein­furcht­vor­
+    angreifen­vor­anderer­intelligent­geschopfs­von­hinzwischen­sternartig­
+    raum Sr.</p>
+  <p>(<a href="https://zh.wikipedia.org/zh-cn/休伯特·布萊因·沃爾夫什里格爾斯坦霍森伯格多夫">Wikipedia-休伯特·布莱因·沃尔夫什里格尔斯坦霍森伯格多夫</a>)</p>
+</blockquote>
+<p>emmm&#8230; 那么把 <code>SIZE</code> 设为 <code>1028</code> 吧&#8230;</p>
+<p>好像也不太对劲, 当然, 你也不是不能强制用户将自己的名字设定为 <code>3-20</code> 个字符,
+  但如果我们想要一个能够支持储存任意长度的输入的数据结构, 这该如何呢?</p>
+<details><summary>也不是不能&#8230; </summary>
+<p>我们可以做一个数组 <code>append</code> 的操作:</p>
+<ol>
+  <li>若需要填充的数据大小 <code>&lt; length(arr)</code>, 则将数据写入 <code>arr[fill-pointer]</code></li>
+  <li>防止, 新建一个数组, 其大小为 <code>length(arr) + APPEND_SIZE</code>,
+    然后将旧数组的所有数据都拷贝进去.</li>
+</ol>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+
+<span class="cp">#define DATA_T int</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">appendable_vector_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">fill_pointer</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">DATA_T</span><span class="o">*</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">AppendableVector</span><span class="p">;</span>
+
+<span class="cm">/*</span>
+<span class="cm">  Return a pointer to allocated `AppendableVector`.</span>
+<span class="cm">  If failed to alloc, return NULL;</span>
+
+<span class="cm">  Parameters:</span>
+<span class="cm">  + `length`: size of `AppendableVector`</span>
+
+<span class="cm"> */</span>
+<span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="nf">make_vector</span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">AppendableVector</span><span class="p">));</span>
+<span class="w">  </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">DATA_T</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">length</span><span class="p">);</span>
+<span class="w">  </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">fill_pointer</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">length</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="n">length</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vec</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/*</span>
+<span class="cm">  Push `element` to the end of `vec`.</span>
+
+<span class="cm">  Parameters:</span>
+<span class="cm">  + `vec`: a pointer to `AppendableVector`</span>
+<span class="cm">  + `element`: an element as `vec` new element</span>
+<span class="cm"> */</span>
+<span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="nf">vector_push</span><span class="p">(</span><span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="n">vec</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">element</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// no space to fill</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">fill_pointer</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">DATA_T</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">length</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">      </span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+
+<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+<span class="w">    </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">fill_pointer</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element</span><span class="p">;</span>
+<span class="w">  </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">fill_pointer</span><span class="o">++</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">vec</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*</span>
+<span class="cm">  Free allocation of AppendableVector `vec`.</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">free_vector</span><span class="p">(</span><span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="n">vec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">);</span>
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cm">/*</span>
+<span class="cm">  Print all the data in AppendableVector `vec`.</span>
+<span class="cm"> */</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">print_vector</span><span class="p">(</span><span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="n">vec</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">size_t</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">fill_pointer</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d, &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">vec</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;]</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">AppendableVector</span><span class="w"> </span><span class="o">*</span><span class="n">vec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">make_vector</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">print_vector</span><span class="p">(</span><span class="n">vector_push</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">free_vector</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<pre class="example">
+[0, ]
+[0, 1, ]
+[0, 1, 2, ]
+[0, 1, 2, 3, ]
+[0, 1, 2, 3, 4, ]
+[0, 1, 2, 3, 4, 5, ]
+[0, 1, 2, 3, 4, 5, 6, ]
+[0, 1, 2, 3, 4, 5, 6, 7, ]
+[0, 1, 2, 3, 4, 5, 6, 7, 8, ]
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ]
+</pre>
+</details>
+<h1>链表 <code>LinkedList</code></h1>
+<h2>一个非常简单的链表的实现</h2>
+<p>一个简单的想法就是: 好吧, 如果当前分配的内存不够用了, 就在它后面跟一块补丁.
+  类似如下图所示:</p>
+<p><img src="/_img/pieces/data-struct/linked-data.svg" alt="/_img/pieces/data-struct/linked-data.svg" /></p>
+<p>即, 我们可以把每一份储存的数据片段看作是由两个部分组成的:</p>
+<ul>
+  <li><code>car</code>: 数据片段本身, 或是一个指向该数据片段的指针</li>
+  <li><code>cdr</code>: 一个指向下一段数据片段的指针, 如果其指向 <code>NULL</code>, 则表示没有更多的数据了,
+    即数据本身的结束.</li>
+</ul>
+<details><summary>为什么叫作 car 和 cdr? (一点点的历史)</summary>
+<p>在 IBM 的 <a href="https://bitsavers.org/pdf/ibm/704/24-6661-2_704_Manual_1955.pdf">704 机</a> 上, 有一个叫作 Type A 的指令 (page 8), 其由 <code>prefix</code>, <code>decrement</code>,
+  <code>tag</code>, <code>address</code> 组成. 早期的 <a href="https://www-formal.stanford.edu/jmc/recursive.html">LISP-1</a> 的实现使用了这样的一个 <code>Word</code> 来表示一个 <code>cons</code>
+  数据结构 (有点类似于下面定义的 <code>LinkedString</code>).</p>
+<p>所以叫作 *C*​ontent of the *A*​ddress *R*​egister 以及 *C*​ontent of the *D*​ecrement *R*​egister.</p>
+<p>那么为什么要用 LISP 里的名字来叫 <code>list</code> 呢? 明明我们可以有其他各种各样的称呼,
+  这是因为 LISP (*LIS*​t *P*​rocessing, 列表处理) 差不多可以算是最早的 (仅次于 Fortran)
+  的编程语言之一了. 用它来代表一类的编程语言以及其结构, 我觉得并无不可.</p>
+<p>我们将会在后面的例子里面看到, 使用列表结构可以如何简单地定义一门编程语言的解释器.</p>
+</details>
+<p>于是我们可以用这样的方式来实现我们前面的 &#8220;任意长度名称&#8221; 存储的数据结构:</p>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">linked_string_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">chr</span><span class="p">;</span><span class="w">                     </span><span class="c1">// car</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">linked_string_</span><span class="w"> </span><span class="o">*</span><span class="n">next</span><span class="p">;</span><span class="w">  </span><span class="c1">// cdr</span>
+<span class="p">}</span><span class="w"> </span><span class="n">LinkedString</span><span class="p">;</span>
+</pre></div>
+<p>假如我们有一个函数可以构造这样的数据对 <code>cons_LinkedString(chr, next)</code>,</p>
+<details><summary>具体的实现</summary>
+<div class="highlight"><pre><span></span><span class="n">LinkedString</span><span class="o">*</span><span class="w"> </span><span class="nf">cons_LinkedString</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">chr</span><span class="p">,</span><span class="w"> </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">next</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">LinkedString</span><span class="p">));</span>
+<span class="w">  </span><span class="n">str</span><span class="o">-&gt;</span><span class="n">chr</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">chr</span><span class="p">;</span>
+<span class="w">  </span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">print_LinkedString</span><span class="p">(</span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">putchar</span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">chr</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="n">print_LinkedString</span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">free_LinkedString</span><span class="p">(</span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="n">free_LinkedString</span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="w">  </span><span class="n">free</span><span class="p">(</span><span class="n">str</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+<p>于是我们就可以把一个字符串 =&#8221;Hello&#8221;= 写作:</p>
+<div class="highlight"><pre><span></span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="sc">&#39;H&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="sc">&#39;e&#39;</span><span class="p">,</span><span class="w"> </span>\
+<span class="w">  </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="sc">&#39;l&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="sc">&#39;l&#39;</span><span class="p">,</span><span class="w"> </span>\
+<span class="w">    </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="sc">&#39;o&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)))));</span>
+</pre></div>
+<details><summary>一个完整的演示</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+
+<span class="o">&lt;&lt;</span><span class="n">LinkedString</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="o">&lt;&lt;</span><span class="n">cons_LinkedString</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">hello</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="n">linked_string_hello</span><span class="o">&gt;&gt;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">print_LinkedString</span><span class="p">(</span><span class="n">hello</span><span class="p">);</span>
+<span class="w">  </span><span class="n">free_LinkedString</span><span class="p">(</span><span class="n">hello</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<pre class="example">
+Hello
+</pre>
+</details>
+<h3>对链表的各种操作</h3>
+<p>这部分可能有些无趣, 我会尽量用图示, 伪代码算法描述以及折叠的 C 代码进行介绍.</p>
+<ul>
+  <li>读第 <code>n</code> 个元素的值 <code>nth_LinkedString(n, str)</code>
+    <p><img src="/_img/ctf/nth_LinkedString.svg" alt="/_img/ctf/nth_LinkedString.svg" /></p>
+    <p><b>Algorithm</b>:</p>
+    <ol>
+      <li>从 <code>list</code> 头开始, 若 <code>n</code> 为 <code>0</code>, 则返回 <code>first(str)</code></li>
+      <li>反之, 若 <code>n &gt; 0</code>, 则返回 <code>nth_LinkedString(n - 1, rest(str))</code></li>
+    </ol>
+  <details><summary>简单的实现和实现需要注意的问题</summary>
+<div class="highlight"><pre><span></span><span class="kt">char</span><span class="w"> </span><span class="nf">nth_LinkedString</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">str</span><span class="o">-&gt;</span><span class="n">chr</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">&lt;</span><span class="w">  </span><span class="mi">0</span><span class="p">)</span><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">nth_LinkedString</span><span class="p">(</span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+    <p>如何处理边界条件 <code>n</code>?</p>
+  </details>
+  <details><summary>一些有趣的其他的数据结构的模拟</summary>
+    <p>这部分不是那么有用, 大家可以看看就好.</p>
+    <p>我们可以用 <code>list</code> 去模拟一个表:</p>
+<div class="highlight"><pre><span></span><span class="p">((</span><span class="nf">a1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">a2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+<span class="w"> </span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+    <p><img src="/_img/ctf/assoc_LinkedString.svg" alt="/_img/ctf/assoc_LinkedString.svg" /></p>
+    <p><b>思考</b>: 大家可以思考一下如何:</p>
+    <ul>
+      <li>从表里面读取和写入数据</li>
+      <li>合并两个表</li>
+      <li>&#8230;</li>
+    </ul>
+  </details>
+  </li>
+  <li>判断两个链表是否相等 <code>equalp_LinkedString(str1, str2)</code>
+    <p><img src="/_img/ctf/equalp_LinkedString.svg" alt="/_img/ctf/equalp_LinkedString.svg" /></p>
+    <p><b>Algorithm</b>:</p>
+    <ol>
+      <li>若 <code>str1</code> 和 <code>str2</code> 都是 <code>NULL</code>, 则相同</li>
+      <li>若 <code>car(str1)</code> 和 <code>car(str2)</code> 不相同, 则不同</li>
+      <li>比较 <code>equalp(cdr(str1), cdr(str2))</code></li>
+    </ol>
+  <details><summary>简单的实现</summary>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">equalp_LinkedString</span><span class="p">(</span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str1</span><span class="p">,</span><span class="w"> </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">str2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">str2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">str1</span><span class="o">-&gt;</span><span class="n">chr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">str2</span><span class="o">-&gt;</span><span class="n">chr</span><span class="p">)</span><span class="w">       </span><span class="k">return</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">equalp_LinkedString</span><span class="p">(</span><span class="n">str1</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">,</span><span class="w"> </span><span class="n">str2</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+  </details>
+  </li>
+  <li>删除第 <code>n</code> 个元素 <code>delete_nth_LinkedString(n, str)</code>
+    <p><img src="/_img/ctf/delete_LinkedString.svg" alt="/_img/ctf/delete_LinkedString.svg" /></p>
+    <p><b>Algorithm</b>:</p>
+    <ol>
+      <li>找到第 <code>n</code> 个元素的 <code>cons_n</code>, 以及前一个元素的 <code>cons_{n-1}</code>,
+        以及后一个元素 <code>cons_{n+1}</code></li>
+      <li>将 <code>cons_{n-1}-&gt;next</code> 指向 <code>cons_{n+1}</code></li>
+    </ol>
+  <details><summary>简单的实现</summary>
+<div class="highlight"><pre><span></span><span class="n">LinkedString</span><span class="o">*</span><span class="w"> </span><span class="nf">delete_nth_LinkedString</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">n</span><span class="p">,</span><span class="w"> </span><span class="n">LinkedString</span><span class="o">*</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
+<span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">n</span><span class="o">--</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">search</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="n">search</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">search</span><span class="o">-&gt;</span><span class="n">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">search</span><span class="o">-&gt;</span><span class="n">next</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">str</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+  </details>
+    <p><b>思考</b>: 如果我们不希望删除的操作对 <code>str</code> 本身存在修改的行为 (side-effect),
+      我们该如何设计这个算法?</p>
+    <p>注: 这个思考题其实包含了一个 <code>immutable</code> (不可变) 对象的处理方法的考虑.</p>
+  </li>
+  <li>替换链表中的第 <code>n</code> 个元素 <code>set_nth_LinkedString(chr, n, str)</code>
+    <p><img src="/_img/ctf/set_nth_LinkedString.svg" alt="/_img/ctf/set_nth_LinkedString.svg" /></p>
+    <p><b>思考</b>: 这个算法并不难想, 留作习题.</p>
+    <p><b>思考</b>: 同样的, 我们也可以考虑该如何去实现这样的无 side-effect 版本的算法.</p>
+  </li>
+  <li>合并两个链表 <code>append_LinkedString(str1, str2)</code>
+    <p><b>思考</b>: 这个算法并不难想, 看看上面的 <code>set_nth_LinkedString</code>, 留作习题.</p>
+    <p><b>思考</b>: 如果我们希望的是 <code>union_LinkedString(str1, str2)</code>, 该如何设计?</p>
+    <p><b>思考</b>: 同样的, 如果我们希望实现非 destructive 的算法, 又该如何设计?</p>
+  </li>
+</ul>
+<details><summary>为什么在这里会要求一些无 side-effect 的算法? </summary>
+</details>
+<details><summary>尾递归</summary>
+<p>我们会发现, 前面的算法往往都有如下的形式:</p>
+<div class="highlight"><pre><span></span><span class="n">RESULT_T</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="n">LinkedList</span><span class="w"> </span><span class="o">*</span><span class="n">list</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">continuep</span><span class="p">(</span><span class="n">list</span><span class="o">-&gt;</span><span class="n">car</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">list</span><span class="o">-&gt;</span><span class="n">cdr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">foo</span><span class="p">(</span><span class="n">list</span><span class="o">-&gt;</span><span class="n">cdr</span><span class="p">);</span>
+<span class="w">  </span><span class="k">else</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">process_on</span><span class="p">(</span><span class="n">list</span><span class="o">-&gt;</span><span class="n">car</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>即我们通过递归的方式构建我们的算法, 这样的算法写起来和读起来都非常容易,
+  只是&#8230; 对于性能敏感肌的同学们往往会问一个问题: 你这递归算法,
+  函数调用的开栈过程是不是很影响性能啊?</p>
+<p>那么难道没法解决了么? 并非如此, 我们会发现上面的递归算法可以写成循环的形式:</p>
+<div class="highlight"><pre><span></span><span class="n">RESULT_T</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="n">LinkedList</span><span class="w"> </span><span class="o">*</span><span class="n">list</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">continuep</span><span class="p">(</span><span class="n">list</span><span class="o">-&gt;</span><span class="n">car</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">list</span><span class="o">-&gt;</span><span class="n">cdr</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">list</span><span class="o">-&gt;</span><span class="n">cdr</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">process_on</span><span class="p">(</span><span class="n">list</span><span class="o">-&gt;</span><span class="n">car</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>当然, 这个例子还是有点太简单了, 实际上在编译器中这样的替换会被自动执行,
+  称为 &#8220;尾递归&#8221; 优化.</p>
+<p><b>思考</b>: 请比较下面的同一个函数的两种不同表示, 哪一种会被尾递归优化?</p>
+<div class="highlight"><pre><span></span><span class="n">LinkedString</span><span class="o">*</span><span class="w"> </span><span class="nf">str_to_LinkedString</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="k">else</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">str_to_LinkedString</span><span class="p">(</span><span class="n">str</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+<p>和:</p>
+<div class="highlight"><pre><span></span><span class="n">LinkedString</span><span class="o">*</span><span class="w"> </span><span class="nf">str_to_LinkedString_acc</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">LinkedString</span><span class="w"> </span><span class="o">*</span><span class="n">lstr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">lstr</span><span class="p">;</span>
+<span class="w">  </span><span class="k">else</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">str_to_LinkedString_acc</span><span class="p">(</span><span class="n">str</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">cons_LinkedString</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">lstr</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+<details><summary>答案</summary>
+<p>后者&#8230; (废话, 选名字长的, bushi)</p>
+<p>相当于用函数 <code>argument</code> 作为了循环中的循环变量.</p>
+</details>
+</details>
+<h3>那么古尔丹, 代价是什么呢?</h3>
+<ul>
+  <li>空间上更占空间
+    <p>不难发现, 和数组相比, 链表的每个元素还多了一个指向下一个元素的指针,
+      虽然占用的内存不多, 但是总归也算是内存</p>
+  </li>
+  <li>时间上也没占优势
+    <p>比如访问第 <code>n</code> 个元素的时候, 我们总要进行 <code>n</code> 次寻址, 而与之对比的是,
+      数组的第 <code>n</code> 个元素的访问快的多了.</p>
+  </li>
+</ul>
+<details><summary>那么难道就完蛋了吗? </summary>
+<p>其实也不是不能做一些简单的优化:</p>
+<ul>
+  <li>比如可以用一个简单的标记来标记数据, 将数据分为 normal cdr 和 compressed cdr:
+    <p><img src="/_img/ctf/compressed_list.png" alt="/_img/ctf/compressed_list.png" /></p>
+    <p>(Symbolics 3600 Techical Summary)</p>
+  </li>
+  <li>或者可以用类似于一块数组接另一块数组的形式:
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">linked_string_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="n">buff</span><span class="p">[</span><span class="n">BUFF_SIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">linked_string_</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">LinkedString</span><span class="p">;</span>
+</pre></div>
+  </li>
+  <li>当然, 在硬件层面上的优化也是可以的</li>
+  <li>不过问题又回来了, 写得爽不就好了? 嫌跑不快的可以换一个更新的电脑,
+    以及尝试并行的算法</li>
+</ul>
+<p>注: 不过还是建议在使用数据类型的时候还是需要考虑具体的引用场景.</p>
+</details>
+<h3>既然你已经学会了单向链表, 那么双向链表和环链表估计也不是问题了吧</h3>
+<p>因为我们暂时用不到这两个, 所以只会非常简单地进行一个介绍.</p>
+<ul>
+  <li>双向链表
+    <p><img src="/_img/ctf/DoubleLinkedString.svg" alt="/_img/ctf/DoubleLinkedString.svg" /></p>
+  </li>
+  <li>环链表
+    <p><img src="/_img/ctf/RingLinkedString.svg" alt="/_img/ctf/RingLinkedString.svg" /></p>
+  </li>
+</ul>
+<h1>用链表实现一些有趣的东西</h1>
+<h2>用链表实现逆波兰表达式的计算</h2>
+<h3>读逆波兰表达式 <code>read_from_string(str)</code></h3>
+<p>总的代码有点长, 这里直接给一个能用的代码了 (<a href="/_img/ctf/foo.c">foo.c</a>).</p>
+<p>运行的效果类似于:</p>
+<pre class="example">
+&gt; (hello world)
+(hello . (world . nil))
+</pre>
+<ol>
+  <li>读取输入行</li>
+  <li>然后打印出来</li>
+  <li>循环上面的步骤</li>
+</ol>
+<details><summary>一点点的解释</summary>
+<ul>
+  <li>定义数据结构
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">cons_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">Object</span><span class="o">*</span><span class="w"> </span><span class="n">car</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Object</span><span class="o">*</span><span class="w"> </span><span class="n">cdr</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Cons</span><span class="p">;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">object_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">enum</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">CONS</span><span class="p">,</span><span class="w"> </span><span class="n">SYMBOL</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="n">tag</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">union</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Cons</span><span class="w">        </span><span class="o">*</span><span class="n">cons</span><span class="p">;</span>
+<span class="w">    </span><span class="n">SymbolName</span><span class="w">  </span><span class="o">*</span><span class="n">symbol</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+    <p>这里用 <code>tag</code> 的形式标记了数据结构使得其能够更好地支持不同的数据类型,
+      在这里, 只有 <code>SYMBOL</code> 和 <code>CONS</code> 两种数据类型.</p>
+  </li>
+  <li>其实最麻烦的部分就是读取了
+<div class="highlight"><pre><span></span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="nf">read_from_string_</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="o">*</span><span class="n">pos</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">FUNC_CALL</span><span class="p">(</span><span class="s">&quot;read_from_string_&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">obj</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">SKIP_WHITESPACE</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">));</span>
+
+<span class="w">  </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">str</span><span class="p">[</span><span class="o">*</span><span class="n">pos</span><span class="p">])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;\0&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="n">DEBUG</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;read_from_string_&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;End of input line. &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">free</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">    </span><span class="n">FUNC_RET</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">    </span><span class="k">break</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="sc">&#39;(&#39;</span><span class="p">:</span>
+<span class="w">    </span><span class="n">DEBUG1</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">),</span><span class="w"> </span><span class="s">&quot;read_from_string_&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;read list cons mark ( </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">(</span><span class="o">*</span><span class="n">pos</span><span class="p">)</span><span class="o">++</span><span class="p">;</span><span class="w"> </span><span class="c1">// skip (</span>
+<span class="w">    </span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read_cons_from_string_</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">pos</span><span class="p">);</span>
+<span class="w">    </span><span class="k">break</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">default</span><span class="o">:</span>
+<span class="w">    </span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">Object</span><span class="p">));</span>
+<span class="w">    </span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SYMBOL</span><span class="p">;</span>
+<span class="w">    </span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">symbol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read_SymbolName_from_string_</span><span class="p">(</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">pos</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// failed to read SymbolNames</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">symbol</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">free</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">      </span><span class="n">FUNC_RET</span><span class="p">(</span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">break</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">FUNC_RET</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+    <p>用的是非常简单粗暴的读取方法.</p>
+  </li>
+</ul>
+</details>
+<h3>请阅读代码, 然后拓展代码使得能够支持 <code>NUMBER</code> 类型的数</h3>
+<ol>
+  <li>第一个函数: 让我们历遍 <code>SymbolName</code> 以判断其是否是一个 <code>NUMBER</code>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">SymbolName_numberp</span><span class="p">(</span><span class="n">SymbolName</span><span class="w"> </span><span class="o">*</span><span class="n">sym</span><span class="p">);</span><span class="w"> </span><span class="c1">// -&gt; TRUE or FALSE</span>
+</pre></div>
+  </li>
+  <li>第二个函数: 让我们将 <code>SymbolName</code> 变成数
+<div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">SymbolName_numberp</span><span class="p">(</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">symbol</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">NUMBER</span><span class="p">;</span>
+<span class="w">  </span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SymbolName2number</span><span class="p">(</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">symbol</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li>第 n 个函数: 大家写点四则运算之类的函数吧
+    <p>比如, 举个例子:</p>
+<div class="highlight"><pre><span></span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="nf">op2_add</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">b</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">||</span>
+<span class="w">      </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">NUMBER</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">NUMBER</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Cannot add &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_object</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; and &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_object</span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; together. &quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">Object</span><span class="p">));</span>
+<span class="w">  </span><span class="n">c</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">NUMBER</span><span class="p">;</span>
+<span class="w">  </span><span class="n">c</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">number</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">number</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">c</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+    <p>大家可以实现一些简单的函数来自己玩一下. 然后用:</p>
+<div class="highlight"><pre><span></span><span class="n">op2_add</span><span class="p">(</span><span class="n">read_from_string</span><span class="p">(</span><span class="s">&quot;1&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">read_from_string</span><span class="p">(</span><span class="s">&quot;2&quot;</span><span class="p">));</span>
+</pre></div>
+    <p>这样的简单函数测试一下.</p>
+   <details><summary>那么我们的内存要在什么时候回收呢? </summary>
+    <p>你说的对, 我们的内存确实完全没有回收, 这会导致随着计算的增加,
+      我们的程序的内存占用会越来越大. 这非常的坏.</p>
+    <p>我们会在后面有空的时候介绍一下简单的 GC (垃圾回收).</p>
+   </details>
+  </li>
+</ol>
+<h3><code>eval</code>: 让我们计算一下表达式的值</h3>
+<p>假如我们现在希望能够计算 <code>(+ 1 2 3)</code> 这样的表达式的值, 我们需要?</p>
+<ol>
+  <li>对于读到的表达式 <code>expr</code>, 我们取其 <code>car(expr)</code> 元素, 若其为
+    <ul>
+      <li><code>+</code>: 则将 <code>cdr(expr)</code> 元素全部加在一起</li>
+      <li><code>-</code>: 则将 <code>car(cdr(expr))</code> 用剩余的其他 <code>cdr(cdr(expr))</code> 元素相减</li>
+      <li>&#8230;</li>
+    </ul>
+    <p>于是我们可以写这样的一个函数 <code>eval</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="nf">eval</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">expr</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">expr</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">expr</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">CONS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Don&#39;t know how to eval(&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">print_object</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">cmd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">car</span><span class="p">(</span><span class="n">expr</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="n">Sadd</span><span class="p">))</span><span class="w">          </span><span class="c1">// Object *Sadd = read_from_string(&quot;+&quot;);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">op_add</span><span class="p">(</span><span class="n">cdr</span><span class="p">(</span><span class="n">expr</span><span class="p">));</span>
+<span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">eq</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="n">Ssub</span><span class="p">))</span><span class="w">     </span><span class="c1">// Object *Ssub = read_from_string(&quot;-&quot;);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">op_sub</span><span class="p">(</span><span class="n">cdr</span><span class="p">(</span><span class="n">expr</span><span class="p">));</span>
+
+<span class="w">  </span><span class="c1">// add more commands ...</span>
+
+<span class="w">  </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Unknown command &quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">print_object</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">  </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li>不难发现, 如果把这样的表达式用 C 语言一般的函数调用来写
+    <ul>
+      <li><code>(func arg1 arg2 arg3 ...)</code></li>
+      <li><code>func(arg1, arg2, arg3, ...)</code></li>
+    </ul>
+    <p>两者是等价的</p>
+  </li>
+</ol>
+<h3>一些补注: 这里提供一些辅助函数的实现</h3>
+<ul>
+  <li><code>car(cons)</code>
+    <p>Return <code>car</code> of <code>cons</code>.</p>
+<div class="highlight"><pre><span></span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="nf">car</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">cons</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cons</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">CONS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">print_object</span><span class="p">(</span><span class="n">cons</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; is not cons. &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">car</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li><code>cdr(cons)</code>
+    <p>Return <code>cdr</code> of <code>cons</code>.</p>
+<div class="highlight"><pre><span></span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="nf">cdr</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="o">*</span><span class="n">cons</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cons</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">tag</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">CONS</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">print_object</span><span class="p">(</span><span class="n">cons</span><span class="p">,</span><span class="w"> </span><span class="n">stderr</span><span class="p">);</span>
+<span class="w">    </span><span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; is not cons. &quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">val</span><span class="p">.</span><span class="n">cons</span><span class="o">-&gt;</span><span class="n">cdr</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li><code>cons(car, cdr)</code>
+    <p>Make <code>cons</code> of <code>car</code> and <code>cdr</code>.</p>
+  </li>
+  <li><code>eq(a, b)</code>
+    <p>Test if two symbol <code>a</code> and <code>b</code> is equal (literally).
+      Return <code>t</code> if true, <code>nil</code> if not.</p>
+  </li>
+  <li><code>cond((condition . exprs) ...)</code>
+    <p>If <code>condition</code> is non <code>nil</code>, eval <code>exprs</code>.
+      Otherwise, test on other <code>(condition . exprs)</code> pairs.
+      If non of the <code>(condition . exprs)</code> pairs works, return <code>nil</code>.</p>
+  </li>
+  <li><code>atom(expr)</code>
+    <p>Test if <code>expr</code> is <b>not</b> <code>cons</code>.</p>
+  </li>
+</ul>
+<h3>补注的补注: 既然我们已经实现了这么多的函数&#8230;</h3>
+<p>其实可以考虑参考:</p>
+<ul>
+  <li><a href="/lisp/from-linked-list-to-the-old-yet-modern-computer/">From Linked List to the Old Yet Modern Computer (1)</a></li>
+  <li><a href="/lisp/from-linked-list-to-the-old-yet-modern-computer-2/">From Linked List to the Old Yet Modern Computer (2)</a></li>
+</ul>
+<p>来只用上面的几个 <code>car</code>, <code>cdr</code>, <code>cons</code>, <code>atom</code>, <code>eq</code>, <code>cond</code>
+  来实现一个简单的编程语言解释器.</p>
+<details><summary>一些更多的乐子</summary>
+<ul>
+  <li><b>内存回收</b>: 前面我们已经指出了貌似我们好像缺少一些内存回收的机制,
+    会导致内存爆炸的危机&#8230; 这非常的坏. 那么我们该如何解决这个问题呢?</li>
+  <li><b>宏</b>: 既然我们的表达式 (代码) 都是和数据一样的列表,
+    那么为啥不能用代码生成代码呢?</li>
+  <li><b>自举</b>: 既然是图灵完备的编程语言解释器, 所以为何不妨试试让其自举呢?</li>
+  <li><b>JIT</b>: 既然能自举了, 为啥不试试 JIT 呢? 这里我们的 JIT 同样可以使用链表,
+    同时配合内存回收机制, 这样就能实现许多好玩的特性了.</li>
+</ul>
+</details>
+<p>不过太麻烦了, 跳过.</p>
+<h2>用链表实现一个 <code>ed</code> (略)</h2>
+<h3>行储存</h3>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">line_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">line_size</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">char</span><span class="w">   </span><span class="n">buff</span><span class="p">[</span><span class="n">LINE_BUFF_SIZE</span><span class="p">];</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">line_</span><span class="w"> </span><span class="o">*</span><span class="n">rest</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Line</span><span class="p">;</span>
+</pre></div>
+<p>我们可以用一个 linked-trunk 来表示行这个数据结构.</p>
+<h3>文件 buffer 的储存</h3>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">buffer_lines_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">size_t</span><span class="w"> </span><span class="n">line_number</span><span class="p">;</span>
+<span class="w">  </span><span class="n">Line</span><span class="w"> </span><span class="o">*</span><span class="n">curr</span><span class="p">;</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">buffer_lines_</span><span class="w"> </span><span class="o">*</span><span class="n">prev</span><span class="p">;</span>
+<span class="w">  </span><span class="k">struct</span><span class="w"> </span><span class="nc">buffer_lines_</span><span class="w"> </span><span class="o">*</span><span class="n">next</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">BufferLines</span><span class="p">;</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">buffer_</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">filename</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">BufferLines</span><span class="o">*</span><span class="w"> </span><span class="n">head</span><span class="p">;</span>
+<span class="w">  </span><span class="n">BufferLines</span><span class="o">*</span><span class="w"> </span><span class="n">tail</span><span class="p">;</span>
+<span class="w">  </span><span class="n">BufferLines</span><span class="o">*</span><span class="w"> </span><span class="n">curr</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Buffer</span><span class="p">;</span>
+</pre></div>
+<p>可以用一个双向链表实现的环来储存文件 buffer.</p>
+<h3>一些操作</h3>
+<ul>
+  <li><code>append_line_(BufferLines *pos, BufferLines *line)</code>
+    <p>Insert <code>line</code> after <code>pos</code>.</p>
+  </li>
+  <li><code>read_BufferLines_(char *str, size_t *pos)</code>
+    <p>Return <code>Bufferlines</code> from <code>str</code>, increasing <code>pos</code>.</p>
+  </li>
+  <li><code>append_line(BufferLines *pos, char *line)</code>
+    <p>Insert <code>line</code> after <code>pos</code>.</p>
+  </li>
+  <li><code>delete_line(BufferLines *pos)</code>
+    <p>Delete line at <code>pos</code>.</p>
+  </li>
+  <li><code>read_Buffer(char *file)</code>
+    <p>Read and return <code>Buffer</code> from <code>file</code>.</p>
+  </li>
+  <li><code>write_Buffer(char *file, Buffer *buffer)</code>
+    <p>Write <code>buffer</code> to <code>file</code>.</p>
+  </li>
+</ul>
+<p>注: 假如课上有时间的话, 我们可以尝试实现一下.</p>
+<h3>注: 比较困难的部分是指令的读取</h3>
+<p>大家可以参考 <a href="https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ed.html">ed</a> 的官方文档来实现指令读取和操作功能. 这里就略过了.</p>
+
+  </div><a class="u-url" href="/ctf/data-structure-linked-list/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
