@@ -1,0 +1,522 @@
+#+title: ObjC (00): ObjC Runtime Inspector
+#+date: 2025-12-09
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp objc
+* About
+这估计又会是一次比较失败的 ObjC-bridge 的尝试 -- 但是我可以比较高兴地说,
+虽然之前的每次都是比较失败的, 至少次次我都有一些新的东西学到.
+
+这次的目标大概就是能够实现一个简单的 ObjC Runtime Inspector:
+1. =(coerce-to-objc-class objc-class-name)= 会生成一个 Lisp Class:
+   比如 =(coerce-to-objc-class "NSString")= 会生成 =ns-string= 类,
+   同时绑定一堆的类/实例的方法
+
+   这里参考的是 [[https://felixk15.github.io/posts/c_ocoa/][Develop with Cocoa for Apple Devices without using Objective-C]]
+
+2. 在 =(invoke obj sel &rest args)= 的时候实现一个传 =struct= 参数的功能,
+   从而实现能够 =(make-ns-rect :x x :y y :width width :height height)=
+   并最终实现可以创建一个最简单的窗口
+
+* ObjC Runtime with JUST C API
+#+begin_quote
+The Objective-C runtime is a runtime library that provides support for
+the dynamic properties of the Objective-C language, and as such is
+linked to by all Objective-C apps. Objective-C runtime library support
+functions are implemented in the shared library found at
+/usr/lib/libobjc.A.dylib.
+#+end_quote
+
+(ref: [[https://developer.apple.com/documentation/objectivec/objective-c-runtime?language=objc][Objective-C Runtime]])
+
+ObjC Runtime 可以被看作是一个纯 C 的 API, 尽管历史上有一些尝试 Cross-compile ObjC
+到 C 的操作 (比如 [[https://web.archive.org/web/20190110121255/http://users.telenet.be/stes/compiler.html][Protable Object Compiler]]), 或者是使用 clang 的 [[https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-rewrite-objc][=-rewrite-objc=]].
+但是实际上貌似也没有很好用...
+
+#+html: <details><summary>关于 -rewrite-objc</summary>
+
+假如有这样的 =test.m= 代码文件
+
+#+begin_src objc
+#import <Foundation/Foundation.h>
+
+// --- Main Entry Function ---
+int main(int argc, const char * argv[]) {
+    @autoreleasepool {
+      NSLog(@"Hello World");
+    }
+    return 0;
+}
+#+end_src
+
+可以如下实现 "rewrite" 的操作:
+
+#+begin_src shell
+clang -rewrite-objc test.m -o test.cpp
+#+end_src
+
+但是实际上得到的结果几乎是不可读的. 不过有一个小 trick:
+你可以通过构建一个空代码文档:
+
+#+begin_src objc
+#import <Foundation/Foundation.h>
+#+end_src
+
+然后用 =diff= 的方式来判断相比空文件,
+新的代码在 rewrite 的时候有什么不同.
+
+#+begin_src shell :dir ~/Buff/ :results verbatim :exports both
+diff empty.cpp test.cpp
+#+end_src
+
+#+RESULTS:
+#+begin_example
+108a109
+> static __NSConstantStringImpl __NSConstantStringImpl__var_folders_j2_gn8hljx139d7671xs5x0xw400000gn_T_test_4a1764_mi_0 __attribute__ ((section ("__DATA, __cfstring"))) = {__CFConstantStringClassReference,0x000007c8,"Hello World",11};
+63348c63349,63354
+<
+---
+> int main(int argc, const char * argv[]) {
+>     /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool;
+>       NSLog((NSString *)&__NSConstantStringImpl__var_folders_j2_gn8hljx139d7671xs5x0xw400000gn_T_test_4a1764_mi_0);
+>     }
+>     return 0;
+> }
+#+end_example
+
+#+html: </details>
+
+欸, 但是现在不是有 LLM AI 么? 大可以让 AI 来帮我们重写.
+
+#+begin_example
+Rewrite the following Objective-C code using ObjC runtime with only valid C code.
+Return code only with out explanation. The code logic should be same as original,
+with minimal comments.
+
+{{your code here}}
+#+end_example
+
+#+html: <details><summary>一个例子</summary>
+
+#+begin_src c
+#include <objc/objc.h>
+#include <objc/runtime.h>
+#include <objc/message.h>
+#include <stdio.h>
+
+// Function pointer typedef for better readability and casting
+typedef id (*NSObjectInitMethod)(id, SEL);
+typedef void (*NSLogMethod)(id, SEL, NSString*);
+
+int main(int argc, const char * argv[]) {
+    // Manually setting up the Autorelease Pool equivalent (less strict than @autoreleasepool)
+    // In pure C/runtime context, setting up a pool requires calling NSObject/NSAutoreleasePool methods.
+    // However, for a simple `NSLog` call, we often rely on the runtime environment
+    // or manually interact with NSAutoreleasePool. Since NSAutoreleasePool is deprecated
+    // and modern ObjC uses scope-based pools, we'll try to simulate the minimum environment
+    // to allow ObjC calls to work, which often means initializing an autorelease pool
+    // and draining it.
+
+    Class NSAutoreleasePoolClass = objc_getClass("NSAutoreleasePool");
+    SEL initSel = sel_registerName("init");
+    SEL newSel = sel_registerName("new");
+    SEL drainSel = sel_registerName("drain");
+    SEL NSLogSel = sel_registerName("NSLog");
+
+    // Create an autorelease pool instance: [NSAutoreleasePool new];
+    id pool = ((id (*)(Class, SEL))objc_msgSend)(NSAutoreleasePoolClass, newSel);
+
+    // Call NSLog: NSLog(@"Hello World");
+    // We need to get the NSString * object for @"Hello World"
+    // Since we can't use the Objective-C literal @"...", we must rely on
+    // an external mechanism or the runtime's internal string creation.
+    // For simplicity in a self-contained C file, we often assume the constant
+    // string exists or use a bridging function. A common way for known strings
+    // is to use C-string bridges, but the most correct runtime way is to find
+    // the static string object defined by the compiler.
+    // Given the constraints of "pure C code", we cannot easily create
+    // an NSString* object that the C code doesn't define.
+    // If we assume the ObjC runtime is initialized and handles string literals
+    // in the same manner as a compiled ObjC file (which is a stretch for pure C),
+    // we would use a predefined external pointer.
+
+    // As a simplification, we must usually cheat and use an external symbol
+    // or use a helper function to get an NSString.
+    // The closest to a pure C solution while still being valid ObjC runtime is
+    // to use the external symbol `__CFStringMakeConstantString` or `objc_auto.c`'s
+    // string mechanism.
+
+    // ******* Using a common workaround to get a static NSString *******
+    // This function is usually what the compiler calls for @"..."
+    extern id __CFStringMakeConstantString(const char *);
+
+    // Create the NSString* object for "Hello World"
+    id helloWorldString = __CFStringMakeConstantString("Hello World");
+
+    // Call NSLog((id)nil, NSLogSel, helloWorldString);
+    // NSLog is a variadic function and is usually called as a C function or via
+    // a special objc_msgSend variant. The standard `NSLog` signature is:
+    // void NSLog(NSString *format, ...);
+    // When called via message passing, it looks like:
+    // ((void (*)(id, SEL, id))objc_msgSend)(nil, NSLogSel, helloWorldString);
+
+    // Use objc_msgSend for the call. NSLog's "receiver" is typically `nil` or treated as a C function.
+    // It's safer to call it as a C function if the environment is set up.
+    // For strict `objc_msgSend` use:
+    ((void (*)(id, SEL, id))objc_msgSend)((id)nil, NSLogSel, helloWorldString);
+
+
+    // Drain the pool: [pool drain];
+    ((void (*)(id, SEL))objc_msgSend)(pool, drainSel);
+
+    return 0;
+}
+#+end_src
+
+#+html: </details>
+
+基本上还算是可以使用的, 所以用这样的方法可以快速得到如何在 C 里面去使用 ObjC Runtime 的例子了.
+
+* Inspect ObjC Runtime
+** Wrapper of foreign-pointer
+这里用:
+
+#+begin_src lisp
+(defclass objc-pointer ()
+  ((objc-object-pointer
+    :initarg       :objc-object-pointer
+    :reader        objc-object-pointer)))
+#+end_src
+
+来处理 =foreign-pointer=.
+
+核心的思想是通过 =objc-pointer= 这个类来对 =foreign-pointer= 进行类型标记.
+同时可以根据不同的类型来处理 =foreign-pointer=.
+
+#+html: <details><summary>ObjC 中的各种指针</summary>
+
+| ObjC Runtime Pointer                | Lisp Class   | Note |
+|-------------------------------------+--------------+------|
+| [[https://developer.apple.com/documentation/objectivec/class?language=objc][typedef struct objc_class * Class;]]  | ~objc-class~ |      |
+| [[https://developer.apple.com/documentation/objectivec/sel?language=objc][typedef struct objc_selector * SEL;]] | ~sel~        |      |
+
+P.S. 传指针才是好文明, 传结构体真不是个好决定... 说的就是你啊, [[https://developer.apple.com/documentation/foundation/nsrect?language=objc][NSRect]]!
+
+#+html: </details>
+
+** Class
+在 ObjC Runtime 中, 提供了很多的 meta-programming 的接口,
+这里不妨和 Common Lisp 的 [[https://www.lispworks.com/documentation/lw81/MOP/mop/index.html][MOP (MetaObject Protocol)]] 一起对比来看:
+
+| ObjC Runtime        | MOP                                       | Note                          |
+|---------------------+-------------------------------------------+-------------------------------|
+| [[https://developer.apple.com/documentation/objectivec/class_getname(_:)?language=objc][class_getName]]       | ~(class-name class)~                      | 获取 =class= 的名字           |
+| [[https://developer.apple.com/documentation/objectivec/class_getsuperclass(_:)?language=objc][class_getSuperClass]] | ~(c2mop:class-direct-superclasses class)~ | 获取 =class= 的父类           |
+| [[https://developer.apple.com/documentation/objectivec/objc_getclasslist(_:_:)?language=objc][objc_getClassList]]   |                                           | 获取当前 runtime 中的所有的类 |
+
+#+html: <details><summary>c2mop</summary>
+
+因为不同的 Lisp 实现对应的有不同的 MOP 实现,
+所以在这里用 [[https://github.com/pcostanza/closer-mop][closer-mop]] 来实现 MOP 的 Layer.
+
+不过这里就体现出了 Common Lisp (或者说 Lisp) 的历史问题了. 因为 Lisp 出现得太早了,
+大部分的计算机变成范式还完全没有出现, 每个人都在用自己的方式来提出自己的设计,
+然后哪怕出现了 ANSI Common Lisp, 他们重新定义的 Common Lisp 的标准仍然是 "当年"
+觉得比较好的设计. 从现在来看, 一些函数名称就没有那么现代了.
+
+比如在 tsoding 写 Emacs 插件的直播 ([[https://youtu.be/QH6KOEVnSZA][I wrote an Emacs plugin (YouTube)]], [[https://www.bilibili.com/video/BV1EA2pBkE5V/][(Bilibili)]])
+里面就可以看出不怎么写 Lisp 的人对 Lisp 的 API 的吐槽.
+
+#+html: </details>
+
+#+html: <details><summary>graphviz</summary>
+
+我突然有一个很贱的想法, 如果把整个的继承关系全部画在一张图片里面:
+
+#+begin_src lisp
+(defun dot-subclass-plot (class &key exclude stream
+                                  (rankdir "LR")
+                                  (node '((:shape . :rect)))
+                                  (edge '()))
+  "Generate DOT plot of CLASS.
+Write output to STREAM.
+
+Parameters:
++ CLASS: start root lisp class
++ EXCLUDE: a list of classes to exclude
++ STREAM: DOT code output stream
+"
+  (if (null stream)
+      (with-output-to-string (stream)
+        (dot-subclass-plot class :exclude exclude :stream stream))
+      (let ((class  (find-class class))
+            (exclue (mapcar #'find-class exclude)))
+        (labels ((attr (which attrs)
+                   (etypecase attrs
+                     (string
+                      (format stream "~A [~A];~%" which attrs))
+                     (list
+                      (format stream "~A [" which)
+                      (loop :for (prop . val) :in attrs :do
+                        (format stream "~A=~A," prop val))
+                      (format stream "];~%"))))
+                 (excludep (class)
+                   (member class exclude :test #'equal))
+                 (iter (class)
+                   (let ((subclasses (remove-if #'excludep (c2mop:class-direct-subclasses class))))
+                     (when subclasses
+                       (format stream "\"~A\" -> {~{\"~A\"~^, ~}};~%"
+                               (objc-class-name class)
+                               (mapcar #'objc-class-name subclasses))
+                       (mapcar #'iter subclasses)))))
+          (write-line "digraph {" stream)
+          (format stream "rankdir=~A;~%" rankdir)
+          (when node (attr "node" node))
+          (when edge (attr "edge" edge))
+          (iter class)
+          (write-line "}" stream)))))
+#+end_src
+
+没啥特别的, 大伙看看散了吧:
+
+[[{{ site.github.url }}/_img/lisp/objc/ns-object-subclasses.svg]]
+
+P.S. 这图还挺大, 不知道会不会拖慢网页加载速度... 不过现在这个博客也就是个屎山了,
+懒得改.
+
+#+html: </details>
+
+** Methods
+*** Method Part-Zero: funcall is =[obj SEL ...]=
+现在大伙都知道了, =[obj SEL ...]= 是 ObjC 调用方法的一种特殊操作,
+其本质对应于 ObjC Runtime 中的 [[https://developer.apple.com/documentation/objectivec/objc_msgsend?language=objc][objc_msgSend]].
+
+而 [[https://developer.apple.com/documentation/objectivec/sel?language=objc][SEL]], 形如 [[https://developer.apple.com/documentation/foundation/nsstring/init(utf8string:)-8bcy8?language=objc][stringWithUTF8String:]], 通过 [[https://developer.apple.com/documentation/objectivec/sel_registername(_:)?language=objc][sel_registerName]] 的方式,
+将 =SEL= 的名字和其地址指针挂钩.
+
+#+html: <details><summary><code>@</code></summary>
+
+感觉 ObjC 的作者挺喜欢用 =@= 来标记语法的.
+
+比如 =NSString= 可以通过:
+
+#+begin_src objc
+NSString str = [NSString stringWithUTF8String: c_string];
+#+end_src
+
+的方式来进行创建, 也可以通过 =@"c string"= 的方式来进行创建.
+假如了解 C 的语法, 那么其实从 C 变到 ObjC 还是挺自然的.
+
+比如在 C 里面已经把 =func(arg)= 形式占用了, 为了保证不会破坏原有的 C 函数,
+ObjC 的做法是通过引入 =[obj SEL arg]= 的方式来实现类似于 =obj.SEL(arg)= 形式的函数调用.
+(感觉想是一开始想用 =SEL[obj, arg]= 形式, 但是发现 =arr[]= 的语法被数组占用了,
+所以变成了方便编译器实现的 =[obj SEL arg]= 语法).
+
+并且 ObjC 的关键词大多也是 =@= 开头的, 比如 =@implement= 之类的.
+
+不过也有可能是历史原因, 因为需要兼容 C 的语法 (C-extension like),
+所以像 Cpp/Python/JS 那样的 =balabala.method(bala)=
+的调用形式不容易在 C 里面实现/移植?
+
+注: 虽说是模仿的 Smalltalk, 但是我怎么看都不觉得 Smalltalk 的语法,
+额, 易读. 应该是 OOP 的思想是模仿 Smalltalk 中的设计吧.
+
+#+begin_src smalltalk
+exampleWithNumber: x
+    | y |
+    true & false not & (nil isNil) ifFalse: [self halt].
+    y := self size + super size.
+    #($a #a 'a' 1 1.0)
+        do: [ :each |
+            Transcript show: (each class name);
+                       show: ' '].
+    ^x < y
+#+end_src
+
+不过感觉那个时代的计算机语言设计更适合在纸上书写而不是在屏幕上阅读...
+
+注: 你可以在网页上体验 Smalltalk Machine. 试用体验上来说, 感觉和 Lisp Machine
+是同时代的设计.
+
+#+html: </details>
+
+*** Method Part-I: Inspect =Method= data
+使用 [[https://developer.apple.com/documentation/objectivec/class_getinstancemethod(_:_:)?language=objc][class_getInstanceMethod]] 和 [[https://developer.apple.com/documentation/objectivec/class_getclassmethod(_:_:)?language=objc][class_getClassMethod]] 可以根据 =Class= 和 =SEL=
+来找到对应的 =Method= -- 一个指向具体方法实现元数据的指针.
+
++ 通过 [[https://developer.apple.com/documentation/objectivec/method_getname(_:)?language=objc][method_getName]] 可以得到其对应的 =SEL=, 从而又可以得到其对应的名称.
++ 通过 [[https://developer.apple.com/documentation/objectivec/method_gettypeencoding(_:)?language=objc][method_getTypeEncoding]] 可以得到其对应的返回值, 参数类型
+
+  注: 可以参考 [[https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html][Type Encodings]] 来实现一个 Type Encoding parser.
+
+  #+html: <details><summary>一个简单的做法</summary>
+  通过 =method_getTypeEncoding= 得到的字符串类似于: ="@24@0:8r*16"=,
+  其可以被看作是一列 Type Encoding 的 =concat=.
+
+  于是可以实现一个 =(parse-type-encoding string &key start)=,
+  其返回值为 =type-encoding=, =ends=. 于是就可以递归地去 parse 给定的 type encoding.
+  #+html: </details>
+
+那么既然有了 Type Encoding, 于是就可以在 Lisp 侧去编译一个调用 =objc_msgSend= 过程的函数.
+在 Lisp 中, 实现类似的操作并不是一个非常困难的事情:
+
+比如说有 =[NSString stringWithUTF8String: string]=, 其函数 Type Encoding 可以被 parse 为:
+
+#+begin_src lisp
+objc> (objc-class-method-signature "NSString" "stringWithUTF8String:")
+(:object :sel (:const . :string))
+:object
+"@24@0:8r*16"
+#+end_src
+
+那么调用的形式应当为:
+
+#+begin_src lisp
+(lambda (class sel string)
+  (coerce-to-objc-object
+   (foreign-funcall
+    "objc_msgSend"
+    :pointer (objc-object-pointer class)
+    :pointer (objc-object-pointer sel)
+    :string  string
+    :pointer)))
+#+end_src
+
+#+html: <details><summary>一个困难</summary>
+一个稍微有点困难的地方就是不知道该怎么传入 =struct= 类型的数...
+一个暴力一点的做法就是把 =struct= 向量化然后一个个传入调用帧里面, 类似于这样:
+
+#+begin_src lisp
+(lambda (class sel cg-point)
+  (coerce-to-objc-object
+   (foreign-funcall
+    "objc_msgSend"
+    :pointer (objc-object-pointer class)
+    :pointer (objc-object-pointer sel)
+    ;; (:struct "CGSize" (:double :double))
+    :double  (cg-point-x cg-point)
+    :double  (cg-point-y cg-point)
+    :pointer)))
+#+end_src
+
+这个方法虽然感觉有点不合理, 但是能跑... 但是该如何程序化地去实现, 就有点难搞了.
+当然, 还有一个比较困难的地方是, 对于结构体的结构体, 在传参数的时候会遇到如下的问题:
+
+比如有一个 =cg-rect= (=CGRect=) 的结构, 其包含 =origin= (=CGPoint=) 和 =size= (=CGSize=)
+两个结构作为自己的子值... 虽然仍然可以用形如
+
+#+begin_src lisp
+(lambda (class sel ns-rect)
+  (coerce-to-objc-object
+   (foreign-funcall
+    "objc_msgSend"
+    :double (cg-rect-origin (cg-point-x ns-rect))
+    :double (cg-rect-origin (cg-point-y ns-rect))
+    :double (cg-rect-size   (cg-size-w  ns-rect))
+    :double (cg-rect-size   (cg-size-h  ns-rect)))))
+#+end_src
+
+来绕过. 但是感觉实现起来会有一些麻烦... 相当于是要实现一个简单的 expander.
+
+这里有一个还算 "比较优雅" 的方式来实现:
+
+定义一个 generic function 叫做 =(objc-encoding-arg-form encoding)=,
+其返回一个 =list= 并如下构造 =lambda= 表达式:
+
+#+begin_src lisp
+`(lambda ,(gen-lambda-list encodings)
+   (,(objc-encoding-wrapper encoding)
+    (foreign-funcall
+     "objc_msgSend"
+     ,@(apply #'append (mapcar #'objc-encoding-arg-form encodings))
+     ,(objc-encoding-cffi-type return-encoding))))
+#+end_src
+
+#+html: </details>
+
+*** Method Part-II: Inspect all the method of =Class=
+使用 [[https://developer.apple.com/documentation/objectivec/class_copymethodlist(_:_:)?language=objc][class_copyMethodList]] 可以获得 =Class= 的所有的方法,
+于是可以用这样的方式来分析在当前 Runtime 中具体有哪些方法的实现:
+
+#+begin_src lisp
+(defun all-objc-class-methods (objc-class)
+  "Return a list of `sel' as methods of OBJC-CLASS. "
+  (with-foreign-object (cnt :pointer)
+    (let ((arr (class_copyMethodList (objc-object-pointer (coerce-to-objc-class objc-class))
+                                     cnt)))
+      (unwind-protect
+           (loop :for i :below (mem-aref cnt :int)
+                 :collect (coerce-to-selector (method_getName (mem-aref arr :pointer i))))
+        (foreign-free arr)))))
+#+end_src
+
+于是就可以提前预处理编译所有的 ObjC Runtime 中的所有方法.
+
+* Creating an NSWindow
+这里参考 [[https://github.com/gammasoft71/Examples_Cocoa][gammasoft71/Examples_Cocoa]].
+
+** [[https://github.com/gammasoft71/Examples_Cocoa/blob/master/src/Applications/Application/Application.m][Application]]
+#+begin_src lisp
+(let ((app (invoke "NSApplication" "sharedApplication"))
+      (win (invoke (invoke "NSWindow" "alloc")
+                   "initWithContentRect:styleMask:backing:defer:"
+                   (make-ns-rect :x 100 :y 100 :w 300 :h 300)
+                   (ns-window-style '(:titled :closable :miniaturizable :resizable))
+                   (ns-backing :store-buffered)
+                   nil)))
+  (invoke win "setIsVisible:" t)
+  (invoke app "run"))
+#+end_src
+
+#+html: <details><summary>ObjC Version</summary>
+原始的代码如下:
+
+#+begin_src objc
+#include <Cocoa/Cocoa.h>
+
+int main(int argc, char* argv[]) {
+  [NSApplication sharedApplication];
+  NSWindow* window1 = [[[NSWindow alloc] initWithContentRect:NSMakeRect(100, 100, 300, 300) styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO] autorelease];
+  [window1 setIsVisible:YES];
+  [NSApp run];
+}
+#+end_src
+
+如果尝试使用
+
+#+begin_src shell
+gcc -fobjc-arc Application.m -framework Cocoa
+#+end_src
+
+却并不能正常地进行编译... 需要移除 =autorelease= 才能编译... 很奇怪.
+
+#+begin_src objc
+#include <Cocoa/Cocoa.h>
+
+int main(int argc, char* argv[]) {
+  NSApplication* app = [NSApplication sharedApplication];
+  NSWindow* window1 = [[NSWindow alloc]
+                        initWithContentRect:NSMakeRect(100, 100, 300, 300)
+                                  styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable
+                                    backing:NSBackingStoreBuffered
+                                      defer:NO];
+  [window1 setIsVisible:YES];
+  [NSApp run];
+}
+#+end_src
+
+这样设计就可以保证正常的编译了, 不过由于并没有实现退出逻辑,
+所以在窗口关闭了之后仍会保持运行... 稍稍有些麻烦, 但是至少动起来了.
+
+#+html: </details>
+
+注: 由于 macOS 中仅允许 GUI 程序在主线程中创建 (=main loop=),
+所以实际上还需要保证代码在主线程中运行.
+
+注: 由于 SBCL 的 float trap 的问题 ([[https://www.reddit.com/r/lisp/comments/1ceio6b/is_it_safe_to_disable_floating_point_traps/][Ref]]), 实际上还需要手动关闭来保证不会报错
+(在 macOS SBCL 上做 CFFI 的时候好像经常出现...)
+
+最终的效果 (非常简陋的) 如下:
+
+[[{{ site.github.url }}/_img/lisp/objc/trivial-application.png]]
