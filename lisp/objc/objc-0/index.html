@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ObjC (00): ObjC Runtime Inspector | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ObjC (00): ObjC Runtime Inspector" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 这估计又会是一次比较失败的 ObjC-bridge 的尝试 &#8211; 但是我可以比较高兴地说, 虽然之前的每次都是比较失败的, 至少次次我都有一些新的东西学到. 这次的目标大概就是能够实现一个简单的 ObjC Runtime Inspector: (coerce-to-objc-class objc-class-name) 会生成一个 Lisp Class: 比如 (coerce-to-objc-class &quot;NSString&quot;) 会生成 ns-string 类, 同时绑定一堆的类/实例的方法 这里参考的是 Develop with Cocoa for Apple Devices without using Objective-C 在 (invoke obj sel &amp;rest args) 的时候实现一个传 struct 参数的功能, 从而实现能够 (make-ns-rect :x x :y y :width width :height height) 并最终实现可以创建一个最简单的窗口 ObjC Runtime with JUST C API The Objective-C runtime is a runtime library that provides support for the dynamic properties of the Objective-C language, and as such is linked to by all Objective-C apps. Objective-C runtime library support functions are implemented in the shared library found at /usr/lib/libobjc.A.dylib. (ref: Objective-C Runtime) ObjC Runtime 可以被看作是一个纯 C 的 API, 尽管历史上有一些尝试 Cross-compile ObjC 到 C 的操作 (比如 Protable Object Compiler), 或者是使用 clang 的 =-rewrite-objc=. 但是实际上貌似也没有很好用&#8230; 关于 -rewrite-objc 假如有这样的 test.m 代码文件 #import &lt;Foundation/Foundation.h&gt;" />
+<meta property="og:description" content="About 这估计又会是一次比较失败的 ObjC-bridge 的尝试 &#8211; 但是我可以比较高兴地说, 虽然之前的每次都是比较失败的, 至少次次我都有一些新的东西学到. 这次的目标大概就是能够实现一个简单的 ObjC Runtime Inspector: (coerce-to-objc-class objc-class-name) 会生成一个 Lisp Class: 比如 (coerce-to-objc-class &quot;NSString&quot;) 会生成 ns-string 类, 同时绑定一堆的类/实例的方法 这里参考的是 Develop with Cocoa for Apple Devices without using Objective-C 在 (invoke obj sel &amp;rest args) 的时候实现一个传 struct 参数的功能, 从而实现能够 (make-ns-rect :x x :y y :width width :height height) 并最终实现可以创建一个最简单的窗口 ObjC Runtime with JUST C API The Objective-C runtime is a runtime library that provides support for the dynamic properties of the Objective-C language, and as such is linked to by all Objective-C apps. Objective-C runtime library support functions are implemented in the shared library found at /usr/lib/libobjc.A.dylib. (ref: Objective-C Runtime) ObjC Runtime 可以被看作是一个纯 C 的 API, 尽管历史上有一些尝试 Cross-compile ObjC 到 C 的操作 (比如 Protable Object Compiler), 或者是使用 clang 的 =-rewrite-objc=. 但是实际上貌似也没有很好用&#8230; 关于 -rewrite-objc 假如有这样的 test.m 代码文件 #import &lt;Foundation/Foundation.h&gt;" />
+<link rel="canonical" href="/lisp/objc/objc-0/" />
+<meta property="og:url" content="/lisp/objc/objc-0/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-12-09T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ObjC (00): ObjC Runtime Inspector" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-12-09T00:00:00+00:00","datePublished":"2025-12-09T00:00:00+00:00","description":"About 这估计又会是一次比较失败的 ObjC-bridge 的尝试 &#8211; 但是我可以比较高兴地说, 虽然之前的每次都是比较失败的, 至少次次我都有一些新的东西学到. 这次的目标大概就是能够实现一个简单的 ObjC Runtime Inspector: (coerce-to-objc-class objc-class-name) 会生成一个 Lisp Class: 比如 (coerce-to-objc-class &quot;NSString&quot;) 会生成 ns-string 类, 同时绑定一堆的类/实例的方法 这里参考的是 Develop with Cocoa for Apple Devices without using Objective-C 在 (invoke obj sel &amp;rest args) 的时候实现一个传 struct 参数的功能, 从而实现能够 (make-ns-rect :x x :y y :width width :height height) 并最终实现可以创建一个最简单的窗口 ObjC Runtime with JUST C API The Objective-C runtime is a runtime library that provides support for the dynamic properties of the Objective-C language, and as such is linked to by all Objective-C apps. Objective-C runtime library support functions are implemented in the shared library found at /usr/lib/libobjc.A.dylib. (ref: Objective-C Runtime) ObjC Runtime 可以被看作是一个纯 C 的 API, 尽管历史上有一些尝试 Cross-compile ObjC 到 C 的操作 (比如 Protable Object Compiler), 或者是使用 clang 的 =-rewrite-objc=. 但是实际上貌似也没有很好用&#8230; 关于 -rewrite-objc 假如有这样的 test.m 代码文件 #import &lt;Foundation/Foundation.h&gt;","headline":"ObjC (00): ObjC Runtime Inspector","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/objc/objc-0/"},"url":"/lisp/objc/objc-0/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ObjC (00): ObjC Runtime Inspector</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-12-09T00:00:00+00:00" itemprop="datePublished">Dec 9, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>这估计又会是一次比较失败的 ObjC-bridge 的尝试 &#8211; 但是我可以比较高兴地说,
+  虽然之前的每次都是比较失败的, 至少次次我都有一些新的东西学到.</p>
+<p>这次的目标大概就是能够实现一个简单的 ObjC Runtime Inspector:</p>
+<ol>
+  <li><code>(coerce-to-objc-class objc-class-name)</code> 会生成一个 Lisp Class:
+    比如 <code>(coerce-to-objc-class &quot;NSString&quot;)</code> 会生成 <code>ns-string</code> 类,
+    同时绑定一堆的类/实例的方法
+    <p>这里参考的是 <a href="https://felixk15.github.io/posts/c_ocoa/">Develop with Cocoa for Apple Devices without using Objective-C</a></p>
+  </li>
+  <li>在 <code>(invoke obj sel &amp;rest args)</code> 的时候实现一个传 <code>struct</code> 参数的功能,
+    从而实现能够 <code>(make-ns-rect :x x :y y :width width :height height)</code>
+    并最终实现可以创建一个最简单的窗口</li>
+</ol>
+<h1>ObjC Runtime with JUST C API</h1>
+<blockquote>
+  <p>The Objective-C runtime is a runtime library that provides support for
+    the dynamic properties of the Objective-C language, and as such is
+    linked to by all Objective-C apps. Objective-C runtime library support
+    functions are implemented in the shared library found at
+    /usr/lib/libobjc.A.dylib.</p>
+</blockquote>
+<p>(ref: <a href="https://developer.apple.com/documentation/objectivec/objective-c-runtime?language=objc">Objective-C Runtime</a>)</p>
+<p>ObjC Runtime 可以被看作是一个纯 C 的 API, 尽管历史上有一些尝试 Cross-compile ObjC
+  到 C 的操作 (比如 <a href="https://web.archive.org/web/20190110121255/http://users.telenet.be/stes/compiler.html">Protable Object Compiler</a>), 或者是使用 clang 的 <a href="https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-rewrite-objc">=-rewrite-objc=</a>.
+  但是实际上貌似也没有很好用&#8230;</p>
+<details><summary>关于 -rewrite-objc</summary>
+<p>假如有这样的 <code>test.m</code> 代码文件</p>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+
+<span class="c1">// --- Main Entry Function ---</span>
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">@autoreleasepool</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Hello World&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>可以如下实现 &#8220;rewrite&#8221; 的操作:</p>
+<div class="highlight"><pre><span></span>clang<span class="w"> </span>-rewrite-objc<span class="w"> </span>test.m<span class="w"> </span>-o<span class="w"> </span>test.cpp
+</pre></div>
+<p>但是实际上得到的结果几乎是不可读的. 不过有一个小 trick:
+  你可以通过构建一个空代码文档:</p>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+</pre></div>
+<p>然后用 <code>diff</code> 的方式来判断相比空文件,
+  新的代码在 rewrite 的时候有什么不同.</p>
+<div class="highlight"><pre><span></span>diff<span class="w"> </span>empty.cpp<span class="w"> </span>test.cpp
+</pre></div>
+<pre class="example">
+108a109
+&gt; static __NSConstantStringImpl __NSConstantStringImpl__var_folders_j2_gn8hljx139d7671xs5x0xw400000gn_T_test_4a1764_mi_0 __attribute__ ((section (&quot;__DATA, __cfstring&quot;))) = {__CFConstantStringClassReference,0x000007c8,&quot;Hello World&quot;,11};
+63348c63349,63354
+&lt;
+---
+&gt; int main(int argc, const char * argv[]) {
+&gt;     /* @autoreleasepool */ { __AtAutoreleasePool __autoreleasepool;
+&gt;       NSLog((NSString *)&amp;__NSConstantStringImpl__var_folders_j2_gn8hljx139d7671xs5x0xw400000gn_T_test_4a1764_mi_0);
+&gt;     }
+&gt;     return 0;
+&gt; }
+</pre>
+</details>
+<p>欸, 但是现在不是有 LLM AI 么? 大可以让 AI 来帮我们重写.</p>
+<pre class="example">
+Rewrite the following Objective-C code using ObjC runtime with only valid C code.
+Return code only with out explanation. The code logic should be same as original,
+with minimal comments.
+
+
+</pre>
+<details><summary>一个例子</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;objc/objc.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;objc/runtime.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;objc/message.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="c1">// Function pointer typedef for better readability and casting</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">NSObjectInitMethod</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">);</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">NSLogMethod</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">,</span><span class="w"> </span><span class="n">NSString</span><span class="o">*</span><span class="p">);</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Manually setting up the Autorelease Pool equivalent (less strict than @autoreleasepool)</span>
+<span class="w">    </span><span class="c1">// In pure C/runtime context, setting up a pool requires calling NSObject/NSAutoreleasePool methods.</span>
+<span class="w">    </span><span class="c1">// However, for a simple `NSLog` call, we often rely on the runtime environment</span>
+<span class="w">    </span><span class="c1">// or manually interact with NSAutoreleasePool. Since NSAutoreleasePool is deprecated</span>
+<span class="w">    </span><span class="c1">// and modern ObjC uses scope-based pools, we&#39;ll try to simulate the minimum environment</span>
+<span class="w">    </span><span class="c1">// to allow ObjC calls to work, which often means initializing an autorelease pool</span>
+<span class="w">    </span><span class="c1">// and draining it.</span>
+
+<span class="w">    </span><span class="n">Class</span><span class="w"> </span><span class="n">NSAutoreleasePoolClass</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;NSAutoreleasePool&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">SEL</span><span class="w"> </span><span class="n">initSel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;init&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">SEL</span><span class="w"> </span><span class="n">newSel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;new&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">SEL</span><span class="w"> </span><span class="n">drainSel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;drain&quot;</span><span class="p">);</span>
+<span class="w">    </span><span class="n">SEL</span><span class="w"> </span><span class="n">NSLogSel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;NSLog&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Create an autorelease pool instance: [NSAutoreleasePool new];</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="n">pool</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">id</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">Class</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">))</span><span class="n">objc_msgSend</span><span class="p">)(</span><span class="n">NSAutoreleasePoolClass</span><span class="p">,</span><span class="w"> </span><span class="n">newSel</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Call NSLog: NSLog(@&quot;Hello World&quot;);</span>
+<span class="w">    </span><span class="c1">// We need to get the NSString * object for @&quot;Hello World&quot;</span>
+<span class="w">    </span><span class="c1">// Since we can&#39;t use the Objective-C literal @&quot;...&quot;, we must rely on</span>
+<span class="w">    </span><span class="c1">// an external mechanism or the runtime&#39;s internal string creation.</span>
+<span class="w">    </span><span class="c1">// For simplicity in a self-contained C file, we often assume the constant</span>
+<span class="w">    </span><span class="c1">// string exists or use a bridging function. A common way for known strings</span>
+<span class="w">    </span><span class="c1">// is to use C-string bridges, but the most correct runtime way is to find</span>
+<span class="w">    </span><span class="c1">// the static string object defined by the compiler.</span>
+<span class="w">    </span><span class="c1">// Given the constraints of &quot;pure C code&quot;, we cannot easily create</span>
+<span class="w">    </span><span class="c1">// an NSString* object that the C code doesn&#39;t define.</span>
+<span class="w">    </span><span class="c1">// If we assume the ObjC runtime is initialized and handles string literals</span>
+<span class="w">    </span><span class="c1">// in the same manner as a compiled ObjC file (which is a stretch for pure C),</span>
+<span class="w">    </span><span class="c1">// we would use a predefined external pointer.</span>
+
+<span class="w">    </span><span class="c1">// As a simplification, we must usually cheat and use an external symbol</span>
+<span class="w">    </span><span class="c1">// or use a helper function to get an NSString.</span>
+<span class="w">    </span><span class="c1">// The closest to a pure C solution while still being valid ObjC runtime is</span>
+<span class="w">    </span><span class="c1">// to use the external symbol `__CFStringMakeConstantString` or `objc_auto.c`&#39;s</span>
+<span class="w">    </span><span class="c1">// string mechanism.</span>
+
+<span class="w">    </span><span class="c1">// ******* Using a common workaround to get a static NSString *******</span>
+<span class="w">    </span><span class="c1">// This function is usually what the compiler calls for @&quot;...&quot;</span>
+<span class="w">    </span><span class="k">extern</span><span class="w"> </span><span class="n">id</span><span class="w"> </span><span class="n">__CFStringMakeConstantString</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Create the NSString* object for &quot;Hello World&quot;</span>
+<span class="w">    </span><span class="n">id</span><span class="w"> </span><span class="n">helloWorldString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__CFStringMakeConstantString</span><span class="p">(</span><span class="s">&quot;Hello World&quot;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">// Call NSLog((id)nil, NSLogSel, helloWorldString);</span>
+<span class="w">    </span><span class="c1">// NSLog is a variadic function and is usually called as a C function or via</span>
+<span class="w">    </span><span class="c1">// a special objc_msgSend variant. The standard `NSLog` signature is:</span>
+<span class="w">    </span><span class="c1">// void NSLog(NSString *format, ...);</span>
+<span class="w">    </span><span class="c1">// When called via message passing, it looks like:</span>
+<span class="w">    </span><span class="c1">// ((void (*)(id, SEL, id))objc_msgSend)(nil, NSLogSel, helloWorldString);</span>
+
+<span class="w">    </span><span class="c1">// Use objc_msgSend for the call. NSLog&#39;s &quot;receiver&quot; is typically `nil` or treated as a C function.</span>
+<span class="w">    </span><span class="c1">// It&#39;s safer to call it as a C function if the environment is set up.</span>
+<span class="w">    </span><span class="c1">// For strict `objc_msgSend` use:</span>
+<span class="w">    </span><span class="p">((</span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">,</span><span class="w"> </span><span class="n">id</span><span class="p">))</span><span class="n">objc_msgSend</span><span class="p">)((</span><span class="n">id</span><span class="p">)</span><span class="n">nil</span><span class="p">,</span><span class="w"> </span><span class="n">NSLogSel</span><span class="p">,</span><span class="w"> </span><span class="n">helloWorldString</span><span class="p">);</span>
+
+
+<span class="w">    </span><span class="c1">// Drain the pool: [pool drain];</span>
+<span class="w">    </span><span class="p">((</span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">))</span><span class="n">objc_msgSend</span><span class="p">)(</span><span class="n">pool</span><span class="p">,</span><span class="w"> </span><span class="n">drainSel</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+<p>基本上还算是可以使用的, 所以用这样的方法可以快速得到如何在 C 里面去使用 ObjC Runtime 的例子了.</p>
+<h1>Inspect ObjC Runtime</h1>
+<h2>Wrapper of foreign-pointer</h2>
+<p>这里用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">objc-pointer</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">objc-object-pointer</span>
+<span class="w">    </span><span class="nv">:initarg</span><span class="w">       </span><span class="nv">:objc-object-pointer</span>
+<span class="w">    </span><span class="nv">:reader</span><span class="w">        </span><span class="nv">objc-object-pointer</span><span class="p">)))</span>
+</pre></div>
+<p>来处理 <code>foreign-pointer</code>.</p>
+<p>核心的思想是通过 <code>objc-pointer</code> 这个类来对 <code>foreign-pointer</code> 进行类型标记.
+  同时可以根据不同的类型来处理 <code>foreign-pointer</code>.</p>
+<details><summary>ObjC 中的各种指针</summary>
+<table>
+  <tr><th>ObjC Runtime Pointer</th><th>Lisp Class</th><th>Note</th></tr>
+  <tr><td><a href="https://developer.apple.com/documentation/objectivec/class?language=objc">typedef struct objc_class * Class;</a></td><td><code>objc-class</code></td><td></td></tr>
+  <tr><td><a href="https://developer.apple.com/documentation/objectivec/sel?language=objc">typedef struct objc_selector * SEL;</a></td><td><code>sel</code></td><td></td></tr>
+</table>
+<p>P.S. 传指针才是好文明, 传结构体真不是个好决定&#8230; 说的就是你啊, <a href="https://developer.apple.com/documentation/foundation/nsrect?language=objc">NSRect</a>!</p>
+</details>
+<h2>Class</h2>
+<p>在 ObjC Runtime 中, 提供了很多的 meta-programming 的接口,
+  这里不妨和 Common Lisp 的 <a href="https://www.lispworks.com/documentation/lw81/MOP/mop/index.html">MOP (MetaObject Protocol)</a> 一起对比来看:</p>
+<table>
+  <tr><th>ObjC Runtime</th><th>MOP</th><th>Note</th></tr>
+  <tr><td><a href="https://developer.apple.com/documentation/objectivec/class_getname(_:)?language=objc">class_getName</a></td><td><code>(class-name class)</code></td><td>获取 <code>class</code> 的名字</td></tr>
+  <tr><td><a href="https://developer.apple.com/documentation/objectivec/class_getsuperclass(_:)?language=objc">class_getSuperClass</a></td><td><code>(c2mop:class-direct-superclasses class)</code></td><td>获取 <code>class</code> 的父类</td></tr>
+  <tr><td>&lt;a href=&#8221;https://developer.apple.com/documentation/objectivec/objc_getclasslist(@@html:<span style="text-decoration:underline;">@@:@@html:</span>@@:)?language=objc&#8221;&gt;objc_getClassList</a></td><td></td><td>获取当前 runtime 中的所有的类</td></tr>
+</table>
+<details><summary>c2mop</summary>
+<p>因为不同的 Lisp 实现对应的有不同的 MOP 实现,
+  所以在这里用 <a href="https://github.com/pcostanza/closer-mop">closer-mop</a> 来实现 MOP 的 Layer.</p>
+<p>不过这里就体现出了 Common Lisp (或者说 Lisp) 的历史问题了. 因为 Lisp 出现得太早了,
+  大部分的计算机变成范式还完全没有出现, 每个人都在用自己的方式来提出自己的设计,
+  然后哪怕出现了 ANSI Common Lisp, 他们重新定义的 Common Lisp 的标准仍然是 &#8220;当年&#8221;
+  觉得比较好的设计. 从现在来看, 一些函数名称就没有那么现代了.</p>
+<p>比如在 tsoding 写 Emacs 插件的直播 (<a href="https://youtu.be/QH6KOEVnSZA">I wrote an Emacs plugin (YouTube)</a>, <a href="https://www.bilibili.com/video/BV1EA2pBkE5V/">(Bilibili)</a>)
+  里面就可以看出不怎么写 Lisp 的人对 Lisp 的 API 的吐槽.</p>
+</details>
+<details><summary>graphviz</summary>
+<p>我突然有一个很贱的想法, 如果把整个的继承关系全部画在一张图片里面:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">dot-subclass-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">exclude</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">rankdir</span><span class="w"> </span><span class="s">&quot;LR&quot;</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">:shape</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:rect</span><span class="p">)))</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">edge</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">  </span><span class="s">&quot;Generate DOT plot of CLASS.</span>
+<span class="s">Write output to STREAM.</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ CLASS: start root lisp class</span>
+<span class="s">+ EXCLUDE: a list of classes to exclude</span>
+<span class="s">+ STREAM: DOT code output stream</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">dot-subclass-plot</span><span class="w"> </span><span class="nv">class</span><span class="w"> </span><span class="nv">:exclude</span><span class="w"> </span><span class="nv">exclude</span><span class="w"> </span><span class="nv">:stream</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">class</span><span class="w">  </span><span class="p">(</span><span class="nf">find-class</span><span class="w"> </span><span class="nv">class</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">exclue</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;find-class</span><span class="w"> </span><span class="nv">exclude</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">attr</span><span class="w"> </span><span class="p">(</span><span class="nf">which</span><span class="w"> </span><span class="nv">attrs</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">etypecase</span><span class="w"> </span><span class="nv">attrs</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">string</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~A [~A];~%&quot;</span><span class="w"> </span><span class="nv">which</span><span class="w"> </span><span class="nv">attrs</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">list</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~A [&quot;</span><span class="w"> </span><span class="nv">which</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="p">(</span><span class="nf">prop</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">attrs</span><span class="w"> </span><span class="nv">:do</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~A=~A,&quot;</span><span class="w"> </span><span class="nv">prop</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;];~%&quot;</span><span class="p">))))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">excludep</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="nv">class</span><span class="w"> </span><span class="nv">exclude</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">subclasses</span><span class="w"> </span><span class="p">(</span><span class="nf">remove-if</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;excludep</span><span class="w"> </span><span class="p">(</span><span class="nf">c2mop:class-direct-subclasses</span><span class="w"> </span><span class="nv">class</span><span class="p">))))</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">subclasses</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s"> -&gt; {~{</span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">~^, ~}};~%&quot;</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">objc-class-name</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;objc-class-name</span><span class="w"> </span><span class="nv">subclasses</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;iter</span><span class="w"> </span><span class="nv">subclasses</span><span class="p">)))))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;digraph {&quot;</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;rankdir=~A;~%&quot;</span><span class="w"> </span><span class="nv">rankdir</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">attr</span><span class="w"> </span><span class="s">&quot;node&quot;</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">edge</span><span class="w"> </span><span class="p">(</span><span class="nf">attr</span><span class="w"> </span><span class="s">&quot;edge&quot;</span><span class="w"> </span><span class="nv">edge</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;}&quot;</span><span class="w"> </span><span class="nv">stream</span><span class="p">)))))</span>
+</pre></div>
+<p>没啥特别的, 大伙看看散了吧:</p>
+<p><img src="/_img/lisp/objc/ns-object-subclasses.svg" alt="/_img/lisp/objc/ns-object-subclasses.svg" /></p>
+<p>P.S. 这图还挺大, 不知道会不会拖慢网页加载速度&#8230; 不过现在这个博客也就是个屎山了,
+  懒得改.</p>
+</details>
+<h2>Methods</h2>
+<h3>Method Part-Zero: funcall is <code>[obj SEL ...]</code></h3>
+<p>现在大伙都知道了, <code>[obj SEL ...]</code> 是 ObjC 调用方法的一种特殊操作,
+  其本质对应于 ObjC Runtime 中的 <a href="https://developer.apple.com/documentation/objectivec/objc_msgsend?language=objc">objc_msgSend</a>.</p>
+<p>而 <a href="https://developer.apple.com/documentation/objectivec/sel?language=objc">SEL</a>, 形如 <a href="https://developer.apple.com/documentation/foundation/nsstring/init(utf8string:)-8bcy8?language=objc">stringWithUTF8String:</a>, 通过 <a href="https://developer.apple.com/documentation/objectivec/sel_registername(_:)?language=objc">sel_registerName</a> 的方式,
+  将 <code>SEL</code> 的名字和其地址指针挂钩.</p>
+<details><summary><code>@</code></summary>
+<p>感觉 ObjC 的作者挺喜欢用 <code>@</code> 来标记语法的.</p>
+<p>比如 <code>NSString</code> 可以通过:</p>
+<div class="highlight"><pre><span></span><span class="bp">NSString</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="bp">NSString</span><span class="w"> </span><span class="n">stringWithUTF8String</span><span class="o">:</span><span class="w"> </span><span class="n">c_string</span><span class="p">];</span>
+</pre></div>
+<p>的方式来进行创建, 也可以通过 =@&#8221;c string&#8221;= 的方式来进行创建.
+  假如了解 C 的语法, 那么其实从 C 变到 ObjC 还是挺自然的.</p>
+<p>比如在 C 里面已经把 <code>func(arg)</code> 形式占用了, 为了保证不会破坏原有的 C 函数,
+  ObjC 的做法是通过引入 <code>[obj SEL arg]</code> 的方式来实现类似于 <code>obj.SEL(arg)</code> 形式的函数调用.
+  (感觉想是一开始想用 <code>SEL[obj, arg]</code> 形式, 但是发现 <code>arr[]</code> 的语法被数组占用了,
+  所以变成了方便编译器实现的 <code>[obj SEL arg]</code> 语法).</p>
+<p>并且 ObjC 的关键词大多也是 <code>@</code> 开头的, 比如 <code>@implement</code> 之类的.</p>
+<p>不过也有可能是历史原因, 因为需要兼容 C 的语法 (C-extension like),
+  所以像 Cpp/Python/JS 那样的 <code>balabala.method(bala)</code>
+  的调用形式不容易在 C 里面实现/移植?</p>
+<p>注: 虽说是模仿的 Smalltalk, 但是我怎么看都不觉得 Smalltalk 的语法,
+  额, 易读. 应该是 OOP 的思想是模仿 Smalltalk 中的设计吧.</p>
+<div class="highlight"><pre><span></span><span class="nf">exampleWithNumber:</span> <span class="nv">x</span>
+    <span class="o">|</span><span class="nv"> y </span><span class="o">|</span>
+    <span class="bp">true</span> <span class="nf">&amp;</span> <span class="bp">false</span> <span class="nf">not</span> <span class="nf">&amp;</span> (<span class="bp">nil</span> <span class="nf">isNil</span>) <span class="nb">ifFalse:</span> [<span class="bp">self</span> <span class="nf">halt</span>]<span class="p">.</span>
+    <span class="nv">y</span> <span class="o">:=</span> <span class="bp">self</span> <span class="nf">size</span> <span class="nf">+</span> <span class="bp">super</span> <span class="nf">size</span><span class="p">.</span>
+    <span class="ss">#(</span><span class="sc">$a</span> <span class="ss">#a</span> <span class="s">&#39;a&#39;</span> <span class="m">1</span> <span class="m">1.0</span><span class="ss">)</span>
+        <span class="nf">do:</span> [ <span class="o">:</span><span class="nv">each</span> <span class="o">|</span>
+            <span class="nc">Transcript</span> <span class="nf">show:</span> (<span class="nv">each</span> <span class="nf">class</span> <span class="nf">name</span>)<span class="p">;</span>
+                       <span class="nf">show:</span> <span class="s">&#39; &#39;</span>]<span class="p">.</span>
+    <span class="o">^</span><span class="nv">x</span> <span class="nf">&lt;</span> <span class="nv">y</span>
+</pre></div>
+<p>不过感觉那个时代的计算机语言设计更适合在纸上书写而不是在屏幕上阅读&#8230;</p>
+<p>注: 你可以在网页上体验 Smalltalk Machine. 试用体验上来说, 感觉和 Lisp Machine
+  是同时代的设计.</p>
+</details>
+<h3>Method Part-I: Inspect <code>Method</code> data</h3>
+<p>使用 &lt;a href=&#8221;https://developer.apple.com/documentation/objectivec/class_getinstancemethod(@@html:<span style="text-decoration:underline;">@@:@@html:</span>@@:)?language=objc&#8221;&gt;class_getInstanceMethod</a> 和 &lt;a href=&#8221;https://developer.apple.com/documentation/objectivec/class_getclassmethod(@@html:<span style="text-decoration:underline;">@@:@@html:</span>@@:)?language=objc&#8221;&gt;class_getClassMethod</a> 可以根据 <code>Class</code> 和 <code>SEL</code>
+  来找到对应的 <code>Method</code> &#8211; 一个指向具体方法实现元数据的指针.</p>
+<ul>
+  <li>通过 <a href="https://developer.apple.com/documentation/objectivec/method_getname(_:)?language=objc">method_getName</a> 可以得到其对应的 <code>SEL</code>, 从而又可以得到其对应的名称.</li>
+  <li>通过 <a href="https://developer.apple.com/documentation/objectivec/method_gettypeencoding(_:)?language=objc">method_getTypeEncoding</a> 可以得到其对应的返回值, 参数类型
+    <p>注: 可以参考 <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html">Type Encodings</a> 来实现一个 Type Encoding parser.</p>
+  <details><summary>一个简单的做法</summary>
+    <p>通过 <code>method_getTypeEncoding</code> 得到的字符串类似于: =&#8221;@24@0:8r*16&#8221;=,
+      其可以被看作是一列 Type Encoding 的 <code>concat</code>.</p>
+    <p>于是可以实现一个 <code>(parse-type-encoding string &amp;key start)</code>,
+      其返回值为 <code>type-encoding</code>, <code>ends</code>. 于是就可以递归地去 parse 给定的 type encoding.</p>
+  </details>
+  </li>
+</ul>
+<p>那么既然有了 Type Encoding, 于是就可以在 Lisp 侧去编译一个调用 <code>objc_msgSend</code> 过程的函数.
+  在 Lisp 中, 实现类似的操作并不是一个非常困难的事情:</p>
+<p>比如说有 <code>[NSString stringWithUTF8String: string]</code>, 其函数 Type Encoding 可以被 parse 为:</p>
+<div class="highlight"><pre><span></span><span class="nv">objc&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-class-method-signature</span><span class="w"> </span><span class="s">&quot;NSString&quot;</span><span class="w"> </span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">:object</span><span class="w"> </span><span class="nv">:sel</span><span class="w"> </span><span class="p">(</span><span class="nf">:const</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:string</span><span class="p">))</span>
+<span class="nv">:object</span>
+<span class="s">&quot;@24@0:8r*16&quot;</span>
+</pre></div>
+<p>那么调用的形式应当为:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="w"> </span><span class="nv">sel</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">coerce-to-objc-object</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">foreign-funcall</span>
+<span class="w">    </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="nv">sel</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:string</span><span class="w">  </span><span class="nb">string</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="p">)))</span>
+</pre></div>
+<details><summary>一个困难</summary>
+<p>一个稍微有点困难的地方就是不知道该怎么传入 <code>struct</code> 类型的数&#8230;
+  一个暴力一点的做法就是把 <code>struct</code> 向量化然后一个个传入调用帧里面, 类似于这样:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="w"> </span><span class="nv">sel</span><span class="w"> </span><span class="nv">cg-point</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">coerce-to-objc-object</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">foreign-funcall</span>
+<span class="w">    </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="nv">sel</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; (:struct &quot;CGSize&quot; (:double :double))</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w">  </span><span class="p">(</span><span class="nf">cg-point-x</span><span class="w"> </span><span class="nv">cg-point</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w">  </span><span class="p">(</span><span class="nf">cg-point-y</span><span class="w"> </span><span class="nv">cg-point</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:pointer</span><span class="p">)))</span>
+</pre></div>
+<p>这个方法虽然感觉有点不合理, 但是能跑&#8230; 但是该如何程序化地去实现, 就有点难搞了.
+  当然, 还有一个比较困难的地方是, 对于结构体的结构体, 在传参数的时候会遇到如下的问题:</p>
+<p>比如有一个 <code>cg-rect</code> (<code>CGRect</code>) 的结构, 其包含 <code>origin</code> (<code>CGPoint</code>) 和 <code>size</code> (<code>CGSize</code>)
+  两个结构作为自己的子值&#8230; 虽然仍然可以用形如</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="w"> </span><span class="nv">sel</span><span class="w"> </span><span class="nv">ns-rect</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">coerce-to-objc-object</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">foreign-funcall</span>
+<span class="w">    </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-rect-origin</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-point-x</span><span class="w"> </span><span class="nv">ns-rect</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-rect-origin</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-point-y</span><span class="w"> </span><span class="nv">ns-rect</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-rect-size</span><span class="w">   </span><span class="p">(</span><span class="nf">cg-size-w</span><span class="w">  </span><span class="nv">ns-rect</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">:double</span><span class="w"> </span><span class="p">(</span><span class="nf">cg-rect-size</span><span class="w">   </span><span class="p">(</span><span class="nf">cg-size-h</span><span class="w">  </span><span class="nv">ns-rect</span><span class="p">)))))</span>
+</pre></div>
+<p>来绕过. 但是感觉实现起来会有一些麻烦&#8230; 相当于是要实现一个简单的 expander.</p>
+<p>这里有一个还算 &#8220;比较优雅&#8221; 的方式来实现:</p>
+<p>定义一个 generic function 叫做 <code>(objc-encoding-arg-form encoding)</code>,
+  其返回一个 <code>list</code> 并如下构造 <code>lambda</code> 表达式:</p>
+<div class="highlight"><pre><span></span><span class="o">`</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">gen-lambda-list</span><span class="w"> </span><span class="nv">encodings</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="o">,</span><span class="p">(</span><span class="nf">objc-encoding-wrapper</span><span class="w"> </span><span class="nv">encoding</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">foreign-funcall</span>
+<span class="w">     </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">     </span><span class="o">,@</span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;append</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;objc-encoding-arg-form</span><span class="w"> </span><span class="nv">encodings</span><span class="p">))</span>
+<span class="w">     </span><span class="o">,</span><span class="p">(</span><span class="nf">objc-encoding-cffi-type</span><span class="w"> </span><span class="nv">return-encoding</span><span class="p">))))</span>
+</pre></div>
+</details>
+<h3>Method Part-II: Inspect all the method of <code>Class</code></h3>
+<p>使用 &lt;a href=&#8221;https://developer.apple.com/documentation/objectivec/class_copymethodlist(@@html:<span style="text-decoration:underline;">@@:@@html:</span>@@:)?language=objc&#8221;&gt;class_copyMethodList</a> 可以获得 <code>Class</code> 的所有的方法,
+  于是可以用这样的方式来分析在当前 Runtime 中具体有哪些方法的实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">all-objc-class-methods</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-class</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return a list of `sel&#39; as methods of OBJC-CLASS. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-foreign-object</span><span class="w"> </span><span class="p">(</span><span class="nf">cnt</span><span class="w"> </span><span class="nv">:pointer</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">class_copyMethodList</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce-to-objc-class</span><span class="w"> </span><span class="nv">objc-class</span><span class="p">))</span>
+<span class="w">                                     </span><span class="nv">cnt</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">unwind-protect</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">:below</span><span class="w"> </span><span class="p">(</span><span class="nf">mem-aref</span><span class="w"> </span><span class="nv">cnt</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">:collect</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce-to-selector</span><span class="w"> </span><span class="p">(</span><span class="nf">method_getName</span><span class="w"> </span><span class="p">(</span><span class="nf">mem-aref</span><span class="w"> </span><span class="nv">arr</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="nv">i</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">foreign-free</span><span class="w"> </span><span class="nv">arr</span><span class="p">)))))</span>
+</pre></div>
+<p>于是就可以提前预处理编译所有的 ObjC Runtime 中的所有方法.</p>
+<h1>Creating an NSWindow</h1>
+<p>这里参考 <a href="https://github.com/gammasoft71/Examples_Cocoa">gammasoft71/Examples_Cocoa</a>.</p>
+<h2><a href="https://github.com/gammasoft71/Examples_Cocoa/blob/master/src/Applications/Application/Application.m">Application</a></h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">app</span><span class="w"> </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="s">&quot;NSApplication&quot;</span><span class="w"> </span><span class="s">&quot;sharedApplication&quot;</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">win</span><span class="w"> </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="s">&quot;NSWindow&quot;</span><span class="w"> </span><span class="s">&quot;alloc&quot;</span><span class="p">)</span>
+<span class="w">                   </span><span class="s">&quot;initWithContentRect:styleMask:backing:defer:&quot;</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">make-ns-rect</span><span class="w"> </span><span class="nv">:x</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="nv">:y</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="nv">:w</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="nv">:h</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">ns-window-style</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:titled</span><span class="w"> </span><span class="nv">:closable</span><span class="w"> </span><span class="nv">:miniaturizable</span><span class="w"> </span><span class="nv">:resizable</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">ns-backing</span><span class="w"> </span><span class="nv">:store-buffered</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">nil</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="nv">win</span><span class="w"> </span><span class="s">&quot;setIsVisible:&quot;</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="nv">app</span><span class="w"> </span><span class="s">&quot;run&quot;</span><span class="p">))</span>
+</pre></div>
+<details><summary>ObjC Version</summary>
+<p>原始的代码如下:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Cocoa/Cocoa.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="p">[</span><span class="n">NSApplication</span><span class="w"> </span><span class="n">sharedApplication</span><span class="p">];</span>
+<span class="w">  </span><span class="n">NSWindow</span><span class="o">*</span><span class="w"> </span><span class="n">window1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[[</span><span class="n">NSWindow</span><span class="w"> </span><span class="n">alloc</span><span class="p">]</span><span class="w"> </span><span class="n">initWithContentRect</span><span class="o">:</span><span class="n">NSMakeRect</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span><span class="w"> </span><span class="n">styleMask</span><span class="o">:</span><span class="n">NSWindowStyleMaskTitled</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskClosable</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskMiniaturizable</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskResizable</span><span class="w"> </span><span class="n">backing</span><span class="o">:</span><span class="n">NSBackingStoreBuffered</span><span class="w"> </span><span class="n">defer</span><span class="o">:</span><span class="nb">NO</span><span class="p">]</span><span class="w"> </span><span class="n">autorelease</span><span class="p">];</span>
+<span class="w">  </span><span class="p">[</span><span class="n">window1</span><span class="w"> </span><span class="n">setIsVisible</span><span class="o">:</span><span class="nb">YES</span><span class="p">];</span>
+<span class="w">  </span><span class="p">[</span><span class="n">NSApp</span><span class="w"> </span><span class="n">run</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+<p>如果尝试使用</p>
+<div class="highlight"><pre><span></span>gcc<span class="w"> </span>-fobjc-arc<span class="w"> </span>Application.m<span class="w"> </span>-framework<span class="w"> </span>Cocoa
+</pre></div>
+<p>却并不能正常地进行编译&#8230; 需要移除 <code>autorelease</code> 才能编译&#8230; 很奇怪.</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Cocoa/Cocoa.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">NSApplication</span><span class="o">*</span><span class="w"> </span><span class="n">app</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">NSApplication</span><span class="w"> </span><span class="n">sharedApplication</span><span class="p">];</span>
+<span class="w">  </span><span class="n">NSWindow</span><span class="o">*</span><span class="w"> </span><span class="n">window1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[[</span><span class="n">NSWindow</span><span class="w"> </span><span class="n">alloc</span><span class="p">]</span>
+<span class="w">                        </span><span class="nl">initWithContentRect</span><span class="p">:</span><span class="n">NSMakeRect</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">                                  </span><span class="nl">styleMask</span><span class="p">:</span><span class="n">NSWindowStyleMaskTitled</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskClosable</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskMiniaturizable</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">NSWindowStyleMaskResizable</span>
+<span class="w">                                    </span><span class="nl">backing</span><span class="p">:</span><span class="n">NSBackingStoreBuffered</span>
+<span class="w">                                      </span><span class="nl">defer</span><span class="p">:</span><span class="nb">NO</span><span class="p">];</span>
+<span class="w">  </span><span class="p">[</span><span class="n">window1</span><span class="w"> </span><span class="n">setIsVisible</span><span class="o">:</span><span class="nb">YES</span><span class="p">];</span>
+<span class="w">  </span><span class="p">[</span><span class="n">NSApp</span><span class="w"> </span><span class="n">run</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+<p>这样设计就可以保证正常的编译了, 不过由于并没有实现退出逻辑,
+  所以在窗口关闭了之后仍会保持运行&#8230; 稍稍有些麻烦, 但是至少动起来了.</p>
+</details>
+<p>注: 由于 macOS 中仅允许 GUI 程序在主线程中创建 (<code>main loop</code>),
+  所以实际上还需要保证代码在主线程中运行.</p>
+<p>注: 由于 SBCL 的 float trap 的问题 (<a href="https://www.reddit.com/r/lisp/comments/1ceio6b/is_it_safe_to_disable_floating_point_traps/">Ref</a>), 实际上还需要手动关闭来保证不会报错
+  (在 macOS SBCL 上做 CFFI 的时候好像经常出现&#8230;)</p>
+<p>最终的效果 (非常简陋的) 如下:</p>
+<p><img src="/_img/lisp/objc/trivial-application.png" alt="/_img/lisp/objc/trivial-application.png" /></p>
+
+  </div><a class="u-url" href="/lisp/objc/objc-0/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

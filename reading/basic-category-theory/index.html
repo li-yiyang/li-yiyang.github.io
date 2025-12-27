@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Reading: Basic Category Theory | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Reading: Basic Category Theory" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 想要了解更多的一些关于 &#8220;函数式&#8221; 的知识, 毕竟每次看到网上有人讲到函数式就是范畴论起手, 让我这种对函数式的浅薄印象只停留在 &#8220;不可变数据结构&#8221;, &#8220;函数一等公民&#8221; 这样的菜逼十分的担忧, 思来想去还是得学点硬的. 这本书是看到网上有位 55 岁退休闲得慌的大哥推荐的 (推荐的 网页, 英文版, 不过其实感觉更像是读书笔记, 虽然大哥的笔记真强 什么日本人刻板印象). (大哥的自述 原文: &#8220;2014年に５５歳で退職しました．早まったかもです．&#8221;) 并且这本书 (Basic Category Theory) 的作者免费把书开放在了 arXiv 上: Tom Leinster : Basic Category Theory, 2014 (https://arxiv.org/abs/1612.09375). (真是好人啊) 为了防止我鸽了, 采用一天一更新的方式进行一个记录. 记录的内容 原文中的 Example, Exercise, Lemma, 保留原文的标号 + Introduction Example 0.1: 符号 \(1\) 用于表示 只有一个元素的集合. 性质: 任意 集合 \(X\), 存在 \(X &rarr; 1\) 的映射. 符号 \(&rarr;\) 用于表示映射 (map, mapping, function) Example 0.2: 性质: 任意 环 (ring) \(R\), 存在 唯一 (unique) 同态 \(\mathbb{Z} &rarr; R\) 证明: 略 存在性: \[&phi;(n) = \left\{ \begin{matrix} \underbrace{1 + \cdots + 1}_{n} &amp; \mathrm{if}\ n &gt; 0 &#92; 0 &amp; \mathrm{if}\ n = 0 &#92; - &phi;(-n) &amp; \mathrm{if}\ n &lt; 0 \end{matrix} \right.\] 唯一性: \[&psi;(n) = &psi;(\underbrace{1 + \cdots + 1}_n) = \underbrace{&psi;(1) + \cdots + &psi;(1)}_n = \underbrace{1 + \cdots + 1}_n = &phi;(n)\] 注: 这里用了同态的线性, 反证法证明之; \(n = 0\) 用同态的零元; \(n &lt; 0\) 同理. Lemma 0.3: 若对 任意 环 \(R\), 存在 同态 \(A &rarr; R\) (称该性质为 &#8220;initial&#8221;), 则 \(A &cong; \mathbb{Z}\) 符号: \(&cong;\) isomorphism 证明: 略 \(A\) initial \(&rArr;\) 存在唯一 同态 \(&phi;: A &rarr; \mathbb{Z}\); \(\mathbb{Z}\) initial \(&rArr;\) 存在唯一 同态 \(&phi;&#39;: \mathbb{Z} &rarr; A\); 得 \(&phi;&#39; &circ; &phi; = 1_A, &phi; &circ; &phi;&#39; = 1_{\mathbb{Z}}\) Example 0.4: 矢量空间 (vector space) 的映射可以变成基底 (basis, \((v_s)_{s &isin; S}\)) 的映射. (specify a linear map from \(V\) to \(W\) simply by saying where the basis elements go) 任何定义在基底元素的函数可以被拓展为 \(V\) 唯一的线性映射 (any function defined on the basis elements exends uniquely to a linear map on \(V\)) 考虑函数: \(i: S &rarr; V, i(s) = v_s, s &isin; S\), 对 任意 函数 \(f\), 存在唯一 线性函数 \(\overline{f}: V &rarr; &forall; W\). (这里是不是理解得有点错误? ) 交换图 Example 0.5: 对集合 \(S\), 通过 discrete topology \(D(S)\) (topological space), 任意从 \(S &rarr; X\) 的映射都是连续的. 这里不理解的是 discrete topology (all subsets are open?), topological space 的概念, 为啥就连续了? Example 0.6: bilinear map \(f: U &times; V &rarr; W\) 满足: \[\begin{matrix} f(u, v_1 + &lambda; v_2) &amp; = &amp; f(u, v_1) + &lambda; f(u, v_2) &#92; f(u_1 + &lambda; u_2, v) &amp; = &amp; f(u_1, v) + &lambda; f(u_2, v) \end{matrix}\] universal bilinear map: 一个 universal 的 bilinear map 满足以下交换图: Lemma 0.7: \(b: U &times; V &rarr; T, b&#39;: U &times; V &rarr; T&#39;\), \(b\) 和 \(b&#39;\) 是 universal bilinear map, 则 \(T &cong; T&#39;\), 即 存在唯一 同构 \(j: T &rarr; T&#39;, j &circ; b = b&#39;\). 证明 略 交换图: 相当于利用 Example 0.6 universal bilinear map 里面交换图, 固定 universal bilinear map \(b\) 和 \(&forall;\) bilinear \(f &rArr; b&#39;\), 得到的 \(&exist;!\) linear \((\overline{f} &rArr; j, &forall; W &rArr; T&#39;) &rArr; j: T &rarr; T&#39;\), 然后对称得到 \(j&#39;: T&#39; &rarr; T\), 即构造了 \(1_T = j&#39; &circ; j = j &circ; j&#39;\). (所以交换图的作用就是来找路径咯? ) Example 0.8: 令 \(&theta;: G &rarr; H\) 为一个群的同态, 有如下交换图: 其中: \(\imath\) 是 \(\mathrm{ker}(&theta;)\) 到 \(G\) 的包含映射 (inclusion) 包含映射 (inclusion): \(&forall; x &isin; \mathrm{ker}(&theta;), \imath(x) = x\), 用符号 \(\hookrightarrow \) 进行表示 (\(&sub;\) 和 \(&rarr;\) 结合). \(&epsilon;\) 为 trivial homomorphism. trivial: \(&forall; g &isin; G, &epsilon;(g) = 1\) Example 0.9: &#8230; Categories, functors and natural transformations A category is a system of related objects. The objects do not live in isolation: there is some notion of map between objects, binding them together. typical examples: object: group, topological space; map: homomorphism, continuous map Categories Definition 1.1.1: 一个 category (范畴) \(\mathcal{A}\) 包含: objects (对象) 的集合 \(\mathrm{ob}(\mathcal{A})\); 对于每个 \(A, B &isin; \mathrm{ob}(\mathcal{A})\), 一个从 \(A\) 到 \(B\) 的 map, arrows, morphisms 的集合 \(\mathcal{A} (A, B)\); 对于每个 \(A, B, C &isin; \mathrm{ob}(\mathcal{A})\), 一个 composition 函数: \[\begin{matrix} \mathcal{A}(B, C) &times; \mathcal{A}(A, B) &amp; &rarr; &amp; \mathcal{A}(A, C) &#92; (g, f) &amp; \mapsto &amp; g &circ; f \end{matrix}\] 对于每个 \(A &isin; \mathrm{ob}(\mathcal{A})\), 一个 \(A\) 上的单位元: an element \(1_{A}\) of \(\mathcal{A}(A, A)\), called the identity on \(A\) 有以下公理: associativity: \(f &isin; \mathcal{A}(A, B), g &isin; \mathcal{A}(B, C), h &isin; \mathcal{A}(C, D), (h &circ; g) &circ; f = h &circ; (g &circ; f)\). identity laws: \(f &isin; \mathcal{A}(A, B), f &circ; 1_{A} = f = 1_{B} &circ; f\) Remarks 1.1.2 记号: 将: \(A &isin; \mathcal{A}\) 记为 \(A &isin; \mathrm{ob}(\mathcal{A})\); 函数的映射 \(f: A &rarr; B, A \xrightarrow{f} B\) 记为 \(f &isin; \mathcal{A}(A, B)\) 也有记为 \(\mathrm{Hom}_{\mathcal{A}}(A, B)\), 或者 \(\mathrm{Hom}(A, B)\) 的情况, \(\mathrm{Hom}\) 表示 homomorphism (同态). 函数的结合 (compose) \(g f\) 记为 \(g &circ; f\) 对一串映射的连接 (string of map): \[A_0 \xrightarrow{f_1} A_1 \xrightarrow{f_2} \cdots \xrightarrow{f_n} A_n\] 可以用一个映射来代替: \[A_0 \xrightarrow{f_n f_{n-1} \cdots f_1} A_n\] 交换图的 commutes: 如果一个交换图中有两条从 object \(X\) 到 object \(Y\) 的通路, 则称该交换图为 commutes 的; 称 &#8220;collection&#8221; 为 &#8220;set&#8221; 是一种比较模糊的称呼, 用 &#8220;class&#8221; 理解可能会比较好; 若 \(f &isin; \mathcal{A}(A, B)\), 则 \(A\) 为 \(f\) 的 domain, \(B\) 为 \(f\) 的 codomain. 在所有的范畴中的映射都对应有一个明确的 domain 和 codomain. Examples 1.1.3: (categories of mathematical structures) set: 其 object 为集合, 对应的 map 即传统的映射; grp: 其 object 为群, 对应的 map 为群同态; ring: 其 object 为环, 对应的 map 为环同态; \(\textbf{Vect}_{k}\): vector spaces over \(k\), 以及对应的线性映射; top: 拓扑空间以及对应的 continuous maps (连续映射). Definition 1.1.4: 对于在范畴 \(\mathcal{A}\) 中的映射 \(f: A &rarr; B\), 若 存在 在 \(\mathcal{A}\) 中的映射 \(g: B &rarr; A\), 使得 \(g f = 1_{A}, f g = 1_{B}\), 则称其为 isomorphism (同构), 称 \(g\) 为 \(f\) 的逆. 吐槽 哦, 怪不得我觉得上线代的时候老师的用语非常的 &#8220;定语后置&#8221;, 现在自己读英文的时候, 感觉这种说法在简单直译的时候很正常啊&#8230; Example 1.1.5: set 中的同构为 bijection. Example 1.1.6: grp 中的同构及群同构, 类似的 ring 的同构为环同构. Example 1.1.7: top 中的同构为同态. (注: 因为不了解拓扑, 所以之后 top 的部分会尽可能跳过) Example 1.1.8: 一个范畴可以直接说明其 objects, maps, composition 以及 identities: \(&empty;\): 没有 objects 与 map; \(\boldsymbol{1}\): 仅有一个 object 与单位映射 (其交换图就是一个点); 一个包含两个元素和一个非单位映射的范畴 \(A \xrightarrow{f} B\); 更多复杂的交换图: 一些范畴可以除了单位映射外完全没有其他的映射, 称其为 discrete 范畴 (离散范畴); 当一个群只有一个元素, 并且所有的映射都是同构时即为一个范畴. 解释 考虑一个仅有一个元素 \(A\) 的范畴 \(\mathcal{A}\), 其有一个满足结合率的组合函数 (associative composition function): \[&circ;: \mathcal{A}(A, A) &times; \mathcal{A}(A, A) &rarr; \mathcal{A}(A, A)\] 以及一个单位映射 \(1_{A} &isin; \mathcal{A}(A, A)\) 于是有如下和群的对应关系: 范畴群 单元素 \(A\) 的范畴 \(\mathcal{A}\)\(G\) \(\mathcal{A}\) 中的映射\(G\) 中的元素 \(&circ; &isin; \mathcal{A}\)\(G\) 中的 \(&sdot;\) 算子 \(1_A\)\(1 &isin; G\) monoid: a set equipped with an associative binary operation and two-sided unit element. preorder: a reflexive transitive binary relation. Construction 1.1.9: 每个范畴 \(\mathcal{A}\) 都有一个对应的 opposite (或 dual) 范畴 \(\mathcal{A}^{\mathrm{op}}\), 其定义为反转 \(\mathcal{A}\) 中的箭头方向. 形式的定义: 例子: 若 \(A \xrightarrow{f} B \xrightarrow{g} C\) 为 \(\mathcal{A}^{\mathrm{op}}\) 中的映射, 则 \(\mathcal{A}\) 的映射为 \(A \xleftarrow{f} B \xleftarrow{g} C\)/ Remark 1.1.10: 所有的范畴的定义, 定理以及证明都有一个反转箭头方向的 dual 形式. Construction 1.1.11: 范畴的积 (product category) \(\mathcal{A} &times; \mathcal{B}\) 定义为: \[\begin{matrix} \mathrm{ob}(\mathcal{A} &times; \mathcal{B}) &amp; = &amp; \mathrm{ob}(\mathcal{A}) &times; \mathrm{ob}(\mathcal{B}) &#92; (\mathcal{A} &times; \mathcal{B}) ((A, B), (A&#39;, B&#39;)) &amp; = &amp; \mathcal{A}(A, A&#39;) &times; \mathcal{B}(B, B&#39;) \end{matrix}\] 其中 \(\mathcal{A} &times; \mathcal{B}\) 中的映射 \((A, B) &rarr; (A&#39;, B&#39;)\) 是一个 pair. 不知道对不对的注记 感觉很像线性空间的直积. 简单的一个小节: 这节大概定义了一个 &#8220;范畴&#8221; 是什么东西; 范畴包含元素 (object) 的集合 (collection); 元素之间的映射 (map) 关系 (这些映射关系是如何组合 (compose) 在一起的, 单位映射); 可以用交换图来表示一个范畴, 而将交换图中的箭头反向即可得到一个范畴的 dual. Functors Definition 1.2.1: 定义一个 functor \(F: \mathcal{A} &rarr; \mathcal{B}\) 由以下组成: 一个函数: \[ \mathrm{ob}(\mathcal{A}) &rarr; \mathrm{ob}(\mathcal{B}) \] 记作 \(A \mapsto F(A)\); 对于所有 \(A, A&#39; &isin; \mathcal{A}\), 其中的映射如下: \[ \mathcal{A}(A, A&#39;) &rarr; \mathcal{B}(F(A), F(A&#39;)) \] 记作 \(f \mapsto F(f)\). 注: 相当于就是一个 functor 同时定义了范畴中元素 (object) 和映射 (map) 的映射关系. 满足一下的公理: \(F(f&#39; &circ; f) = F(f&#39;) &circ; F(f)\), 对于 \(\mathcal{A}\) 中的 \(A \xrightarrow{f} A&#39; \xrightarrow{f&#39;} A&#8221;\); \(F(1_{A}) = 1_{F(A)}, A &isin; \mathcal{A}\). Remarks 1.2.2: 1. Appendix: English Dictionary 看到同学有读论文学英文的操作, 不妨也来试试: multiplicative \(&larr;\) multiplication \(&larr;\) multiply multiplicative identity 乘法单位元 homomorphisms (\(&larr;\) Greek homoios morphe, &#8220;similar form&#8221;) 同态 isomorphism \(&larr;\) Greek isos (equal), morphe (form, shape) 同构 可逆的线性变换称为同构 inclusion \(&larr;\) include axiom: 公理 vague: 模糊的 bijection: bijective function, one-to-one correspondence, 一一映射 associative: 结合的 associate, association dual" />
+<meta property="og:description" content="About 想要了解更多的一些关于 &#8220;函数式&#8221; 的知识, 毕竟每次看到网上有人讲到函数式就是范畴论起手, 让我这种对函数式的浅薄印象只停留在 &#8220;不可变数据结构&#8221;, &#8220;函数一等公民&#8221; 这样的菜逼十分的担忧, 思来想去还是得学点硬的. 这本书是看到网上有位 55 岁退休闲得慌的大哥推荐的 (推荐的 网页, 英文版, 不过其实感觉更像是读书笔记, 虽然大哥的笔记真强 什么日本人刻板印象). (大哥的自述 原文: &#8220;2014年に５５歳で退職しました．早まったかもです．&#8221;) 并且这本书 (Basic Category Theory) 的作者免费把书开放在了 arXiv 上: Tom Leinster : Basic Category Theory, 2014 (https://arxiv.org/abs/1612.09375). (真是好人啊) 为了防止我鸽了, 采用一天一更新的方式进行一个记录. 记录的内容 原文中的 Example, Exercise, Lemma, 保留原文的标号 + Introduction Example 0.1: 符号 \(1\) 用于表示 只有一个元素的集合. 性质: 任意 集合 \(X\), 存在 \(X &rarr; 1\) 的映射. 符号 \(&rarr;\) 用于表示映射 (map, mapping, function) Example 0.2: 性质: 任意 环 (ring) \(R\), 存在 唯一 (unique) 同态 \(\mathbb{Z} &rarr; R\) 证明: 略 存在性: \[&phi;(n) = \left\{ \begin{matrix} \underbrace{1 + \cdots + 1}_{n} &amp; \mathrm{if}\ n &gt; 0 &#92; 0 &amp; \mathrm{if}\ n = 0 &#92; - &phi;(-n) &amp; \mathrm{if}\ n &lt; 0 \end{matrix} \right.\] 唯一性: \[&psi;(n) = &psi;(\underbrace{1 + \cdots + 1}_n) = \underbrace{&psi;(1) + \cdots + &psi;(1)}_n = \underbrace{1 + \cdots + 1}_n = &phi;(n)\] 注: 这里用了同态的线性, 反证法证明之; \(n = 0\) 用同态的零元; \(n &lt; 0\) 同理. Lemma 0.3: 若对 任意 环 \(R\), 存在 同态 \(A &rarr; R\) (称该性质为 &#8220;initial&#8221;), 则 \(A &cong; \mathbb{Z}\) 符号: \(&cong;\) isomorphism 证明: 略 \(A\) initial \(&rArr;\) 存在唯一 同态 \(&phi;: A &rarr; \mathbb{Z}\); \(\mathbb{Z}\) initial \(&rArr;\) 存在唯一 同态 \(&phi;&#39;: \mathbb{Z} &rarr; A\); 得 \(&phi;&#39; &circ; &phi; = 1_A, &phi; &circ; &phi;&#39; = 1_{\mathbb{Z}}\) Example 0.4: 矢量空间 (vector space) 的映射可以变成基底 (basis, \((v_s)_{s &isin; S}\)) 的映射. (specify a linear map from \(V\) to \(W\) simply by saying where the basis elements go) 任何定义在基底元素的函数可以被拓展为 \(V\) 唯一的线性映射 (any function defined on the basis elements exends uniquely to a linear map on \(V\)) 考虑函数: \(i: S &rarr; V, i(s) = v_s, s &isin; S\), 对 任意 函数 \(f\), 存在唯一 线性函数 \(\overline{f}: V &rarr; &forall; W\). (这里是不是理解得有点错误? ) 交换图 Example 0.5: 对集合 \(S\), 通过 discrete topology \(D(S)\) (topological space), 任意从 \(S &rarr; X\) 的映射都是连续的. 这里不理解的是 discrete topology (all subsets are open?), topological space 的概念, 为啥就连续了? Example 0.6: bilinear map \(f: U &times; V &rarr; W\) 满足: \[\begin{matrix} f(u, v_1 + &lambda; v_2) &amp; = &amp; f(u, v_1) + &lambda; f(u, v_2) &#92; f(u_1 + &lambda; u_2, v) &amp; = &amp; f(u_1, v) + &lambda; f(u_2, v) \end{matrix}\] universal bilinear map: 一个 universal 的 bilinear map 满足以下交换图: Lemma 0.7: \(b: U &times; V &rarr; T, b&#39;: U &times; V &rarr; T&#39;\), \(b\) 和 \(b&#39;\) 是 universal bilinear map, 则 \(T &cong; T&#39;\), 即 存在唯一 同构 \(j: T &rarr; T&#39;, j &circ; b = b&#39;\). 证明 略 交换图: 相当于利用 Example 0.6 universal bilinear map 里面交换图, 固定 universal bilinear map \(b\) 和 \(&forall;\) bilinear \(f &rArr; b&#39;\), 得到的 \(&exist;!\) linear \((\overline{f} &rArr; j, &forall; W &rArr; T&#39;) &rArr; j: T &rarr; T&#39;\), 然后对称得到 \(j&#39;: T&#39; &rarr; T\), 即构造了 \(1_T = j&#39; &circ; j = j &circ; j&#39;\). (所以交换图的作用就是来找路径咯? ) Example 0.8: 令 \(&theta;: G &rarr; H\) 为一个群的同态, 有如下交换图: 其中: \(\imath\) 是 \(\mathrm{ker}(&theta;)\) 到 \(G\) 的包含映射 (inclusion) 包含映射 (inclusion): \(&forall; x &isin; \mathrm{ker}(&theta;), \imath(x) = x\), 用符号 \(\hookrightarrow \) 进行表示 (\(&sub;\) 和 \(&rarr;\) 结合). \(&epsilon;\) 为 trivial homomorphism. trivial: \(&forall; g &isin; G, &epsilon;(g) = 1\) Example 0.9: &#8230; Categories, functors and natural transformations A category is a system of related objects. The objects do not live in isolation: there is some notion of map between objects, binding them together. typical examples: object: group, topological space; map: homomorphism, continuous map Categories Definition 1.1.1: 一个 category (范畴) \(\mathcal{A}\) 包含: objects (对象) 的集合 \(\mathrm{ob}(\mathcal{A})\); 对于每个 \(A, B &isin; \mathrm{ob}(\mathcal{A})\), 一个从 \(A\) 到 \(B\) 的 map, arrows, morphisms 的集合 \(\mathcal{A} (A, B)\); 对于每个 \(A, B, C &isin; \mathrm{ob}(\mathcal{A})\), 一个 composition 函数: \[\begin{matrix} \mathcal{A}(B, C) &times; \mathcal{A}(A, B) &amp; &rarr; &amp; \mathcal{A}(A, C) &#92; (g, f) &amp; \mapsto &amp; g &circ; f \end{matrix}\] 对于每个 \(A &isin; \mathrm{ob}(\mathcal{A})\), 一个 \(A\) 上的单位元: an element \(1_{A}\) of \(\mathcal{A}(A, A)\), called the identity on \(A\) 有以下公理: associativity: \(f &isin; \mathcal{A}(A, B), g &isin; \mathcal{A}(B, C), h &isin; \mathcal{A}(C, D), (h &circ; g) &circ; f = h &circ; (g &circ; f)\). identity laws: \(f &isin; \mathcal{A}(A, B), f &circ; 1_{A} = f = 1_{B} &circ; f\) Remarks 1.1.2 记号: 将: \(A &isin; \mathcal{A}\) 记为 \(A &isin; \mathrm{ob}(\mathcal{A})\); 函数的映射 \(f: A &rarr; B, A \xrightarrow{f} B\) 记为 \(f &isin; \mathcal{A}(A, B)\) 也有记为 \(\mathrm{Hom}_{\mathcal{A}}(A, B)\), 或者 \(\mathrm{Hom}(A, B)\) 的情况, \(\mathrm{Hom}\) 表示 homomorphism (同态). 函数的结合 (compose) \(g f\) 记为 \(g &circ; f\) 对一串映射的连接 (string of map): \[A_0 \xrightarrow{f_1} A_1 \xrightarrow{f_2} \cdots \xrightarrow{f_n} A_n\] 可以用一个映射来代替: \[A_0 \xrightarrow{f_n f_{n-1} \cdots f_1} A_n\] 交换图的 commutes: 如果一个交换图中有两条从 object \(X\) 到 object \(Y\) 的通路, 则称该交换图为 commutes 的; 称 &#8220;collection&#8221; 为 &#8220;set&#8221; 是一种比较模糊的称呼, 用 &#8220;class&#8221; 理解可能会比较好; 若 \(f &isin; \mathcal{A}(A, B)\), 则 \(A\) 为 \(f\) 的 domain, \(B\) 为 \(f\) 的 codomain. 在所有的范畴中的映射都对应有一个明确的 domain 和 codomain. Examples 1.1.3: (categories of mathematical structures) set: 其 object 为集合, 对应的 map 即传统的映射; grp: 其 object 为群, 对应的 map 为群同态; ring: 其 object 为环, 对应的 map 为环同态; \(\textbf{Vect}_{k}\): vector spaces over \(k\), 以及对应的线性映射; top: 拓扑空间以及对应的 continuous maps (连续映射). Definition 1.1.4: 对于在范畴 \(\mathcal{A}\) 中的映射 \(f: A &rarr; B\), 若 存在 在 \(\mathcal{A}\) 中的映射 \(g: B &rarr; A\), 使得 \(g f = 1_{A}, f g = 1_{B}\), 则称其为 isomorphism (同构), 称 \(g\) 为 \(f\) 的逆. 吐槽 哦, 怪不得我觉得上线代的时候老师的用语非常的 &#8220;定语后置&#8221;, 现在自己读英文的时候, 感觉这种说法在简单直译的时候很正常啊&#8230; Example 1.1.5: set 中的同构为 bijection. Example 1.1.6: grp 中的同构及群同构, 类似的 ring 的同构为环同构. Example 1.1.7: top 中的同构为同态. (注: 因为不了解拓扑, 所以之后 top 的部分会尽可能跳过) Example 1.1.8: 一个范畴可以直接说明其 objects, maps, composition 以及 identities: \(&empty;\): 没有 objects 与 map; \(\boldsymbol{1}\): 仅有一个 object 与单位映射 (其交换图就是一个点); 一个包含两个元素和一个非单位映射的范畴 \(A \xrightarrow{f} B\); 更多复杂的交换图: 一些范畴可以除了单位映射外完全没有其他的映射, 称其为 discrete 范畴 (离散范畴); 当一个群只有一个元素, 并且所有的映射都是同构时即为一个范畴. 解释 考虑一个仅有一个元素 \(A\) 的范畴 \(\mathcal{A}\), 其有一个满足结合率的组合函数 (associative composition function): \[&circ;: \mathcal{A}(A, A) &times; \mathcal{A}(A, A) &rarr; \mathcal{A}(A, A)\] 以及一个单位映射 \(1_{A} &isin; \mathcal{A}(A, A)\) 于是有如下和群的对应关系: 范畴群 单元素 \(A\) 的范畴 \(\mathcal{A}\)\(G\) \(\mathcal{A}\) 中的映射\(G\) 中的元素 \(&circ; &isin; \mathcal{A}\)\(G\) 中的 \(&sdot;\) 算子 \(1_A\)\(1 &isin; G\) monoid: a set equipped with an associative binary operation and two-sided unit element. preorder: a reflexive transitive binary relation. Construction 1.1.9: 每个范畴 \(\mathcal{A}\) 都有一个对应的 opposite (或 dual) 范畴 \(\mathcal{A}^{\mathrm{op}}\), 其定义为反转 \(\mathcal{A}\) 中的箭头方向. 形式的定义: 例子: 若 \(A \xrightarrow{f} B \xrightarrow{g} C\) 为 \(\mathcal{A}^{\mathrm{op}}\) 中的映射, 则 \(\mathcal{A}\) 的映射为 \(A \xleftarrow{f} B \xleftarrow{g} C\)/ Remark 1.1.10: 所有的范畴的定义, 定理以及证明都有一个反转箭头方向的 dual 形式. Construction 1.1.11: 范畴的积 (product category) \(\mathcal{A} &times; \mathcal{B}\) 定义为: \[\begin{matrix} \mathrm{ob}(\mathcal{A} &times; \mathcal{B}) &amp; = &amp; \mathrm{ob}(\mathcal{A}) &times; \mathrm{ob}(\mathcal{B}) &#92; (\mathcal{A} &times; \mathcal{B}) ((A, B), (A&#39;, B&#39;)) &amp; = &amp; \mathcal{A}(A, A&#39;) &times; \mathcal{B}(B, B&#39;) \end{matrix}\] 其中 \(\mathcal{A} &times; \mathcal{B}\) 中的映射 \((A, B) &rarr; (A&#39;, B&#39;)\) 是一个 pair. 不知道对不对的注记 感觉很像线性空间的直积. 简单的一个小节: 这节大概定义了一个 &#8220;范畴&#8221; 是什么东西; 范畴包含元素 (object) 的集合 (collection); 元素之间的映射 (map) 关系 (这些映射关系是如何组合 (compose) 在一起的, 单位映射); 可以用交换图来表示一个范畴, 而将交换图中的箭头反向即可得到一个范畴的 dual. Functors Definition 1.2.1: 定义一个 functor \(F: \mathcal{A} &rarr; \mathcal{B}\) 由以下组成: 一个函数: \[ \mathrm{ob}(\mathcal{A}) &rarr; \mathrm{ob}(\mathcal{B}) \] 记作 \(A \mapsto F(A)\); 对于所有 \(A, A&#39; &isin; \mathcal{A}\), 其中的映射如下: \[ \mathcal{A}(A, A&#39;) &rarr; \mathcal{B}(F(A), F(A&#39;)) \] 记作 \(f \mapsto F(f)\). 注: 相当于就是一个 functor 同时定义了范畴中元素 (object) 和映射 (map) 的映射关系. 满足一下的公理: \(F(f&#39; &circ; f) = F(f&#39;) &circ; F(f)\), 对于 \(\mathcal{A}\) 中的 \(A \xrightarrow{f} A&#39; \xrightarrow{f&#39;} A&#8221;\); \(F(1_{A}) = 1_{F(A)}, A &isin; \mathcal{A}\). Remarks 1.2.2: 1. Appendix: English Dictionary 看到同学有读论文学英文的操作, 不妨也来试试: multiplicative \(&larr;\) multiplication \(&larr;\) multiply multiplicative identity 乘法单位元 homomorphisms (\(&larr;\) Greek homoios morphe, &#8220;similar form&#8221;) 同态 isomorphism \(&larr;\) Greek isos (equal), morphe (form, shape) 同构 可逆的线性变换称为同构 inclusion \(&larr;\) include axiom: 公理 vague: 模糊的 bijection: bijective function, one-to-one correspondence, 一一映射 associative: 结合的 associate, association dual" />
+<link rel="canonical" href="/reading/basic-category-theory/" />
+<meta property="og:url" content="/reading/basic-category-theory/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-08-08T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Reading: Basic Category Theory" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-08-08T00:00:00+00:00","datePublished":"2024-08-08T00:00:00+00:00","description":"About 想要了解更多的一些关于 &#8220;函数式&#8221; 的知识, 毕竟每次看到网上有人讲到函数式就是范畴论起手, 让我这种对函数式的浅薄印象只停留在 &#8220;不可变数据结构&#8221;, &#8220;函数一等公民&#8221; 这样的菜逼十分的担忧, 思来想去还是得学点硬的. 这本书是看到网上有位 55 岁退休闲得慌的大哥推荐的 (推荐的 网页, 英文版, 不过其实感觉更像是读书笔记, 虽然大哥的笔记真强 什么日本人刻板印象). (大哥的自述 原文: &#8220;2014年に５５歳で退職しました．早まったかもです．&#8221;) 并且这本书 (Basic Category Theory) 的作者免费把书开放在了 arXiv 上: Tom Leinster : Basic Category Theory, 2014 (https://arxiv.org/abs/1612.09375). (真是好人啊) 为了防止我鸽了, 采用一天一更新的方式进行一个记录. 记录的内容 原文中的 Example, Exercise, Lemma, 保留原文的标号 + Introduction Example 0.1: 符号 \\(1\\) 用于表示 只有一个元素的集合. 性质: 任意 集合 \\(X\\), 存在 \\(X &rarr; 1\\) 的映射. 符号 \\(&rarr;\\) 用于表示映射 (map, mapping, function) Example 0.2: 性质: 任意 环 (ring) \\(R\\), 存在 唯一 (unique) 同态 \\(\\mathbb{Z} &rarr; R\\) 证明: 略 存在性: \\[&phi;(n) = \\left\\{ \\begin{matrix} \\underbrace{1 + \\cdots + 1}_{n} &amp; \\mathrm{if}\\ n &gt; 0 &#92; 0 &amp; \\mathrm{if}\\ n = 0 &#92; - &phi;(-n) &amp; \\mathrm{if}\\ n &lt; 0 \\end{matrix} \\right.\\] 唯一性: \\[&psi;(n) = &psi;(\\underbrace{1 + \\cdots + 1}_n) = \\underbrace{&psi;(1) + \\cdots + &psi;(1)}_n = \\underbrace{1 + \\cdots + 1}_n = &phi;(n)\\] 注: 这里用了同态的线性, 反证法证明之; \\(n = 0\\) 用同态的零元; \\(n &lt; 0\\) 同理. Lemma 0.3: 若对 任意 环 \\(R\\), 存在 同态 \\(A &rarr; R\\) (称该性质为 &#8220;initial&#8221;), 则 \\(A &cong; \\mathbb{Z}\\) 符号: \\(&cong;\\) isomorphism 证明: 略 \\(A\\) initial \\(&rArr;\\) 存在唯一 同态 \\(&phi;: A &rarr; \\mathbb{Z}\\); \\(\\mathbb{Z}\\) initial \\(&rArr;\\) 存在唯一 同态 \\(&phi;&#39;: \\mathbb{Z} &rarr; A\\); 得 \\(&phi;&#39; &circ; &phi; = 1_A, &phi; &circ; &phi;&#39; = 1_{\\mathbb{Z}}\\) Example 0.4: 矢量空间 (vector space) 的映射可以变成基底 (basis, \\((v_s)_{s &isin; S}\\)) 的映射. (specify a linear map from \\(V\\) to \\(W\\) simply by saying where the basis elements go) 任何定义在基底元素的函数可以被拓展为 \\(V\\) 唯一的线性映射 (any function defined on the basis elements exends uniquely to a linear map on \\(V\\)) 考虑函数: \\(i: S &rarr; V, i(s) = v_s, s &isin; S\\), 对 任意 函数 \\(f\\), 存在唯一 线性函数 \\(\\overline{f}: V &rarr; &forall; W\\). (这里是不是理解得有点错误? ) 交换图 Example 0.5: 对集合 \\(S\\), 通过 discrete topology \\(D(S)\\) (topological space), 任意从 \\(S &rarr; X\\) 的映射都是连续的. 这里不理解的是 discrete topology (all subsets are open?), topological space 的概念, 为啥就连续了? Example 0.6: bilinear map \\(f: U &times; V &rarr; W\\) 满足: \\[\\begin{matrix} f(u, v_1 + &lambda; v_2) &amp; = &amp; f(u, v_1) + &lambda; f(u, v_2) &#92; f(u_1 + &lambda; u_2, v) &amp; = &amp; f(u_1, v) + &lambda; f(u_2, v) \\end{matrix}\\] universal bilinear map: 一个 universal 的 bilinear map 满足以下交换图: Lemma 0.7: \\(b: U &times; V &rarr; T, b&#39;: U &times; V &rarr; T&#39;\\), \\(b\\) 和 \\(b&#39;\\) 是 universal bilinear map, 则 \\(T &cong; T&#39;\\), 即 存在唯一 同构 \\(j: T &rarr; T&#39;, j &circ; b = b&#39;\\). 证明 略 交换图: 相当于利用 Example 0.6 universal bilinear map 里面交换图, 固定 universal bilinear map \\(b\\) 和 \\(&forall;\\) bilinear \\(f &rArr; b&#39;\\), 得到的 \\(&exist;!\\) linear \\((\\overline{f} &rArr; j, &forall; W &rArr; T&#39;) &rArr; j: T &rarr; T&#39;\\), 然后对称得到 \\(j&#39;: T&#39; &rarr; T\\), 即构造了 \\(1_T = j&#39; &circ; j = j &circ; j&#39;\\). (所以交换图的作用就是来找路径咯? ) Example 0.8: 令 \\(&theta;: G &rarr; H\\) 为一个群的同态, 有如下交换图: 其中: \\(\\imath\\) 是 \\(\\mathrm{ker}(&theta;)\\) 到 \\(G\\) 的包含映射 (inclusion) 包含映射 (inclusion): \\(&forall; x &isin; \\mathrm{ker}(&theta;), \\imath(x) = x\\), 用符号 \\(\\hookrightarrow \\) 进行表示 (\\(&sub;\\) 和 \\(&rarr;\\) 结合). \\(&epsilon;\\) 为 trivial homomorphism. trivial: \\(&forall; g &isin; G, &epsilon;(g) = 1\\) Example 0.9: &#8230; Categories, functors and natural transformations A category is a system of related objects. The objects do not live in isolation: there is some notion of map between objects, binding them together. typical examples: object: group, topological space; map: homomorphism, continuous map Categories Definition 1.1.1: 一个 category (范畴) \\(\\mathcal{A}\\) 包含: objects (对象) 的集合 \\(\\mathrm{ob}(\\mathcal{A})\\); 对于每个 \\(A, B &isin; \\mathrm{ob}(\\mathcal{A})\\), 一个从 \\(A\\) 到 \\(B\\) 的 map, arrows, morphisms 的集合 \\(\\mathcal{A} (A, B)\\); 对于每个 \\(A, B, C &isin; \\mathrm{ob}(\\mathcal{A})\\), 一个 composition 函数: \\[\\begin{matrix} \\mathcal{A}(B, C) &times; \\mathcal{A}(A, B) &amp; &rarr; &amp; \\mathcal{A}(A, C) &#92; (g, f) &amp; \\mapsto &amp; g &circ; f \\end{matrix}\\] 对于每个 \\(A &isin; \\mathrm{ob}(\\mathcal{A})\\), 一个 \\(A\\) 上的单位元: an element \\(1_{A}\\) of \\(\\mathcal{A}(A, A)\\), called the identity on \\(A\\) 有以下公理: associativity: \\(f &isin; \\mathcal{A}(A, B), g &isin; \\mathcal{A}(B, C), h &isin; \\mathcal{A}(C, D), (h &circ; g) &circ; f = h &circ; (g &circ; f)\\). identity laws: \\(f &isin; \\mathcal{A}(A, B), f &circ; 1_{A} = f = 1_{B} &circ; f\\) Remarks 1.1.2 记号: 将: \\(A &isin; \\mathcal{A}\\) 记为 \\(A &isin; \\mathrm{ob}(\\mathcal{A})\\); 函数的映射 \\(f: A &rarr; B, A \\xrightarrow{f} B\\) 记为 \\(f &isin; \\mathcal{A}(A, B)\\) 也有记为 \\(\\mathrm{Hom}_{\\mathcal{A}}(A, B)\\), 或者 \\(\\mathrm{Hom}(A, B)\\) 的情况, \\(\\mathrm{Hom}\\) 表示 homomorphism (同态). 函数的结合 (compose) \\(g f\\) 记为 \\(g &circ; f\\) 对一串映射的连接 (string of map): \\[A_0 \\xrightarrow{f_1} A_1 \\xrightarrow{f_2} \\cdots \\xrightarrow{f_n} A_n\\] 可以用一个映射来代替: \\[A_0 \\xrightarrow{f_n f_{n-1} \\cdots f_1} A_n\\] 交换图的 commutes: 如果一个交换图中有两条从 object \\(X\\) 到 object \\(Y\\) 的通路, 则称该交换图为 commutes 的; 称 &#8220;collection&#8221; 为 &#8220;set&#8221; 是一种比较模糊的称呼, 用 &#8220;class&#8221; 理解可能会比较好; 若 \\(f &isin; \\mathcal{A}(A, B)\\), 则 \\(A\\) 为 \\(f\\) 的 domain, \\(B\\) 为 \\(f\\) 的 codomain. 在所有的范畴中的映射都对应有一个明确的 domain 和 codomain. Examples 1.1.3: (categories of mathematical structures) set: 其 object 为集合, 对应的 map 即传统的映射; grp: 其 object 为群, 对应的 map 为群同态; ring: 其 object 为环, 对应的 map 为环同态; \\(\\textbf{Vect}_{k}\\): vector spaces over \\(k\\), 以及对应的线性映射; top: 拓扑空间以及对应的 continuous maps (连续映射). Definition 1.1.4: 对于在范畴 \\(\\mathcal{A}\\) 中的映射 \\(f: A &rarr; B\\), 若 存在 在 \\(\\mathcal{A}\\) 中的映射 \\(g: B &rarr; A\\), 使得 \\(g f = 1_{A}, f g = 1_{B}\\), 则称其为 isomorphism (同构), 称 \\(g\\) 为 \\(f\\) 的逆. 吐槽 哦, 怪不得我觉得上线代的时候老师的用语非常的 &#8220;定语后置&#8221;, 现在自己读英文的时候, 感觉这种说法在简单直译的时候很正常啊&#8230; Example 1.1.5: set 中的同构为 bijection. Example 1.1.6: grp 中的同构及群同构, 类似的 ring 的同构为环同构. Example 1.1.7: top 中的同构为同态. (注: 因为不了解拓扑, 所以之后 top 的部分会尽可能跳过) Example 1.1.8: 一个范畴可以直接说明其 objects, maps, composition 以及 identities: \\(&empty;\\): 没有 objects 与 map; \\(\\boldsymbol{1}\\): 仅有一个 object 与单位映射 (其交换图就是一个点); 一个包含两个元素和一个非单位映射的范畴 \\(A \\xrightarrow{f} B\\); 更多复杂的交换图: 一些范畴可以除了单位映射外完全没有其他的映射, 称其为 discrete 范畴 (离散范畴); 当一个群只有一个元素, 并且所有的映射都是同构时即为一个范畴. 解释 考虑一个仅有一个元素 \\(A\\) 的范畴 \\(\\mathcal{A}\\), 其有一个满足结合率的组合函数 (associative composition function): \\[&circ;: \\mathcal{A}(A, A) &times; \\mathcal{A}(A, A) &rarr; \\mathcal{A}(A, A)\\] 以及一个单位映射 \\(1_{A} &isin; \\mathcal{A}(A, A)\\) 于是有如下和群的对应关系: 范畴群 单元素 \\(A\\) 的范畴 \\(\\mathcal{A}\\)\\(G\\) \\(\\mathcal{A}\\) 中的映射\\(G\\) 中的元素 \\(&circ; &isin; \\mathcal{A}\\)\\(G\\) 中的 \\(&sdot;\\) 算子 \\(1_A\\)\\(1 &isin; G\\) monoid: a set equipped with an associative binary operation and two-sided unit element. preorder: a reflexive transitive binary relation. Construction 1.1.9: 每个范畴 \\(\\mathcal{A}\\) 都有一个对应的 opposite (或 dual) 范畴 \\(\\mathcal{A}^{\\mathrm{op}}\\), 其定义为反转 \\(\\mathcal{A}\\) 中的箭头方向. 形式的定义: 例子: 若 \\(A \\xrightarrow{f} B \\xrightarrow{g} C\\) 为 \\(\\mathcal{A}^{\\mathrm{op}}\\) 中的映射, 则 \\(\\mathcal{A}\\) 的映射为 \\(A \\xleftarrow{f} B \\xleftarrow{g} C\\)/ Remark 1.1.10: 所有的范畴的定义, 定理以及证明都有一个反转箭头方向的 dual 形式. Construction 1.1.11: 范畴的积 (product category) \\(\\mathcal{A} &times; \\mathcal{B}\\) 定义为: \\[\\begin{matrix} \\mathrm{ob}(\\mathcal{A} &times; \\mathcal{B}) &amp; = &amp; \\mathrm{ob}(\\mathcal{A}) &times; \\mathrm{ob}(\\mathcal{B}) &#92; (\\mathcal{A} &times; \\mathcal{B}) ((A, B), (A&#39;, B&#39;)) &amp; = &amp; \\mathcal{A}(A, A&#39;) &times; \\mathcal{B}(B, B&#39;) \\end{matrix}\\] 其中 \\(\\mathcal{A} &times; \\mathcal{B}\\) 中的映射 \\((A, B) &rarr; (A&#39;, B&#39;)\\) 是一个 pair. 不知道对不对的注记 感觉很像线性空间的直积. 简单的一个小节: 这节大概定义了一个 &#8220;范畴&#8221; 是什么东西; 范畴包含元素 (object) 的集合 (collection); 元素之间的映射 (map) 关系 (这些映射关系是如何组合 (compose) 在一起的, 单位映射); 可以用交换图来表示一个范畴, 而将交换图中的箭头反向即可得到一个范畴的 dual. Functors Definition 1.2.1: 定义一个 functor \\(F: \\mathcal{A} &rarr; \\mathcal{B}\\) 由以下组成: 一个函数: \\[ \\mathrm{ob}(\\mathcal{A}) &rarr; \\mathrm{ob}(\\mathcal{B}) \\] 记作 \\(A \\mapsto F(A)\\); 对于所有 \\(A, A&#39; &isin; \\mathcal{A}\\), 其中的映射如下: \\[ \\mathcal{A}(A, A&#39;) &rarr; \\mathcal{B}(F(A), F(A&#39;)) \\] 记作 \\(f \\mapsto F(f)\\). 注: 相当于就是一个 functor 同时定义了范畴中元素 (object) 和映射 (map) 的映射关系. 满足一下的公理: \\(F(f&#39; &circ; f) = F(f&#39;) &circ; F(f)\\), 对于 \\(\\mathcal{A}\\) 中的 \\(A \\xrightarrow{f} A&#39; \\xrightarrow{f&#39;} A&#8221;\\); \\(F(1_{A}) = 1_{F(A)}, A &isin; \\mathcal{A}\\). Remarks 1.2.2: 1. Appendix: English Dictionary 看到同学有读论文学英文的操作, 不妨也来试试: multiplicative \\(&larr;\\) multiplication \\(&larr;\\) multiply multiplicative identity 乘法单位元 homomorphisms (\\(&larr;\\) Greek homoios morphe, &#8220;similar form&#8221;) 同态 isomorphism \\(&larr;\\) Greek isos (equal), morphe (form, shape) 同构 可逆的线性变换称为同构 inclusion \\(&larr;\\) include axiom: 公理 vague: 模糊的 bijection: bijective function, one-to-one correspondence, 一一映射 associative: 结合的 associate, association dual","headline":"Reading: Basic Category Theory","mainEntityOfPage":{"@type":"WebPage","@id":"/reading/basic-category-theory/"},"url":"/reading/basic-category-theory/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Reading: Basic Category Theory</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-08-08T00:00:00+00:00" itemprop="datePublished">Aug 8, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>想要了解更多的一些关于 &#8220;函数式&#8221; 的知识,
+  毕竟每次看到网上有人讲到函数式就是范畴论起手,
+  让我这种对函数式的浅薄印象只停留在 &#8220;不可变数据结构&#8221;,
+  &#8220;函数一等公民&#8221; 这样的菜逼十分的担忧, 思来想去还是得学点硬的.</p>
+<p>这本书是看到网上有位 55 岁退休闲得慌的大哥推荐的 (推荐的 <a href="http://www.cs-study.com/koga/category/short_explanation_of_leinster01_j.html">网页</a>,
+  <a href="http://www.cs-study.com/koga/category/short_explanation_of_leinster01.html">英文版</a>, 不过其实感觉更像是读书笔记, 虽然大哥的笔记真强 <del>什么日本人刻板印象</del>).</p>
+<p>(大哥的自述 <a href="http://www.cs-study.com/koga/">原文</a>: &#8220;2014年に５５歳で退職しました．早まったかもです．&#8221;)</p>
+<p>并且这本书 (Basic Category Theory) 的作者免费把书开放在了 arXiv 上:
+  <a href="https://arxiv.org/abs/1612.09375">Tom Leinster : Basic Category Theory, 2014 (https://arxiv.org/abs/1612.09375)</a>.</p>
+<p>(真是好人啊)</p>
+<p>为了防止我鸽了, 采用一天一更新的方式进行一个记录.</p>
+<details><summary>记录的内容</summary>
+<ul>
+  <li>原文中的 Example, Exercise, Lemma, 保留原文的标号</li>
+</ul>
+<p>+</p>
+</details>
+<h1>Introduction</h1>
+<p><b>Example 0.1</b>:</p>
+<ul>
+  <li>符号 \(1\) 用于表示 <span style="text-decoration:underline;">只有一个元素的集合</span>.</li>
+  <li>性质: <b>任意</b> 集合 \(X\), <b>存在</b> \(X &rarr; 1\) 的映射.</li>
+  <li>符号 \(&rarr;\) 用于表示映射 (map, mapping, function)</li>
+</ul>
+<p><b>Example 0.2</b>:</p>
+<ul>
+  <li>性质: <b>任意</b> 环 (ring) \(R\), <b>存在</b> <b>唯一</b> (unique) 同态 \(\mathbb{Z} &rarr; R\)</li>
+  <li>证明:
+  <details><summary>略</summary>
+    <ul>
+      <li>存在性:
+        <p>\[&phi;(n) = \left\{ \begin{matrix} \underbrace{1 + \cdots + 1}_{n} &amp; \mathrm{if}\ n &gt; 0 &#92; 0 &amp; \mathrm{if}\ n = 0 &#92; - &phi;(-n) &amp; \mathrm{if}\ n &lt; 0  \end{matrix} \right.\]</p>
+      </li>
+      <li>唯一性:
+        <p>\[&psi;(n) = &psi;(\underbrace{1 + \cdots + 1}_n) = \underbrace{&psi;(1) + \cdots + &psi;(1)}_n = \underbrace{1 + \cdots + 1}_n = &phi;(n)\]</p>
+        <p>注: 这里用了同态的线性, 反证法证明之; \(n = 0\) 用同态的零元; \(n &lt; 0\) 同理.</p>
+      </li>
+    </ul>
+  </details>
+  </li>
+</ul>
+<p><b>Lemma 0.3</b>:</p>
+<ul>
+  <li>若对 <b>任意</b> 环 \(R\), <b>存在</b> 同态 \(A &rarr; R\) (称该性质为 &#8220;initial&#8221;), 则 \(A &cong; \mathbb{Z}\)</li>
+  <li>符号: \(&cong;\) isomorphism</li>
+  <li>证明:
+  <details><summary>略</summary>
+    <ul>
+      <li>\(A\) initial \(&rArr;\) <b>存在唯一</b> 同态 \(&phi;: A &rarr; \mathbb{Z}\);</li>
+      <li>\(\mathbb{Z}\) initial \(&rArr;\) <b>存在唯一</b> 同态 \(&phi;': \mathbb{Z} &rarr; A\);</li>
+      <li>得 \(&phi;' &circ; &phi; = 1_A, &phi; &circ; &phi;' = 1_{\mathbb{Z}}\)</li>
+    </ul>
+  </details>
+  </li>
+</ul>
+<p><b>Example 0.4</b>:</p>
+<ul>
+  <li>矢量空间 (vector space) 的映射可以变成基底 (basis, \((v_s)_{s &isin; S}\)) 的映射.
+    <p>(specify a linear map from \(V\) to \(W\) simply by saying where
+      the basis elements go)</p>
+  </li>
+  <li>任何定义在基底元素的函数可以被拓展为 \(V\) 唯一的线性映射
+    <p>(any function defined on the basis elements exends uniquely to a
+      linear map on \(V\))</p>
+    <p>考虑函数: \(i: S &rarr; V, i(s) = v_s, s &isin; S\), 对 <b>任意</b> 函数 \(f\),
+      <b>存在唯一</b> 线性函数 \(\overline{f}: V &rarr; &forall; W\). (这里是不是理解得有点错误? )</p>
+  </li>
+  <li>交换图
+    <p><img src="/_img/reading/basic-category-theory/s-v-w-map.png" alt="/_img/reading/basic-category-theory/s-v-w-map.png" /></p>
+  </li>
+</ul>
+<p><b>Example 0.5</b>:</p>
+<ul>
+  <li>对集合 \(S\), 通过 discrete topology \(D(S)\) (topological space),
+    任意从 \(S &rarr; X\)  的映射都是连续的.
+    <p>这里不理解的是 discrete topology (all subsets are <b>open</b>?),
+      topological space 的概念, 为啥就连续了?</p>
+  </li>
+</ul>
+<p><b>Example 0.6</b>:</p>
+<ul>
+  <li><b>bilinear map</b> \(f: U &times; V &rarr; W\) 满足:
+    <p>\[\begin{matrix} f(u, v_1 + &lambda; v_2) &amp; = &amp; f(u, v_1) + &lambda; f(u, v_2) &#92; f(u_1 + &lambda; u_2, v) &amp; = &amp; f(u_1, v) + &lambda; f(u_2, v) \end{matrix}\]</p>
+  </li>
+  <li>universal bilinear map: 一个 universal 的 bilinear map 满足以下交换图:
+    <p><img src="/_img/reading/basic-category-theory/universal-bilinear-map.png" alt="/_img/reading/basic-category-theory/universal-bilinear-map.png" /></p>
+  </li>
+</ul>
+<p><b>Lemma 0.7</b>:</p>
+<ul>
+  <li>\(b: U &times; V &rarr; T, b': U &times; V &rarr; T'\), \(b\) 和 \(b'\) 是 universal bilinear map,
+    则 \(T &cong; T'\), 即 <b>存在唯一</b> 同构 \(j: T &rarr; T', j &circ; b = b'\).</li>
+  <li>证明
+  <details><summary>略</summary>
+    <p>交换图:</p>
+    <p><img src="/_img/reading/basic-category-theory/lemma-0-7.png" alt="/_img/reading/basic-category-theory/lemma-0-7.png" /></p>
+    <p>相当于利用 <b>Example 0.6</b> universal bilinear map 里面交换图,
+      固定 universal bilinear map \(b\) 和 \(&forall;\) bilinear \(f &rArr; b'\),
+      得到的 \(&exist;!\) linear \((\overline{f} &rArr; j, &forall; W &rArr; T') &rArr; j: T &rarr; T'\),
+      然后对称得到 \(j': T' &rarr; T\), 即构造了 \(1_T = j' &circ; j = j &circ; j'\).</p>
+    <p>(所以交换图的作用就是来找路径咯? )</p>
+  </details>
+  </li>
+</ul>
+<p><b>Example 0.8</b>:</p>
+<ul>
+  <li>令 \(&theta;: G &rarr; H\) 为一个群的同态, 有如下交换图:
+    <p><img src="/_img/reading/basic-category-theory/example-0-8.png" alt="/_img/reading/basic-category-theory/example-0-8.png" /></p>
+    <p>其中:</p>
+    <ul>
+      <li>\(\imath\) 是 \(\mathrm{ker}(&theta;)\) 到 \(G\) 的包含映射 (inclusion)
+        <p>包含映射 (inclusion): \(&forall; x &isin; \mathrm{ker}(&theta;), \imath(x) = x\),
+          用符号 \(\hookrightarrow \) 进行表示 (\(&sub;\) 和 \(&rarr;\) 结合).</p>
+      </li>
+      <li>\(&epsilon;\) 为 trivial homomorphism.
+        <p>trivial: \(&forall; g &isin; G, &epsilon;(g) = 1\)</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<p><b>Example 0.9</b>:
+  &#8230;</p>
+<h1>Categories, functors and natural transformations</h1>
+<blockquote>
+  <p>A category is a system of related objects. The <b>objects</b> do not live
+    in isolation: there is some notion of <b>map</b> between objects, binding
+    them together.</p>
+</blockquote>
+<p>typical examples:</p>
+<ul>
+  <li><b>object</b>: group, topological space;</li>
+  <li><b>map</b>: homomorphism, continuous map</li>
+</ul>
+<h2>Categories</h2>
+<p><b>Definition 1.1.1</b>: 一个 <b>category</b> (范畴) \(\mathcal{A}\) 包含:</p>
+<ul>
+  <li><b>objects</b> (对象) 的集合 \(\mathrm{ob}(\mathcal{A})\);</li>
+  <li>对于每个 \(A, B &isin; \mathrm{ob}(\mathcal{A})\), 一个从 \(A\) 到 \(B\) 的 <b>map</b>,
+    <b>arrows</b>, <b>morphisms</b> 的集合 \(\mathcal{A} (A, B)\);</li>
+  <li>对于每个 \(A, B, C &isin; \mathrm{ob}(\mathcal{A})\), 一个 composition 函数:
+    <p>\[\begin{matrix} \mathcal{A}(B, C) &times; \mathcal{A}(A, B) &amp; &rarr; &amp; \mathcal{A}(A, C) &#92; (g, f) &amp; \mapsto &amp; g &circ; f \end{matrix}\]</p>
+  </li>
+  <li>对于每个 \(A &isin; \mathrm{ob}(\mathcal{A})\), 一个 \(A\) 上的单位元: an element \(1_{A}\)
+    of \(\mathcal{A}(A, A)\), called the <b>identity</b> on \(A\)</li>
+</ul>
+<p>有以下公理:</p>
+<ul>
+  <li><b>associativity</b>: \(f &isin; \mathcal{A}(A, B), g &isin; \mathcal{A}(B, C), h &isin; \mathcal{A}(C, D), (h &circ; g) &circ; f = h &circ; (g &circ; f)\).</li>
+  <li><b>identity laws</b>: \(f &isin; \mathcal{A}(A, B), f &circ; 1_{A} = f = 1_{B} &circ; f\)</li>
+</ul>
+<p><b>Remarks 1.1.2</b> 记号:</p>
+<ol>
+  <li>将:
+    <ul>
+      <li>\(A &isin; \mathcal{A}\) 记为 \(A &isin; \mathrm{ob}(\mathcal{A})\);</li>
+      <li>函数的映射 \(f: A &rarr; B, A \xrightarrow{f} B\) 记为 \(f &isin; \mathcal{A}(A, B)\)
+        <p>也有记为 \(\mathrm{Hom}_{\mathcal{A}}(A, B)\), 或者 \(\mathrm{Hom}(A, B)\) 的情况,
+          \(\mathrm{Hom}\) 表示 homomorphism (同态).</p>
+      </li>
+      <li>函数的结合 (compose) \(g f\) 记为 \(g &circ; f\)</li>
+    </ul>
+  </li>
+  <li>对一串映射的连接 (string of map):
+    <p>\[A_0 \xrightarrow{f_1} A_1 \xrightarrow{f_2} \cdots \xrightarrow{f_n} A_n\]</p>
+    <p>可以用一个映射来代替:</p>
+    <p>\[A_0 \xrightarrow{f_n f_{n-1} \cdots f_1} A_n\]</p>
+  </li>
+  <li>交换图的 <b>commutes</b>: 如果一个交换图中有两条从 object \(X\) 到 object \(Y\)
+    的通路, 则称该交换图为 <b>commutes</b> 的;</li>
+  <li>称 &#8220;collection&#8221; 为 &#8220;set&#8221; 是一种比较模糊的称呼, 用 &#8220;class&#8221; 理解可能会比较好;</li>
+  <li>若 \(f &isin; \mathcal{A}(A, B)\), 则 \(A\) 为 \(f\) 的 <b>domain</b>, \(B\) 为 \(f\) 的 <b>codomain</b>.
+    <p>在所有的范畴中的映射都对应有一个明确的 domain 和 codomain.</p>
+  </li>
+</ol>
+<p><b>Examples 1.1.3</b>: (categories of mathematical structures)</p>
+<ol>
+  <li><b>set</b>: 其 object 为集合, 对应的 map 即传统的映射;</li>
+  <li><b>grp</b>: 其 object 为群, 对应的 map 为群同态;</li>
+  <li><b>ring</b>: 其 object 为环, 对应的 map 为环同态;</li>
+  <li>\(\textbf{Vect}_{k}\): vector spaces over \(k\), 以及对应的线性映射;</li>
+  <li><b>top</b>: 拓扑空间以及对应的 continuous maps (连续映射).</li>
+</ol>
+<p><b>Definition 1.1.4</b>:
+  对于在范畴 \(\mathcal{A}\) 中的映射 \(f: A &rarr; B\), 若 <b>存在</b> 在 \(\mathcal{A}\) 中的映射 \(g: B &rarr; A\),
+  使得 \(g f = 1_{A}, f g = 1_{B}\), 则称其为 <b>isomorphism</b> (同构), 称 \(g\) 为 \(f\) 的逆.</p>
+<details><summary>吐槽</summary>
+<p>哦, 怪不得我觉得上线代的时候老师的用语非常的 &#8220;定语后置&#8221;,
+  现在自己读英文的时候, 感觉这种说法在简单直译的时候很正常啊&#8230;</p>
+</details>
+<p><b>Example 1.1.5</b>: <b>set</b> 中的同构为 bijection.</p>
+<p><b>Example 1.1.6</b>: <b>grp</b> 中的同构及群同构, 类似的 <b>ring</b> 的同构为环同构.</p>
+<p><b>Example 1.1.7</b>: <b>top</b> 中的同构为同态.</p>
+<p>(注: 因为不了解拓扑, 所以之后 top 的部分会尽可能跳过)</p>
+<p><b>Example 1.1.8</b>:</p>
+<ol>
+  <li>一个范畴可以直接说明其 objects, maps, composition 以及 identities:
+    <ul>
+      <li>\(&empty;\): 没有 objects 与 map;</li>
+      <li>\(\boldsymbol{1}\): 仅有一个 object 与单位映射 (其交换图就是一个点);</li>
+      <li>一个包含两个元素和一个非单位映射的范畴 \(A \xrightarrow{f} B\);</li>
+      <li>更多复杂的交换图:
+        <p><img src="/_img/reading/basic-category-theory/examples-1-1-8-a.png" alt="/_img/reading/basic-category-theory/examples-1-1-8-a.png" /></p>
+      </li>
+    </ul>
+  </li>
+  <li>一些范畴可以除了单位映射外完全没有其他的映射, 称其为 <b>discrete</b> 范畴 (离散范畴);</li>
+  <li>当一个群只有一个元素, 并且所有的映射都是同构时即为一个范畴.
+   <details><summary>解释</summary>
+    <ul>
+      <li>考虑一个仅有一个元素 \(A\) 的范畴 \(\mathcal{A}\),
+        其有一个满足结合率的组合函数 (associative composition function):
+        <p>\[&circ;: \mathcal{A}(A, A) &times; \mathcal{A}(A, A) &rarr; \mathcal{A}(A, A)\]</p>
+        <p>以及一个单位映射 \(1_{A} &isin; \mathcal{A}(A, A)\)</p>
+      </li>
+      <li>于是有如下和群的对应关系:
+        <table>
+          <tr><th>范畴</th><th>群</th></tr>
+          <tr><td>单元素 \(A\) 的范畴 \(\mathcal{A}\)</td><td>\(G\)</td></tr>
+          <tr><td>\(\mathcal{A}\) 中的映射</td><td>\(G\) 中的元素</td></tr>
+          <tr><td>\(&circ; &isin; \mathcal{A}\)</td><td>\(G\) 中的 \(&sdot;\) 算子</td></tr>
+          <tr><td>\(1_A\)</td><td>\(1 &isin; G\)</td></tr>
+        </table>
+      </li>
+    </ul>
+   </details>
+  </li>
+  <li><b>monoid</b>: a set equipped with an associative binary operation and
+    two-sided unit element.</li>
+  <li><b>preorder</b>: a reflexive transitive binary relation.</li>
+</ol>
+<p><b>Construction 1.1.9</b>:
+  每个范畴 \(\mathcal{A}\) 都有一个对应的 <b>opposite</b> (或 <b>dual</b>) 范畴 \(\mathcal{A}^{\mathrm{op}}\),
+  其定义为反转 \(\mathcal{A}\) 中的箭头方向.</p>
+<ul>
+  <li>形式的定义:</li>
+  <li>例子: 若 \(A \xrightarrow{f} B \xrightarrow{g} C\) 为 \(\mathcal{A}^{\mathrm{op}}\) 中的映射, 则 \(\mathcal{A}\) 的映射为 \(A \xleftarrow{f} B \xleftarrow{g} C\)/</li>
+</ul>
+<p><b>Remark 1.1.10</b>:
+  所有的范畴的定义, 定理以及证明都有一个反转箭头方向的 <b>dual</b> 形式.</p>
+<p><b>Construction 1.1.11</b>:
+  范畴的积 (<b>product category</b>) \(\mathcal{A} &times; \mathcal{B}\) 定义为:</p>
+<p>\[\begin{matrix} \mathrm{ob}(\mathcal{A} &times; \mathcal{B}) &amp; = &amp; \mathrm{ob}(\mathcal{A}) &times; \mathrm{ob}(\mathcal{B}) &#92; (\mathcal{A} &times; \mathcal{B}) ((A, B), (A', B')) &amp; = &amp; \mathcal{A}(A, A') &times; \mathcal{B}(B, B') \end{matrix}\]</p>
+<p>其中 \(\mathcal{A} &times; \mathcal{B}\) 中的映射 \((A, B) &rarr; (A', B')\) 是一个 pair.</p>
+<details><summary>不知道对不对的注记</summary>
+<p>感觉很像线性空间的直积.</p>
+</details>
+<p>简单的一个小节:</p>
+<ul>
+  <li>这节大概定义了一个 &#8220;范畴&#8221; 是什么东西;</li>
+  <li>范畴包含元素 (object) 的集合 (collection); 元素之间的映射 (map) 关系
+    (这些映射关系是如何组合 (compose) 在一起的, 单位映射);</li>
+  <li>可以用交换图来表示一个范畴, 而将交换图中的箭头反向即可得到一个范畴的 <b>dual</b>.</li>
+</ul>
+<h2>Functors</h2>
+<p><b>Definition 1.2.1</b>:
+  定义一个 <b>functor</b> \(F: \mathcal{A} &rarr; \mathcal{B}\) 由以下组成:</p>
+<ul>
+  <li>一个函数:
+    <p>\[ \mathrm{ob}(\mathcal{A}) &rarr; \mathrm{ob}(\mathcal{B}) \]</p>
+    <p>记作 \(A \mapsto F(A)\);</p>
+  </li>
+  <li>对于所有 \(A, A' &isin; \mathcal{A}\), 其中的映射如下:
+    <p>\[ \mathcal{A}(A, A') &rarr; \mathcal{B}(F(A), F(A')) \]</p>
+    <p>记作 \(f \mapsto F(f)\).</p>
+  </li>
+</ul>
+<p>注: 相当于就是一个 <b>functor</b> 同时定义了范畴中元素 (object) 和映射 (map) 的映射关系.</p>
+<p>满足一下的公理:</p>
+<ul>
+  <li>\(F(f' &circ; f) = F(f') &circ; F(f)\), 对于 \(\mathcal{A}\) 中的 \(A \xrightarrow{f} A' \xrightarrow{f'} A&#8221;\);</li>
+  <li>\(F(1_{A}) = 1_{F(A)}, A &isin; \mathcal{A}\).</li>
+</ul>
+<p><b>Remarks 1.2.2</b>:
+  1.</p>
+<h1>Appendix: English Dictionary</h1>
+<p>看到同学有读论文学英文的操作, 不妨也来试试:</p>
+<ul>
+  <li>multiplicative \(&larr;\) multiplication \(&larr;\) multiply</li>
+  <li>multiplicative identity 乘法单位元</li>
+  <li>homomorphisms (\(&larr;\) Greek homoios morphe, &#8220;similar form&#8221;) 同态</li>
+  <li>isomorphism \(&larr;\) Greek isos (equal), morphe (form, shape) 同构
+    <p><i>可逆的线性变换称为同构</i></p>
+  </li>
+  <li>inclusion \(&larr;\) include</li>
+  <li>axiom: 公理</li>
+  <li>vague: 模糊的</li>
+  <li>bijection: bijective function, one-to-one correspondence, 一一映射</li>
+  <li>associative: 结合的 associate, association</li>
+  <li>dual</li>
+</ul>
+
+  </div><a class="u-url" href="/reading/basic-category-theory/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
