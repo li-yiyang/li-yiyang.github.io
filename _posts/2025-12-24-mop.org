@@ -1,0 +1,292 @@
+:PROPERTIES:
+:header-args:lisp: :package CLOSER-COMMON-LISP-USER
+:END:
+#+title: MOP: again!
+#+date: 2025-12-24
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+虽然之前写的/之前的 [[https://www.lispworks.com/documentation/lw70/MOP/mop/concepts.html][MOP]] 阅读和学习尝试都有点中道崩猝.
+要说这次可能有什么不同的话, 那就是至少我现在是带着项目进行的学习了.
+嗯, 应该可以这么说吧... ([[https://github.com/li-yiyang/coca][coca]] 和 [[https://github.com/li-yiyang/mlx-cl][mlx-cl]]).
+
+注: 假如有兴趣的话, 不妨来试试 [[https://github.com/li-yiyang/mopdoc][MOPDoc]], 为 MOP 添加 documentation string.
+这样就可以用 SLIME/SLY 来 inspect.
+
+这里参考的是 AMOP (Art of MetaObject Protocol).
+
+* The Design and Implementation of Metaobject Protocols
+** How CLOS is Implemented
+*** A Subset of CLOS
+书中是用了一个 CLOS 的子集来做教学例子.
+这里就用真实对应的 CLOS 和 [[https://github.com/pcostanza/closer-mop/tree/master][closer-mop]] 进行联系.
+
+以下的代码在 =CLOSER-COMMON-LISP-USER= 下运行.
+
+#+html: <details><summary>注: 这部分建议读什么</summary>
+
+感觉这部分属于是作者小小炫技了: 在 CLOS 上实现一个 CLOS 的子集.
+但是我并不是很关心具体是怎么实现的, 所以读这一部分的时候基本是跳着读的.
+
+其实这部分可以主要用来关注在 CLOS 的 interface 下面的具体发生了什么过程.
+比如创建实例 =make-instance= 的时候, 发生了什么过程:
++ =allocate-instance=
++ =initialize-instance=
+
+#+html: </details>
+
+*** The Basic Backstage Structures
+*** Representing Classes
+在 =standard-class= 这个 Metaclass 类中, 有以下的 =slots=:
+
+#+begin_src lisp :exports both
+(mapcar #'slot-definition-name (class-slots (find-class 'standard-class)))
+#+end_src
+
+#+RESULTS:
+| sb-pcl::%type | sb-pcl::source | sb-pcl::plist | sb-pcl::name | sb-pcl::class-eq-specializer | sb-pcl::direct-superclasses | sb-pcl::direct-subclasses | sb-pcl::direct-methods | sb-pcl::%documentation | sb-pcl::safe-p | sb-pcl::finalized-p | sb-pcl::%class-precedence-list | sb-pcl::cpl-available-p | sb-pcl::can-precede-list | sb-pcl::incompatible-superclass-list | sb-pcl::wrapper | sb-pcl::prototype | sb-pcl::direct-slots | sb-pcl::slots |
+
+**** The =defclass= Macro
+可以把 =defclass= 的过程看作是:
+
+#+begin_src lisp :eval no
+(defmacro defclass (name direct-superclasses direct-slots &rest options)
+  `(ensure-class
+    ',name
+    :direct-superclasses ,(canonicalize-direct-superclasses
+                           direct-superclasses)
+    :direct-slots        ,(canonicalize-direct-slots
+                           direct-slots)
+    ,@(canonicalize-defclass-options options)))
+#+end_src
+
+其中 =canonicalize-= 的这些部分可以暂时当作是一个正则化的过程, 忽略.
+
+注: 实际上可能并不是这样实现的 =defclass=.
+
+**** Direct Superclasses
+是一组 superclasses 的列表.
+
+#+begin_src lisp :eval no
+(defun canonicalize-direct-superclasses (direct-superclasses)
+  (mapcar #'find-class direct-superclasses))
+#+end_src
+
+**** Direct Slots
++ =name= \(\rightarrow\) =:name name=
++ =initform= \(\rightarrow\) =:initform initform :initfunction (lambda () initform)=
+
+  其中
+  + =:initfunction=: 是一个无参数的 =lambda= 函数, 用于在 lexical 环境被调用生成初始化的值
+  + =:initform=: 仅是被保留用于可读性
++ =initarg= \(\rightarrow\) =:initargs (initarg initarg...)=
++ =accessor= \(\rightarrow\) =:reader accessor :writer (setf accessor)=
++ =reader= \(\rightarrow\) =:readers (reader reader...)=
++ =writer= \(\rightarrow\) =:writers (writer writer...)=
+
+例:
+
+#+begin_src lisp :eval no
+(ensure-class
+ 'class
+ :direct-superclasses (...)
+ :direct-slots  (list (list
+                       :name            'name             ; slot-definition-name
+                       :initform        'val              ; slot-definition-initform
+                       :initfunction   #'(lambda () val)  ; slot-definition-initfunction
+                       :initargs        '(:name)          ; slot-definition-initargs
+                       :readers         '(name)           ; slot-definition-readers
+                       :writers         '((setf name))))) ; slot-definition-writers
+#+end_src
+
+**** Class Options
+被转换为 =plist= 作为更多的参数如下被 =ensure-class= 类似如下调用:
+
+#+begin_src lisp :eval no
+(make-instance 'standard-class ,@class-options-plist)
+#+end_src
+
+**** =ensure-class=
+相当于是做了如下的事情:
++ =make-instance=: 从 Metaclass 创建了一个 class 类
++ =(setf find-class)=: 在 class lookup table 中注册对应的类
+
+**** Intializing Class Metaobjects
++ 生成 =direct-superclasses=
++ 向 superclass 的 =direct-subclasses= 添加自己
++ 定义 =reader= 和 =accessor= 函数
++ 以及处理其他的继承关系
+
+**** Inheritance
++ 计算类的继承关系
++ 计算 slot: 从父类中继承, 并最终生成 =effective-slot-definition=
+
+*** Printing Objects
+调用 =print-object=.
+
+*** Representing the Structure of Instances
++ Object identity
+  + =make-instance=: 类似于如下的过程
+
+    #+begin_src lisp :eval no
+    (let ((instance (allocate-instance class)))
+      (apply #'initialize-instance instance initargs)
+      instance)
+    #+end_src
+  + =initialize-instance=, =reinitialize-instance= 都共同地使用了 =shared-initialize=
++ Slot storage:
+  + =(alocate-instance class &rest args)=: 为类实例及其 slots 划分空间
+  + =(slot-value instance slot-name)=: 获取实例的 slot 的值
+  + =(slot-boundp instance slot-name)=: 判断是否绑定了值
+  + =(slot-makunbound instance slot-name)=: unbind slot
+  + =(slot-exists-p instance slot-name)=: 判断是否存在
++ Classification:
+  + =class-of=: 获得实例的类
++ Reclassification:
+  + =change-class=
+  + =update-instance-for-different-class=
+
+*** Representing Generic Functions
+**** The =defgeneric= Macro
+相当于是把 =defgeneric= 变成 =ensure-generic-function=
+
+类似于:
+
+#+begin_src lisp :eval no
+(defun ensure-generic-function (function-name &rest keys)
+  (if (fboundp function-name)
+      ...
+      (let ((gf (apply #'make-instance 'standard-generic-function :name function-name keys)))
+        (setf (fdefinition function-name) gf)
+        gf)))
+#+end_src
+
+*** Representing Methods
+同上, =ensure-method=.
+
+*** Invoking Generic Functions
+*** A Word About Preformance
+** Introspection and Analysis
+#+html: <details><summary>这一部分读什么</summary>
+这部分主要给了一堆的接口可以用来在拓展 CLOS 的时候编程地实现属性的读取和写入.
+但是我没啥精力去抄书, 所以这部分不如直接看 API...
+#+html: </details>
+
+** Extending the Language
+*** Specialized Class Metaobjects
+通过定义 Metaclass, 可以实现修改默认类实例的生成规则.
+
+例:
+
+#+begin_src lisp :eval no
+(defclass counted-class (standard-class)
+  ((counter :initform 0)))
+
+(defmethod make-instance :after ((class counted-class) &key)
+  (incf (slot-value class 'counter)))
+#+end_src
+
+一般的做法:
+
+1. 定义一个 metaobject class =(defclass CLASS (standard-class) (...) ...)=
+2. 在 CLOS 上修改对应的过程
+3. 创建对应 metaobject class 的实例 -- 即受 metaclass 行为控制的类
+
+*** Terminology
+| Terminology                    | Examples, Values                                                 |
+|--------------------------------+------------------------------------------------------------------|
+| standard metaobject classes    | ~standrad-class~, ~standard-generic-function~, ~standard-method~ |
+| specialized metaobject classes | user defined subclasses of standard metaobject classes           |
+| standard methods               | methods                                                          |
+| metaobjects                    | instance of metaobject class                                     |
+|                                | specialized class metaobjects,                                   |
+| metaobject class               |                                                                  |
+
+*** Using Specialized Class Metaobject Classes
+#+begin_src lisp
+(defclass class (...)
+  (...)
+  (:metaclass metaclass)
+  (...)
+  (:metaclass-init-arg init-val))
+#+end_src
+
+*** Class Precedence Lists
+使用 =compute-class-precedence-list= 来得到一个类的所有的依赖列表.
+
+#+begin_src lisp :results verbatim :exports both
+(compute-class-precedence-list (find-class 'coca:ns-window))
+#+end_src
+
+#+RESULTS:
+: (#<coca.appkit:ns-window NSWindow 20BF3C908>
+:  #<coca.appkit::ns-responder NSResponder 20BF3D600>
+:  #<coca.foundation:ns-object NSObject 20BEDDD58>
+:  #<standard-class coca.objc:standard-objc-object>
+:  #<standard-class coca.objc::objc-pointer>
+:  #<standard-class common-lisp:standard-object>
+:  #<sb-pcl::slot-class sb-pcl::slot-object> #<sb-pcl:system-class common-lisp:t>)
+
+*** Slot Inheritance
+**** Slot Inheritance Protocol
++ =(compute-slots class)= 返回元素为 =effective-slot-definition= 的列表
+
+  在调用 =compute-slots= 时, =class-precedence-list= 应当已经被初始化;
++ =(compute-effective-slot-definition class slots)= 用于合并 =slots=
+  + =slots=: 元素为 =direct-slot-definition= 的列表
+
+**** User Code for the Slot Extension
+AMOP 里面用了一个 =attributes-class= 来作为例子.
+这里直接抛开例子, 大概介绍一下过程:
+
++ 需要一个 metaclass
+  + 通过 =compute-effective-slot-definition= 更改合并的逻辑或者参与合并的过程
+  + 通过参与 =compute-slots= 过程来改变或者更新元数据
+
+*** Other Inheritance Protocols
+**** Precomputing Default Initialization Arguments
+*** Slot Access
+以下的接口可以重写默认的 slot 规则:
+
++ =(slot-value-using-class class instance slot-name)=
++ =(slot-boundp-using-class class instance slot-name)=
++ =(slot-makunbound-using-class class instance slot-name)=
+
+*** Instance Allocation
+以下的接口可以重写默认的 slot 初始化规则:
+
++ =(allocate-instance class)=
++ =(slot-definition-allocation slot-definition)=
+
+** Protocol Design
+因为并不关心这一部分, 所以就略过了.
+
+*** A Simple Generic Function Invocation Protocol
+**** Generic Function Invocation
+*** Functional and Procedural Protocols
+**** Documenting Generic Functions vs Methods
+**** Overriding the Standard Method
+*** Layered Protocols
+*** Improving Performance
+**** Effective Method Functions
+**** Method Functions
+**** Discriminating Functions
+**** Streamlined Generic Function Invocation
+*** Protocol Design Summary
+* So, in Coca
+** About
+在 coca 这个项目里面, 因为我希望能够实现一个比较优雅的 Class property 的读取.
+于是希望能够实现这样的操作:
+
+#+begin_src lisp
+(slot-value objc-object 'objc-property)
+#+end_src
+
+来代替 =(invoke objc-object objc-property)=.
+
+那么要如何实现呢? 最终实现的
+
+* 后记
+感觉 Lisp 的书好多都有一种苏式教材的感觉,

@@ -1,0 +1,292 @@
+#+title: ObjC [1.5] NSException (EN)
+#+date: 2025-12-27
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+So this stuff has bother me for days...
+How to catch =NSException= when =invoke= ObjC methods?
+
+In Lisp, we could do error (condition) capture like this:
+
+#+begin_src lisp
+(handler-case (error your-error-condition)
+  (some-other-error ()
+    ...)
+  (your-error-condition ()
+    (format t "Haha")))
+#+end_src
+
+which, is like you do the following in ObjC:
+
+#+begin_src objc
+@try {
+  @throw YourErrorCondition
+}
+@catch (YourErrorCondition *e) {
+  NSLog(@"Haha")
+}
+#+end_src
+
+however, it's not trivial to implement such thing in [[https://github.com/li-yiyang/coca/commit/d91a1025bb9cdf72c434eb382dee134c72262b78][coca]]...
+I gave up... Well, just kidding, if I just give up, you won't
+see this post. :p
+
+#+begin_quote
+Note: I was natively speaking Chinese. This blog post is written
+in English to share to other Lisp programmers on reddit. If you
+think my English is poor, use LLM to refine or translate it. :p
+#+end_quote
+
+* How I Fails: The First Try
+** Callback wrapped by =@try= and =@catch=
+I posted my struggling experience in reddit:
+[[https://www.reddit.com/r/Common_Lisp/comments/1pwetri/cffi_callback_function_in_trycatch_black_is_not/][CFFI callback function in try-catch black is not working]].
+
+And here's its trivial ideas:
++ we want to capture the =NSException=,
+  so we could just write a wrapper code:
+
+  #+begin_src objc
+  void coca_lisp_call_wrapper (void (*call)(void)) {
+    @try {
+      call();
+    }
+    @catch (NSException *e) {
+      coca_lisp_exception_callback(e);
+    }
+  }
+  #+end_src
++ but if we pass CFFI callback as =call= arguments:
+
+  #+begin_src lisp
+  (foreign-funcall "coca_lisp_call_wrapper" :pointer (callback invoke-error))
+  #+end_src
+
+  the =NSException= is just not captured!
+
+  And here's a minimum reproducable example if you are willing to try:
+
+  #+html: <details><summary>Folded, Click me to expand. </summary>
+
+  #+begin_src objc
+  #import <Foundation/Foundation.h>
+
+  void coca_lisp_call_wrapper (void (*call)(void)) {
+    @try {
+      call();
+    }
+    @catch (NSException *e) {
+      NSLog(@"Safe... ");
+    }
+  }
+
+  void coca_lisp_error_function () {
+    NSArray *arr = @[@1, @2];
+    arr[10];
+  }
+
+  int main (int argc, char** argv) {
+    // this will capture NSException
+    coca_lisp_call_wrapper(&coca_lisp_error_function);
+  }
+  #+end_src
+
+  if compiled and run the above code, it would return:
+
+  #+begin_example
+  clang -fobjc-arc -framework Foundation -o test test.m && ./test
+  test.m:14:3: warning: container access result unused - container access should not be used for side effects [-Wunused-value]
+     14 |   arr[10];
+        |   ^~~~~~~
+  1 warning generated.
+  2025-12-27 21:20:02.399 test[96331:13873785] Safe...
+  #+end_example
+
+  if compiled as a library and linked into lisp, you may write a
+  callback function like this:
+
+  #+begin_src lisp
+  (defcallback invoke-error :void ()
+    (foreign-funcall "coca_lisp_error_function" :void))
+
+  (foreign-funcall "coca_lisp_call_wrapper" :pointer (callback invoke-error))
+  #+end_src
+
+  the NSException would not be catched...
+
+  #+html: <details><summary>How to link automatically</summary>
+  You could use the [[https://cffi.common-lisp.dev/manual/html_node/The-Groveller.html][cffi-grovel]], note that the online documentation
+  is a little out-dated. And to work properly, you may need my
+  CFFI-grovel [[https://github.com/cffi/cffi/compare/master...li-yiyang:cffi:master][patch]].
+  #+html: </details>
+
+  #+html: </details>
+
+** Why this
+According to silly LLM, they said that when you switched between Lisp, C, ObjC
+calling frame, the error capture boundary would be broken and so the program
+does not how to throw or capture the exception.
+
+This is really a sad story.
+
+* A trick that solving the problem
+** Invoke =IMP= directly
+So invoking CFFI Lisp callback is impossible, what if we directly pass the
+C function pointer?
+
+#+begin_src lisp
+(foreign-funcall "coca_lisp_call_wrapper"
+                 :pointer (foreign-symbol-pointer "coca_lisp_error_function"))
+#+end_src
+
+this would work fine. The exception would be captured and so the ObjC runtime
+won't just panic and throw =SIGABORT=.
+
+So want we want is a =safe_objc_msgSend= that does:
+
+#+begin_src objc
+void safe_objc_msgSend (IMP imp, id self, SEL sel, ...) {
+  @try {
+    return imp(self, sel, ...);
+  }
+  @catch (NSException *e) {
+    coca_throw_exception_to_lisp(e);
+  }
+}
+#+end_src
+
+** =va_list= is not a trivial thing and =__ASM__= is not portable
+To implement =...= in ObjC/C is difficult and using =__ASM__= to shift
+registers to prepare for function calling is also not so trivial.
+
+#+begin_quote
+NOTE: i was not a professional C programmer (neither a professional Lisp programmer).
+So can't be sure the above is true.
+#+end_quote
+
+#+html: <details><summary>register shifting</summary>
+You might try this:
+
+#+begin_src asm
+_coca_dispatch_imp:
+  mov x9, x0    // imp
+  mov x0, x1    // self
+  mov x1, x2    // sel
+  mov x2, x3    // arg1
+  mov x3, x4    // arg2
+  mov x4, x5    // arg3
+  mov x5, x6    // arg4
+  mov x6, x7    // arg5
+
+  br x9         // imp(self, sel, ...)
+#+end_src
+
+with the new =safe_objc_msgSend=:
+
+#+begin_src objc
+void safe_objc_msgSend (IMP imp, id self, SEL sel, ...) {
+  @try {
+    return _coca_dispatch_imp(imp, self, sel, ...);
+  }
+  @catch (NSException *e) {
+    coca_throw_exception_to_lisp(e);
+  }
+}
+#+end_src
+
+I haven't try this so cannot ensure it's working properly.
+#+html: </details>
+
+** LibFFI
+So I guess I'll just use libffi to do this:
++ lisp: when in =coca.objc=, we could implement =compile-objc-method-calling=
+  to generate =ffi_cif=
++ objc: the =safe_objc_msgSend= should be implemented like:
+
+  #+begin_src objc
+  void safe_objc_msgSend (ffi_cif *cif, IMP imp, void* retval, void** arg_values) {
+    @try {
+      return ffi_call(cif, FFI_FN(imp), retval, arg_values);
+    }
+    @catch (NSException *e) {
+      coca_throw_exception(e);
+    }
+  }
+  #+end_src
+
+So in theory, we could copy the code in [[https://github.com/cffi/cffi/blob/master/libffi/funcall.lisp][cffi/libffi/funcall.lisp]].
+The =safe_objc_msgSend= just works like =ffi_call=.
+
+#+html: <details><summary>A minimum compilable test</summary>
+
+#+begin_src objc
+#import  <Foundation/Foundation.h>
+#include <ffi.h>
+
+void coca_lisp_test_fail_function (unsigned int arg1, float arg2) {
+  NSArray *arr = @[@1];
+  arr[10];
+}
+
+void coca_objc_msgSend (ffi_cif *cif, IMP imp, void* retval, void** args) {
+  @try {
+    return ffi_call(cif, FFI_FN(imp), retval, args);
+  }
+  @catch (NSException *e) {
+    NSLog(@"Safe");
+  }
+}
+
+int main (int argc, char** argv) {
+  ffi_cif cif;
+  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 0, &ffi_type_void, NULL) != FFI_OK) {
+    NSLog(@"Failed to call ffi_pref_cif");
+  }
+
+  coca_objc_msgSend(&cif, FFI_FN(coca_lisp_test_fail_function), NULL, NULL);
+
+  return 0;
+}
+#+end_src
+
+the compilation result is like below:
+
+#+begin_example
+clang -fobjc-arc -framework Foundation -lffi -I/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/ffi -o test test.m && ./test
+test.m:14:3: warning: container access result unused - container access should not be used for side effects [-Wunused-value]
+   14 |   arr[10];
+      |   ^~~~~~~
+1 warning generated.
+2025-12-27 23:48:27.165 test[99720:14024008] Safe
+
+Compilation finished at Sat Dec 27 23:48:27, duration 0.39 s
+#+end_example
+
+#+html: </details>
+
+** A word about performance
+Yes, performace... Although I don't like to care about it (I write shit codes,
+really really shit codes), I think we could make a hole on the previous
+=compile-objc-method-calling= rules: if we got a =objc_msgSend= with no
+additional arguments other than =id self= and =SEL sel=, we could just call
+the simple wrapper function:
+
+#+begin_src objc
+void safe_objc_msgSend_0 (IMP imp, id _self, SEL sel) {
+  @try {
+    return imp(_self, sel);
+  }
+  @catch (NSException *e) {
+    coca_throw_exception(e);
+  }
+}
+#+end_src
+
+but this is just left here as it is. I don't think I'd like to implement it.
+Maybe you could generate a wrapper like CFFI-grovel, generate the
+ObjC wrapper code for every method of likely same type encoding, and doing
+JIT like things (compile and load the dylib into lisp image). I'd like to
+see such PR if you are willing to contribute.
+
