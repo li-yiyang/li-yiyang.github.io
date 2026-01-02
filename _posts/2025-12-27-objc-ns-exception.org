@@ -219,6 +219,7 @@ So I guess I'll just use libffi to do this:
 So in theory, we could copy the code in [[https://github.com/cffi/cffi/blob/master/libffi/funcall.lisp][cffi/libffi/funcall.lisp]].
 The =safe_objc_msgSend= just works like =ffi_call=.
 
+*** LibFFI and ObjC =@try= =@catch= prototype
 #+html: <details><summary>A minimum compilable test</summary>
 
 #+begin_src objc
@@ -264,7 +265,18 @@ test.m:14:3: warning: container access result unused - container access should n
 Compilation finished at Sat Dec 27 23:48:27, duration 0.39 s
 #+end_example
 
+so in theory, it's workable...
 #+html: </details>
+
+*** LibFFI in Common Lisp
+Refering to [[https://github.com/cffi/cffi/blob/master/libffi/funcall.lisp][cffi/libffi/funcall.lisp]], we could implement our own
+foreign-funcall-form/fsbv-with-libffi:
+
+#+begin_src lisp
+(in-package :coca.objc)
+
+(defun foreign-funcall-form 
+#+end_src
 
 ** A word about performance
 Yes, performace... Although I don't like to care about it (I write shit codes,
@@ -289,4 +301,3 @@ Maybe you could generate a wrapper like CFFI-grovel, generate the
 ObjC wrapper code for every method of likely same type encoding, and doing
 JIT like things (compile and load the dylib into lisp image). I'd like to
 see such PR if you are willing to contribute.
-

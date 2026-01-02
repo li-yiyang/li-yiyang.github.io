@@ -1,0 +1,299 @@
+#+title: ObjC [1.75] libffi, cffi, cffi-grovel, and C
+#+date: 2025-12-30
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+无限接近 ObjC [2] 的道路中... 那么在解决了 =NSException= (见 [[{{site.github.url}}/lisp/objc-ns-exception/][ObjC [1.5]​]]) 之后,
+又是什么阻碍了我呢? 答案就是我引入的 =libffi=.
+
+虽然现在错误捕获这一块已经是完全胜利了 (大概), 但是另一个奇怪的问题出现了:
+用 =cffi-libffi= 调用的函数, 好像返回值不太正确. 那么该怎么办呢? 只好自己去实现了吧.
+
+* 如何使用 libffi
+尽管可以依赖网上搜的教程, [[https://www.chiark.greenend.org.uk/doc/libffi-dev/html/index.html][libffi 文档]],
+或者可以参考 [[https://www.youtube.com/watch?v=0o8Ex8mXigU][This Library is a Hidden Gem, Tsoding]] ([[https://www.bilibili.com/video/BV1Pg1SBfE7w/][bilibili]]),
+或者可以直接问 AI.
+
+#+html: <details><summary>可以问 AI, 但是问 AI 好像不太行</summary>
+我猜这是可能是因为用的 macOS 内置的 libffi:
+
+#+begin_src shell
+pkg-config libffi --cflags
+#+end_src
+
+#+RESULTS:
+: -I/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/ffi
+
+所以导致了和 AI 常见的 libffi 有所出入... (当然, 更有可能是因为没啥训练语料,
+所以 AI 在乱说, 所以更建议是问完 AI 之后自己再修改一下 -- 不过试过几遍之后,
+可能会发现还不如自己直接写 -- 问 AI 也是要时间的嘛.
+#+html: </details>
+
+因为我的目标是要能够调用 ObjC 中的方法, 所以这里尝试给 ObjC 中的 Type Encoding
+都尽可能地测一边: 该如何调用 [[https://github.com/li-yiyang/coca/blob/cfb71ae5564b73b3304bbd765fc6b63078b480b3/objc/encoding.lisp#L163][ObjC encoding]].
+
+| ObjC encoding                                      | ~ffi_type~                                  |
+|----------------------------------------------------+---------------------------------------------|
+| ~:char~                                            | ~ffi_type_sint8~                            |
+| ~:unsigned-char~, ~:bool~                          | ~ffi_type_uint8~                            |
+| ~:int~                                             | ~ffi_type_sint32~                           |
+| ~:unsigned-int~                                    | ~ffi_type_uint32~                           |
+| ~:short~                                           | ~ffi_type_sint16~                           |
+| ~:unsigned-short~                                  | ~ffi_type_uint16~                           |
+| ~:long~, ~:long-long~                              | ~ffi_type_sint64~                           |
+| ~:unsigned-long~, ~:unsigned-long-long~            | ~ffi_type_uint64~                           |
+| ~:float~                                           | ~ffi_type_float~                            |
+| ~:double~                                          | ~ffi_type_double~                           |
+| ~:string~, ~:object~, ~:class~, ~:sel~, ~:unknown~ | ~ffi_type_pointer~                          |
+| ~:void~                                            | ~ffi_type_void~                             |
+| ~:struct~                                          | ~ffi_type_struct~ (should manually specify) |
+| ~:union~                                           | ?                                           |
+| ~:bits~                                            | ?                                           |
+| ~:array~                                           | ?                                           |
+
+使用 =man ffi_call= 命令可以获得一个最简单的调用的例子, 这里仿照其结果以及用
+在 [[{{site.github.url}}/lisp/objc-ns-exception/][ObjC [1.5]​]] 中提到的 =coca_objc_msgSend= 思路实现的一个 =ffi_call= wrapper
+来作为例子.
+
+#+html: <details><summary>点击展开折叠的例子</summary>
+#+begin_src objc
+#import <Foundation/Foundation.h>
+#include <ffi.h>
+
+void coca_objc_msgSend (ffi_cif *cif, IMP imp, void* retval, void** args) {
+  NSLog(@"coca_objc_msgSend");
+  @try {
+    ffi_call(cif, FFI_FN(imp), retval, args);
+  }
+  @catch (NSException *e) {
+    NSLog(@"Safe: %@", e);
+  }
+}
+
+int main (int argc, char **argv) {
+  <<ffi_calling_code_here>>
+}
+#+end_src
+
+不过这里更加推荐直接查看 =objc/wrapper.lisp= 中的代码作为默认的策略.
+#+html: </details>
+
+** Basic Types and their return values
+*** Trivial C Example
+这里为了方便, 可以来看这样的一个例子:
+
+#+begin_src objc
+#import <Foundation/Foundation.h>
+#include <ffi.h>
+
+void foo (char c, BOOL B, int i, unsigned int I, long l, long long q, float f, double d) {
+  NSLog(@"Got %c, %d, %d, %u, %ld, %lld, %f, %f", c, B, i, I, l, q, f, d);
+}
+
+int main (int argc, char** argv) {
+  ffi_cif cif;
+  ffi_type* arg_types[8];
+
+  arg_types[0] = &ffi_type_sint8;
+  arg_types[1] = &ffi_type_uint8;
+  arg_types[2] = &ffi_type_sint32;
+  arg_types[3] = &ffi_type_uint32;
+  arg_types[4] = &ffi_type_sint64;
+  arg_types[5] = &ffi_type_uint64;
+  arg_types[6] = &ffi_type_float;
+  arg_types[7] = &ffi_type_double;
+
+  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 8, &ffi_type_void, arg_types) != FFI_OK)
+    NSLog(@"Error!!!!!!");
+
+  char             c = 'L';
+  BOOL             B = YES;
+  int              i = -23333;
+  unsigned int     I = 3242342;
+  long             l = -134533256432;
+  long long        q = 3245633256732234543;
+  float            f = 3.14159265354;
+  double           d = 114.514;
+
+  void* arg_values[8];
+  arg_values[0] = &c;
+  arg_values[1] = &B;
+  arg_values[2] = &i;
+  arg_values[3] = &I;
+  arg_values[4] = &l;
+  arg_values[5] = &q;
+  arg_values[6] = &f;
+  arg_values[7] = &d;
+
+  ffi_call(&cif, FFI_FN(foo), NULL, arg_values);
+}
+#+end_src
+
+大概演示了如何进行简单的 libffi 调用. 不难发现其实可以把上面的 =main= 函数过程看成两部分:
++ =ffi_prep_cif=: 准备函数类型签名部分
++ =ffi_call=: 实际函数调用部分
+
+假如需要反复调用一个函数 -- 这在 ObjC bridge 中应该是较常见的一种状态,
+那么理论上可以通过复用 =ffi_cif= 来实现减少计算的功能.
+实际上由于我们已知 ObjC method 的 type encoding, 根据 Type Encoding 来生成 =ffi_cif=
+并非困难的事情.
+
+#+html: <details><summary>如何生成...</summary>
+
+#+begin_src lisp
+(defun compile-objc-encoding-ffi-cif (encoding)
+  (multiple-value-bind (arg-types ret)
+      (decode-objc-type-encoding encoding)
+    (let* ((cif    (foreign-alloc '(:struct ffi_cif)))
+           (len    (length arg-types))
+           (atypes (foreign-alloc :pointer :count len)))
+      (loop :for i :from 0
+            :for type :in arg-types
+            :do (setf (mem-aref atypes :pointer i)
+                      (objc-encoding-ffi-type type)))
+      (assert (eq (ffi_prep_cif cif :default-abi len (objc-encoding-ffi-type ret) atypes)
+                  :ffi-ok))
+      cif)))
+#+end_src
+
+#+html: </details>
+
+只是我们还是需要解决 =struct= 的难题...
+
+*** Struct
+修改以下上面的代码, 便可以得到:
+
+#+begin_src objc
+#import <Foundation/Foundation.h>
+#include <ffi.h>
+
+typedef struct _greet {
+  char *name;
+  int repeat;
+} Greet;
+
+Greet foo (Greet greet) {
+  for (int i = 0; i < greet.repeat; i++)
+    NSLog(@"Hello %s", greet.name);
+  return greet;
+}
+
+int main (int argc, char** argv) {
+  ffi_cif cif;
+  ffi_type ffi_type_greet;
+
+  ffi_type* elements[3];
+
+  elements[0] = &ffi_type_pointer;
+  elements[1] = &ffi_type_sint32;
+  elements[2] = NULL;
+
+  ffi_type_greet.size      = 0;
+  ffi_type_greet.alignment = 0;
+  ffi_type_greet.type      = FFI_TYPE_STRUCT;
+  ffi_type_greet.elements  = elements;
+
+  ffi_type* arg_types[1];
+  arg_types[0] = &ffi_type_greet;
+
+  if (ffi_prep_cif(&cif, FFI_DEFAULT_ABI, 1, &ffi_type_greet, arg_types) != FFI_OK)
+    NSLog(@"Error!!!!!!");
+
+  Greet bar;
+  bar.name = "Ryo";
+  bar.repeat = 10;
+
+  void* arg_values[1];
+  arg_values[0] = &bar;
+
+  Greet result;
+
+  ffi_call(&cif, FFI_FN(foo), &result, arg_values);
+
+  NSLog(@"Got: %s", result.name);
+}
+#+end_src
+
+其实仍然不难发现, =ffi_type_greet= 也是一个可以被提前定义的量 --
+在 =define-objc-struct= 的时候便可以被定义了.
+
+不过好处是由于用的是 =libffi=, 现在并不需要过分手动展开结构体了,
+只需要实现一个 =objc-encoding-ffi-type= 即可.
+
+*** 除了 Struct, 还有...
+为了能够处理各种类型的输入和输出, 这里将整个调用过程的形式编译为如下的形式
+([[https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L170][objc-method-foreign-call-form]]):
+
+1. =foreign-alloc= \(\rightarrow\) =arg_types=
+2. 通过 [[https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L72][objc-method-foreign-alloc-form]] 在堆上分配调用的参数的空间,
+   通过 [[https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L92][objc-method-foreign-setf-form]] 将 Lisp 的值复制到堆上
+3. 调用设置好的 wrapper [[https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/wrapper.lisp#L22][coca_objc_msgSend]] 来调用 ObjC method
+4. 通过 [[https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L123][objc-method-foreign-aref-form]] 将结果从指针拷贝到 Lisp 环境中
+
+* 如何使用 CFFI grovel
+[[https://cffi.common-lisp.dev/manual/cffi-manual.html#The-Groveller][CFFI-Grovel]] 提供了一种非常巧妙的方法来构造 CFFI binding: 即通过生成一个 C 程序 (grovel),
+将宏, 常量值, =enum= 等值打印输出为 Lisp 代码, 然后将这个 Lisp 代码作为代码载入;
+以及通过编译一个 C 程序 (wrapper), 将一些简单的静态库链接编译成动态库载入,
+同时也可以获得简单的 C 互操作性 -- 我认为这比让用户手动打包一个 =dylib= 要优雅...
+
+虽然但是, 在 CFFI 的文档和具体实现里面还是有些差别的... (见 [[https://github.com/cffi/cffi/pull/426][PR]]).
+等上游合并可能有点慢, 这里我选择了自己维护一份用于 ObjC 的 wrapper 拓展.
+
+** Grovel and Wrapper
+实际的代码可以参考 [[https://github.com/li-yiyang/cffi/blob/b9ee202b6a8961f81b190b8cf1ba10b203605c62/grovel/grovel.lisp][grovel.lisp]], 定义了 grovel file 和 wrapper file
+是如何被映射为 C 代码, 以及如何生成 Lisp 端的接口的.
+
+然后在 [[https://github.com/li-yiyang/cffi/blob/b9ee202b6a8961f81b190b8cf1ba10b203605c62/grovel/asdf.lisp][asdf.lisp]] 中注册了对应的功能来让 ASDF 载入的时候能够按照前面定义的规则进行处理.
+实际上是非常棒的设计.
+
+#+html: <details><summary>如何阅读 Lisp 代码</summary>
+这里是一点点我的简单的阅读 Lisp 代码的小经验:
+
+因为 Lisp 的动态性, 所以用 C 的那种 "静态" 代码分析其实并不是很现实 -- 或者说,
+会很痛苦, 所以最好还是利用 SLY/SLIME 这样的动态环境去分析代码的逻辑:
+
++ 用 =git clone ...= 将代码拉到本地
++ =(ql:quickload :system)= 将系统载入
+  + =(trace ...)=: 通过 =trace= 来跟踪方法调用 -- 其实更多的时候是用来不重定义函数,
+    来得到函数的输出和输入, 来确认函数的功能
+
+    当然, 最好还是自己给这个函数加上注释和文档, 这样一来就方便自己下一次重新观察代码.
+  + =sly-edit-definition=: 这样就能够直接跳到函数的定义
+  + =sly-who-calls=, =sly-who-binds=, ... 虽然有这些个功能, 但是貌似好多都跟踪不了 (找不到...
++ 并且在了解了一些 MOP 之后, 现在看到 Class 我也会觉得可以很好地阅读和了解了,
+  感觉就只是缺少一个比较好的可视化辅助 -- LEM 的 [[https://lem-project.github.io/usage/living-canvas/][Living Canvas]] 我觉得还挺不错,
+  可惜是在 Electron 上实现的, 希望 coca 实现完了之后能够摆脱 Electron 这个可怕的家伙...
+#+html: </details>
+
+** ObjC File
+如果对实际的实现感兴趣的话, 请参考 =grovel/grovel.lisp= 以及 =grovel/asdf.lisp=,
+不过估计也不会有人那么闲吧... 那还是请参考 =grovel/syntax.lisp= 中具体的语法说明吧.
+
+#+html: <details><summary>那么具体是什么呢? </summary>
+在 =grovel/asdf.lisp= 中, 为 =:objc-file= 注册了一个处理接口,
+于是所有的 =:objc-file= 将会被交由 =process-objc-file= 函数来进行处理.
+
+对于 =process-objc-file= 函数, 其做的事情导致如下:
++ 从 =:objc-file= 中读取 S-expr
++ 根据 S-expr 的 =car= 信息, 找到对应的 =%process-objc-form= 方法, 然后对其进行处理
++ 在 =grovel/syntax.lisp= 中定义了一堆可用的处理函数
+#+html: </details>
+
++ =progn=: 执行一组 ObjC form 指令 (实际上适合用来做 feature switch)
++ =in-package=: 设置 Lisp package
++ =objc=: 直接嵌入 ObjC 代码
++ =cc-flags=: 添加 compiler flags
++ =ld-flags=: 添加 linker flags
++ =pkg-config-cflags=: 使用 =pkg-config ... --cflags= 来添加 =cc-flags=
++ =define=: 映射到 C 的 =#define ...= 宏
++ =include=: 映射到 C 的 =#include <...>= 宏
++ =import=: 映射到 ObjC 的 =#import <...>= 宏
+
+之后我想我应该添加一些在 Coca.ObjC 包中的函数, 比如 =define-objc-struct=,
+=define-objc-const= 之类的命令来让写 ObjC wrapper 的体验和写 Lisp 代码是一模一样的.
+
+* 最后
+目前的状态是 [[https://github.com/li-yiyang/coca/commit/ad9c9959fb786ca60764982e20ad69654b0021c6][#ad9c995]], 我认为算是可以实现一个比较简单的 ObjC 调用了...
+之后的目标还是继续学习 ObjC 和 Cocoa 的编程来实现最终的 macOS 的 GUI 编程的大业... 
