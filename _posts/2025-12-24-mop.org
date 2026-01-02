@@ -284,9 +284,36 @@ AMOP 里面用了一个 =attributes-class= 来作为例子.
 (slot-value objc-object 'objc-property)
 #+end_src
 
-来代替 =(invoke objc-object objc-property)=.
+来代替 =(invoke objc-object objc-property)=:
 
-那么要如何实现呢? 最终实现的
+核心的思路如下 (以下的内容建议配合代码 [[https://github.com/li-yiyang/coca/blob/1c0790af7d6855b6d8b4866d2dec19820f9409c7/objc/objc-class.lisp][objc-class.lisp]] 进行阅读):
++ 通过注册一个 [[https://github.com/li-yiyang/coca/blob/1c0790af7d6855b6d8b4866d2dec19820f9409c7/objc/objc-class.lisp#L56C11-L56C29][objc-property-slot]] 来作为 =standard-slot-definition= 功能的 mixin,
+  即对于 ObjC instance property, 其所有的逻辑性功能都在该类中实现
++ 在 MOP 中, 需要区分 =direct-slot-definition= 和 =effective-slot-definition=,
+  前者类似于在 =defclass= 的时候定义的 =slot=,
+  在确认 Class 初始化的时候 (=ensure-finalized=),
+  会被转换/合并为 =effective-slot-definition=,
+  即实际所持有的 =slot-definition=
+
+于是就可以实现一个在 =coerce-to-objc-class= 的时候,
+自动化注册 =slot-definition= 的操作.
 
 * 后记
-感觉 Lisp 的书好多都有一种苏式教材的感觉,
+AMOP 属于是那种, 从一个非常简单的小例子开始, 慢慢不知不觉就实现了一个庞大系统的书.
+不过由于这个庞大系统的耦合性实在是太强了, 只实现一个简单的小组件/或者说,
+只实现 =defclass= 好像没啥用 -- 因为确实 OOP 的知识不是这本书应该讲的内容.
+
+我现在想要的教科书应该也是类似这样的教科书, 从一些最简单的部分开始,
+然后慢慢地构建一个庞大的系统 -- 听起来好像和现在的教学没啥区别,
+大家不都是从一个简单的, 几乎类似于公理一样的一些前提假设出发,
+不断地添加新的知识点/记忆点吗? 好像确实, 但是这个构建的过程应当是可以复用的,
+是可以重新定义的. 比如说实现了计算素数的函数, 那么之后就可以重复应用这个函数,
+来实现更加复杂的功能, 然后在性能或者表达能力受限的时候,
+重新返回过来去修正... 好像确实就应当是正常的教学设计本来应该的方式.
+
+那么还应该添加一个可以预见的目标 -- 应当是携带着目标来去实现最终的结果,
+这样会有一个全局的视野 -- 这样利用 REPL 编程的好处就可以显现出来了:
+一开始可以构建一些不存在的辅助函数, 比如说先实现了一个类似于伪代码一样的主函数,
+其中的各种功能分支像是占位符一样得先放在这里 -- 也许是已经存在的,
+也许是需要调优的, 也许是还没有实现的. 总之这样在之后的更细的小任务里面,
+应该就不会迷失具体最终要做什么.
