@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Gnuplot interface | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Gnuplot interface" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 虽然在重构 GURAFU, 但是还是效率优先, 有一个能跑的并且还算美观的绘图接口要紧. 在这里整理一下写的思路. 注: 结果整理的时候打算重构了&#8230; 阿巴阿巴. 因为源代码里面加了很多我自己定义的 DSL. 所以可能没法直接在正常的 Lisp 里面跑, 不过放心, 我会尽量保留可读性, 你应当可以通过简单的手动编写函数来复现. 为什么会有很多的自己的 DSL? Wolfram 花了那么多年攒出来的自己的配置有如此的规模, 我觉得我从现在开始攒一套自己的 Lisp 代码也绝对没有问题. 并且更好的事情是, Lisp 已经是一个标准固定绝对不会更改的语言 (唯一的更改估计就是性能上的调整和具体实现的变化), 所以我这套配置 (毕竟大部分是纯 Lisp, 唯一可能会变的估计就是这种依赖外部程序比如 Gnuplot 的部分的代码) 理论上是可以使用无穷久的. 这些 DSL 往往是一些我平时使用的时候发现自己需要重复编写的代码. 于是就需要独立出来单独使用. 之所以没有同步到 ryo 仓库里面, 则是因为大部分是一些处理平时科研代码用的垃圾代码. 等到经过实践打磨之后, 我想我会在有空的时候慢慢地把一些不会让我被导师追责的代码放上去&#8230; (大概) 或者说有点像是一个日用功能大摸底的感觉&#8230; 省流版 交互通过 popen 的方式实现, 相当于是一个 REPL 的利用 做一个限制功能的子集并通过 CLOS 拓展多种不同的功能 尽可能利用规则自动生成而非手动编写 最终的效果: (with-gnuplot (:output &quot;example.png&quot;) (plot &#39;(1 2 3 4 5)) (plot histogram)) 简单的实现 (defmacro with-gnuplot ((&amp;rest sets &amp;key &amp;allow-other-keys) &amp;body body) `(with-output-to-gnuplot (gnuplot-reset *gnuplot*) (gnuplot-sets *gnuplot* ,@sets) (with-gnuplot-plot ,@body))) with-output-to-gnuplot 首先是实现 Gnuplot 的代码的发送执行, 举个例子: (with-output-to-gnuplot (write-line &quot;set term qt&quot; *gnuplot*) (write-line &quot;plot sin(x) w l&quot; *gnuplot*)) 效果如下: (手动拉伸了窗口) 而实现起来也非常轻松 (defparameter *gnuplot* t &quot;Stream of Gnuplot source code goes. &quot;)" />
+<meta property="og:description" content="About 虽然在重构 GURAFU, 但是还是效率优先, 有一个能跑的并且还算美观的绘图接口要紧. 在这里整理一下写的思路. 注: 结果整理的时候打算重构了&#8230; 阿巴阿巴. 因为源代码里面加了很多我自己定义的 DSL. 所以可能没法直接在正常的 Lisp 里面跑, 不过放心, 我会尽量保留可读性, 你应当可以通过简单的手动编写函数来复现. 为什么会有很多的自己的 DSL? Wolfram 花了那么多年攒出来的自己的配置有如此的规模, 我觉得我从现在开始攒一套自己的 Lisp 代码也绝对没有问题. 并且更好的事情是, Lisp 已经是一个标准固定绝对不会更改的语言 (唯一的更改估计就是性能上的调整和具体实现的变化), 所以我这套配置 (毕竟大部分是纯 Lisp, 唯一可能会变的估计就是这种依赖外部程序比如 Gnuplot 的部分的代码) 理论上是可以使用无穷久的. 这些 DSL 往往是一些我平时使用的时候发现自己需要重复编写的代码. 于是就需要独立出来单独使用. 之所以没有同步到 ryo 仓库里面, 则是因为大部分是一些处理平时科研代码用的垃圾代码. 等到经过实践打磨之后, 我想我会在有空的时候慢慢地把一些不会让我被导师追责的代码放上去&#8230; (大概) 或者说有点像是一个日用功能大摸底的感觉&#8230; 省流版 交互通过 popen 的方式实现, 相当于是一个 REPL 的利用 做一个限制功能的子集并通过 CLOS 拓展多种不同的功能 尽可能利用规则自动生成而非手动编写 最终的效果: (with-gnuplot (:output &quot;example.png&quot;) (plot &#39;(1 2 3 4 5)) (plot histogram)) 简单的实现 (defmacro with-gnuplot ((&amp;rest sets &amp;key &amp;allow-other-keys) &amp;body body) `(with-output-to-gnuplot (gnuplot-reset *gnuplot*) (gnuplot-sets *gnuplot* ,@sets) (with-gnuplot-plot ,@body))) with-output-to-gnuplot 首先是实现 Gnuplot 的代码的发送执行, 举个例子: (with-output-to-gnuplot (write-line &quot;set term qt&quot; *gnuplot*) (write-line &quot;plot sin(x) w l&quot; *gnuplot*)) 效果如下: (手动拉伸了窗口) 而实现起来也非常轻松 (defparameter *gnuplot* t &quot;Stream of Gnuplot source code goes. &quot;)" />
+<link rel="canonical" href="/lisp/gnuplot/" />
+<meta property="og:url" content="/lisp/gnuplot/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-21T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Gnuplot interface" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-21T00:00:00+00:00","datePublished":"2025-03-21T00:00:00+00:00","description":"About 虽然在重构 GURAFU, 但是还是效率优先, 有一个能跑的并且还算美观的绘图接口要紧. 在这里整理一下写的思路. 注: 结果整理的时候打算重构了&#8230; 阿巴阿巴. 因为源代码里面加了很多我自己定义的 DSL. 所以可能没法直接在正常的 Lisp 里面跑, 不过放心, 我会尽量保留可读性, 你应当可以通过简单的手动编写函数来复现. 为什么会有很多的自己的 DSL? Wolfram 花了那么多年攒出来的自己的配置有如此的规模, 我觉得我从现在开始攒一套自己的 Lisp 代码也绝对没有问题. 并且更好的事情是, Lisp 已经是一个标准固定绝对不会更改的语言 (唯一的更改估计就是性能上的调整和具体实现的变化), 所以我这套配置 (毕竟大部分是纯 Lisp, 唯一可能会变的估计就是这种依赖外部程序比如 Gnuplot 的部分的代码) 理论上是可以使用无穷久的. 这些 DSL 往往是一些我平时使用的时候发现自己需要重复编写的代码. 于是就需要独立出来单独使用. 之所以没有同步到 ryo 仓库里面, 则是因为大部分是一些处理平时科研代码用的垃圾代码. 等到经过实践打磨之后, 我想我会在有空的时候慢慢地把一些不会让我被导师追责的代码放上去&#8230; (大概) 或者说有点像是一个日用功能大摸底的感觉&#8230; 省流版 交互通过 popen 的方式实现, 相当于是一个 REPL 的利用 做一个限制功能的子集并通过 CLOS 拓展多种不同的功能 尽可能利用规则自动生成而非手动编写 最终的效果: (with-gnuplot (:output &quot;example.png&quot;) (plot &#39;(1 2 3 4 5)) (plot histogram)) 简单的实现 (defmacro with-gnuplot ((&amp;rest sets &amp;key &amp;allow-other-keys) &amp;body body) `(with-output-to-gnuplot (gnuplot-reset *gnuplot*) (gnuplot-sets *gnuplot* ,@sets) (with-gnuplot-plot ,@body))) with-output-to-gnuplot 首先是实现 Gnuplot 的代码的发送执行, 举个例子: (with-output-to-gnuplot (write-line &quot;set term qt&quot; *gnuplot*) (write-line &quot;plot sin(x) w l&quot; *gnuplot*)) 效果如下: (手动拉伸了窗口) 而实现起来也非常轻松 (defparameter *gnuplot* t &quot;Stream of Gnuplot source code goes. &quot;)","headline":"Gnuplot interface","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/gnuplot/"},"url":"/lisp/gnuplot/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Gnuplot interface</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-21T00:00:00+00:00" itemprop="datePublished">Mar 21, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>虽然在重构 GURAFU, 但是还是效率优先,
+  有一个能跑的并且还算美观的绘图接口要紧.
+  在这里整理一下写的思路.</p>
+<p>注: 结果整理的时候打算重构了&#8230; 阿巴阿巴.
+  因为源代码里面加了很多我自己定义的 DSL.
+  所以可能没法直接在正常的 Lisp 里面跑, 不过放心,
+  我会尽量保留可读性, 你应当可以通过简单的手动编写函数来复现.</p>
+<details><summary>为什么会有很多的自己的 DSL? </summary>
+<p>Wolfram 花了那么多年攒出来的自己的配置有如此的规模,
+  我觉得我从现在开始攒一套自己的 Lisp 代码也绝对没有问题.
+  并且更好的事情是, Lisp 已经是一个标准固定绝对不会更改的语言
+  (唯一的更改估计就是性能上的调整和具体实现的变化),
+  所以我这套配置 (毕竟大部分是纯 Lisp,
+  唯一可能会变的估计就是这种依赖外部程序比如 Gnuplot 的部分的代码)
+  理论上是可以使用无穷久的.</p>
+<p>这些 DSL 往往是一些我平时使用的时候发现自己需要重复编写的代码.
+  于是就需要独立出来单独使用. 之所以没有同步到 <a href="https://github.com/li-yiyang/ryo">ryo</a> 仓库里面,
+  则是因为大部分是一些处理平时科研代码用的垃圾代码. 等到经过实践打磨之后,
+  我想我会在有空的时候慢慢地把一些不会让我被导师追责的代码放上去&#8230; (大概)</p>
+<p>或者说有点像是一个日用功能大摸底的感觉&#8230;</p>
+</details>
+<h1>省流版</h1>
+<ul>
+  <li>交互通过 popen 的方式实现, 相当于是一个 REPL 的利用</li>
+  <li>做一个限制功能的子集并通过 CLOS 拓展多种不同的功能</li>
+  <li>尽可能利用规则自动生成而非手动编写</li>
+</ul>
+<p>最终的效果:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-gnuplot</span><span class="w"> </span><span class="p">(</span><span class="nf">:output</span><span class="w"> </span><span class="s">&quot;example.png&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">plot</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="mi">5</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">plot</span><span class="w"> </span><span class="nv">histogram</span><span class="p">))</span>
+</pre></div>
+<h1>简单的实现</h1>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-gnuplot</span><span class="w"> </span><span class="p">((</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">sets</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">with-output-to-gnuplot</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">gnuplot-reset</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">gnuplot-sets</span><span class="w">  </span><span class="nv">*gnuplot*</span><span class="w"> </span><span class="o">,@</span><span class="nv">sets</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">with-gnuplot-plot</span>
+<span class="w">       </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))</span>
+</pre></div>
+<h2><code>with-output-to-gnuplot</code></h2>
+<p>首先是实现 Gnuplot 的代码的发送执行, 举个例子:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-output-to-gnuplot</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;set term qt&quot;</span><span class="w">     </span><span class="nv">*gnuplot*</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;plot sin(x) w l&quot;</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="p">))</span>
+</pre></div>
+<p>效果如下: (手动拉伸了窗口)</p>
+<p><img src="/_img/lisp/misc/gnuplot/with-output-to-gnuplot.png" alt="/_img/lisp/misc/gnuplot/with-output-to-gnuplot.png" /></p>
+<details><summary>而实现起来也非常轻松</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="w"> </span><span class="nv">t</span>
+<span class="w">  </span><span class="s">&quot;Stream of Gnuplot source code goes. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*gnuplot-exec*</span><span class="w"> </span><span class="s">&quot;gnuplot&quot;</span>
+<span class="w">  </span><span class="s">&quot;Path to Gnuplot executble.</span>
+<span class="s">Set this if gnuplot could not start properly. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*gnuplot-process*</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">  </span><span class="s">&quot;Holds the Gnuplot subprocess.</span>
+<span class="s">It should be a `uiop:process-info&#39;. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*gnuplot-debug*</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">  </span><span class="s">&quot;Set this to be non-nil for echo `*gnuplot*&#39; stream code for debugging. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ensure-gnuplot</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;Make sure Gnuplot subprocess is running behind. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">*gnuplot-process*</span><span class="w"> </span><span class="p">(</span><span class="nf">uiop:process-alive-p</span><span class="w"> </span><span class="nv">*gnuplot-process*</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*gnuplot-process*</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">uiop:launch-program</span><span class="w"> </span><span class="nv">*gnuplot-exec*</span><span class="w"> </span><span class="nv">:input</span><span class="w"> </span><span class="nv">:stream</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">uiop:process-alive-p</span><span class="w"> </span><span class="nv">*gnuplot-process*</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Gnuplot could not properly init. ~</span>
+<span class="s">Make sure you sets `*gnuplot-exec*&#39; properly. ~</span>
+<span class="s">(Currently it&#39;s set to be ~A. &quot;</span><span class="w"> </span><span class="nv">*gnuplot-exec*</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-output-to-gnuplot</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;With all the output to `*gnuplot*&#39;, send them to Gnuplot subprocess. &quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">in</span><span class="w"> </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">*gnuplot*</span><span class="p">)</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">to</span><span class="w"> </span><span class="p">(</span><span class="nf">uiop:process-info-input</span><span class="w"> </span><span class="nv">*gnuplot-process*</span><span class="p">)))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">ensure-gnuplot</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">*gnuplot-debug*</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A&quot;</span><span class="w"> </span><span class="nv">in</span><span class="p">))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">force-output</span><span class="w"> </span><span class="nv">to</span><span class="p">)))</span>
+</pre></div>
+<p>感觉如果后面需要反复编写类似的外部进程打开的代码的话,
+  可以考虑写一个自动生成外部进程的 wrapper 的 wrapper 宏.</p>
+<p>小结: 对于外部 Gnuplot (CLI PIPE 进程), 通过 <code>uiop:lanuch-program</code> 创建子进程,
+  并通过 <code>uiop:process-info-input</code> <code>stream</code> (重绑定为 <code>*gnuplot*</code>) 进行控制数据的发送.</p>
+</details>
+<h2><code>gnuplot-format</code></h2>
+<p>于是问题就转换为如何生成 lispy 的 gnuplot 的代码.
+  此事在 SDF (*S*​oftware *D*​esign for *F*​lexibility) 中亦有记载.</p>
+<p>这里可以定义一个简单的 &#8220;general&#8221; 函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gnuplot-format</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Call Gnuplot format `method&#39; with `key&#39; and `val&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">ensure-gnuplot-output-stream</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">fn</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">*gnuplot-format-alist*</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">fn</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Unknown Gnuplot format method `~A&#39;. ~</span>
+<span class="s">Please use `define-gnuplot-format-method&#39; or check your spelling first. &quot;</span>
+<span class="w">               </span><span class="nv">method</span><span class="p">))))</span>
+</pre></div>
+<details><summary>具体的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*gnuplot-format-alist*</span><span class="w"> </span><span class="p">())</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">define-gnuplot-format-method</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Define methods to format to Gnuplot stream. &quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="w"> </span><span class="nv">*gnuplot-format-alist*</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">key</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">keyword</span><span class="w"> </span><span class="o">,</span><span class="nv">key</span><span class="p">))</span>
+<span class="w">           </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))</span>
+</pre></div>
+<p>一些简单的例子:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-gnuplot-format-method</span><span class="w"> </span><span class="nv">:plain</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">fmt!</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">etypecase</span><span class="w"> </span><span class="nv">elem</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">string</span><span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~S&quot;</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">integer</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~D&quot;</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">float</span><span class="w">   </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~F&quot;</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">symbol</span><span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~(~A~)&quot;</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">inline</span><span class="w"> </span><span class="nv">fmt!</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~(~A~) &quot;</span><span class="w"> </span><span class="nv">key</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">dolist-and-between</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="p">(</span><span class="nf">alexandria:flatten</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="sc">#\Space</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">fmt!</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">fmt!</span><span class="w"> </span><span class="nv">val</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">define-gnuplot-format-method</span><span class="w"> </span><span class="nv">:flag</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">flag</span><span class="w"> </span><span class="nv">enablep</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">enablep</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~(~A~)&quot;</span><span class="w">   </span><span class="nv">flag</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;no~(~A~)&quot;</span><span class="w"> </span><span class="nv">flag</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">define-gnuplot-format-method</span><span class="w"> </span><span class="nv">:range</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">range</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">let-bind*</span><span class="w"> </span><span class="p">(((</span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">)</span><span class="w"> </span><span class="nv">range</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nb">min</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nb">max</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Bad range with min (~A) &gt; max (~A). &quot;</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~(~A~) [~F:~F]&quot;</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">max</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="p">))))</span>
+</pre></div>
+<p>不难注意到, 在这里的 <code>gnuplot-format-method</code> 除了起到了输出的功能,
+  还起到了输入值检查的功能.</p>
+</details>
+<h3><code>gnuplot-format-by-alist</code></h3>
+<p>既然有了 <code>gnuplot-format</code> 函数, 就可以根据规则集去映射一个 <code>plist</code>
+  中不同参数的值该如何去显示.</p>
+<p>比如有这样的一个 <code>plist</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">gnuplot-format-by-alist-example</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">*gnuplot-set-alist*</span>
+<span class="w">                                 </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:terminal</span><span class="w"> </span><span class="p">(</span><span class="nf">:png</span><span class="w"> </span><span class="nv">:size</span><span class="w"> </span><span class="p">(</span><span class="mi">400</span><span class="w"> </span><span class="mi">400</span><span class="p">))</span>
+<span class="w">                                   </span><span class="nv">:xrange</span><span class="w">   </span><span class="p">(</span><span class="mi">-10</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">                                   </span><span class="nv">:yrange</span><span class="w">   </span><span class="p">(</span><span class="mi">-1</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">                                 </span><span class="nv">:prefix</span><span class="w"> </span><span class="s">&quot;set &quot;</span>
+<span class="w">                                 </span><span class="nv">:suffix</span><span class="w"> </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~%&quot;</span><span class="p">))</span>
+</pre></div>
+<p>不难注意到, 在 <code>set terminal</code> 中, 应当包含 <code>terminal</code> 对应的子规则,
+  如是这般, balabala. 假设这里的 <code>*gnuplot-set-alist*</code> 如下定义:</p>
+<div class="highlight"><pre><span></span><span class="o">&#39;</span><span class="p">((</span><span class="nf">:xrange</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:range</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:yrange</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:range</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:terminal</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">*gnuplot-terminal-alist*</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:size</span><span class="w">     </span><span class="o">.</span><span class="w"> </span><span class="nv">:size</span><span class="p">)</span>
+<span class="w">  </span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+<p>而对应的 <code>*gnuplot-terminal-alist*</code> 如下定义:</p>
+<div class="highlight"><pre><span></span><span class="o">&#39;</span><span class="p">((</span><span class="nf">:size</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:size</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:output</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:path</span><span class="p">)</span>
+<span class="w">  </span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+<p>伪功能代码如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gnuplot-format-by-alist</span><span class="w"> </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">keywordp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w">              </span><span class="c1">; is gnuplot-format-method</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">gnuplot-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">T</span><span class="w">                              </span><span class="c1">; is subalist rule</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">gnuplot-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">:plain</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">           </span><span class="c1">;; format subrules</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">gnuplot-format-by-alist</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">val</span><span class="p">))))))</span>
+</pre></div>
+<p>不难发现, 这样子就可以实现许多嵌套的复杂子功能设置.</p>
+<details><summary>具体实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gnuplot-format-by-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">alist</span><span class="w"> </span><span class="nv">plist</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">prefix</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">suffix</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">do-plist</span><span class="w"> </span><span class="p">(</span><span class="nf">key</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">plist</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">when-bind</span><span class="w"> </span><span class="p">((</span><span class="nf">key</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">alist</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="nv">prefix</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">keywordp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">gnuplot-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">            </span><span class="p">((</span><span class="nf">symbolp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">gnuplot-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">:plain</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">gnuplot-format-by-alist</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-value</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">val</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Unknown `~A&#39;. &quot;</span><span class="w"> </span><span class="nv">method</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="nv">suffix</span><span class="w"> </span><span class="nv">stream</span><span class="p">))))</span>
+</pre></div>
+<p>其实这里还可以引入 <code>alias</code> 的功能, 只需要修改 <code>(assoc key alist)</code> 即可.</p>
+</details>
+<h3>小结</h3>
+<p>通过 <code>gnuplot-format</code> 实现单种类型的 Lisp 值到 Gnuplot 的值的映射 (与检查).
+  通过 <code>gnuplot-format-by-alist</code> 实现根据不同的规则集的不同映射.
+  这样就可以保证代码的可拓展性了.</p>
+<h2><code>gnuplot-sets</code>, <code>gnuplot-resets</code></h2>
+<h3><code>gnuplot-reset</code></h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gnuplot-reset</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;reset&quot;</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">write-line</span><span class="w"> </span><span class="s">&quot;reset session&quot;</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+</pre></div>
+<p>好, 下一个.</p>
+<h3><code>gnuplot-sets</code></h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gnuplot-sets</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">sets</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">gnuplot-format-by-alist</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">*gnuplot-set-alist*</span><span class="w"> </span><span class="nv">sets</span>
+<span class="w">                           </span><span class="nv">:prefix</span><span class="w"> </span><span class="s">&quot;set &quot;</span>
+<span class="w">                           </span><span class="nv">:suffix</span><span class="w"> </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~%&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>好, 下一个.</p>
+<details><summary>会不会太快了? </summary>
+<p>假如还需要很久的打磨的话, 说明 <code>gnuplot-format-by-alist</code> 函数设计的不好 (bushi).</p>
+</details>
+<h2><code>with-gnuplot-plot</code></h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-gnuplot-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">*gnuplot-elements*</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">     </span><span class="o">,@</span><span class="nv">body</span>
+<span class="w">     </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">*gnuplot-elements*</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="w"> </span><span class="s">&quot;plot ~{~A~^, }~%&quot;</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">nreverse</span><span class="w"> </span><span class="nv">*gnuplot-elements*</span><span class="p">)))))</span>
+</pre></div>
+<p>设计是让 <code>plot</code> 把所有的绘制命令都扔到 <code>*gnuplot-elements*</code> 中,
+  然后在最后统一合成为 <code>plot &lt;gnuplot-element&gt;, &lt;gnuplot-element&gt;, ...</code>
+  这样形式的输出.</p>
+<h3><code>plot</code></h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">plot</span><span class="w"> </span><span class="p">((</span><span class="nf">data</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">styles</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">style</span><span class="w"> </span><span class="nv">:lines</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~A with ~(~A~)&quot;</span><span class="w"> </span><span class="nv">data</span><span class="w"> </span><span class="nv">style</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">alist</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-value</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">style</span><span class="w"> </span><span class="nv">*gnuplot-styles-alist*</span><span class="p">)))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">gnuplot-format-by-alist</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">alist</span><span class="w"> </span><span class="nv">styles</span>
+<span class="w">                                     </span><span class="nv">:prefix</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="w"> </span><span class="nv">:suffix</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">)))</span>
+<span class="w">        </span><span class="nv">*gnuplot-elements*</span><span class="p">))</span>
+</pre></div>
+<p>好了, 下一个 (不是).</p>
+<p>这里还是有一些比较有意思的东西可以进行一个解的说:</p>
+<h4><code>*gnuplot-styles-alist*</code></h4>
+<p>让其值形如:</p>
+<div class="highlight"><pre><span></span><span class="o">&#39;</span><span class="p">((</span><span class="nf">:lines</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">*gnuplot-style-lines-options*</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:points</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">*gnuplot-style-points-options*</span><span class="p">)</span>
+<span class="w">  </span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+<p>可以定义一个简单的初始化函数 (类伪代码):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">define-gnuplot-plot-style</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">inherits</span><span class="w"> </span><span class="nv">initform</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; check initform</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">name-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">merge-alist</span><span class="w"> </span><span class="o">,@</span><span class="nv">inherits-alist</span><span class="w"> </span><span class="o">,</span><span class="nv">initform</span><span class="p">))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*gnuplot-styles-alist*</span><span class="p">))</span><span class="w"> </span><span class="ss">&#39;,name-alist</span><span class="p">)))</span>
+</pre></div>
+<h4>不同类型的数据的支持</h4>
+<p>比如说 <code>pathname</code> (一个文件):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">plot</span><span class="w"> </span><span class="p">((</span><span class="nf">file</span><span class="w"> </span><span class="nv">pathname</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">styles</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;plot</span><span class="w"> </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~S&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">namestring</span><span class="w"> </span><span class="p">(</span><span class="nf">truename</span><span class="w"> </span><span class="nv">file</span><span class="p">)))</span><span class="w"> </span><span class="nv">styles</span><span class="p">))</span>
+</pre></div>
+<p>比如说 <code>list</code>, 虽然你完全也可以通过将 <code>list</code> 写到一个临时文件里面,
+  然后让 Gnuplot 去读取, 在绘图完后将临时文件删除.
+  但是为什么不直接使用 inline data 呢?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">plot</span><span class="w"> </span><span class="p">((</span><span class="nb">list</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">styles</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gnuplot-inline-data</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">var</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~{~{~A~^ ~}~^~%~}&quot;</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;plot</span><span class="w"> </span><span class="nv">var</span><span class="w"> </span><span class="nv">styles</span><span class="p">)))</span>
+</pre></div>
+<details><summary>inline data 的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-gnuplot-inline-data</span><span class="w"> </span><span class="p">((</span><span class="nf">stream</span><span class="w"> </span><span class="nv">data</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">dataname</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-name</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;$DATA&quot;</span><span class="p">))))</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">data</span><span class="w">   </span><span class="o">,</span><span class="nv">dataname</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~A &lt;&lt; EOD~%&quot;</span><span class="w"> </span><span class="nv">dataname</span><span class="p">))</span>
+<span class="w">       </span><span class="o">,@</span><span class="nv">body</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">*gnuplot*</span><span class="w"> </span><span class="s">&quot;~&amp;EOD&quot;</span><span class="p">)</span>
+<span class="w">       </span><span class="o">,</span><span class="nv">data</span><span class="p">)))</span>
+</pre></div>
+</details>
+<h3>小结</h3>
+<p>上层代码相比之下会简单许多&#8230; 不过实际上的代码, 里面加了很多的检查和条件判断,
+  并没有想的那么的优雅. 不过这个感觉应该怪我缺少经验 (Gnuplot 不熟练以及写 Wrapper
+  的经验不足导致的).</p>
+<h1>假如我有超级健忘症</h1>
+<p>其实我已经练习过, 使用过很多次 Gnuplot 了,
+  但是每次回过头来再去使用 Gnuplot 的时候, 总是会忘记参数,
+  然后就不得不去查参数.</p>
+<p>那么可不可以通过自动生成文档的方式来构造上层的 wrapper 函数/宏呢?
+  显然是可以的, 例如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">styles</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">plot</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">data</span>
+<span class="w">        </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">styles</span>
+<span class="w">        </span><span class="nv">&amp;key</span>
+<span class="w">          </span><span class="o">,@</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">options</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">do-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">style</span><span class="w"> </span><span class="nv">alist</span><span class="w"> </span><span class="nv">*gnuplot-style-alist*</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">style</span><span class="w"> </span><span class="nv">styles</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">do-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">opt</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-value</span><span class="w"> </span><span class="nv">alist</span><span class="p">))</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">pushnew</span><span class="w"> </span><span class="nv">opt</span><span class="w"> </span><span class="nv">options</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;keyword-&gt;intern</span><span class="w"> </span><span class="nv">options</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~A</span>
+<span class="s">Possible styles:~%~{+ `:~A&#39;~^~%~}&quot;</span><span class="w"> </span><span class="nv">doc</span><span class="w"> </span><span class="nv">styles</span><span class="p">))))</span>
+</pre></div>
+<p>这样就可以通过 SLY 的 pretty lambda list 提示在调用 <code>plot</code> 函数的时候提供提示了.</p>
+<h1>End</h1>
+<p>拖了两天才陆陆续续把 bug 啥的都调好.</p>
+
+  </div><a class="u-url" href="/lisp/gnuplot/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

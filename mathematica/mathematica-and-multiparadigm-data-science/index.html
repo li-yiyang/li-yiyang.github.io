@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Mathematica and MultiParadigm Data Science | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Mathematica and MultiParadigm Data Science" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="非常功利的理由 Update: 2023-2-10: 参考 b 站 视频, 增加了一些函数和方法的使用情境. 更新了关于神经网络部分的一些记录. 之后要用来分析数据, 所以学一些备用. 教程是 Wolfram U 中的 MultiParadigm Data Science. 本文的作用就是用来速查的, 尽可能忠实地复制原文, 并随便添加一些注释 (在使用过后). Update: [2023-2-10] 注: 因为这个完全是一个垃圾学习笔记, 无脑缝合了各种文档的笔记, 所以会非常的混乱且没有逻辑. What is multiparadigm data science: Multiparadigm Data Science is a new approach of using Al and modern analytical techniques, automation and human-data interfaces to arrive at better answers with flexibility and scale. from Multiparadigm Data Science Build A Project Overview This part is an overview of how the data analysis is done. Data science projects attempt to use data to answer certain questions so that you can derive some useful insights from the answers and act on them. A flexible, modular, iterative workflow can serve as a roadmap in this quest to get from data-driven questions to actionable insights. Questions Wrangle Explore Analyze Communicate Question What can be learned from the data? How many &#8230;? What &#8230;? Who &#8230;? Who wants to know? (which means stands at the reader&#39;s view and interests.) Wrangle This part is the data gathering and pre-processing, which is about gathering the data and unifying the data for further processing. Data Gathering 获取数据 Pre-process 对数据进行预处理, 即: Beautify Data Struct 美化数据格式 Strip Unnecessary Data 剔除不必要的数据 Add Pivots to Important Data 增加关键的数据节点 会使用到的方法和知识: Key-Value Pairs 在 Ruby 里面叫做 Hash. 在 Mathematica 中为 Associations. 通过: &lt;| key1 -&gt; value1, key2 -&gt; value2, ... |&gt; 这样的形式来组织构建. String Modification 字符串处理. (String Manipulation) StringCases Find cases of string patterns. 但是不得不说, 其形式是真的难看: StringCases[str, patt] (* equal to StringCases[patt][str] *) StringCases[str, lhs -&gt; rhs] (* replace matched lhs by rhs *) 其中, patt 的规则类似于 Regexp (Ruby) (在 MMA 中也有对应 Regexp (MMA)). 简单来说是用 ~~ 连接, 用字符串 (如 =&#8221;a&#8221;= ), 字符集合 (如 DigitCharacter ), 匹配的函数符号 (如 x_ 或者 (x: WordCharacter)) 来组成. 使用 .. 来表示匹配多字符. txt = &quot;This is an example text @wolfram.&quot;; StringCases[txt, &quot;@&quot;~~u:(LetterCharacter | DigitCharacter | &quot;-&quot;)..~~ (WhitespaceCharacter | PunctuationCharacter | EndOfString) :&gt; u] StringReplace Make replacements for string patterns. 类似于 Ruby 里面的 String#gsub 方法. StringDelete 类似于查找并删除. 用于去掉非必需的字符串. List Manipulation 列表处理. (List Manipulation) Select Pick out all elements of list which crit is True. Select[list, crit] 或者 Select[crit][list]. Sort, ReverseSort Count Gives the number of elements. DeleteDuplicates Graph and Relations 关系网络. (Graphs and Networks, Grap Construction and Representation) SimpleGraph Gives the underlying simple graph from the graph. 一些不太好分类的 WordCloud Generate a word cloud. Interpreter Something like a parser on specific rules. 比如用来处理地理数据 Interpreter[&quot;ComputedLocation&quot;]. (注: 使用 GeoListPlot 可以在地图上输出地点, GeoHistogram 可以输出地图上的数据点的强度. ) Explore By this stage, use the previous stage of Wrangle to visualize the data gathered and while trying to answer the questions asked at Question stage, figure out more questions of the data. (which also means returning to the Question stage) Thus the visualization data methods: DateHistogram Plots a histogram of the dates. 根据日期绘制分布. 比较有用的参数: DateReduction 用于约化计数的范围. 传入的参数范围为 DateValue (=&#8221;Year&#8221;=, =&#8221;Month&#8221;= 等). Histogram Plots a histogram of the values. 比较有用的参数: ChartLayout Overall layout: 单参数可传入 =&#8221;Overlapped&#8221;= (重叠两张表来显示), =&#8221;Stacked&#8221;= (两张图表数值会叠在一起). 或者可以通过 =&#8221;Column&#8221;=, =&#8221;Row&#8221;= 等传入更多的参数, 但是用处感觉不是很大. ChatLegends 图例. Graph Yields a graph. 通过简单的数据处理和可视化来表现数据的性质和特征. Analyze To answer the question asked at the stage of Question, methods could be applied to the data. How many &#8230;? by Simply Counting by Comparision Charts Histogram ArrayPlot Generate a plot in which the values in an array are shown in a discrete array of squares. 可以和 Github 上的小绿图做个类比. 可以用来分析一个在二维分布的数据的频次. by Predict the Future Data Predict generates a PredictorFunction based on example input-output pairs given. What &#8230;? by String Matching and Counting by Clustering Cluster Analysis by Classification (assigning labels to data) Classify by Graphs and Networks (show who is connected to whom, aka, the relationships). FindGraphCommunities finds communities in the graph Communicate Things to Remember: (How to tell the story) What is the story your audience is interested in? How can you recreate the story easily? Reproducible analysis Comparative analysis Easy to read and see the results. Visualization Grid (Used to layout the graphics) TabView (Used to add interactability for flat data) Easy to redo the results. To convince the readers. Notebook as an essay, report slides, cloud publishment, report template. (MMA only) Get Your Data into Shape This part is mainly about the Wrangle part, which could be done by: Handle data in different formats from different sources Reshape the data into different structures Deal with messy data Extract useful features from raw data Reduce the dimensionality of high-dimensional data Handling Different Types of Data Note: Before wrangling the Real-world data, you have to get them first (of course): Repositories of curated data With Curated Data, it is easier to produce the data (or even skip the wrangle part.) Wolfram Data Repository: ResourceData Gives the primary content of the specified resource. Wolfram Knowlegebase: Entity Types. FinancialData: gives the last known price or value for the financial entity specified by name. WeatherData: gives the most recent measurement for the specified weather property at the location. Flat files Import Imports data from source. And the $ImportFormats is a list of currently supported import formats. If passing in a URL, the Import function can be used to parse the specified data format of the URL. For example: Import[&quot;https://li-yiyang.github.io/manga/animatation-review/&quot;, &quot;Images&quot;] You can get a list of images (depending on your network connectivity&#8230;) Save appends definitions associated with a specified symbol to a file. And DumpSave write definitions associated with a symbol to a file in internal Wolfram System format. After saving, use FindFile to find the file path saved. With Get (&lt;&lt;) can read in a file. Databases Database Connectivity DatabaseLink SQL Operations Needs[&quot;DatabaseLink&quot;] conn = OpenSQLConnection[&quot;...&quot;]" />
+<meta property="og:description" content="非常功利的理由 Update: 2023-2-10: 参考 b 站 视频, 增加了一些函数和方法的使用情境. 更新了关于神经网络部分的一些记录. 之后要用来分析数据, 所以学一些备用. 教程是 Wolfram U 中的 MultiParadigm Data Science. 本文的作用就是用来速查的, 尽可能忠实地复制原文, 并随便添加一些注释 (在使用过后). Update: [2023-2-10] 注: 因为这个完全是一个垃圾学习笔记, 无脑缝合了各种文档的笔记, 所以会非常的混乱且没有逻辑. What is multiparadigm data science: Multiparadigm Data Science is a new approach of using Al and modern analytical techniques, automation and human-data interfaces to arrive at better answers with flexibility and scale. from Multiparadigm Data Science Build A Project Overview This part is an overview of how the data analysis is done. Data science projects attempt to use data to answer certain questions so that you can derive some useful insights from the answers and act on them. A flexible, modular, iterative workflow can serve as a roadmap in this quest to get from data-driven questions to actionable insights. Questions Wrangle Explore Analyze Communicate Question What can be learned from the data? How many &#8230;? What &#8230;? Who &#8230;? Who wants to know? (which means stands at the reader&#39;s view and interests.) Wrangle This part is the data gathering and pre-processing, which is about gathering the data and unifying the data for further processing. Data Gathering 获取数据 Pre-process 对数据进行预处理, 即: Beautify Data Struct 美化数据格式 Strip Unnecessary Data 剔除不必要的数据 Add Pivots to Important Data 增加关键的数据节点 会使用到的方法和知识: Key-Value Pairs 在 Ruby 里面叫做 Hash. 在 Mathematica 中为 Associations. 通过: &lt;| key1 -&gt; value1, key2 -&gt; value2, ... |&gt; 这样的形式来组织构建. String Modification 字符串处理. (String Manipulation) StringCases Find cases of string patterns. 但是不得不说, 其形式是真的难看: StringCases[str, patt] (* equal to StringCases[patt][str] *) StringCases[str, lhs -&gt; rhs] (* replace matched lhs by rhs *) 其中, patt 的规则类似于 Regexp (Ruby) (在 MMA 中也有对应 Regexp (MMA)). 简单来说是用 ~~ 连接, 用字符串 (如 =&#8221;a&#8221;= ), 字符集合 (如 DigitCharacter ), 匹配的函数符号 (如 x_ 或者 (x: WordCharacter)) 来组成. 使用 .. 来表示匹配多字符. txt = &quot;This is an example text @wolfram.&quot;; StringCases[txt, &quot;@&quot;~~u:(LetterCharacter | DigitCharacter | &quot;-&quot;)..~~ (WhitespaceCharacter | PunctuationCharacter | EndOfString) :&gt; u] StringReplace Make replacements for string patterns. 类似于 Ruby 里面的 String#gsub 方法. StringDelete 类似于查找并删除. 用于去掉非必需的字符串. List Manipulation 列表处理. (List Manipulation) Select Pick out all elements of list which crit is True. Select[list, crit] 或者 Select[crit][list]. Sort, ReverseSort Count Gives the number of elements. DeleteDuplicates Graph and Relations 关系网络. (Graphs and Networks, Grap Construction and Representation) SimpleGraph Gives the underlying simple graph from the graph. 一些不太好分类的 WordCloud Generate a word cloud. Interpreter Something like a parser on specific rules. 比如用来处理地理数据 Interpreter[&quot;ComputedLocation&quot;]. (注: 使用 GeoListPlot 可以在地图上输出地点, GeoHistogram 可以输出地图上的数据点的强度. ) Explore By this stage, use the previous stage of Wrangle to visualize the data gathered and while trying to answer the questions asked at Question stage, figure out more questions of the data. (which also means returning to the Question stage) Thus the visualization data methods: DateHistogram Plots a histogram of the dates. 根据日期绘制分布. 比较有用的参数: DateReduction 用于约化计数的范围. 传入的参数范围为 DateValue (=&#8221;Year&#8221;=, =&#8221;Month&#8221;= 等). Histogram Plots a histogram of the values. 比较有用的参数: ChartLayout Overall layout: 单参数可传入 =&#8221;Overlapped&#8221;= (重叠两张表来显示), =&#8221;Stacked&#8221;= (两张图表数值会叠在一起). 或者可以通过 =&#8221;Column&#8221;=, =&#8221;Row&#8221;= 等传入更多的参数, 但是用处感觉不是很大. ChatLegends 图例. Graph Yields a graph. 通过简单的数据处理和可视化来表现数据的性质和特征. Analyze To answer the question asked at the stage of Question, methods could be applied to the data. How many &#8230;? by Simply Counting by Comparision Charts Histogram ArrayPlot Generate a plot in which the values in an array are shown in a discrete array of squares. 可以和 Github 上的小绿图做个类比. 可以用来分析一个在二维分布的数据的频次. by Predict the Future Data Predict generates a PredictorFunction based on example input-output pairs given. What &#8230;? by String Matching and Counting by Clustering Cluster Analysis by Classification (assigning labels to data) Classify by Graphs and Networks (show who is connected to whom, aka, the relationships). FindGraphCommunities finds communities in the graph Communicate Things to Remember: (How to tell the story) What is the story your audience is interested in? How can you recreate the story easily? Reproducible analysis Comparative analysis Easy to read and see the results. Visualization Grid (Used to layout the graphics) TabView (Used to add interactability for flat data) Easy to redo the results. To convince the readers. Notebook as an essay, report slides, cloud publishment, report template. (MMA only) Get Your Data into Shape This part is mainly about the Wrangle part, which could be done by: Handle data in different formats from different sources Reshape the data into different structures Deal with messy data Extract useful features from raw data Reduce the dimensionality of high-dimensional data Handling Different Types of Data Note: Before wrangling the Real-world data, you have to get them first (of course): Repositories of curated data With Curated Data, it is easier to produce the data (or even skip the wrangle part.) Wolfram Data Repository: ResourceData Gives the primary content of the specified resource. Wolfram Knowlegebase: Entity Types. FinancialData: gives the last known price or value for the financial entity specified by name. WeatherData: gives the most recent measurement for the specified weather property at the location. Flat files Import Imports data from source. And the $ImportFormats is a list of currently supported import formats. If passing in a URL, the Import function can be used to parse the specified data format of the URL. For example: Import[&quot;https://li-yiyang.github.io/manga/animatation-review/&quot;, &quot;Images&quot;] You can get a list of images (depending on your network connectivity&#8230;) Save appends definitions associated with a specified symbol to a file. And DumpSave write definitions associated with a symbol to a file in internal Wolfram System format. After saving, use FindFile to find the file path saved. With Get (&lt;&lt;) can read in a file. Databases Database Connectivity DatabaseLink SQL Operations Needs[&quot;DatabaseLink&quot;] conn = OpenSQLConnection[&quot;...&quot;]" />
+<link rel="canonical" href="/mathematica/mathematica-and-multiparadigm-data-science/" />
+<meta property="og:url" content="/mathematica/mathematica-and-multiparadigm-data-science/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-02-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Mathematica and MultiParadigm Data Science" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-02-13T00:00:00+00:00","datePublished":"2023-02-13T00:00:00+00:00","description":"非常功利的理由 Update: 2023-2-10: 参考 b 站 视频, 增加了一些函数和方法的使用情境. 更新了关于神经网络部分的一些记录. 之后要用来分析数据, 所以学一些备用. 教程是 Wolfram U 中的 MultiParadigm Data Science. 本文的作用就是用来速查的, 尽可能忠实地复制原文, 并随便添加一些注释 (在使用过后). Update: [2023-2-10] 注: 因为这个完全是一个垃圾学习笔记, 无脑缝合了各种文档的笔记, 所以会非常的混乱且没有逻辑. What is multiparadigm data science: Multiparadigm Data Science is a new approach of using Al and modern analytical techniques, automation and human-data interfaces to arrive at better answers with flexibility and scale. from Multiparadigm Data Science Build A Project Overview This part is an overview of how the data analysis is done. Data science projects attempt to use data to answer certain questions so that you can derive some useful insights from the answers and act on them. A flexible, modular, iterative workflow can serve as a roadmap in this quest to get from data-driven questions to actionable insights. Questions Wrangle Explore Analyze Communicate Question What can be learned from the data? How many &#8230;? What &#8230;? Who &#8230;? Who wants to know? (which means stands at the reader&#39;s view and interests.) Wrangle This part is the data gathering and pre-processing, which is about gathering the data and unifying the data for further processing. Data Gathering 获取数据 Pre-process 对数据进行预处理, 即: Beautify Data Struct 美化数据格式 Strip Unnecessary Data 剔除不必要的数据 Add Pivots to Important Data 增加关键的数据节点 会使用到的方法和知识: Key-Value Pairs 在 Ruby 里面叫做 Hash. 在 Mathematica 中为 Associations. 通过: &lt;| key1 -&gt; value1, key2 -&gt; value2, ... |&gt; 这样的形式来组织构建. String Modification 字符串处理. (String Manipulation) StringCases Find cases of string patterns. 但是不得不说, 其形式是真的难看: StringCases[str, patt] (* equal to StringCases[patt][str] *) StringCases[str, lhs -&gt; rhs] (* replace matched lhs by rhs *) 其中, patt 的规则类似于 Regexp (Ruby) (在 MMA 中也有对应 Regexp (MMA)). 简单来说是用 ~~ 连接, 用字符串 (如 =&#8221;a&#8221;= ), 字符集合 (如 DigitCharacter ), 匹配的函数符号 (如 x_ 或者 (x: WordCharacter)) 来组成. 使用 .. 来表示匹配多字符. txt = &quot;This is an example text @wolfram.&quot;; StringCases[txt, &quot;@&quot;~~u:(LetterCharacter | DigitCharacter | &quot;-&quot;)..~~ (WhitespaceCharacter | PunctuationCharacter | EndOfString) :&gt; u] StringReplace Make replacements for string patterns. 类似于 Ruby 里面的 String#gsub 方法. StringDelete 类似于查找并删除. 用于去掉非必需的字符串. List Manipulation 列表处理. (List Manipulation) Select Pick out all elements of list which crit is True. Select[list, crit] 或者 Select[crit][list]. Sort, ReverseSort Count Gives the number of elements. DeleteDuplicates Graph and Relations 关系网络. (Graphs and Networks, Grap Construction and Representation) SimpleGraph Gives the underlying simple graph from the graph. 一些不太好分类的 WordCloud Generate a word cloud. Interpreter Something like a parser on specific rules. 比如用来处理地理数据 Interpreter[&quot;ComputedLocation&quot;]. (注: 使用 GeoListPlot 可以在地图上输出地点, GeoHistogram 可以输出地图上的数据点的强度. ) Explore By this stage, use the previous stage of Wrangle to visualize the data gathered and while trying to answer the questions asked at Question stage, figure out more questions of the data. (which also means returning to the Question stage) Thus the visualization data methods: DateHistogram Plots a histogram of the dates. 根据日期绘制分布. 比较有用的参数: DateReduction 用于约化计数的范围. 传入的参数范围为 DateValue (=&#8221;Year&#8221;=, =&#8221;Month&#8221;= 等). Histogram Plots a histogram of the values. 比较有用的参数: ChartLayout Overall layout: 单参数可传入 =&#8221;Overlapped&#8221;= (重叠两张表来显示), =&#8221;Stacked&#8221;= (两张图表数值会叠在一起). 或者可以通过 =&#8221;Column&#8221;=, =&#8221;Row&#8221;= 等传入更多的参数, 但是用处感觉不是很大. ChatLegends 图例. Graph Yields a graph. 通过简单的数据处理和可视化来表现数据的性质和特征. Analyze To answer the question asked at the stage of Question, methods could be applied to the data. How many &#8230;? by Simply Counting by Comparision Charts Histogram ArrayPlot Generate a plot in which the values in an array are shown in a discrete array of squares. 可以和 Github 上的小绿图做个类比. 可以用来分析一个在二维分布的数据的频次. by Predict the Future Data Predict generates a PredictorFunction based on example input-output pairs given. What &#8230;? by String Matching and Counting by Clustering Cluster Analysis by Classification (assigning labels to data) Classify by Graphs and Networks (show who is connected to whom, aka, the relationships). FindGraphCommunities finds communities in the graph Communicate Things to Remember: (How to tell the story) What is the story your audience is interested in? How can you recreate the story easily? Reproducible analysis Comparative analysis Easy to read and see the results. Visualization Grid (Used to layout the graphics) TabView (Used to add interactability for flat data) Easy to redo the results. To convince the readers. Notebook as an essay, report slides, cloud publishment, report template. (MMA only) Get Your Data into Shape This part is mainly about the Wrangle part, which could be done by: Handle data in different formats from different sources Reshape the data into different structures Deal with messy data Extract useful features from raw data Reduce the dimensionality of high-dimensional data Handling Different Types of Data Note: Before wrangling the Real-world data, you have to get them first (of course): Repositories of curated data With Curated Data, it is easier to produce the data (or even skip the wrangle part.) Wolfram Data Repository: ResourceData Gives the primary content of the specified resource. Wolfram Knowlegebase: Entity Types. FinancialData: gives the last known price or value for the financial entity specified by name. WeatherData: gives the most recent measurement for the specified weather property at the location. Flat files Import Imports data from source. And the $ImportFormats is a list of currently supported import formats. If passing in a URL, the Import function can be used to parse the specified data format of the URL. For example: Import[&quot;https://li-yiyang.github.io/manga/animatation-review/&quot;, &quot;Images&quot;] You can get a list of images (depending on your network connectivity&#8230;) Save appends definitions associated with a specified symbol to a file. And DumpSave write definitions associated with a symbol to a file in internal Wolfram System format. After saving, use FindFile to find the file path saved. With Get (&lt;&lt;) can read in a file. Databases Database Connectivity DatabaseLink SQL Operations Needs[&quot;DatabaseLink&quot;] conn = OpenSQLConnection[&quot;...&quot;]","headline":"Mathematica and MultiParadigm Data Science","mainEntityOfPage":{"@type":"WebPage","@id":"/mathematica/mathematica-and-multiparadigm-data-science/"},"url":"/mathematica/mathematica-and-multiparadigm-data-science/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Mathematica and MultiParadigm Data Science</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-02-13T00:00:00+00:00" itemprop="datePublished">Feb 13, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>非常功利的理由</h1>
+<blockquote>
+  <p>Update:</p>
+  <ul>
+    <li>2023-2-10: 参考 b 站 <a href="https://www.bilibili.com/video/BV1Rq4y1S7S8">视频</a>, 增加了一些函数和方法的使用情境.
+      更新了关于神经网络部分的一些记录.</li>
+  </ul>
+</blockquote>
+<p>之后要用来分析数据, 所以学一些备用.</p>
+<p>教程是 Wolfram U 中的 <a href="https://www.wolfram.com/wolfram-u/courses/data-science/multiparadigm-data-science/">MultiParadigm Data Science</a>.
+  本文的作用就是用来速查的, 尽可能忠实地复制原文,
+  并随便添加一些注释 (在使用过后).</p>
+<blockquote>
+  <p>Update: [2023-2-10] 注: 因为这个完全是一个垃圾学习笔记,
+    无脑缝合了各种文档的笔记, 所以会非常的混乱且没有逻辑.</p>
+</blockquote>
+<p>What is multiparadigm data science:</p>
+<blockquote>
+  <p>Multiparadigm Data Science is a new approach of
+    using Al and modern analytical techniques, automation
+    and human-data interfaces to arrive at better answers
+    with flexibility and scale.</p>
+  <p>from <a href="https://www.mpdatascience.com">Multiparadigm Data Science</a></p>
+</blockquote>
+<h1>Build A Project Overview</h1>
+<p>This part is an overview of how the data analysis is done.</p>
+<blockquote>
+  <p>Data science projects attempt to use data to answer certain
+    questions so that you can derive some useful insights from
+    the answers and act on them. A flexible, modular, iterative
+    workflow can serve as a roadmap in this quest to get from
+    data-driven questions to actionable insights.</p>
+</blockquote>
+<ul>
+  <li>Questions</li>
+  <li>Wrangle</li>
+  <li>Explore</li>
+  <li>Analyze</li>
+  <li>Communicate</li>
+</ul>
+<h2>Question</h2>
+<ul>
+  <li>What can be learned from the data?
+    <ul>
+      <li>How many &#8230;?</li>
+      <li>What &#8230;?</li>
+      <li>Who &#8230;?</li>
+    </ul>
+  </li>
+  <li>Who wants to know?
+    (which means stands at the reader's view and interests.)</li>
+</ul>
+<h2>Wrangle</h2>
+<p>This part is the data gathering and pre-processing,
+  which is about gathering the data and unifying the data for
+  further processing.</p>
+<ul>
+  <li><b>Data Gathering</b> 获取数据</li>
+  <li><b>Pre-process</b> 对数据进行预处理, 即:
+    <ul>
+      <li><b>Beautify Data Struct</b> 美化数据格式</li>
+      <li><b>Strip Unnecessary Data</b> 剔除不必要的数据</li>
+      <li><b>Add Pivots to Important Data</b> 增加关键的数据节点</li>
+    </ul>
+  </li>
+</ul>
+<p>会使用到的方法和知识:</p>
+<ul>
+  <li><b>Key-Value Pairs</b> 在 Ruby 里面叫做 <a href="https://ruby-doc.org/3.2.0/Hash.html">Hash</a>.
+    在 Mathematica 中为 <a href="https://reference.wolfram.com/language/guide/Associations.html">Associations</a>. 通过:
+<div class="highlight"><pre><span></span>&lt;| key1 -&gt; value1, key2 -&gt; value2, ... |&gt;
+</pre></div>
+    <p>这样的形式来组织构建.</p>
+  </li>
+  <li><b>String Modification</b> 字符串处理. (<a href="https://reference.wolfram.com/language/guide/StringManipulation.html">String Manipulation</a>)
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/StringCases.html">StringCases</a> Find cases of string patterns.
+        <p>但是不得不说, 其形式是真的难看:</p>
+<div class="highlight"><pre><span></span><span class="n">StringCases</span><span class="p">[</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">patt</span><span class="p">]</span><span class="w"> </span><span class="c">(* equal to StringCases[patt][str] *)</span>
+<span class="n">StringCases</span><span class="p">[</span><span class="n">str</span><span class="p">,</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">rhs</span><span class="p">]</span><span class="w"> </span><span class="c">(* replace matched lhs by rhs *)</span>
+</pre></div>
+        <p>其中, <code>patt</code> 的规则类似于 <a href="https://ruby-doc.org/3.2.0/Regexp.html">Regexp (Ruby)</a>
+          (在 MMA 中也有对应 <a href="https://reference.wolfram.com/language/tutorial/StringsAndCharacters.html#16225">Regexp (MMA)</a>). 简单来说是用 <code>~~</code> 连接,
+          用字符串 (如 =&#8221;a&#8221;= ), 字符集合 (如 <code>DigitCharacter</code> ),
+          匹配的函数符号 (如 <code>x_</code> 或者 <code>(x: WordCharacter)</code>) 来组成.
+          使用 <code>..</code> 来表示匹配多字符.</p>
+<div class="highlight"><pre><span></span><span class="w">     </span><span class="n">txt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;This is an example text @wolfram.&quot;</span><span class="p">;</span>
+<span class="w">     </span><span class="n">StringCases</span><span class="p">[</span><span class="n">txt</span><span class="p">,</span>
+<span class="w">	</span><span class="s">&quot;@&quot;</span><span class="o">~~</span><span class="n">u</span><span class="err">:</span><span class="p">(</span><span class="n">LetterCharacter</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">DigitCharacter</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p">)</span><span class="err">..</span><span class="o">~~</span>
+<span class="w">	  </span><span class="p">(</span><span class="n">WhitespaceCharacter</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">PunctuationCharacter</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">EndOfString</span><span class="p">)</span><span class="w"> </span><span class="o">:&gt;</span><span class="w"> </span><span class="n">u</span><span class="p">]</span>
+</pre></div>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/StringReplace.html">StringReplace</a> Make replacements for string patterns.
+        <p>类似于 Ruby 里面的 <a href="https://ruby-doc.org/3.2.0/String.html#method-i-gsub">String#gsub</a> 方法.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/StringDelete.html">StringDelete</a> 类似于查找并删除. 用于去掉非必需的字符串.</li>
+    </ul>
+  </li>
+  <li><b>List Manipulation</b> 列表处理. (<a href="https://reference.wolfram.com/language/guide/ListManipulation.html">List Manipulation</a>)
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Select.html?q=Select">Select</a> Pick out all elements of list which <code>crit</code> is <code>True</code>.
+        <code>Select[list, crit]</code> 或者 <code>Select[crit][list]</code>.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Sort.html?q=Sort">Sort</a>, <a href="https://reference.wolfram.com/language/ref/ReverseSort.html?q=ReverseSort">ReverseSort</a></li>
+      <li><a href="https://reference.wolfram.com/language/ref/Count.html">Count</a> Gives the number of elements.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/DeleteDuplicates.html">DeleteDuplicates</a></li>
+    </ul>
+  </li>
+  <li><b>Graph and Relations</b> 关系网络.
+    (<a href="https://reference.wolfram.com/language/guide/GraphsAndNetworks.html">Graphs and Networks</a>, <a href="https://reference.wolfram.com/language/guide/GraphConstructionAndRepresentation.html">Grap Construction and Representation</a>)
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/SimpleGraph.html">SimpleGraph</a> Gives the underlying simple graph from the graph.</li>
+    </ul>
+  </li>
+  <li>一些不太好分类的
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud">WordCloud</a> Generate a word cloud.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Interpreter.html?q=Interpreter">Interpreter</a> Something like a parser on specific rules.
+        <p>比如用来处理地理数据 <code>Interpreter[&quot;ComputedLocation&quot;]</code>.
+          (注: 使用 <a href="https://reference.wolfram.com/language/ref/GeoListPlot.html">GeoListPlot</a> 可以在地图上输出地点,
+          <a href="https://reference.wolfram.com/language/ref/GeoHistogram.html">GeoHistogram</a> 可以输出地图上的数据点的强度. )</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Explore</h2>
+<p>By this stage, use the previous stage of <b>Wrangle</b> to visualize
+  the data gathered and while trying to answer the questions
+  asked at <b>Question</b> stage, figure out more questions of the data.
+  (which also means returning to the <b>Question</b> stage)</p>
+<p>Thus the visualization data methods:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/DateHistogram.html?q=DateHistogram">DateHistogram</a> Plots a histogram of the dates.
+    <p>根据日期绘制分布. 比较有用的参数:</p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/DateReduction.html">DateReduction</a> 用于约化计数的范围.
+        传入的参数范围为 <a href="https://reference.wolfram.com/language/ref/DateValue.html">DateValue</a> (=&#8221;Year&#8221;=, =&#8221;Month&#8221;= 等).</li>
+    </ul>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/Histogram.html">Histogram</a> Plots a histogram of the values.
+    <p>比较有用的参数:</p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/ChartLayout.html">ChartLayout</a> Overall layout:
+        单参数可传入 =&#8221;Overlapped&#8221;= (重叠两张表来显示),
+        =&#8221;Stacked&#8221;= (两张图表数值会叠在一起).
+        或者可以通过 =&#8221;Column&#8221;=, =&#8221;Row&#8221;= 等传入更多的参数,
+        但是用处感觉不是很大.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/ChartLegends.html">ChatLegends</a> 图例.</li>
+    </ul>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/Graph.html">Graph</a> Yields a graph.</li>
+</ul>
+<p>通过简单的数据处理和可视化来表现数据的性质和特征.</p>
+<h2>Analyze</h2>
+<p>To answer the question asked at the stage of <b>Question</b>,
+  methods could be applied to the data.</p>
+<ul>
+  <li>How many &#8230;?
+    <ul>
+      <li>by <b>Simply Counting</b></li>
+      <li>by <b>Comparision Charts</b>
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/Histogram.html">Histogram</a></li>
+          <li><a href="https://reference.wolfram.com/language/ref/ArrayPlot.html">ArrayPlot</a> Generate a plot in which the values in an array
+            are shown in a discrete array of squares.
+            <p>可以和 Github 上的小绿图做个类比.
+              可以用来分析一个在二维分布的数据的频次.</p>
+          </li>
+        </ul>
+      </li>
+      <li>by <b>Predict the Future Data</b>
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/Predict.html">Predict</a> generates a <a href="https://reference.wolfram.com/language/ref/PredictorFunction.html">PredictorFunction</a> based on example
+            input-output pairs given.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>What &#8230;?
+    <ul>
+      <li>by <b>String Matching and Counting</b></li>
+      <li>by <b>Clustering</b> <a href="https://reference.wolfram.com/language/guide/ClusterAnalysis.html">Cluster Analysis</a></li>
+      <li>by <b>Classification</b> (assigning labels to data)
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/Classify.html">Classify</a></li>
+        </ul>
+      </li>
+      <li>by <b>Graphs and Networks</b> (show who is connected to whom, aka,
+        the relationships).
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/FindGraphCommunities.html">FindGraphCommunities</a> finds communities in the graph</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Communicate</h2>
+<blockquote>
+  <p><b>Things to Remember</b>: (How to tell the story)</p>
+  <ul>
+    <li>What is the story your audience is interested in?</li>
+    <li>How can you recreate the story easily?
+      <ul>
+        <li>Reproducible analysis</li>
+        <li>Comparative analysis</li>
+      </ul>
+    </li>
+  </ul>
+</blockquote>
+<ul>
+  <li>Easy to read and see the results.
+    <ul>
+      <li>Visualization
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/Grid.html">Grid</a> (Used to layout the graphics)</li>
+          <li><a href="https://reference.wolfram.com/language/ref/TabView.html">TabView</a> (Used to add interactability for flat data)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Easy to redo the results.</li>
+  <li>To convince the readers.</li>
+  <li>Notebook as an essay, report slides, cloud publishment,
+    report template. (<b>MMA only</b>)</li>
+</ul>
+<h1>Get Your Data into Shape</h1>
+<p>This part is mainly about the <b>Wrangle</b> part,
+  which could be done by:</p>
+<ul>
+  <li>Handle data in different formats from different sources</li>
+  <li>Reshape the data into different structures</li>
+  <li>Deal with messy data</li>
+  <li>Extract useful features from raw data</li>
+  <li>Reduce the dimensionality of high-dimensional data</li>
+</ul>
+<h2>Handling Different Types of Data</h2>
+<p>Note: Before wrangling the Real-world data,
+  you have to get them first (of course):</p>
+<ul>
+  <li>Repositories of curated data
+    <p>With Curated Data, it is easier to produce the
+      data (or even skip the wrangle part.)</p>
+    <ul>
+      <li><a href="https://datarepository.wolframcloud.com">Wolfram Data Repository</a>: <a href="https://reference.wolfram.com/language/ref/ResourceData.html">ResourceData</a>
+        Gives the primary content of the specified resource.</li>
+      <li><a href="https://www.wolfram.com/knowledgebase/">Wolfram Knowlegebase</a>: <a href="https://reference.wolfram.com/language/guide/EntityTypes.html">Entity Types</a>.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/FinancialData.html">FinancialData</a>: gives the last known price or value for the
+        financial entity specified by name.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/WeatherData.html">WeatherData</a>: gives the most recent measurement for the
+        specified weather property at the location.</li>
+    </ul>
+  </li>
+  <li>Flat files
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Import.html">Import</a> Imports data from source.
+        And the <a href="https://reference.wolfram.com/language/ref/$ImportFormats.html">$ImportFormats</a> is a list of currently supported
+        import formats.
+        <p>If passing in a URL, the <code>Import</code> function can be
+          used to parse the specified data format of the URL.
+          For example:</p>
+<div class="highlight"><pre><span></span><span class="n">Import</span><span class="p">[</span><span class="s">&quot;https://li-yiyang.github.io/manga/animatation-review/&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Images&quot;</span><span class="p">]</span>
+</pre></div>
+        <p>You can get a list of images (depending on your network
+          connectivity&#8230;)</p>
+        <p><img src="/_img/MMA/MMA-Import-Images-example-of-my-blog.png" alt="/_img/MMA/MMA-Import-Images-example-of-my-blog.png" /></p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/Save.html">Save</a> appends definitions associated with a specified symbol
+        to a file. And <a href="https://reference.wolfram.com/language/ref/DumpSave.html">DumpSave</a> write definitions associated
+        with a symbol to a file in internal Wolfram System format.
+        <p>After saving, use <a href="https://reference.wolfram.com/language/ref/FindFile.html">FindFile</a> to find the file path saved.
+          With <a href="https://reference.wolfram.com/language/ref/Get.html">Get (&lt;&lt;)</a> can read in a file.</p>
+      </li>
+    </ul>
+  </li>
+  <li>Databases <a href="https://reference.wolfram.com/language/guide/DatabaseConnectivity.html">Database Connectivity</a>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/DatabaseLink/guide/SQLDatabaseOperations.html">DatabaseLink SQL Operations</a> <code>Needs[&quot;DatabaseLink&quot;]</code>
+<div class="highlight"><pre><span></span><span class="n">conn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OpenSQLConnection</span><span class="p">[</span><span class="s">&quot;...&quot;</span><span class="p">]</span>
+
+<span class="n">SQLTableNames</span><span class="p">[</span><span class="n">conn</span><span class="p">]</span>
+
+<span class="n">SQLSelect</span><span class="p">[</span><span class="n">conn</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">]</span><span class="w"> </span><span class="c">(* or, SQLExecute[] *)</span>
+</pre></div>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/RelationalDatabase.html">RelationalDatabase</a> Represents schema information about
+        a relational database.</li>
+    </ul>
+  </li>
+  <li>External APIs
+    <ul>
+      <li>comes alone Wolfram: <a href="https://reference.wolfram.com/language/ref/ServiceConnect.html">ServiceConnect</a> Creates a
+        connection to an external service, which are
+        listed by <a href="https://reference.wolfram.com/language/ref/$Services.html">$Services</a> or described at
+        <a href="https://reference.wolfram.com/language/guide/ListingOfSupportedExternalServices.html">Listing of Supported External Services</a>.
+        <p><del>乐, 一堆国内不好用的.</del></p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/WebSearch.html">WebSearch</a> Gives a dataset of the top web search results
+        for the specified literal string.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/WebImageSearch.html">WebImageSearch</a> Gives a list of thumbnails of
+        the top web image search results for the specified literal
+        string.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/WikipediaData.html">WikipediaData</a> Gives the plain text of the specified
+        Wikipedia article.</li>
+      <li>Publicly Available Data
+        <ul>
+          <li><a href="https://data.stats.gov.cn">国家统计局</a>
+            <del>不过离谱的是网站证书过期了&#8230;</del></li>
+          <li><a href="https://opendata.chinadep.com/#/">China Open Data</a>
+            <del>类似一个整合网站, 不过数据不一定全部有效</del></li>
+          <li><a href="https://data.gov">US Government's Open Data</a></li>
+          <li><a href="https://data.nasa.gov/browse">NASA's Open Data Portal</a></li>
+          <li><a href="https://archive.ics.uci.edu/ml/index.php">UCI Machine Learning Repository</a></li>
+          <li><a href="https://www.kaggle.com/datasets">Kaggle Data Science Contests</a></li>
+          <li><a href="https://data.fivethirtyeight.com">Five Thirty Eight</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Web scraping</li>
+</ul>
+<details><summary>吐槽</summary>
+<p>不知道该说什么好&#8230; Mathematica 难道真的是一个非常小众的东西么?
+  网络上的资料基本上全部都是官方的.
+  <del>尽管可能是因为大家都在用&#8230; 所以比较低调?</del></p>
+<p>并且连接到数据库真的好累&#8230; 可能是服务器不在国内的缘故吧.
+  一个曲线救国的方式就是使用梯子, 在
+  <code>Mathematica -&gt; Settings -&gt; Internet &amp; Mail</code>
+  里面设置 Proxy Settings. 用自己的梯子来.</p>
+</details>
+<h2>Restructuring Data</h2>
+<blockquote>
+  <ul>
+    <li>Data is systematically stored</li>
+    <li>Data elements are arranged in a structured way</li>
+  </ul>
+  <p>from <a href="https://blog.wolfram.com/2017/04/20/launching-the-wolfram-data-repository-data-publishing-that-really-works/">Launching the Wolfram Data Repository: Data Publishing that Really Works</a></p>
+</blockquote>
+<details><summary>吐槽</summary>
+<p>每次看 Stephen Wolfram 的博客的时候,
+  总有一种好像很牛逼又好像很一般的感觉.
+  有一种说不上来的敬佩感.</p>
+<p>尽管有一种虽然这个问题很简单, 但是为什么要这么做的困惑.
+  有点像是之前计算机科学导论的课上的感觉.
+  (尽管我那门课可能上得不太行, 但是里面的知识我觉得都是很有用的)</p>
+<p>可能这就是牛逼的人的一种思考方式么.</p>
+</details>
+<p>Here are some helpful organized data types:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/List.html">List</a>: <a href="https://reference.wolfram.com/language/guide/ListManipulation.html">List Manipulation</a></li>
+  <li><a href="https://reference.wolfram.com/language/ref/Association.html">Association</a>: <a href="https://reference.wolfram.com/language/guide/Associations.html">Associations</a></li>
+  <li><a href="https://reference.wolfram.com/language/ref/Dataset.html">Dataset</a>: <a href="https://reference.wolfram.com/language/guide/ComputationWithStructuredDatasets.html">Computation with Structured Datasets</a></li>
+  <li><a href="https://reference.wolfram.com/language/ref/EntityStore.html">EntityStore</a>: <a href="https://reference.wolfram.com/language/guide/KnowledgeRepresentationAndAccess.html">Knowledge Representation &amp; Access</a></li>
+  <li><a href="https://reference.wolfram.com/language/ref/TimeSeries.html">TimeSeries</a>: <a href="https://reference.wolfram.com/language/guide/TimeSeries.html">Time Series Processing</a></li>
+</ul>
+<p>Some more useful data types I think:</p>
+<h3>Lists</h3>
+<p>Most data imported are in the forms of List,
+  and many built-in data structures (Vector, Matrix, &#8230;)
+  are based on List.</p>
+<ul>
+  <li>Read List
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/First.html">First</a> Gives the first element of exp.
+        <p>And like <code>car</code> and <code>cdr</code> in lisp (<a href="https://www.gnu.org/software/emacs/manual/html_node/eintr/car-_0026-cdr.html">Elisp</a>),
+          the First function has a relative function: <a href="https://reference.wolfram.com/language/ref/Rest.html">Rest</a>,
+          which gives the rest element with first one removed.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/Part.html">Part</a> <code>expr[[]]</code> can be used to get part of <code>expr</code>.
+        <ul>
+          <li><code>{a, b, c}[[1]]</code> will return <code>a</code>.
+            (start counting from <code>1</code>, and the negative index
+            will count backward.)</li>
+          <li><code>{a, b, c}[[2;;3]]</code> likes python's <a href="https://docs.python.org/3/library/functions.html#slice">slice</a>,
+            which could be written as
+            <code>list[[start ;; stop ;; step]]</code> .</li>
+          <li><code>{ {a, 1, 0}, {b, 2, 1} }[[All, {1, 3}]]</code>
+            will return <code>{ {a, 0}, {b, 1} }</code>, which could be
+            a way to extract nested list data.</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>Process List
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/GatherBy.html">GatherBy</a> Gathers into sublist each set elements
+        in <code>list</code> that gives the same value when <code>f</code> is
+        applied. <code>Gatherby[list, f]</code>.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Map.html">Map (/@)</a> Applies function to each element in list.</li>
+    </ul>
+  </li>
+  <li>List Attributes
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Dimensions.html">Dimensions</a> Gives a list of dimensions.
+        (kinda like giving the shape of a list)</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Length.html">Length</a> Gives the number of elements.</li>
+    </ul>
+  </li>
+</ul>
+<h3>Associations</h3>
+<p><a href="https://reference.wolfram.com/language/guide/Associations.html">Associations</a> are key-value pairs.</p>
+<ul>
+  <li><code>&lt;|a -&gt; 1, b -&gt; 2|&gt;[a]</code> It looks more like a function
+    written in mapping rules.
+    <p><code>&lt;|b -&gt; 2, a -&gt; 1|&gt;[[1]]</code> will return <code>2</code> as the first
+      value of it is <code>2</code>.</p>
+  </li>
+  <li>Those List functions would also work on Associations:
+    <a href="https://reference.wolfram.com/language/ref/Total.html">Total</a>, <a href="https://reference.wolfram.com/language/ref/Select.html">Select</a>, <a href="https://reference.wolfram.com/language/ref/Sort.html">Sort</a>&#8230; (just like they are performed on
+    the values (<a href="https://reference.wolfram.com/language/ref/Values.html">Values</a>) of the associations).</li>
+  <li>And the functions with &#8220;Key&#8221; prefixed will serve on
+    the keys (<a href="https://reference.wolfram.com/language/ref/Keys.html">Keys</a>): <a href="https://reference.wolfram.com/language/ref/KeySort.html">KeySort</a>, <a href="https://reference.wolfram.com/language/ref/KeyMap.html">KeyMap</a>.</li>
+  <li>To map with Key-Value pairs, use <a href="https://reference.wolfram.com/language/ref/AssociationMap.html">AssociationMap</a>.
+    To construct an Association by Keys and Values,
+    use <a href="https://reference.wolfram.com/language/ref/AssociationThread.html">AssociationThread</a> and turn Association to List
+    by <a href="https://reference.wolfram.com/language/ref/Normal.html">Normal</a>.</li>
+</ul>
+<h3>Dataset</h3>
+<p><a href="https://reference.wolfram.com/language/ref/Dataset.html">Dataset</a> represents a structured dataset based on a hierarchy
+  of lists and associations.</p>
+<ul>
+  <li>by <b>Definitions</b>
+<div class="highlight"><pre><span></span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Dataset</span><span class="p">[{</span>
+<span class="w">	    </span><span class="o">&lt;|</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="o">|&gt;</span><span class="p">,</span>
+<span class="w">	    </span><span class="o">&lt;|</span><span class="w"> </span><span class="s">&quot;a&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;b&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;c&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}</span><span class="w"> </span><span class="o">|&gt;</span><span class="p">}]</span>
+</pre></div>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/SemanticImport.html">SemanticImport</a> attempts to import a file semantically to
+        give a <b>Dataset</b> object.</li>
+    </ul>
+  </li>
+  <li>by <b>Reading</b>
+    <ul>
+      <li>Query row: <code>d[2]</code>, and rows <code>d[1;;2]</code>
+        <p>and a row can be processed like an <b>Association</b>.
+          (<code>d[2] // Normal</code> will return the <b>Association</b> form data)</p>
+      </li>
+      <li>Query with rules: <code>d[All, &quot;a&quot;]</code> will return all the column
+        of =&#8221;a&#8221;=.
+        <p>With functions passed in will be applied to the matched column.
+          For example: <code>d[Total, &quot;a&quot;]</code> will return the results of applying
+          <code>Total</code> to the =&#8221;a&#8221;= column.</p>
+        <p>And pass in select function will apply the function to each
+          row: <code>d[SortBy[Lengh[#c]&amp;]]</code>, <code>d[Select[#a &gt; 1 &amp;], &quot;b&quot;]</code>
+          (return the =&#8221;b&#8221;= column, whose =&#8221;a&#8221;= value is greater than <code>1</code>).</p>
+        <p>And <code>d[GroupBy[Key[&quot;b&quot;]], Catenate, &quot;c&quot;]</code>.</p>
+        <p>A simple guess is that when queried with rules,
+          functions are applied to each row and finally select the
+          corresponding column.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Dealing with Messy Data</h2>
+<p>This part is fighting with the messy data, which often
+  comes with data like:</p>
+<ul>
+  <li>Incomplete</li>
+  <li>Inaccurate</li>
+  <li>Irrelevant</li>
+</ul>
+<p>For which data cleaning is necessary:</p>
+<ul>
+  <li>Replacing</li>
+  <li>Modifying</li>
+  <li>Removing errors</li>
+</ul>
+<p>And a possible checklist for such a process can be:</p>
+<ul>
+  <li><b>Type Checking</b>: Consistent formatting across each row and column
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Head.html">Head</a> Gives the head of input.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/InputForm.html">InputForm</a> Prints as a version of <code>expr</code> suitable
+        for input to the Wolfram Language.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/DeleteDuplicates.html">DeleteDuplicates</a> Delete all duplicates from a list.
+        This could strip out the different types of values.
+        Also, <a href="https://reference.wolfram.com/language/ref/Sort.html">Sort</a> values could help with stripping out
+        wrong data.</li>
+    </ul>
+  </li>
+  <li><b>Range Checking</b>: Reasonable and informative feature values
+    <ul>
+      <li>Use <a href="https://reference.wolfram.com/language/ref/Histogram.html">Histogram</a> to plot out the data to check.</li>
+      <li>Use <a href="https://reference.wolfram.com/language/ref/Select.html?q=Select">Select</a> to strip out suspecious values.</li>
+      <li>除了上面的方法, 还可以使用统计方式来找出存在误差的值.
+        如: 使用正态分布来剔除 $3 &sigma;$ 外的值, 认为在 $3 &sigma;$ 外的值为不正常的值.
+        一般适合总体符合正态分布的数据, 如人口数据, 测量误差, 生产加工质量,
+        考试成绩等. 不适合其他分布.
+        <p>或者是在箱线图中看数值是否存在异常. 比较普遍适用.</p>
+        <p>或者使用 <a href="https://reference.wolfram.com/language/ref/AnomalyDetection.html">AnomalyDetection</a> 来生成查找非正常数据的函数.
+          这个处理的方式就比较无脑了.</p>
+      </li>
+    </ul>
+  </li>
+  <li><b>Missing Data</b>: Occurrence of missing data
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/DeleteCases.html">DeleteCases</a> to match values with =&#8221;NA&#8221;= missing data,
+        and delete them. <i>[Note: if you have enough data to delete&#8230;]</i>
+        <p>注: 对于缺失太多的数据, 可以选择删除. 比如 40% 的缺失,
+          就不适合作为一个正经数据源来使用了.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/ReplaceAll.html">ReplaceAll (/.)</a> Applies a rule or list of rules in an attempt
+        to transform each subpart of an expression <code>expr</code>.
+        <i>[Note: Use it to replace missing value. ]</i>
+        <p>The <b>replacing</b> methods are various:</p>
+        <ul>
+          <li>Replace with default values: <code>data /. &quot;NA&quot; -&gt; 0</code></li>
+          <li>Replace with means:
+            <i>[Note: Also, select with <a href="https://reference.wolfram.com/language/ref/Cases.html">Cases</a> to provide better means.]</i>
+            <code>data /. &quot;NA&quot; -&gt; Mean[Select[data, NumbericQ]]</code>
+            <p>使用平均值替代的, 适用于对 <b>个体精度要求不大</b>, <b>基数大</b> 的数据
+              根据定量和定性来进行区分具体使用的方法, 比如定量的数据可以考虑平均,
+              定性的数据可以考虑众数, 即出现次数最多的数据.</p>
+          </li>
+          <li><a href="https://reference.wolfram.com/language/ref/Interpolation.html">Interpolation</a> 插值法, 即通过构造近似函数来补上缺失值.
+            <ul>
+              <li><b>牛顿插值法</b>: 适用于热力学温度, 地形测量,
+                定位等最求函数值的精确而不关心变化情况.
+                (这个因为可能会发生振荡而不太适合求解变化的情况. )</li>
+              <li><b>样条插值法</b>: 分段光滑曲线去插值, 连续且有连续曲率,
+                适用于零件加工, 要关心变化导数的问题.</li>
+            </ul>
+          </li>
+          <li>Replace with random value <a href="https://reference.wolfram.com/language/ref/RandomVariate.html">RandomVariate</a>:
+            <ul>
+              <li><a href="https://reference.wolfram.com/language/ref/NormalDistribution.html">NormalDistribution</a>:</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <p>First get the $&mu;$ and $&sigma;$ out from good data by
+      <a href="https://reference.wolfram.com/language/ref/Mean.html">Mean</a>, <a href="https://reference.wolfram.com/language/ref/StandardDeviation.html">StandardDeviation</a>. Then use <code>RandomVariate</code> to generate.</p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/LearnedDistribution.html">LearnedDistribution</a>: Guess a possible distribution.</li>
+    </ul>
+    <ul>
+      <li>Replace with <a href="https://reference.wolfram.com/language/ref/Nearest.html">Nearest</a> sample.</li>
+      <li>Use a Regression or Classification Model to <a href="https://reference.wolfram.com/language/ref/Predict.html">Predict</a>:
+        <code>Predict[data, Method -&gt; &quot;...&quot;]</code>.</li>
+      <li>Treat &#8220;missing&#8221; as a special value <a href="https://reference.wolfram.com/language/ref/Missing.html">Missing</a>: <code>Missing[]</code></li>
+    </ul>
+  </li>
+</ul>
+<h2>Feature Extraction and Dimensionality Reduction</h2>
+<p>This part is about extracting useful features from raw data,
+  and reducing the dimensionality of high-dimensional data.</p>
+<h3>Feature Extraction</h3>
+<p>Transform raw data into numeric vectors to enable:</p>
+<ul>
+  <li>Applying transformations like standardization, rescaling,
+    filtering etc.</li>
+  <li>Performing operations like Principal Component Analysis</li>
+  <li>Calculating distances between samples</li>
+  <li>Feeding data into Neural Networks</li>
+</ul>
+<p>To extract data, the following methods could be applied:</p>
+<ul>
+  <li><b>Nominal to Numbers</b>: <a href="https://reference.wolfram.com/language/ref/FeatureExtract.html">FeatureExtract</a> and apply Feature Selection.
+    <p><i>[Note: About the <a href="https://en.wikipedia.org/wiki/Feature_(machine_learning)">features</a> in machine learning.]</i></p>
+    <p>通过 <code>FeatureExtract</code> 来提取出数据的关键参数,
+      然后通过 Feature Selection 的方式来选择需要的数据以提高效率.
+      常见的选择方式:</p>
+    <ul>
+      <li><b>Filter methods</b>: 类似于给一个打分标准来选择什么样的 feature 更好用.</li>
+      <li><b>Wrapper methods</b>: 在数据的子集上先进行训练,
+        然后更换子集来看是否训练的模型是匹配的.
+        <p><i>[Note: 可以使用 <a href="https://reference.wolfram.com/language/ref/RandomSample.html">RandomSample</a>, <a href="https://reference.wolfram.com/language/ref/RandomChoice.html">RandomChoice</a> 来从数据集中提取出一个小样本. ]</i></p>
+        <p><i>[Note: 或者是对数据先 *Select* 之后再筛选. ]</i></p>
+      </li>
+      <li><b>Embedded methods</b></li>
+    </ul>
+  </li>
+</ul>
+<h3>Dimension Reduce</h3>
+<p>实际上也可以算是一种 Feature Extract 和 Feature Selection 的组合了.</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/DimensionReduce.html">DimensionReduce</a>: 自动尝试将输入进行缩减.
+    <p>有一个非常炫酷的例子:</p>
+<div class="highlight"><pre><span></span><span class="n">images</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Import</span><span class="p">[</span><span class="s">&quot;https://li-yiyang.github.io/manga/animatation-review/&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Images&quot;</span><span class="p">];</span>
+<span class="n">reduced</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DimensionReduce</span><span class="p">[</span><span class="n">images</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">];</span>
+<span class="n">ListPlot</span><span class="p">[</span><span class="n">MapThread</span><span class="p">[</span><span class="n">Labeled</span><span class="p">[</span><span class="nv">#1</span><span class="p">,</span><span class="w"> </span><span class="nv">#2</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">reduced</span><span class="p">,</span><span class="w"> </span><span class="n">images</span><span class="p">}]]</span>
+</pre></div>
+    <p>这个例子里面的结果就很炫酷, 可以将输入的图片直接进行一个分类.
+      (当然, 应该不是内容识别, 猜测可能是根据图片的色调之类的进行的区分,
+      因为我输入的这几张图片在颜色上还是有那么一个区分的. )</p>
+    <p><img src="/_img/MMA/MMA-DimensionReduce-on-Images-Imported-from-my-Blog.png" alt="/_img/MMA/MMA-DimensionReduce-on-Images-Imported-from-my-Blog.png" /></p>
+    <p>并且可以传入各种各样的参数, 所以非常的方便. <del>尽管都不会</del></p>
+    <p>类似上面操作的还有 <a href="https://reference.wolfram.com/language/ref/FeatureSpacePlot.html">FeatureSpacePlot</a>.</p>
+  </li>
+</ul>
+<h1>Get to Know Your Data (EDA: Exploratory Data Analysis)</h1>
+<p><b>What to do</b> at this stage:</p>
+<ul>
+  <li>Gain an intuitive understanding of the underlying
+    nature of the dataset</li>
+  <li>Identify relationships between variables</li>
+  <li>Formulate good questions for the actual analysis
+    (as the explorations proceed, those questions can change)</li>
+  <li>Evaluate the quality of data (Data QA)</li>
+</ul>
+<p>Questions to <b>keep in mind</b> for EDA:</p>
+<ul>
+  <li>Do we have the data as needed for the planned analysis?
+    Is there enough of it?</li>
+  <li>Does the data seem to be accurate? Are there obvious errors?
+    Is the data missing something?</li>
+  <li>Is the data relevant? Are there outliers?</li>
+  <li>Are there some characteristics of the features that
+    attract attention right away?</li>
+</ul>
+<p>EDA Checklist:</p>
+<ul>
+  <li>Visualise the data in <b>feature space</b>
+    <ul>
+      <li>Try pairs of raw features</li>
+      <li>Project data to 2 or 3 dimensions
+        through Dimensionality Reduction.</li>
+    </ul>
+  </li>
+  <li>Create scatterplot matrices to look at pairwise relationships
+    across all variables</li>
+  <li>Plot distributions of all variables
+    <ul>
+      <li>Start with single distribution - single variable</li>
+      <li>Go on to joint distributions of pairs of variables</li>
+    </ul>
+  </li>
+  <li>Overlay plots and graphs
+    <ul>
+      <li>Compare distribution shapes to histograms</li>
+      <li>Look for deviations</li>
+    </ul>
+  </li>
+  <li>Visualise clusters of samples
+    <ul>
+      <li>Identify outliers</li>
+      <li>Look for gaps in the data</li>
+    </ul>
+  </li>
+  <li>Plot time series data to identify trends</li>
+  <li>Try visualization tools from other disciplines</li>
+  <li>Look at pairwise relationships between variables - correlation</li>
+</ul>
+<h2>Visual Exploration</h2>
+<blockquote>
+  <p>We are visual creatures. Visual things stay put, whereas sounds fade.</p>
+  <p>人是视觉的动物.</p>
+  <p>by Steven Pinker</p>
+</blockquote>
+<p>所以数据可视化对于认识数据极其有帮助.</p>
+<p><b>Tools</b> of EDA:</p>
+<ul>
+  <li>Graphical (visualizations) or Non-graphical (statistics)
+    <p><i>[Note: a useful website about <a href="https://datavizcatalogue.com/ZH/">Visualization Plots</a>. ]</i></p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Show.html">Show</a> 用于整合输出多幅图</li>
+      <li>Scatterplots (散点图) <a href="https://reference.wolfram.com/language/ref/ListPlot.html">ListPlot</a>
+        <p>通过 <a href="https://reference.wolfram.com/language/ref/Grid.html">Grid</a> 来组织不同的图表来展现不同类别的散点图.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/BarChart.html">BarChart</a> (柱状图, 相对大小), <a href="https://reference.wolfram.com/language/ref/PieChart.html">PieChart</a> (饼状图, 成分占比)</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Histogram.html">Histogram</a>, 或使用 <a href="https://reference.wolfram.com/language/ref/PairedHistogram.html">PairedHistogram</a> 来进行对比.
+        <p>注: 一个绘图的小技巧是在绘图前可以对数据进行一个缩放 <a href="https://reference.wolfram.com/language/ref/Rescale.html">Rescale</a>,
+          使得其输出结果更加容易看:</p>
+<div class="highlight"><pre><span></span><span class="n">dataScaled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">With</span><span class="p">[{</span>
+<span class="w">        </span><span class="n">dat1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">({</span><span class="n">Min</span><span class="p">[</span><span class="nv">#1</span><span class="p">],</span><span class="w"> </span><span class="n">Max</span><span class="p">[</span><span class="nv">#1</span><span class="p">]}</span><span class="o">&amp;</span><span class="p">)[</span><span class="n">dur</span><span class="p">],</span>
+<span class="w">        </span><span class="n">dat2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">({</span><span class="n">Min</span><span class="p">[</span><span class="nv">#1</span><span class="p">],</span><span class="w"> </span><span class="n">Max</span><span class="p">[</span><span class="nv">#1</span><span class="p">]}</span><span class="o">&amp;</span><span class="p">)[</span><span class="n">wait</span><span class="p">]},</span>
+<span class="w">             </span><span class="p">(</span><span class="n">Rescale</span><span class="p">[</span><span class="nv">#1</span><span class="p">,</span><span class="w"> </span><span class="n">dat1</span><span class="p">,</span><span class="w"> </span><span class="n">dat2</span><span class="p">]</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">/@</span><span class="w"> </span><span class="n">dur</span><span class="p">];</span>
+</pre></div>
+        <p>上面是来自官方的代码, 满满的函数式编程的味道.</p>
+        <p>其他的还有: <a href="https://reference.wolfram.com/language/ref/DensityHistogram.html">DensityHistogram</a>, <a href="https://reference.wolfram.com/language/ref/Histogram3D.html">Histogram3D</a>,
+          <a href="https://reference.wolfram.com/language/ref/SmoothHistogram.html">SmoothHistogram</a>, <a href="https://reference.wolfram.com/language/ref/SmoothHistogram3D.html">SmoothHistogram3D</a>.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/BoxWhiskerChart.html">BoxWhiskerChart</a> (箱线图)
+        <p>注: 箱线图的 (线) 两端表示最大和最小, 中间的框表示第一四分位数,
+          第三四分位数的一个范围. 最后中间的线表示中位数. 其反应了数据的:
+          中心位置, 散布程度, 对称性的信息.</p>
+        <p>可以用箱线图来帮助了解数据是否有误. 如从上下极限可以找到是否有异常数值,
+          或者根据四分位距 $IQR = Q_3 - Q_1$ 来判断, 再通过设置一个合理区间来判断.
+          即设置上极限和下极限的区域为 $Q_1 - 1.5 &times; IQR, Q_3 + 1.5 &times; IQR$.
+          是一种比较普遍适用的方法.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/DistributionChart.html">DistributionChart</a> (默认) 得到的是 <a href="https://mode.com/blog/violin-plot-examples/">Violin Plots</a> (小提琴图).
+        <p>注: 类似于箱线图的升级版本. 可以和人口年龄结构分布图类比一下.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/QuantilePlot.html">QuantilePlot</a> (Q-Q 图)
+        <p>注: 用来表示两个分布之间的差异. 比如默认是和标准分布的差:
+          假设数据样本的概率分布为 $F(X)$ 而标准分布为 $\hat{F}(X)$.
+          那么如果将其差 $F(X) - \hat{F}(X)$ 在一条直线附近绘制出来,
+          就会得到 Q-Q 图.</p>
+        <blockquote>
+          <ul>
+            <li>Do two data sets come from populations with
+              a common distribution?</li>
+            <li>Do two data sets have a common location and scale?</li>
+            <li>Do two data sets have similar distributional shapes?</li>
+            <li>Do two data sets have similar tail behavior?</li>
+          </ul>
+          <p>from <a href="https://www.itl.nist.gov/div898/handbook/eda/section3/qqplot.htm">Quantile-Quantile Plot</a></p>
+        </blockquote>
+      </li>
+      <li>Cluster visualizations 通过对数据进行分类以达到数据可视化的程度.
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/FindClusters.html">FindClusters</a> 对输入的数据进行一个分类</li>
+          <li><a href="https://reference.wolfram.com/language/ref/ClusteringTree.html">ClusteringTree</a> 基于树状图的一个分类,
+            类似的还有 <a href="https://reference.wolfram.com/language/ref/Dendrogram.html">Dendrogram</a> 来绘制.</li>
+        </ul>
+      </li>
+      <li>TimeSeries plots
+        <ul>
+          <li><a href="https://reference.wolfram.com/language/ref/DateListPlot.html">DateListPlot</a>, <a href="https://reference.wolfram.com/language/ref/DateListStepPlot.html">DateListStepPlot</a></li>
+        </ul>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud">WordCloud</a>
+        <p><i>[Note: 可以用来分析词条的出现频次.]</i></p>
+      </li>
+    </ul>
+  </li>
+  <li>Univariate (single variable behavior) or multivariate
+    (combined behavior of two or more variables)</li>
+</ul>
+<h2>Looking at Data Differently</h2>
+<p>这一部分的想法就是, 对于不同的类型的数据, 通过不同的方式来处理,
+  可以得到很好的结果:</p>
+<ul>
+  <li>词条的出现频次, 通过 <a href="https://reference.wolfram.com/language/ref/WordCloud.html?q=WordCloud">WordCloud</a> 这样的方案就很好</li>
+  <li>对于低维数据, 可以通过简单的绘图的方式显现.
+    但是对于复杂的高维数据, 则可以通过特征提取的方式来分类.
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/FeatureSpacePlot.html">FeatureSpacePlot</a></li>
+      <li><a href="https://reference.wolfram.com/language/ref/Graph.html">Graph</a>, and <a href="https://reference.wolfram.com/language/ref/HighlightGraph.html">HighlightGraph</a> helps information stand out.</li>
+    </ul>
+  </li>
+  <li>对于特定的种类的数据, 可以用专门的方式来绘制:
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/GeoGraphics.html">GeoGraphics</a>, <a href="https://reference.wolfram.com/language/ref/GeoHistogram.html">GeoHistogram</a></li>
+      <li><a href="https://reference.wolfram.com/language/ref/TimelinePlot.html">TimelinePlot</a></li>
+    </ul>
+  </li>
+</ul>
+<h2>Statistical Tools</h2>
+<ul>
+  <li>$\bar{x} = &sum; x_i / N$ <a href="https://reference.wolfram.com/language/ref/Mean.html">Mean</a>, $&sum;(x - \bar{x})^2/N$ <a href="https://reference.wolfram.com/language/ref/Variance.html">Variance</a></li>
+  <li>$&sigma;$ <a href="https://reference.wolfram.com/language/ref/StandardDeviation.html">StandardDeviation</a></li>
+  <li>Tukey's <b>Five number summary</b>
+    <p>注: 这个 <a href="https://en.wikipedia.org/wiki/Five-number_summary">Five number summary</a> 描述的量在箱线图中就有表述.</p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Min.html">Min</a></li>
+      <li>First quartile</li>
+      <li>Median</li>
+      <li>Third quartile</li>
+      <li><a href="https://reference.wolfram.com/language/ref/Max.html">Max</a></li>
+    </ul>
+  </li>
+  <li>Frequency Counts <a href="https://reference.wolfram.com/language/ref/Count.html">Count</a>
+    <p><i>[Note: when dealing with *Float* data, it is helpful to first apply <a href="https://reference.wolfram.com/language/ref/Round.html">Round</a>.]</i></p>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/Correlation.html">Correlation</a></li>
+  <li>Others
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/Skewness.html">Skewness</a></li>
+      <li><a href="https://reference.wolfram.com/language/ref/Kurtosis.html">Kurtosis</a></li>
+    </ul>
+  </li>
+</ul>
+<h1>Assenble a Multiparadigm Toolset</h1>
+<p>This part is about using tools to answer the questions asked above.</p>
+<p><b>Quick Review of Terms</b>: (黑话介绍)</p>
+<ul>
+  <li><b>Independent variables</b> as input $\vec{x} = {x_1, &hellip;, x_n}$</li>
+  <li><b>Dependent variable</b> as the result $y$.</li>
+  <li><b>Model</b> about how input generates the output,
+    which could be a function $y = f(\vec{x})$ or just
+    simply a <b>blackbox</b>: $\vec{x} &rarr; \mathrm{blackbox} &rarr;  y$.</li>
+  <li><b>Parameters</b> are values in the model or algorithm that
+    are not assumed by the predictor or response variables;
+    learned/tuned while training.</li>
+  <li><b>Training</b> The process of identifying the function or the
+    algorithm (and the corresponding parameters) that best
+    represents the relationship between the input and output.</li>
+</ul>
+<h2>Classification</h2>
+<p>This part is about answering the question like <b>Is this A or B?</b></p>
+<p>Use <a href="https://reference.wolfram.com/language/ref/Classify.html">Classify</a> to mark data, return a <a href="https://reference.wolfram.com/language/ref/ClassifierFunction.html">ClassifierFunction</a> which could
+  classify input. The  <a href="https://reference.wolfram.com/language/ref/ClassifierFunction.html">ClassifierFunction</a> can be used for getting
+  the probabilities for all classes or a specific class.</p>
+<div class="highlight"><pre><span></span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Classify</span><span class="p">[</span><span class="n">data</span><span class="p">];</span>
+<span class="n">c</span><span class="p">[</span><span class="n">value</span><span class="p">]</span><span class="w"> </span><span class="c">(* Return the class *)</span>
+<span class="n">c</span><span class="p">[</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Probabilities&quot;</span><span class="p">]</span><span class="w"> </span><span class="c">(* All possible classes with probability *)</span>
+<span class="n">c</span><span class="p">[</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Probabilities&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;A&quot;</span><span class="p">]</span><span class="w"> </span><span class="c">(* Probability for a specific class*)</span>
+</pre></div>
+<p>思路是这样的, 在数据集中选择一个代表数据集, 然后进行手工标定,
+  最后用 <a href="https://reference.wolfram.com/language/ref/Classify.html">Classify</a> 来对数据集进行学习, 以期望能够通过学习的结果,
+  用来对其他的数据进行预测.</p>
+<p>训练的方法 <code>Classify[data, Method -&gt; &quot;...&quot;]</code> 有: (方法内容介绍有空补)</p>
+<ul>
+  <li><b>Logistic Regression</b> to classify using probabilities from linear
+    combinations of features.</li>
+  <li><b>Nearest Neighbors</b> to classify from nearest neighbor examples</li>
+  <li><b>Naive Bayes</b> to classify by assuming probabilistic independence of features</li>
+  <li><b>Decision Tree</b> to classify using a tree-like model for representing
+    decisions and their consequences</li>
+  <li><b>Gradient Boosted Trees</b> to classify using an ensemble of trees
+    trained with gradient boosting</li>
+  <li><b>Random Forests</b> to classify using Breiman-Cutler ensembles of
+    decision trees</li>
+  <li><b>Markov Models</b> to classify using a stochastic model on the sequence
+    of features (for text, bags of tokens, etc.)</li>
+  <li><b>Support Vector Machines</b> to classify using a discriminative model that
+    constructs a hyperplane or sets of hyperplanes to separate samples of
+    different classes.</li>
+  <li><b>Neural Networks</b> to classify using algorithms modeled loosely after
+    biological neural networks.</li>
+  <li>更多方法见 <a href="https://reference.wolfram.com/language/ref/Classify.html">Classify</a> 文档.</li>
+</ul>
+<p>训练结果可以添加用来判断分类的阀值, 如:
+  <code>Classify[data, IndeterminateThreshold -&gt; 0.9`]</code>,
+  若没有高于阀值的分类结果, 则返回 <code>Indeterminate</code> 表示不能判断.
+  也可以在实际使用中添加参数: <code>cfunc[value, Indeterminate -&gt; ...]</code>.</p>
+<p>在训练的时候, 可以传入标定概率的数据集 <code>UtilityFunction</code> 来增强分类结果.</p>
+<div class="highlight"><pre><span></span>utility = Association[
+  &quot;a&quot; -&gt; Association[&quot;a&quot; -&gt; 1, &quot;b&quot; -&gt; 0, Indeterminate -&gt; 0.5`],
+  &quot;b&quot; -&gt; Association[&quot;a&quot; -&gt; -15, &quot;b&quot; -&gt; 1, Indeterminate -&gt; 0.8`]];
+ClassifierMeasurements[c, test, &quot;ConfusionMatrixPlot&quot;, UtilityFunction -&gt; utility]
+</pre></div>
+<p>使用 <code>PerformanceGoal</code> 参数在 <code>Classify</code> 中可以改变分类的性能.
+  是速度优先或者是质量优先或者其他.</p>
+<p>对于结果, 通过 <a href="https://reference.wolfram.com/language/ref/Information.html">Information</a> 来提取关于拟合的 <a href="https://reference.wolfram.com/language/ref/ClassifierFunction.html">ClassifierFunction</a> 函数的信息,
+  比如 <code>Information[c]</code> 得到所有关于 <code>c</code> 的信息. 或者再传入一个参数指定信息:
+  <code>Information[c, &quot;MethodOption&quot;]</code>. 其中的参数还有: <code>LearningCurve</code> (训练曲线),
+  <code>Accuracy</code> 精确度等等.</p>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/ClassifierMeasurements.html">ClassifierMeasurements</a> 来评估一个 <b>ClassifierFunction</b> 的好坏程度.
+  其中, <code>test</code> 为另一部分人为标定的数据集. <code>cfunc</code> 是根据部分标定的数据训练得到的结果.</p>
+<div class="highlight"><pre><span></span><span class="n">cfuncMeasure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ClassifierMeasurements</span><span class="p">[</span><span class="n">cfunc</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">]</span>
+<span class="n">cfuncMeasure</span><span class="p">[</span><span class="s">&quot;Accuracy&quot;</span><span class="p">]</span>
+<span class="n">cfuncMeasure</span><span class="p">[</span><span class="s">&quot;ConfusionMatrixPlot&quot;</span><span class="p">]</span>
+</pre></div>
+<p>其中的参数有:</p>
+<ul>
+  <li><b>Accuracy</b>: fraction of correctly classified examples</li>
+  <li><b>ConfusionMatrixPlot</b>: plot of the confusion matrix</li>
+  <li><b>BestClassifiedExamples</b>: examples having the highest actual-class probability
+    samely: <b>WorstClassifiedExamples</b>.</li>
+</ul>
+<p>总结:</p>
+<ul>
+  <li>Classification as a supervised machine learning task of
+    predicting labels for new samples, based on a set of previously
+    labeled training samples</li>
+  <li>Classify: a machine learning super-function
+    <ul>
+      <li>Works for various types of input&#8211;numerical features,
+        images, text, etc.</li>
+      <li>ClassifierMeasurements: to evaluate the performance of
+        the ClassifierFunction created by Classify</li>
+    </ul>
+  </li>
+  <li>Customize Classify to:
+    <ul>
+      <li>Use different &#8220;Methods&#8221; or common classification algorithms
+        like Logistic Regression, Decision Trees, Nearest Neighbor etc.</li>
+      <li>Use different UtlityFunction and IndeterminateThreshold
+        for making decisions</li>
+      <li>Optimize performance according to different criteria
+        like training speed, actual runtime speed, memory usage,
+        or accuracy of predictions</li>
+    </ul>
+  </li>
+</ul>
+<h2>Regression</h2>
+<p>This part is to answer <b>How much</b> would something be.</p>
+<ul>
+  <li><b>Linear Regression</b> <a href="https://reference.wolfram.com/language/ref/LinearModelFit.html">LinearModelFit</a>
+<div class="highlight"><pre><span></span><span class="n">lm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearModelFit</span><span class="p">[</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="n">f1</span><span class="p">,</span><span class="w"> </span><span class="n">f2</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">x1</span><span class="p">,</span><span class="w"> </span><span class="n">x2</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">}]</span>
+<span class="n">lm</span><span class="p">[</span><span class="s">&quot;BestFit&quot;</span><span class="p">]</span><span class="w"> </span><span class="c">(* linear exp of f1, f2, ... *)</span>
+</pre></div>
+  </li>
+  <li><b>Machine Learning Super Function</b> <a href="https://reference.wolfram.com/language/ref/Predict.html">Predict</a>
+    <ul>
+      <li><code>PerformanceGoal</code></li>
+      <li>Methods used to generate prediction:
+        <ul>
+          <li><code>BoostingMethod</code></li>
+        </ul>
+      </li>
+      <li>Test of predicted results:
+        <ul>
+          <li>Plot <i>distribution</i> of predicted function on specific input:
+            <code>Plot[PDF[predictFunction[input, &quot;Distribution&quot;], x], {x, 0, 1}]</code></li>
+          <li><a href="https://reference.wolfram.com/language/ref/PredictorMeasurements.html">PredictMeasurements</a> to test predicted results.
+            <ul>
+              <li><code>ComparisionPlot</code> to plot predictions with data input.</li>
+              <li><code>StandardDeviation</code></li>
+              <li><code>Report</code></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><code>FindFormula</code> to find a formula to describe the given data</li>
+</ul>
+<h2>Cluster Analysis</h2>
+<p>The previous two parts use a lot of supervised machine-learning methods.
+  This part is about some unsupervised machine learning methods,
+  which will answer questions like:</p>
+<ul>
+  <li>How is the data organized?</li>
+  <li>Does the data have some inherent structure?</li>
+  <li>Do the samples sort themselves out into different groups and subgroups?</li>
+</ul>
+<p><a href="https://reference.wolfram.com/language/ref/FindClusters.html">FindClusters</a> 来对输入的函数进行分类. 其中可以传入的参数:</p>
+<ul>
+  <li><code>DistanceFunction</code> 对于输入的一个距离函数, 需要满足的条件:
+    $f(e_i, e_i) = 0, f(e_i, e_j) \geq 0, f(e_i, e_j) = f(e_j, e_i)$.
+    <p>默认使用的距离函数根据不同的输入会有不同的结果.
+      如对于 Numeric data, 可以是 Euclid Distance;
+      对于 Boolean data, 使用的方法是 Matching Dissimilarity or
+      Jaccard Dissimilarity; 对于 String data, 方法为 Edit Distance
+      或 Hamming Distance.</p>
+    <p><a href="https://reference.wolfram.com/language/ref/Nearest.html">Nearest</a> 函数用来找最近的元素. <code>Nearest[list, query, &lt;number&gt;]</code>.
+      <a href="https://reference.wolfram.com/language/ref/FeatureNearest.html">FeatureNearest</a>, <a href="https://reference.wolfram.com/language/ref/FeatureSpacePlot.html">FeatureSpacePlot</a>.</p>
+  </li>
+  <li><code>Method</code> 用来指定使用的分类方法</li>
+  <li><code>CriterionFunction</code></li>
+</ul>
+<p>其他类似的函数有 <a href="https://reference.wolfram.com/language/ref/ClusteringTree.html">ClusteringTree</a>, <a href="https://reference.wolfram.com/language/ref/Dendrogram.html">Dendrogram</a>, 以及 <a href="https://reference.wolfram.com/language/ref/ClusteringComponents.html">ClusteringComponents</a>
+  可以给出不同元素所对应的类别的一个 list.</p>
+<p><a href="https://reference.wolfram.com/language/ref/ClusterClassify.html">ClusterClassify</a> 函数可以通过使用 <b>Cluster</b> 的方式来构建一个分类函数.</p>
+<p><a href="https://reference.wolfram.com/language/ref/LearnDistribution.html">LearnDistribution</a> 和 <a href="https://reference.wolfram.com/language/ref/FindDistribution.html">FindDistribution</a> 的作用和 <a href="https://reference.wolfram.com/language/ref/FindFormula.html">FindFormula</a> 类似,
+  可以根据输入来生成一个可能的分布.</p>
+<h2>Anomaly Detection</h2>
+<p>Answer the question about <b>is this unusual?</b>.
+  To perform anomaly detection, here are some methods:</p>
+<ul>
+  <li>Network instrusion</li>
+  <li>Fraudulent transaction</li>
+  <li>Unusual characteristics of diseased cells</li>
+</ul>
+<p><a href="https://reference.wolfram.com/language/ref/AnomalyDetection.html">AnomalyDetection</a> 可以在样本的基础上训练一个找不同函数,
+  配合 <a href="https://reference.wolfram.com/language/ref/FindAnomalies.html">FindAnomalies</a> 函数使用可以在输入中找到一个不同的函数结果.
+  后者通过传入 <code>AcceptanceThreashold</code> 参数来改变默认的剔除阀值.
+  这个找不同函数也可以用来 <a href="https://reference.wolfram.com/language/ref/DeleteAnomalies.html">DeleteAnomalies</a>. 来防止不同的样本对后续分析的影响.</p>
+<p>或者是使用 <a href="https://reference.wolfram.com/language/ref/LearnDistribution.html">LearnDistribution</a> 生成一个分布, 并使用 <a href="https://reference.wolfram.com/language/ref/RarerProbability.html">RarerProbability</a>
+  来找出那些不太可能出现的量 (通过概率来). 并且可以用这个生成的分布,
+  来填补之前的 <code>Missing</code> 的数据. 使用的函数是 <a href="https://reference.wolfram.com/language/ref/SynthesizeMissingValues.html">SynthesizeMissingValues</a>.</p>
+<h2>Predict of Next Value</h2>
+<p>Use <a href="https://reference.wolfram.com/language/ref/SequencePredict.html">SequencePredict</a> to generate a <a href="https://reference.wolfram.com/language/ref/SequencePredictorFunction.html">SequencePredictFunction</a>,
+  which could be used to generate the next value of input by learning
+  sample data: <code>predictFunc[input, &quot;RandomNextElement&quot; -&gt; num]</code>.</p>
+<p>在 <a href="https://reference.wolfram.com/language/ref/SequencePredict.html">SequencePredict</a> 使用不同的参数来处理输入:</p>
+<ul>
+  <li><code>FeatureExtractor</code> 来指定如何提取输入的关键部分, 如 <code>SegmentedWords</code></li>
+  <li><code>Method</code> 中可以指定 <code>Markov</code> 链的长度 <code>Method -&gt; {&quot;Markov&quot;, &quot;Order&quot; -&gt; 5}</code>,
+    类似这样.</li>
+</ul>
+<blockquote>
+  <p><b>灰色预测模型</b> $GM(1, 1)$</p>
+  <p>适用于时间序列预测, 灾变预测, 波形预测, 系统预测.
+    其中 $GM(1, 1)$ 表示仅含有一个变量的一阶微分方程模型.</p>
+</blockquote>
+<h2>Neural Networks</h2>
+<blockquote>
+  <p>The good news is that the Wolfram Neural Net Repository and
+    the Neural Net Framework in the Wolfram Language makes it really easy
+    to incorporate this powerful technology into
+    our project workflow.</p>
+  <p>The bad news is that we could never do justice to covering
+    this topic in just 10 minutes.</p>
+</blockquote>
+<ul>
+  <li>Neural networks are either chains or (acyclic) graphs of layers</li>
+  <li>Layers process arrays (a.k.a. tensors) of numbers
+    (a.k.a. neural activities)</li>
+  <li>Encoders and decoders convert the input to and output from
+    numerical arrays</li>
+  <li>Frameworks provide different loss functions</li>
+  <li>Frameworks provide built-in backpropagation and
+    stochastic gradient descent</li>
+  <li>Frameworks are highly optimized to run on (special) hardware</li>
+</ul>
+<p>所以关于神经网络的部分还得之后继续学.</p>
+<p>可以参考的网站:</p>
+<ul>
+  <li><a href="https://resources.wolframcloud.com/NeuralNetRepository/">WOLFRAM NEURAL NET REPOSITORY</a></li>
+  <li><a href="https://www.wolfram.com/language/12/neural-network-framework/perform-net-surgery-for-transfer-learning.html">Perform Net Surgery for Transfer Learning</a></li>
+  <li><a href="https://reference.wolfram.com/language/tutorial/NeuralNetworksIntroduction.html">Introduction to Neural Nets</a></li>
+  <li><a href="https://zh.d2l.ai/index.html">动手学深度学习</a> (但是不是 Mathematica 的版本)</li>
+</ul>
+<details><summary>Introduction to Neural Networks</summary>
+<h3>Introduction to Neural Networks</h3>
+<p>课程是 <a href="https://www.wolfram.com/wolfram-u/courses/machine-learning/introduction-neural-networks-ml010/">Wolfram U: Introduction to Neural Networks</a> 的课程.</p>
+<blockquote>
+  <p>What are Neural Nets?</p>
+  <p><b>Modertn term</b>: <a href="https://en.wikipedia.org/wiki/Differentiable_programming">differentiable programming (wikipedia)</a>.</p>
+</blockquote>
+<h4>Layers (Operator)</h4>
+<p><i>[Note: 因为我是照着英文从零开始学的, 所以并不知道名词应该怎么翻译. 故以下名词全部保留英文. ]</i></p>
+<p><b>Layer</b> 是一个网络中最基本的组成, 类似于一个运算子 (operator),
+  但是只接受数值输入的 tensors:</p>
+<div class="highlight"><pre><span></span><span class="n">elem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ElementwiseLayer</span><span class="p">[</span><span class="n">Tanh</span><span class="p">];</span>
+<span class="p">{</span><span class="n">elem</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span>
+<span class="n">N</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="n">Tanh</span><span class="w"> </span><span class="o">@</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">}}</span>
+</pre></div>
+<pre class="example">
+{ {0.7615941762924194, 0.9640275835990906, 0.9950547814369202}, {0.7615941559557649, 0.9640275800758169, 0.9950547536867305} }
+</pre>
+<p>且 Layer 是可导的. (可导性为后续用于计算参数 &#8220;学习&#8221; 的一个前提. )</p>
+<div class="highlight"><pre><span></span><span class="n">elem</span><span class="p">[{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">NetPortGradient</span><span class="p">[</span><span class="s">&quot;Input&quot;</span><span class="p">]]</span>
+<span class="n">D</span><span class="p">[</span><span class="n">Tanh</span><span class="p">[</span><span class="n">x</span><span class="p">],</span><span class="w"> </span><span class="n">x</span><span class="p">]</span><span class="w"> </span><span class="o">/.</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="mf">1.</span><span class="p">,</span><span class="w"> </span><span class="mf">2.</span><span class="p">,</span><span class="w"> </span><span class="mf">3.</span><span class="p">}</span>
+</pre></div>
+<details><summary>其他关于 Layers 的一些知识</summary>
+<p>在运算的时候可以指定 GPU 和 CPU 来进行运算:</p>
+<div class="highlight"><pre><span></span><span class="n">elem</span><span class="p">[{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">},</span><span class="w"> </span><span class="n">TargetDevice</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;GPU&quot;</span><span class="p">]</span>
+</pre></div>
+<p><i>注: macOS 貌似没有对 GPU 的支持.</i></p>
+<p><i>[等一下, 我突然发现讲课的人用的是 macOS, 且其 GPU 至少有 3 线程&#8230; 是我的电脑不配么&#8230;]</i></p>
+<p>在新建 Layer 的时候可以指定输入的类型:</p>
+<div class="highlight"><pre><span></span><span class="n">ElementwiseLayer</span><span class="p">[</span><span class="n">Tanh</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Input&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">}]</span>
+</pre></div>
+<p>上面的就是一个 $4 &times; 32$ 的矩阵作为输入.</p>
+</details>
+<p>一些 Layer 有可学习的参数:</p>
+<div class="highlight"><pre><span></span><span class="n">dot</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearLayer</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Input&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">2</span><span class="p">]</span>
+</pre></div>
+<p><i>注: 上面的是一个三维输出, 二维输入的一个线性 Layer.</i></p>
+<p><img src="/_img/MMA/2-to-3-layer-example.svg" alt="/_img/MMA/2-to-3-layer-example.svg" /></p>
+<p>而默认是没有初始化这些未知的参数的, 所以需要通过初始化的方式 (<a href="https://reference.wolfram.com/language/ref/NetInitialize.html">NetInitialize</a>)
+  来给一个 Layer 赋上随机的参数值. 使用 <a href="https://reference.wolfram.com/language/ref/NetExtract.html">NetExtract</a> 可以提取出参数的具体值.</p>
+<p><img src="/_img/MMA/MMA-LinearLayer-Uninitialize.png" alt="/_img/MMA/MMA-LinearLayer-Uninitialize.png" /></p>
+<p>通过 <code>?*Layer</code> 可以列出可用的各种 Layer.</p>
+<h4>Chain and Graph</h4>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/NetChain.html">NetChain</a> 可以将多个 Layer 串联在一起, 将其输入和输出依次相连.
+  但是这样得到的只是单输入的一个网络. 使用 <a href="https://reference.wolfram.com/language/ref/NetGraph.html">NetGraph</a> 可以构建有多个输入的网络.</p>
+<p>比如有一个函数是: <code>func = (Tanh @ #Input1 + LogisticSidmoid @ #Input2)&amp;</code>,
+  用网络来表示就是:</p>
+<div class="highlight"><pre><span></span><span class="n">NetGraph</span><span class="p">[{</span><span class="n">ElementwiseLayer</span><span class="p">[</span><span class="n">Tanh</span><span class="p">],</span><span class="w"> </span><span class="n">ElementwiseLayer</span><span class="p">[</span><span class="n">LogisticSigmoid</span><span class="p">],</span><span class="w"> </span><span class="n">TotalLayer</span><span class="p">},</span>
+<span class="p">{</span><span class="n">NetPort</span><span class="p">[</span><span class="s">&quot;Input1&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">NetPort</span><span class="p">[</span><span class="s">&quot;Input2&quot;</span><span class="p">]</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">}</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">3</span><span class="p">}]</span>
+</pre></div>
+<p>其中 <code>1</code>, <code>2</code> 对应的就是第一个参数 (节点列表) 中节点的顺序.
+  于是对于这样的 <code>net</code>, 通过 <code>net @ &lt;| &quot;Input1&quot; -&gt; {...}, &quot;Input2&quot; -&gt; {...} |&gt;</code>
+  的形式来进行计算.</p>
+<h4>NetEncoder and NetDecoder</h4>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/NetEncoder.html">NetEncoder</a> 可以对输入的数据进行一个解码.
+  如对输入的图片以灰度形式转换为 $12 &times; 12$ 的一个张量:</p>
+<div class="highlight"><pre><span></span><span class="n">NetEncoder</span><span class="p">[{</span><span class="s">&quot;Image&quot;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">12</span><span class="p">},</span><span class="w"> </span><span class="s">&quot;ColorSpace&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;Grayscale&quot;</span><span class="p">}]</span>
+</pre></div>
+<p>参考文档:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/tutorial/NeuralNetworksLargeDatasets.html">Training on Large Datasets</a></li>
+</ul>
+<p>或者可以直接通过 <code>*Layer[..., &quot;Input&quot; -&gt; NetEncoder[...]]</code>
+  来指定一个 Layer 输入的类型.</p>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/NetDecoder.html">NetDecoder</a> 可以将张量转换为原始的输出.
+  通过 <code>*Layer[..., &quot;Output&quot; -&gt; NetDecoder[...]]</code> 的形式,
+  可以来指定一个  Layer 输出的类型.</p>
+<h4>Training</h4>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/NetTrain.html">NetTrain</a> 可以根据输入的数据来训练一个网络.</p>
+<p>一个输出的数据的例子如下: <code>{input -&gt; output, {1, 2} -&gt; 3}</code>,
+  类似这样.</p>
+<p>其使用 Gradient Descent (梯度下降) 的方式来对参数进行查找.
+  但是其原理目前并不需要太过了解.</p>
+<h4>An Example: a Digit Classifier</h4>
+<p>详细的介绍在 <a href="/_img/MMA/MMA-a-Digital-Number-Classifier-example.nb">Notebook</a> 里面可以查看.
+  简单的介绍如下:</p>
+<ul>
+  <li>使用 <a href="https://en.wikipedia.org/wiki/LeNet">LeNet</a> 来构建的神经网络, 主要包含的内容如下:
+    <p><img src="/_img/MMA/lenet-from-d2l-ai.svg" alt="/_img/MMA/lenet-from-d2l-ai.svg" /></p>
+    <p><i>[Note: 图片来源: <a href="https://zh.d2l.ai/chapter_convolutional-neural-networks/lenet.html#img-lenet">动手深度学习: LeNet</a> ]</i></p>
+  </li>
+  <li>使用一个 NetGraph 来用于训练.</li>
+</ul>
+<p>注: 最终训练的网络结果可以在 <a href="/_img/MMA/trained-LeNet-for-digits.wlnet">这里</a> 下载.</p>
+</details>
+<h1>Get the Message Across</h1>
+<h2>Visualizations</h2>
+<p>列举一些绘图用的函数以及其可能的用途和参数:</p>
+<p><i>[Note: 因为这些参数并不只能用在一个函数中, 其他函数估计也可以, 但是这里只记录一次出现. ]</i></p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/BarChart.html">BarChart</a> 柱状图, 用于表现各组分的数量比较关系
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/ChartLabels.html">ChartLabels</a> 用于给组分进行标记, 一个比较妙的标记方式:
+        <code>ChartLabels -&gt; Keys @ data</code>
+        <p>对于绘制的 <b>Label</b>, 默认是在下方 (x 轴),
+          通过 <code>Placed[Keys @ data, Top]</code>, 可以放在柱的顶部.
+          通过 <code>Callout[Keys @ data, Above]</code> 可以以箭头注记的方式标在顶部.</p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/AxesLabel.html">AxesLabel</a> 用于绘制坐标轴上的注记 (轴末端, 水平方向),
+        类似的还有 <a href="https://reference.wolfram.com/language/ref/FrameLabel.html">FrameLabel</a> (框线侧, 框线方向) 和 <a href="https://reference.wolfram.com/language/ref/Frame.html">Frame</a>.
+        后者通过布尔值来判断是否在图的四周绘制框线.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/PlotLabel.html">PlotLabel</a> 用于绘制图顶部的图名称</li>
+      <li><a href="https://reference.wolfram.com/language/ref/PlotTheme.html">PlotTheme</a> 用于标记图表的主体, 类似的有 <a href="https://reference.wolfram.com/language/ref/ChartStyle.html">ChartStyle</a>, <a href="https://reference.wolfram.com/language/ref/PlotStyle.html">PlotSytle</a>.
+        区别在于 <b>PlotTheme</b> 改变的是图表的数据标记, 框线之类的非主体要素;
+        <b>ChartStyle</b> 改变的是图表绘制的内容 (柱条颜色) 之类的主体内容整体指定;
+        <b>PlotStyle</b> 则是对每一个元素主体进行一一指定.</li>
+      <li><a href="https://reference.wolfram.com/language/ref/ImageSize.html">ImageSize</a> 指定绘制的图表的大小</li>
+    </ul>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/RectangleChart.html">RectangleChart</a> 可以用来绘制二维向量的柱状图,
+    每个矩形的横宽和竖高分别代表不同的向量的分量.</li>
+  <li><a href="https://reference.wolfram.com/language/ref/BubbleChart.html">BubbleChart</a> (泡泡图?) 可以用来绘制三维向量的图,
+    用在 $xOy$ 平面上半径为 $r$ 的不同大小的圆来表示 $\{x, y, z\}$ 这样的向量.
+    <p>类似的还有 <a href="https://reference.wolfram.com/language/ref/GeoBubbleChart.html">GeoBubbleChart</a>.</p>
+    <ul>
+      <li><a href="https://reference.wolfram.com/language/ref/ChartLegends.html">ChartLegends</a> 给出图例
+        <p>一个比较适合多数据的颜色的图例为 <a href="https://reference.wolfram.com/language/ref/BarLegend.html">BarLegend</a>.
+          这个函数适合配合 <a href="https://reference.wolfram.com/language/ref/ChartStyle.html">ChartStyle</a> 一起使用, 如:
+          <code>ChartLegends -&gt; BarLegend[{&lt;ChartStyle&gt;, QuantityMagnitude[MinMax[data]]}]</code></p>
+      </li>
+      <li><a href="https://reference.wolfram.com/language/ref/Tooltip.html">Tooltip</a> 一个对于导出图片来说没什么鸟用的 Mathematica Notebook 限定的华丽操作.
+        可以指定在 Mathematica 绘制出来的图片上, 当鼠标放置在特定元素上时,
+        弹出的自动提示框的样式.</li>
+    </ul>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/Manipulate.html">Manipulate</a> 可以用来给图表添加交互性, 也是一个 Mathematica Notebook 限定的华丽操作.
+    像 Mathematica Engine 这样的就无福享受了.</li>
+  <li>对数坐标轴, 有助于将中间的对象提取出来, 防止挤在一起</li>
+  <li><a href="https://reference.wolfram.com/language/ref/Graph.html">Graph</a> 关系图
+    <p>一个非常酷的关系图的例子:</p>
+<div class="highlight"><pre><span></span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="c">(* a list *)</span>
+<span class="n">nearby</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Flatten</span><span class="p">[</span><span class="n">Map</span><span class="p">[(</span><span class="n">Thread</span><span class="p">[</span><span class="nv">#</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">DeleteCases</span><span class="p">[</span><span class="n">Nearest</span><span class="p">[</span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="nv">#</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="nv">#</span><span class="p">]])</span><span class="o">&amp;</span><span class="p">,</span><span class="w"> </span><span class="n">words</span><span class="p">]]</span>
+<span class="n">Graph</span><span class="p">[</span><span class="n">nearbys</span><span class="p">,</span><span class="w"> </span><span class="n">VertexLabels</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Automatic</span><span class="p">]</span>
+</pre></div>
+    <p>或者用 <a href="https://reference.wolfram.com/language/ref/NearestNeighborGraph.html">NearestNeighborGraph</a> 也可以实现类似的功能.</p>
+    <p>一个更加炫酷的例子:</p>
+<div class="highlight"><pre><span></span><span class="n">wordPlot</span><span class="p">[</span><span class="nv">w_String</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">Graph</span><span class="p">[(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Characters</span><span class="p">[</span><span class="n">w</span><span class="p">];</span>
+<span class="w">  </span><span class="n">Thread</span><span class="p">[</span><span class="n">Drop</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Drop</span><span class="p">[</span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">]]),</span><span class="w"> </span><span class="n">VertexLabels</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">Automatic</span><span class="p">,</span>
+<span class="w">  </span><span class="n">DirectedEdges</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">True</span><span class="p">];</span>
+<span class="n">wordPlot</span><span class="p">[</span><span class="s">&quot;Shakespeare&quot;</span><span class="p">]</span>
+</pre></div>
+  </li>
+</ul>
+<p>更多参考: <a href="https://reference.wolfram.com/language/guide/DataVisualization.html">Data Visualization</a> 或者 <a href="https://www.wolfram.com/wolfram-u/courses/visualization-graphics/data-visualization-wolfram-language-vis201/">Data Visualization with the Wolfram Language</a>.
+  <a href="https://www.wolfram.com/wolfram-u/courses/catalog/?topic=visualization-graphics">Visualization and Graphics</a>.</p>
+<h2>Automated Reports</h2>
+<p>自动化一键生成报告, 很好. 不过因为不太能用到,
+  (平时以 Org-mode 为主), 所以这部分快速一点:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/CreateDocument.html">CreateDocument</a> 用来生成一个最终的文档</li>
+  <li><a href="https://reference.wolfram.com/language/ref/CreateNotebook.html">CreateNotebook</a> 配合 <code>CreateNotebook[&quot;Template&quot;]</code>, 用于生成模版.</li>
+</ul>
+<h2>Microsites and Web Apps</h2>
+<p>因为 CloudDeploy 要 Credits, 所以这部分就是穷鬼看看就好了.</p>
+<p>其中将计算的结果用 <code>iframe</code> 的形式嵌入到网页中这个功能我觉得是可用的,
+  不过可能需要有一些更加实际的场景才能让穷鬼花费自己的 Credits 去部署吧.</p>
+<h2>Reproducible Research Checklist</h2>
+<p>这个我觉得很有必要, 可复现性.</p>
+<p>Publishing data-backed reproducible analyses enable the community to:</p>
+<ul>
+  <li>Verify results (Replication == Stronger evidence)</li>
+  <li>Build on existing results</li>
+  <li>Combine results for better insight</li>
+</ul>
+<p>为了达到上面的目的, 一个 checklist:</p>
+<ul>
+  <li>Build a flexible, modular iterative workflow in stages
+    (Question, Wrangle, Explore, Analyse, Communicate)</li>
+  <li>Plan for structured data analysis</li>
+  <li>Automate (write code) the process wherever possible.
+    (Avoid point and click).</li>
+  <li>Document the code; Use a notebook-based workflow to combine code
+    and visualizations along with text descriptions (styled and formatted
+    for better communication)</li>
+  <li>Record and preserve
+    <ul>
+      <li>Sources: raw data, goals, references</li>
+      <li>Process: explorations, final code, observations,
+        and comments (selections and rejections)</li>
+      <li>Output: clean data, visualizations, reports, apps</li>
+    </ul>
+  </li>
+  <li>Use version control</li>
+  <li>Prepare for obsolescence - things will change,
+    and sources will get removed. (存档或者对新资源重新利用)</li>
+</ul>
+<h1>Other Mathematica Functions</h1>
+<p>因为官方的教程中大量使用了 Mathematica 中的缩写和函数式的知识,
+  所以在这里进行一个记录以用来之后的查找.</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/ref/With.html">With</a>, 使用方法就像是 Lisp 中的 <code>let</code> 方法. 提供临时局部变量绑定.
+    但是并不能做到按顺序进行依次赋值, 比如 <code>With[{a = 1, b = a + 1}, exp]</code>
+    这样的表达式是不能够实现的. 可以通过嵌套的 <code>With</code> 来曲线救国.</li>
+  <li>函数 <a href="https://reference.wolfram.com/language/ref/Function.html">Function</a>: 定义一个完整形式的函数 <code>Function[arg, exp]</code>,
+    如 <code>Function[{x, y}, x + y]</code> 生成一个函数.
+    (和 Lisp 中的 <code>(lambda (arg) exp)</code> 类似)
+    <p>或者使用缩写形式: <code>(exp)&amp;</code> 来表示一个表达式, 其中用 <code>#</code>, <code>##</code>, <code>#1</code>, <code>##2</code>
+      这样的方式来表示传递进来的参数. 其中:</p>
+    <ul>
+      <li><code>#</code> 形式代表选择对应的传入参数, 默认为第一个参数,
+        带上数字后缀则表示对应的位置的参数, 比如 <code>#1</code> 为第一个传入的参数,
+        <code>#2</code> 为第二个传入的参数, 依此类推. 比如 <code>(#1 ^ #2)&amp;[2, 3]</code> 就会变成 <code>2 ^ 3</code>.</li>
+      <li><code>##</code> 形式代表选择从某一位开始之后的传入参数, 默认从第一个参数开始,
+        带上数字后最则表示从对应位置开始的所有参数, 如 <code>##2</code> 为从第二位开始的所有参数.
+        比如 <code>(##2)&amp;[1, 2, 3, 4, 5]</code> 就会返回 <code>Sequence[2, 3, 4, 5]</code>. <b>比较少用</b>.</li>
+    </ul>
+  </li>
+  <li><a href="https://reference.wolfram.com/language/ref/Map.html">Map</a> 系的函数: <a href="https://reference.wolfram.com/language/ref/Apply.html">Apply</a> (相关函数: <a href="https://reference.wolfram.com/language/ref/Evaluate.html">Evaluate</a>), <a href="https://reference.wolfram.com/language/ref/MapThread.html">MapThread</a>, <a href="https://reference.wolfram.com/language/ref/MapIndexed.html">MapIndexed</a> 等.
+    一些简单的例子和缩写:
+<div class="highlight"><pre><span></span>(#^2)&amp; /@ Range[5]  (* Abbrevation of Map[(#^2)&amp;, Range[5]],
+                      but Table[i^2, {i, 5}] is better. *)
+MapThread[(#1 -&gt; #2)&amp;, { {a, b}, {1, 2} }] (* Return {a -&gt; 1, b -&gt; 2} *)
+MapIndexed[f, {a, b}] (* Return {f[a, {1}], f[b, {2}]} *)
+</pre></div>
+  </li>
+</ul>
+<p>其他的参考:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/tutorial/FunctionalOperations.html">Functional Operation</a></li>
+</ul>
+<details><summary>Functional Programming Quick Start</summary>
+<p>参考 Wolfram U 上的 <a href="https://www.wolfram.com/wolfram-u/courses/programming-applications/functional-programming-quick-start-dev020/">Functional Programming Quick Start</a> 课程.</p>
+<ul>
+  <li><b>Everything is an Expression</b>
+    <p>除了基本的元素以外, 所有的 Mathematica 中的表达式的形式都可以归化为
+      <code>Head[elem1, elem2, ...]</code> 的形式. 而一些操作符号有其对应的缩写形式 (shorthand).</p>
+  </li>
+  <li><b>Evaluation of Expressions</b>
+    <p>使用 <a href="https://reference.wolfram.com/language/ref/Attributes.html">Attributes</a> 可以查看函数的特性, 譬如对于 <a href="https://reference.wolfram.com/language/ref/Plot.html">Plot</a> 函数,
+      <code>Attributes[Plot]</code> 的返回值为 <code>{HoldAll, Protected, ReadProtected}</code>.
+      其中 <code>Protected</code> 表示被保留, 不会被随便写掉.
+      而 <code>HoldAll</code> 表示 <code>Plot</code> 不会将其参数先执行求值后运算.
+      (类似于 SICP 中的 applicative-order 和 normal-order 的感觉. )</p>
+  </li>
+  <li><b>List, the Functional Workhorse</b>
+    <ul>
+      <li><b>Constructing</b> a List: <a href="https://reference.wolfram.com/language/ref/Range.html">Range</a>, <a href="https://reference.wolfram.com/language/ref/Table.html">Table</a></li>
+      <li><b>Manipulation</b> and <b>Extraction</b>: <a href="https://reference.wolfram.com/language/ref/Part.html">Part</a>, 一般使用缩写 <code>list[[index]]</code>.</li>
+    </ul>
+  </li>
+  <li><b>Procedural to Functional Programming</b>
+    <blockquote>
+      <p>Mathematica is a multi-paradigm language,
+        and while procedural programming is supported,
+        it is better to use the system using its native paradigm.</p>
+    </blockquote>
+    <ul>
+      <li>Lose the Loop: <code>Do[exp, {iterVar, start, end}]</code>,
+        但是效率不高, 所以并不推荐. 一般的历遍和建表的操作,
+        应该选用 <a href="https://reference.wolfram.com/language/ref/Map.html">Map</a> 和 <a href="https://reference.wolfram.com/language/ref/Table.html">Table</a>.</li>
+      <li>Conditional Programming:
+        <ul>
+          <li><code>If[condition, t, f]</code>, 或者是缩写形式 <code>t /; condtion</code>.</li>
+          <li>或者是 <code>func[var_?EvenQ]</code> 这样的 pattern 形式.
+            这样的形式可以用来替换 <code>Which</code> 的分支定义:
+<div class="highlight"><pre><span></span><span class="n">func</span><span class="p">[</span><span class="nv">n_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">Which</span><span class="p">[</span><span class="n">cond1</span><span class="p">,</span><span class="w"> </span><span class="n">exp1</span><span class="p">,</span><span class="w"> </span><span class="n">cond2</span><span class="p">,</span><span class="w"> </span><span class="n">exp2</span><span class="p">]</span>
+<span class="c">(* The following are equal definitions *)</span>
+<span class="n">func</span><span class="p">[</span><span class="nv">n_</span><span class="o">?</span><span class="n">cond1</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">exp1</span><span class="p">;</span>
+<span class="n">func</span><span class="p">[</span><span class="nv">n_</span><span class="o">?</span><span class="n">cond2</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">exp2</span><span class="p">;</span>
+</pre></div>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><b>Patterns and Rules</b>
+    <ul>
+      <li>Extracting Parts with Patterns: 使用 <code>_</code> 来表示占空.
+        相关的函数有 <a href="https://reference.wolfram.com/language/ref/Cases.html">Cases</a>, <a href="https://reference.wolfram.com/language/ref/Position.html">Position</a> 和 <a href="https://reference.wolfram.com/language/ref/Count.html">Count</a>.</li>
+      <li>Transforming Expressions with Rules: 使用 <code>named_</code> 来为占空的匹配进行命名.
+        类似于 Regexp 中的命名匹配元素.
+        一个例子: <code>{x^2, x^3} /. x^power_ -&gt; power</code>.</li>
+      <li>Patterns and Functions: 在函数定义的时候的表也是一个 Pattern 的例子.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h1>About Mathematica And Emacs</h1>
+<ul>
+  <li>A helpful guide about mathematica and emacs can be seen <a href="https://rgoswami.me/posts/org-mathematica/">here</a>.
+    <p>You may need first download <a href="https://github.com/stuartsierra/org-mode/blob/master/contrib/lisp/ob-mathematica.el">ob-mathematica.el</a>
+      to your included path. And at <a href="https://github.com/stuartsierra/org-mode/blob/fd8a18151a7a64ded36c169f03c76bf96733bfd9/contrib/lisp/ob-mathematica.el#L34">line 34</a>, change
+      <code>(org-babel-get-header params :var)</code> to
+      <code>(org-babel--get-vars params)</code> according to this <a href="https://github.com/wose/ob-scad/issues/1">issue</a>.</p>
+    <p>And using <a href="http://ai.eecs.umich.edu/people/dreeves/mash/">mash.pl</a> can help with evaluation.</p>
+  </li>
+  <li>And a mathematica <a href="https://microsoft.github.io/language-server-protocol/">LSP</a> server can be seen at Github:
+    <a href="https://github.com/WolframResearch/LSPServer">WolframResearch</a>, or <a href="https://github.com/kenkangxgwe/lsp-wl">lsp-wl</a>, which need to write yourself
+    emacs code. (I choose the latter one.)
+    <p><del>Although I can't tell why it was slow to connect.</del></p>
+  </li>
+  <li>To enable lsp-mode for org-src-mode when editing Mathematica code,
+    could refer to this <a href="https://github.com/emacs-lsp/lsp-mode/issues/2842#issuecomment-870807018">issue</a>. (which I think is important,
+    especially for something like Mathematica with tons of functions.)</li>
+  <li>Also, you can use Jupyter and Wolfram Engine, which,
+    I think is a bit complicated.</li>
+</ul>
+<h1>Others</h1>
+<blockquote>
+  <p>All models are wrong. Some are useful.</p>
+</blockquote>
+<h2>线性规化, 非线性规化和多目标规化 - 最优方案</h2>
+<h3>线性规划</h3>
+<p>对于 <a href="https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationLinearProgramming.html">线性规化</a> 的问题, 若有不等式方程组为条件:</p>
+<p>$$\left\{\begin{array}{lll}x_1 + x_2 &amp; \leq &amp; 6 &#92;&#92; x_1 &amp; \geq &amp; 1 &#92;&#92; x_2 &amp; \geq &amp; 1 &#92;&#92; 240 x_1 + 120 x_2 &amp; \leq &amp; 1200\end{array}\right.$$</p>
+<p>想要求 $y = 40 x_1 + 30 x_2$ 的最大值.</p>
+<p>使用 <a href="https://reference.wolfram.com/language/ref/LinearOptimization.html">LinearOptimization</a> 方法来计算最小值时的变量取值.</p>
+<div class="highlight"><pre><span></span><span class="n">LinearOptimization</span><span class="p">[</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="p">(</span><span class="mi">40</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">30</span><span class="w"> </span><span class="n">x2</span><span class="p">),</span>
+<span class="w">  </span><span class="p">{</span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">  </span><span class="n">x2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">     </span><span class="mi">240</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">120</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">1200</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">x1</span><span class="p">,</span><span class="w"> </span><span class="n">x2</span><span class="p">}]</span>
+</pre></div>
+<pre class="example">
+{x1 -&gt; 4, x2 -&gt; 2}
+</pre>
+<p>或者直接扔到 <a href="https://reference.wolfram.com/language/ref/Minimize.html">Minimize</a> 或者 <a href="https://reference.wolfram.com/language/ref/Maximize.html">Maximize</a> 函数中可以得到结果:</p>
+<div class="highlight"><pre><span></span><span class="n">Maximize</span><span class="p">[{</span><span class="mi">40</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">30</span><span class="w"> </span><span class="n">x2</span><span class="p">,</span>
+<span class="w">          </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">          </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="mi">240</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">120</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">1200</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="n">x1</span><span class="p">,</span><span class="w"> </span><span class="n">x2</span><span class="p">}]</span>
+</pre></div>
+<pre class="example">
+{220, {x1 -&gt; 4, x2 -&gt; 2}}
+</pre>
+<p>并且上面的 <b>Minimize</b> 和 <b>Maximize</b> 方法还不只适用于线性规划:</p>
+<div class="highlight"><pre><span></span><span class="n">NMinimize</span><span class="p">[{</span><span class="n">x1</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x2</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x3</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span>
+<span class="w">  </span><span class="n">x1</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x3</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x2</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">x3</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">   </span><span class="o">-</span><span class="n">x1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">x2</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x3</span><span class="o">^</span><span class="mi">2</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<span class="w">   </span><span class="n">x1</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x2</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">x3</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mi">0</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">x1</span><span class="p">,</span><span class="w"> </span><span class="n">x2</span><span class="p">,</span><span class="w"> </span><span class="n">x3</span><span class="p">}]</span>
+</pre></div>
+<pre class="example">
+{10.651091807695447, {x1 -&gt; 0.5521673359041438, x2 -&gt; 1.2032591743672956, x3 -&gt; 0.9478240343844963}}
+</pre>
+<p>注: 并不适合多变元的问题. (<a href="https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationComparison.html">参考</a>)</p>
+<p>其他的方法有二次规划 (<a href="https://reference.wolfram.com/language/ref/QuadraticOptimization.html">QuadraticOptimization</a>),
+  罚函数法, 梯度法等, 可以参考文档:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/tutorial/ConstrainedOptimizationOverview.html">Constrained Opimization</a></li>
+  <li><a href="https://reference.wolfram.com/language/tutorial/UnconstrainedOptimizationOverview.html">Unconstrained Optimization</a></li>
+</ul>
+<h3>多个目标规划</h3>
+<ul>
+  <li>每个目标都有一个完成情况的目标 $d_i^0$,</li>
+  <li>取实际值函数 $f_i$, 于是可以得到正偏差 $d_i^+ = max\{f_i - d_i^0\}$
+    以及负偏差 $d_i^- = -min\{f_i - d_i^0, 0\}$.</li>
+  <li>绝对约束是前提的约束, 而目标约束是对目标的一个要求,
+    类似于绝对约束是客观事实, 而目标约束是画的大饼应该有的样子,
+    比如利润目标应 $f_i \geq 2,000$ 之类的. 目标约束可以有一定的偏差,
+    于是可以加入正负偏差变量: $f_i + d_i^- - d_i^+ = d_i^0$.
+    <p>注: 上面的偏差公式的意义是: $f_i$ 可以比 $d_i^0$ 小 $d_i^-$,
+      可以比 $d_i^0$ 大 $d_i^+$. 如果一个目标约束只能偏大,
+      那么就不能有 $d_i^-$ 的项.</p>
+    <p>好处: (为什么这样做), 将偏差用正负偏差变量来代替,
+      可以把目标函数变成等式的约束条件.
+      等式的约束条件也就是让我们可以不用考虑目标函数的约束了.</p>
+  </li>
+  <li>有限因子 $P_i$, 根据多个目标的重要程度来设定不同目标函数的权值.
+    一般靠查文献和瞎编得到.
+    <p>于是多个目标的 &#8220;总的&#8221; 目标函数就变成了 $F = &sum; P_i d_i^*$,
+      其中 $d_i^*$ 表示对于目标 $i$ 的希望: 如希望 $d_i^0$ 只能偏大,
+      不会偏小, 那么有 $d_i^* = d_i^+$, 如果是在附近, 那么就是 $d_i^* = d_i^+ + d_i^-$.</p>
+  </li>
+</ul>
+<h3>贪心算法</h3>
+<ol>
+  <li>选择一点 $p$, 对应有可行域 $F(p)$, 选择可行域中最大 $max_{p_j &isin; F(p)} p_j$</li>
+  <li>将 $p_j$ 作为下一个 $p$ 重复步骤 1 直至没有更大的</li>
+</ol>
+<p>缺点: 容易陷入局部极值.</p>
+<h3>模拟退火</h3>
+<p>为了防止贪心算法的局部极值的问题. 使用模拟退火的方式来做.
+  适用于可信解过多, NP-hard 的问题.</p>
+<ul>
+  <li>在可见范围内随机选择一点, 如果该点比当前位置更高, 就直接选择该点;
+    若更低, 则选择根据当前值用一定概率来选择去不去.</li>
+  <li>退火的概念就是让这个选择去不去的概率随时间慢慢减少,
+    确保最终会停留在最高值处.</li>
+</ul>
+<h2>多指标评估模型</h2>
+<h3>层次分析法</h3>
+<p>层次分析法的方法就是将目标和方案层之间, 通过一个准则层来进行连接.
+  这类似于有一个评估的参数列表 $attr_i$, 希望得到一个最终的目标的决策:</p>
+<p><img src="/_img/MMA/analytic-hierachy-process.svg" alt="/_img/MMA/analytic-hierachy-process.svg" /></p>
+<p>即每个可选项都有 $n$ 个特征项 $attr_i$, 要根据这些特征项选择一个最优的可选项.
+  于是就需要对特征按权值 $w_i$ 进行考虑, 最终在比较的时候, 考虑
+  $&sum; w_i attr_i$ 来作为最终的选择依据.</p>
+<p>注: 不过为了让数据能够可以被更好地使用, 一开始一般可以先对数据进行归一化.
+  即对于特征 $attr_i$, 每个可选项都有对应的值 $attr_i(x)$, 于是归一化即
+  $attr_i(x) / &sum;_x attr_i(x)$.</p>
+<p>通过一个矩阵来进行描述每个特征的权重:</p>
+<table>
+  <tr><th>$attr_i$ to $attr_j$</th><th>$attr_1$</th><th>$attr_2$</th></tr>
+  <tr><td>$attr_1$</td><td>$1$</td><td>$5$</td></tr>
+  <tr><td>$attr_2$</td><td>$\frac{1}{5}$</td><td>$1$</td></tr>
+</table>
+<p>类似于上面这样. 比如上面认为 $attr_2$ 比 $attr_1$ 重要 $5$ 倍,
+  (比例是随便编的). 即 $a_{ij}$ 表示第 $i$ 个元素对于第 $j$ 个元素重要 $a_{ij}$ 倍.</p>
+<p>为了让这个比例矩阵更加科学, 那么需要满足的是, 除了两两相比有大小,
+  对于整体应满足可比性. 即不会出现 $A &lt; B &lt; C &lt; A$ 这样的情况出现.
+  于是就引入 <b>一致性检验</b>:</p>
+<ul>
+  <li>计算一致性比例 $CR = \frac{CI}{RI}, CI = \frac{&lambda;_{max} - n}{n - 1}$,</li>
+  <li>其中 $&lambda;_{max}$ 为矩阵的最大特征值, $n$ 为指标数 (矩阵行数).</li>
+  <li>$RI$ 为平均随机一致性指标. (查表得到)
+    <table>
+      <tr><th>$n$</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr>
+      <tr><td>$RI$</td><td>0</td><td>0</td><td>0.52</td><td>0.89</td><td>1.12</td></tr>
+    </table>
+  </li>
+  <li>$CR &lt; 0.1$ 时为通过一致性检验.</li>
+</ul>
+<p>在得到矩阵后, 按列归一化, 按行求和后除以 $n$ 得到最终的权重值.</p>
+<p>注: 若准则层没有客观评价因素, 那么可以将其作为准则层,
+  然后在其中加入可以衡量的客观因素, 重新引用层次分析法.</p>
+<p>其他资源 (MMA)</p>
+<ul>
+  <li>一个 <a href="https://demonstrations.wolfram.com/PreferenceWeightsFromPairwiseComparisons/">代码</a></li>
+</ul>
+<h3>TOPSIS 法</h3>
+<p>有 $attr_i$ 一组的客观指标 (共 $n$ 个) 用于衡量 $x_i$ 各个对象.
+  对于 $attr_i$ 有打分函数 $f_{\mathrm{rank_i}}$, 于是就可以用 TOPSIS 法来进行比较.</p>
+<p>如若有如下数据:</p>
+<table>
+  <tr><th>对象 \ 指标</th><th>$attr_1$</th><th>$attr_2$</th><th>$attr_3$</th></tr>
+  <tr><td>$x_1$</td><td>$1$</td><td>$-2$</td><td>$6$</td></tr>
+  <tr><td>$x_2$</td><td>$2$</td><td>$0$</td><td>$9$</td></tr>
+  <tr><td>正理想解</td><td>$max f_{\mathrm{rank}_1}(attr_i(x_i))$</td><td>$max f_{\mathrm{rank}_2}(attr_i(x_i))$</td><td>$max f_{\mathrm{rank}_2}(attr_i(x_i))$</td></tr>
+  <tr><td>负理想解</td><td>$min f_{\mathrm{rank}_1}(attr_i(x_i))$</td><td>$min f_{\mathrm{rank}_2}(attr_i(x_i))$</td><td>$min f_{\mathrm{rank}_2}(attr_i(x_i))$</td></tr>
+</table>
+<p>于是可以构造一个比较约定: 在 $n$ 维空间中,
+  若一个对象距离正理想解越近, 且距离负理想解越远, 则视为最佳的选择.</p>
+<p>适用于有客观指标的对象, 若没有客观指标,
+  可以利用层次分析法来构建一个评价指标.</p>
+<h3>熵权法</h3>
+<p>对于 $n$ 个指标 $attr_i$, 考虑每个指标对应的对象的离散程度,
+  通过离散程度, 也就是熵值来判断指标对综合评价的影响强弱.
+  比如一个集中分布的指标就不如一个差异较大的指标更能够判断评价.
+  于是使用熵值来作为判断指标的影响权值.</p>
+<p>适用于数据全面, 缺少文献或者主观依据的问题,
+  比如有各种数据, 但是因为指标过于抽象, 不清楚哪个才是决定因素,
+  也不能够像层次分析法一样直观地给出定性判断, 所以可以用熵权法.
+  在统计的意义上建立评价体系. 适合 &#8220;公平公正&#8221; 的情况,
+  但是不适合考虑数据之外的影响因素.</p>
+<p>一个参考的文档: <a href="https://www.hindawi.com/journals/mpe/2020/3564835/">Effectiveness of Entropy Weight Method in Decision-Making</a>.</p>
+<ol>
+  <li>数据预处理: 将所有数据正规化, 如第 $j$ 个对象的第 $i$ 个指标的值 $x_{ij}$,
+    正规化为 $p_{ij} = \frac{x_{ij} - min_j x_ij}{max_j x_ij - min_j x_ij}$.
+    <p>(或者 $p_{ij} = \frac{x_{ij}}{&sum;_j x_{ij}}$)</p>
+  </li>
+  <li>计算熵 <a href="https://reference.wolfram.com/language/ref/Entropy.html">Entropy</a>, 或者 $E_i = - \frac{&sum;_j p_{ij} \mathrm{ln} p_{ij}}{\mathrm{ln} n}$.</li>
+  <li>以熵作为权值: $w_i = \frac{1 - E_i}{&sum;_i (1 - E_i)}$</li>
+</ol>
+<h2>图问题</h2>
+<p>Mathematica 中的 <a href="https://reference.wolfram.com/language/ref/Graph.html">Graph</a>:</p>
+<p><img src="/_img/MMA/MMA-Graph-FindShortestPath-example.png" alt="/_img/MMA/MMA-Graph-FindShortestPath-example.png" /></p>
+<p>其中:</p>
+<ul>
+  <li>对于无向图中的符号 ●&#8211;●, 其为 <code>\[UndirectedEdge]</code>,
+    输入方法为 <code>ESC ue ESC</code>. 通过 <code>Ctrl - 7</code> 可以输入上标, 上标对应的是边的权值,
+    或者可以用 <a href="https://reference.wolfram.com/language/ref/UndirectedEdge.html">UndirectedEdge</a> 来直接输入: <code>UndirectedEdge[u, v, t]</code>.</li>
+  <li>使用 <a href="https://reference.wolfram.com/language/ref/FindShortestPath.html">FindShortestPath</a> 来找到图中最短的路径.
+    使用 <code>Method</code> 参数可以指定找到最短路径的算法:
+    <a href="https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm">Dijkstra</a>, <a href="https://en.wikipedia.org/wiki/Bellman–Ford_algorithm">BellmanFord</a>. (注: 其他还有 <a href="https://en.wikipedia.org/wiki/Floyd–Warshall_algorithm">Floyd-Warshall</a> 算法)
+    <p>适用于货物运输问题, 设备更新问题这样的有一个起点和终点的规划模型的问题.
+      一般的想法是首先建立节点和节点之间的权, 最后使用找最短路径的方式来解决问题.</p>
+  </li>
+  <li>使用 <a href="https://reference.wolfram.com/language/ref/FindSpanningTree.html">FindSpanningTree</a> 来找到一个最小生成树. 可用的 <b>Method</b> 有:
+    <a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm">Kruskal</a>, <a href="https://www.sciencedirect.com/science/article/abs/pii/S0899825611000923">Minimum cost arborescences</a>, <a href="https://en.wikipedia.org/wiki/Prim%27s_algorithm">Prim</a>.
+    <p>适用于通信建设, 管道铺设规划, 这样的没有起点和终点的规划模型的问题.
+      即想要让所有的点连接在一起的最小连接方法的问题.</p>
+  </li>
+</ul>
+<h3>蚁群算法</h3>
+<p>在一个图中, 如何求得遍历所有点的最短路径的方法.
+  且只经过城市 1 次. 其思想从蚁群如何寻找最短路径而来:</p>
+<ul>
+  <li>蚂蚁经过路径会留下信息浓度 $&tau;$, 其与经过路径的长度 $d_{ij}$ 成反比.</li>
+  <li>蚂蚁在分叉路上更可能选择信息素浓度高的方向移动, 即
+    <p>$$P_{ij}^k(t) = \left\{\begin{array}{ll}\frac{&tau;_{ij}(t)}{&sum;_{s &isin; allowed_k} &tau;_{is} (t)} &amp; j &isin; allowed_k &#92;&#92; 0 &amp; j &notin; allowed_k \end{array}\right.$$</p>
+    <p>其中, $P_{ij}^k(t)$ 为在 $t$ 时刻第 $k$ 只蚂蚁选择从 $i$ 到 $j$ 的概率.
+      $allowed_k$ 为 $k$ 蚂蚁未经过的城市集合.</p>
+    <p>为了加速收敛速度, 考虑距离的影响:</p>
+    <p>$$P_{ij}^k(t) = \left\{\begin{array}{ll}\frac{[&tau;_{ij}(t)]^&alpha; &times; [\frac{1}{d_{ij}(t)}]^&beta;}{&sum;_{s &isin; allowed_k} [&tau;_{is} (t)]^&alpha; &times; [\frac{1}{d_{is}(t)}]^&beta;} &amp; j &isin; allowed_k &#92;&#92; 0 &amp; j &notin; allowed_k \end{array}\right.$$</p>
+    <ul>
+      <li>若 $&beta; = 0$, 则完全为正反馈算法, 收敛速度较慢</li>
+      <li>若 $&alpha; = 0$, 则完全为贪心算法, 容易陷入局部极值</li>
+    </ul>
+  </li>
+  <li>信息素随时间挥发, 故 $i$ 和 $j$ 节点之间 $t$ 时刻的信息素记为 $&tau;_{ij}(t)$.
+    则 $&tau;_{ij}(t + 1) = (1 - &rho;) &tau;_{ij} (t) + &sum;_{k = 1}^m &Delta; &tau;_{ij}^k, 0 &lt; &rho; &lt; 1$.
+    其中 $&Delta; &tau;_{ij}^k = \frac{Q}{L_k}$ 若 $k$ 经过 $d_{ij}$, 否则为 $0$, $L_k$ 为总路径长度;
+    $&rho;$ 为一个信息素消失的速度. $Q$ 为一个常数.</li>
+</ul>
+<p>其他资源 (MMA):</p>
+<ul>
+  <li>一个代码的 <a href="https://demonstrations.wolfram.com/AntColonyOptimizationACO/">例子</a></li>
+  <li>一个函数的 <a href="https://resources.wolframcloud.com/FunctionRepository/resources/AntColonyOptimization">库</a></li>
+</ul>
+<h2>神经网络</h2>
+<p>适用于: 预测类, 分类, 评价类型的问题.</p>
+<h3>感知机</h3>
+<p>一个感知机模型 (最简单的神经网络) 由如下的部分组成:</p>
+<ul>
+  <li>输入层: <b>Input</b> 为输入的信号 $x$</li>
+  <li>激活函数: 综合判断输入信号是否达到 <b>阀值</b></li>
+  <li>输出层: <b>Output</b> 激活函数在输出层, 求得的函数就是输出值 $y$</li>
+</ul>
+<p>示意图:</p>
+<p><img src="/_img/MMA/neural-network-sensor-machine.svg" alt="/_img/MMA/neural-network-sensor-machine.svg" /></p>
+<p>若要在上面的模型中加入一个阈值.</p>
+<p><img src="/_img/MMA/neural-network-sensor-machine-threshold.svg" alt="/_img/MMA/neural-network-sensor-machine-threshold.svg" /></p>
+<p>于是就可以加入一个阀值的考虑, 如果 <code>f(x) = x &lt; 0 ? 0 : 1</code>,
+  那么就变成了一个决断系统了.</p>
+<p>注: 如果用 Mathematica 来的话, 就变成了一个简单的 <b>LinearLayer</b>:</p>
+<div class="highlight"><pre><span></span><span class="n">layer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LinearLayer</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Input&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+<p>大概就是这个样子的.</p>
+<h2>蒙特卡洛法</h2>
+<p>当无法求得精确解的时候, 通过随机抽样, 根据统计试验求近似解.
+  适用于可行域过大, 没有通用方法求出精确解的问题.</p>
+<p>注: 为了满足统计意义, 需要抽样数足够多.</p>
+<p>一个经典例子:</p>
+<p><img src="/_img/MMA/MMA-MonteCarlo-method-and-pi.png" alt="/_img/MMA/MMA-MonteCarlo-method-and-pi.png" /></p>
+<p>蒙特卡洛法可以配合用于非线性规划来计算初始值,
+  用于在非线性规划中辅助计算:</p>
+<ol>
+  <li>对于非线性多元函数 $f(\boldsymbol{x})$, 有 $n$ 个变元 $x_i$.
+    现在要在一组约束 $g_i(\boldsymbol{x})$ 下计算 $f$ 的最大 (小) 值.</li>
+  <li>随机生成 $n$ 个变元, 记为 $\boldsymbol{x}^{(k)}$.</li>
+  <li>判断约束 $g_i$ 是否被满足, 若是, 则进入下一步; 若否, 则重新生成.</li>
+  <li>判断该结果是否为更大 (小) 值, 若是, 则更新最大 (小) 值; 若否,
+    则回到生成步骤重新开始.</li>
+</ol>
+<p>其他参考:</p>
+<ul>
+  <li><a href="https://reference.wolfram.com/language/howto/PerformAMonteCarloSimulation.html">How to | Perform a Monte Carlo Simulation</a></li>
+</ul>
+<h2>传播模型</h2>
+<p>可以参考 <a href="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology">Compartmental models in epidemiology</a>.
+  下面的模型原理非常简单, 基本只要搞清楚转换关系和约束关系即可.</p>
+<h3>指数传播模型</h3>
+<ul>
+  <li>$t$ 时刻传播数 $N(t)$</li>
+  <li>单位时间传播的数量 $&lambda; N(t) &Delta; t$</li>
+  <li>方程: $N(t + &Delta; t) = N(t) + &lambda; N(t) &Delta; t$,
+    结果为 $N = N_0 e^{&lambda; t}$ 类型的指数传播模型.</li>
+  <li>一般只能用于描述初期的问题, 不太合理.</li>
+</ul>
+<h3>SI 模型</h3>
+<ul>
+  <li>总数 $N$, 认为是不考虑变化的常数</li>
+  <li>将人群分为易感染 (susceptible, 可感染) 和已感染 (infective),
+    用占比 $s(t)$ 和 $i(t)$ 来表示, 有 $s(t) + i(t) = 1$.
+    忽略治愈和死亡.</li>
+  <li>感染率: 已感染者每天接触的平均人数 $&lambda;$ (日感染率),
+    接触可感染者时, 会将其感染成病人,
+    故一个已感染者传播的人数即为其接触的可感染人数 $&lambda; s(t)$.</li>
+  <li>方程: $N i(t + &Delta; t) - N i(t) = &lambda; N s(t) i(t) &Delta; t$.
+    一个例子:
+<div class="highlight"><pre><span></span><span class="n">NDSolve</span><span class="p">[{</span><span class="n">i</span><span class="err">&#39;</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.5</span><span class="o">*</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">i</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="w"> </span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">i</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">0.001</span><span class="p">},</span>
+<span class="w">  </span><span class="p">{</span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">},</span><span class="w"> </span><span class="p">{</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">}];</span>
+<span class="n">Plot</span><span class="p">[</span><span class="n">Evaluate</span><span class="p">[{</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">],</span><span class="w"> </span><span class="n">i</span><span class="p">[</span><span class="n">t</span><span class="p">]}</span><span class="w"> </span><span class="o">/.</span><span class="w"> </span><span class="err">%</span><span class="p">[[</span><span class="mi">1</span><span class="p">]]],</span><span class="w"> </span><span class="p">{</span><span class="n">t</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">30</span><span class="p">},</span><span class="w"> </span><span class="n">PlotRange</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">All</span><span class="p">]</span>
+</pre></div>
+  </li>
+  <li>用 $i'(t)$ 来表示传染病曲线, 在高峰期 $i = 0.5$,
+    有 $t_m = \frac{1}{&lambda;} \mathrm{ln} (\frac{1}{i_0} - 1)$</li>
+  <li>但是没有考虑治愈</li>
+</ul>
+<h3>SIS</h3>
+<ul>
+  <li>在 SI 模型上考虑治愈比例 $&mu;$, 即每天被治愈的病人占总数的比例.
+    以及无免疫性, 即被治愈后仍然可以被感染.</li>
+  <li>于是新的方程为:
+    <p>$$\left\{\begin{array}{llll} i'(t) &amp; = &amp; &lambda; i(t) (1 - i(t) - &mu; i(t)) &amp; t &gt; 0&#92;&#92;i(0) &amp; = &amp; i_0 &amp; \end{array}\right.$$</p>
+  </li>
+</ul>
+<h3>SIR</h3>
+<ul>
+  <li>考虑治愈后不会被感染</li>
+  <li>$s'(t) = - &lambda; i(t) s(t)$ 可感染人数的变化, 即被感染后的人数每天可以接触 $&lambda;$ 人.</li>
+  <li>$i'(t) = &lambda; i(t) s(t) - &mu; i(t)$ 感染人数的变化为被感染的减去治愈的</li>
+  <li>$r'(t) = &mu; i(t)$ 感染后治愈的人数的变化</li>
+  <li>$i(t) + s(t) + r(t) = 1$ 为总人数</li>
+</ul>
+<h2>马尔科夫链</h2>
+<p>适用于状态随机, 下一阶段只和当前状态有关的问题,
+  如健康变化, 销售储存, 等价结构变化这样的问题.</p>
+<p>其他的参考资料:</p>
+<ul>
+  <li><a href="https://www.wolfram.com/mathematica/new-in-9/markov-chains-and-queues/">Markov Chains and Queues</a></li>
+  <li><a href="https://mathworld.wolfram.com/MarkovChain.html">Markov Chains</a></li>
+</ul>
+<details><summary>一个题外话</summary>
+<p>后悔, 总之现在就是非常后悔, 如果当时我在概统课上好好听老师讲的关于赌博的问题的话,
+  现在估计也不会花这么多的时间来学这些了. 害.</p>
+</details>
+
+  </div><a class="u-url" href="/mathematica/mathematica-and-multiparadigm-data-science/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

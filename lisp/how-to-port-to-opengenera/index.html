@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Port SCIGRAPH and CL-PPCRE to Open Genera | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Port SCIGRAPH and CL-PPCRE to Open Genera" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About I was recently consider using Symbolics Open Genera as my second programming environment. Pros: nice developing experience can learn a lot from its design for building my future projects Cons: missing some useful packages (for example, CL-PPCRE for regexp, QuickLisp for package managing, &#8230;) toooooooooo much documentation (manual) to read (good, yet a little difficult to read them all) some protocol is bit old and not function well (NFSv2 and NFSv3, which made me headache for days) But any way, I thought it was generally a charming experience. Right now, I&#39;ve made OpenGenera running successfully within the QEMU and Docker (little faulty due to NFSv2/3, documentation reading is not avaliable&#8230; ). The future route will be like: porting some existing Common Lisp library (SCIGRAPH and CL-PPCRE in this post) as Genera System build a RPC interface for distribute computation to host machine for heavy computations (or I think I&#39;ll just copy the code from Genera to SBCL and they could run nicely) some reverse engineering on vbin? (possibly, I am not sure if I&#39;d be able to do so) &#8230; (if I&#39;d be free) So here is how I port SCIGRAPH and CL-PPCRE: SCIGRAPH Since it&#39;s designed with support for Genera, the portation is easy. So the process looks like this: add scigraph.system under sys.cst/site, with things like: ;;; -*- Mode: LISP; Syntax: Common-lisp; Package: USER; Base: 10; Lowercase: Yes -*-" />
+<meta property="og:description" content="About I was recently consider using Symbolics Open Genera as my second programming environment. Pros: nice developing experience can learn a lot from its design for building my future projects Cons: missing some useful packages (for example, CL-PPCRE for regexp, QuickLisp for package managing, &#8230;) toooooooooo much documentation (manual) to read (good, yet a little difficult to read them all) some protocol is bit old and not function well (NFSv2 and NFSv3, which made me headache for days) But any way, I thought it was generally a charming experience. Right now, I&#39;ve made OpenGenera running successfully within the QEMU and Docker (little faulty due to NFSv2/3, documentation reading is not avaliable&#8230; ). The future route will be like: porting some existing Common Lisp library (SCIGRAPH and CL-PPCRE in this post) as Genera System build a RPC interface for distribute computation to host machine for heavy computations (or I think I&#39;ll just copy the code from Genera to SBCL and they could run nicely) some reverse engineering on vbin? (possibly, I am not sure if I&#39;d be able to do so) &#8230; (if I&#39;d be free) So here is how I port SCIGRAPH and CL-PPCRE: SCIGRAPH Since it&#39;s designed with support for Genera, the portation is easy. So the process looks like this: add scigraph.system under sys.cst/site, with things like: ;;; -*- Mode: LISP; Syntax: Common-lisp; Package: USER; Base: 10; Lowercase: Yes -*-" />
+<link rel="canonical" href="/lisp/how-to-port-to-opengenera/" />
+<meta property="og:url" content="/lisp/how-to-port-to-opengenera/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-12-27T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Port SCIGRAPH and CL-PPCRE to Open Genera" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-12-27T00:00:00+00:00","datePublished":"2024-12-27T00:00:00+00:00","description":"About I was recently consider using Symbolics Open Genera as my second programming environment. Pros: nice developing experience can learn a lot from its design for building my future projects Cons: missing some useful packages (for example, CL-PPCRE for regexp, QuickLisp for package managing, &#8230;) toooooooooo much documentation (manual) to read (good, yet a little difficult to read them all) some protocol is bit old and not function well (NFSv2 and NFSv3, which made me headache for days) But any way, I thought it was generally a charming experience. Right now, I&#39;ve made OpenGenera running successfully within the QEMU and Docker (little faulty due to NFSv2/3, documentation reading is not avaliable&#8230; ). The future route will be like: porting some existing Common Lisp library (SCIGRAPH and CL-PPCRE in this post) as Genera System build a RPC interface for distribute computation to host machine for heavy computations (or I think I&#39;ll just copy the code from Genera to SBCL and they could run nicely) some reverse engineering on vbin? (possibly, I am not sure if I&#39;d be able to do so) &#8230; (if I&#39;d be free) So here is how I port SCIGRAPH and CL-PPCRE: SCIGRAPH Since it&#39;s designed with support for Genera, the portation is easy. So the process looks like this: add scigraph.system under sys.cst/site, with things like: ;;; -*- Mode: LISP; Syntax: Common-lisp; Package: USER; Base: 10; Lowercase: Yes -*-","headline":"Port SCIGRAPH and CL-PPCRE to Open Genera","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/how-to-port-to-opengenera/"},"url":"/lisp/how-to-port-to-opengenera/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Port SCIGRAPH and CL-PPCRE to Open Genera</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-12-27T00:00:00+00:00" itemprop="datePublished">Dec 27, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>I was recently consider using Symbolics Open Genera
+  as my second programming environment.</p>
+<p>Pros:</p>
+<ul>
+  <li>nice developing experience</li>
+  <li>can learn a lot from its design for building my future projects</li>
+</ul>
+<p>Cons:</p>
+<ul>
+  <li>missing some useful packages (for example, CL-PPCRE for regexp,
+    QuickLisp for package managing, &#8230;)</li>
+  <li>toooooooooo much documentation (manual) to read (good, yet a
+    little difficult to read them all)</li>
+  <li>some protocol is bit old and not function well (NFSv2 and NFSv3,
+    which made me headache for days)</li>
+</ul>
+<p>But any way, I thought it was generally a charming experience.
+  Right now, I've made OpenGenera running successfully within the
+  <a href="https://github.com/li-yiyang/qemu-opengenera">QEMU</a> and <a href="https://github.com/li-yiyang/genera-docker">Docker</a> (little faulty due to NFSv2/3, documentation reading
+  is not avaliable&#8230; ).</p>
+<p>The future route will be like:</p>
+<ol>
+  <li>porting some existing Common Lisp library (<a href="https://www.cs.cmu.edu/afs/cs/project/ai-repository/ai/lang/lisp/gui/clim/general/scigraph/0.html">SCIGRAPH</a> and <a href="http://edicl.github.io/cl-ppcre/">CL-PPCRE</a>
+    in this post) as Genera System</li>
+  <li>build a RPC interface for distribute computation to host machine
+    for heavy computations (or I think I'll just copy the code from
+    Genera to SBCL and they could run nicely)</li>
+  <li>some reverse engineering on <code>vbin</code>? (possibly, I am not sure if I'd
+    be able to do so)</li>
+  <li>&#8230; (if I'd be free)</li>
+</ol>
+<p>So here is how I port SCIGRAPH and CL-PPCRE:</p>
+<h1>SCIGRAPH</h1>
+<p>Since it's designed with support for Genera, the portation is easy.
+  So the process looks like this:</p>
+<ol>
+  <li>add <code>scigraph.system</code> under <code>sys.cst/site</code>, with things like:
+<div class="highlight"><pre><span></span><span class="c1">;;; -*- Mode: LISP; Syntax: Common-lisp; Package: USER; Base: 10; Lowercase: Yes -*-</span>
+
+<span class="p">(</span><span class="nf">sct:set-system-source-file</span><span class="w"> </span><span class="nv">:scigraph</span><span class="w"> </span><span class="s">&quot;SYS:SCIGRAPH;SYSDCL&quot;</span><span class="p">)</span>
+</pre></div>
+    <p>this will tell Genera where to look for system definition file.
+      In this case, the file should be <code>sys.sct/scigraph/sysdcl.lisp</code></p>
+  </li>
+  <li>set the load package method at <code>sys.sct/scigraph/sysdcl.lisp</code>
+    <p>maybe you could refer to <code>sys.sct/concordia/concordia.lisp</code> for
+      how to write <code>defsystem</code> to specify the system compoents.</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; -*- Mode: LISP; Package: USER; Syntax: Common-Lisp; Base: 10 -*-</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:user</span><span class="p">)</span>
+
+<span class="c1">;;; ...</span>
+
+<span class="p">(</span><span class="nf">defsystem</span><span class="w"> </span><span class="nv">scigraph</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">:pretty-name</span><span class="w">         </span><span class="s">&quot;Scigraph&quot;</span>
+<span class="w">	    </span><span class="nv">:default-pathname</span><span class="w">    </span><span class="s">&quot;SYS:SCIGRAPH;&quot;</span>
+<span class="w">	    </span><span class="nv">:source-category</span><span class="w">     </span><span class="nv">:basic</span>
+<span class="w">	    </span><span class="nv">:distribute-sources</span><span class="w">  </span><span class="nv">T</span>
+<span class="w">	    </span><span class="nv">:distribute-binaries</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:module</span><span class="w"> </span><span class="nv">components</span><span class="w"> </span><span class="p">(</span><span class="nf">scigraph-dwim</span><span class="w"> </span><span class="nv">scigraph-core</span><span class="p">)</span>
+<span class="w">	   </span><span class="p">(</span><span class="nf">:type</span><span class="w"> </span><span class="nv">:system</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:serial</span><span class="w"> </span><span class="nv">components</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defsubsystem</span><span class="w"> </span><span class="nv">scigraph-dwim</span>
+<span class="w">	      </span><span class="p">(</span><span class="nf">:pretty-name</span><span class="w">         </span><span class="s">&quot;SciGraph DWIM&quot;</span>
+<span class="w">	       </span><span class="nv">:default-pathname</span><span class="w">    </span><span class="s">&quot;SYS:SCIGRAPH;DWIM;&quot;</span>
+<span class="w">	       </span><span class="nv">:source-category</span><span class="w">     </span><span class="nv">:basic</span>
+<span class="w">	       </span><span class="nv">:distribute-sources</span><span class="w">  </span><span class="nv">T</span>
+<span class="w">	       </span><span class="nv">:distribute-binaries</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:serial</span>
+<span class="w">    </span><span class="s">&quot;package&quot;</span>
+<span class="w">    </span><span class="c1">;; ... load from load-dwim.lisp ...</span>
+<span class="w">    </span><span class="p">))</span>
+
+<span class="c1">;;; ...</span>
+</pre></div>
+    <p>the original system loading process is defined in <code>load-dwim.lisp</code>
+      and <code>load-scigraph.lisp</code>.</p>
+    <p><b>In short</b>: to port a system to Genera, just rewrite the original
+      <code>load-*.lisp</code> to <code>sysdcl.lisp</code> to define a system in Genera.</p>
+  </li>
+  <li>to load Scigraph, should <code>Load System CLIM</code>, <code>Load System Genera-CLIM</code>,
+    <code>Load System Postscript-CLIM</code>, <code>Load System CLX-CLIM</code> before <code>Load System Scigraph</code>.</li>
+  <li>test with <code>(graph:make-demo-frame)</code> to see if loaded properly
+    <p><img src="/_img/lisp/misc/opengenera/scigraph-make-demo-frame.png" alt="/_img/lisp/misc/opengenera/scigraph-make-demo-frame.png" /></p>
+  </li>
+</ol>
+<p>Note: mostly working, but seemed to be a little buggy?</p>
+<p>Note: after I've done this, I found something like <code>dwim-system.lisp</code>
+  and <code>scigraph-system.lisp</code>, I think which could be used as the porper
+  loader of <code>sysdcl.lisp</code> instead. for example, maybe I could write
+  <code>scigraph.system</code> like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">sct:set-system-source-file</span><span class="w"> </span><span class="nv">:scigraph</span><span class="w"> </span><span class="s">&quot;SYS:SCIGRAPH;DWIM;DWIM-SYSTEM&quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">sct:set-system-source-file</span><span class="w"> </span><span class="nv">:scigraph</span><span class="w"> </span><span class="s">&quot;SYS:SCIGRAPH;SCIGRAPH;SCIGRAPH-SYSTEM&quot;</span><span class="p">)</span>
+</pre></div>
+<p>But anyway, it works and I don't see urgency to use it&#8230;</p>
+<h1>CL-PPCRE</h1>
+<p>Since OpenGenera doesn't support and has some feature missing? for example:</p>
+<ul>
+  <li><code>(declare (fixnum ...))</code> will not be treated like <code>(declare (type fixnum ...))</code></li>
+  <li><code>(lambda ...)</code> will not be treated like <code>#&#39;(lambda ...)</code> (in SBCL)</li>
+  <li><code>(coerce ... &#39;simple-string)</code> will not work properly, so I changed them as
+    <code>(coerce ... &#39;string)</code> to make it compile pass&#8230;
+    <p>not sure how this will affect the performance&#8230; and not sure if
+      need to change more&#8230;</p>
+  </li>
+</ul>
+<p>I think I have to change these codes to make it work on OpenGenera.
+  Meanwhile, I thought it would be difficult to keep consistency with
+  current CL-PPCRE version. (maybe you could call it in Chinese &#8220;魔改&#8221;).</p>
+<p>Just test with Advent Of Code 2024 Day 3's problem:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; -*- Package: CL-PPCRE -*-</span>
+
+<span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">input</span><span class="w"> </span><span class="s">&quot;xmul(2,4)%&amp;mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">sum</span><span class="w">   </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">do-matches-as-strings</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="s">&quot;mul</span><span class="se">\\</span><span class="s">((</span><span class="se">\\</span><span class="s">d{1,3}),(</span><span class="se">\\</span><span class="s">d{1,3})</span><span class="se">\\</span><span class="s">)&quot;</span><span class="w"> </span><span class="nv">input</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mul</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">do-matches-as-strings</span><span class="w"> </span><span class="p">(</span><span class="nf">d</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">d+&quot;</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">mul</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">mul</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-integer</span><span class="w"> </span><span class="nv">d</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="nv">mul</span><span class="p">)))</span>
+<span class="w">  </span><span class="nv">sum</span><span class="p">)</span><span class="w"> </span><span class="c1">; =&gt; 161</span>
+</pre></div>
+<h1>Finally</h1>
+<p>So, this two patches has now been ported into Symbolics OpenGenera (<a href="https://github.com/li-yiyang/genera-docker/commit/05e6f03562535e4df993a81173b0255c1beedc67">#05e6f03</a> and <a href="https://github.com/li-yiyang/genera-docker/commit/66dc2c3f9f034b248d2a38d72f878ab983b07ae3">#66dc2c3</a>).
+  Though its shame to declaim, but I could tell there must be some hidden bugs
+  since I'm still not a mature Lisp Programmer. Contributions and helps are welcomed.</p>
+<p>So, what to do next?</p>
+<ul>
+  <li>port or make some simple HTTP downloader package (maybe <a href="https://github.com/fukamachi/dexador">dexador</a> or something else),
+    but this would be sure more difficult though</li>
+  <li>do some simple programming on CLIM (I was always curious about it, but the McCLIM
+    often fail to boot on my macOS)</li>
+  <li>try to fix <b>Document Examiner</b> and <b>NFSv3</b> (no clue)</li>
+  <li>RPC to host PC for heavy computation (maybe should base on TCP/IP)</li>
+</ul>
+
+  </div><a class="u-url" href="/lisp/how-to-port-to-opengenera/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

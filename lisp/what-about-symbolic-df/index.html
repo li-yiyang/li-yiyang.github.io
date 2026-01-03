@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>What about Symbolic df? | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="What about Symbolic df?" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About This post will be a small part of a larger system. The whole picture is that you could build a automatical PDE solver iterator constructor. (Note: if I&#39;d have enough time&#8230; ) Please note that what I&#39;m talking is not a CAS or something like that, it may be only a simple attemp to mechanically mimic the procedure that human do before writing a iterator for PDE. If you are interest in CAS, here&#39;s a little intro presentation about CAS I have written for Mathematical Physics Method class 符号计算的一个介绍. (Note: I donnot know if any possible route is here, but since Mathematica could do so, I think I could do so. ) Here is a brief introduction about it: for an example equation: \[(&part;_x^2 + &part;_y^2) u = 0\] (for which you may notice as a vacuum static electron field) make a solve space where \(u_{i,j}\) will stands for \(u(x_{i}, y_{j})\) trun \(&part;_x^2 u\) into \(&Delta; u = u_{i+1,j} + u_{i-1,j} - 2 u_{i,j}\) simplify the equation to \(u_{i,j} = \frac{1}{4} (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j+1})\) iter on \(u_{i,j}\) for a solution so what is the question? the solve space may in arbitrary shape the boundary condition, how to deal with it? what about \((&part;_x^2 + &part;_y^2) u = f(u, x, y)\)? Why English? | 为啥用英文? 因为这个估计最后得写成一个英文报告 (如果成功了的话). 就可以向老师证明 我时间很多 我可以做到这件事情. Just because I can. \(&part; &rarr; &Delta;\)? This is quite simple if you consider the Talyor expansion: \[\left\{ &sum; \frac{h^i}{i!} f^{(i)}(x) = f(x + h_i) - f(x) \right\} = \boldsymbol{H} \{f^{(i)} (x)\} = \boldsymbol{F}\] so the problem now is truned to solving a linear equation (find the inverse of \(\boldsymbol{H}\)). a sad story: I though of it at class, implemented it and the result is perfect. However, as you may guess, such method had been already done at 1998 by Bengt Fornberg in the paper Calculation of Weights in Finite Difference Formulas. My Common Lisp Implementation (defun make-hs-matrix (hs) &quot;Make H matrix for hs. Return a n*n array (matrix)." />
+<meta property="og:description" content="About This post will be a small part of a larger system. The whole picture is that you could build a automatical PDE solver iterator constructor. (Note: if I&#39;d have enough time&#8230; ) Please note that what I&#39;m talking is not a CAS or something like that, it may be only a simple attemp to mechanically mimic the procedure that human do before writing a iterator for PDE. If you are interest in CAS, here&#39;s a little intro presentation about CAS I have written for Mathematical Physics Method class 符号计算的一个介绍. (Note: I donnot know if any possible route is here, but since Mathematica could do so, I think I could do so. ) Here is a brief introduction about it: for an example equation: \[(&part;_x^2 + &part;_y^2) u = 0\] (for which you may notice as a vacuum static electron field) make a solve space where \(u_{i,j}\) will stands for \(u(x_{i}, y_{j})\) trun \(&part;_x^2 u\) into \(&Delta; u = u_{i+1,j} + u_{i-1,j} - 2 u_{i,j}\) simplify the equation to \(u_{i,j} = \frac{1}{4} (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j+1})\) iter on \(u_{i,j}\) for a solution so what is the question? the solve space may in arbitrary shape the boundary condition, how to deal with it? what about \((&part;_x^2 + &part;_y^2) u = f(u, x, y)\)? Why English? | 为啥用英文? 因为这个估计最后得写成一个英文报告 (如果成功了的话). 就可以向老师证明 我时间很多 我可以做到这件事情. Just because I can. \(&part; &rarr; &Delta;\)? This is quite simple if you consider the Talyor expansion: \[\left\{ &sum; \frac{h^i}{i!} f^{(i)}(x) = f(x + h_i) - f(x) \right\} = \boldsymbol{H} \{f^{(i)} (x)\} = \boldsymbol{F}\] so the problem now is truned to solving a linear equation (find the inverse of \(\boldsymbol{H}\)). a sad story: I though of it at class, implemented it and the result is perfect. However, as you may guess, such method had been already done at 1998 by Bengt Fornberg in the paper Calculation of Weights in Finite Difference Formulas. My Common Lisp Implementation (defun make-hs-matrix (hs) &quot;Make H matrix for hs. Return a n*n array (matrix)." />
+<link rel="canonical" href="/lisp/what-about-symbolic-df/" />
+<meta property="og:url" content="/lisp/what-about-symbolic-df/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-05-23T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="What about Symbolic df?" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-05-23T00:00:00+00:00","datePublished":"2024-05-23T00:00:00+00:00","description":"About This post will be a small part of a larger system. The whole picture is that you could build a automatical PDE solver iterator constructor. (Note: if I&#39;d have enough time&#8230; ) Please note that what I&#39;m talking is not a CAS or something like that, it may be only a simple attemp to mechanically mimic the procedure that human do before writing a iterator for PDE. If you are interest in CAS, here&#39;s a little intro presentation about CAS I have written for Mathematical Physics Method class 符号计算的一个介绍. (Note: I donnot know if any possible route is here, but since Mathematica could do so, I think I could do so. ) Here is a brief introduction about it: for an example equation: \\[(&part;_x^2 + &part;_y^2) u = 0\\] (for which you may notice as a vacuum static electron field) make a solve space where \\(u_{i,j}\\) will stands for \\(u(x_{i}, y_{j})\\) trun \\(&part;_x^2 u\\) into \\(&Delta; u = u_{i+1,j} + u_{i-1,j} - 2 u_{i,j}\\) simplify the equation to \\(u_{i,j} = \\frac{1}{4} (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j+1})\\) iter on \\(u_{i,j}\\) for a solution so what is the question? the solve space may in arbitrary shape the boundary condition, how to deal with it? what about \\((&part;_x^2 + &part;_y^2) u = f(u, x, y)\\)? Why English? | 为啥用英文? 因为这个估计最后得写成一个英文报告 (如果成功了的话). 就可以向老师证明 我时间很多 我可以做到这件事情. Just because I can. \\(&part; &rarr; &Delta;\\)? This is quite simple if you consider the Talyor expansion: \\[\\left\\{ &sum; \\frac{h^i}{i!} f^{(i)}(x) = f(x + h_i) - f(x) \\right\\} = \\boldsymbol{H} \\{f^{(i)} (x)\\} = \\boldsymbol{F}\\] so the problem now is truned to solving a linear equation (find the inverse of \\(\\boldsymbol{H}\\)). a sad story: I though of it at class, implemented it and the result is perfect. However, as you may guess, such method had been already done at 1998 by Bengt Fornberg in the paper Calculation of Weights in Finite Difference Formulas. My Common Lisp Implementation (defun make-hs-matrix (hs) &quot;Make H matrix for hs. Return a n*n array (matrix).","headline":"What about Symbolic df?","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/what-about-symbolic-df/"},"url":"/lisp/what-about-symbolic-df/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">What about Symbolic df?</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-05-23T00:00:00+00:00" itemprop="datePublished">May 23, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>This post will be a small part of a larger system.
+  The whole picture is that you could build a automatical
+  PDE solver iterator constructor.</p>
+<p>(Note: if I'd have enough time&#8230; )</p>
+<p>Please note that what I'm talking is not a CAS or something
+  like that, it may be only a simple attemp to mechanically
+  mimic the procedure that human do before writing a iterator
+  for PDE. If you are interest in CAS, here's a little intro
+  presentation about CAS I have written for Mathematical Physics
+  Method class <a href="/misc/navie-symbolic-computation/">符号计算的一个介绍</a>.</p>
+<p>(Note: <del>I donnot know if any possible route is here</del>,
+  but since Mathematica could do so, I think I could do so. )</p>
+<p>Here is a brief introduction about it:</p>
+<p>for an example equation:</p>
+<p>\[(&part;_x^2 + &part;_y^2) u = 0\]</p>
+<p>(for which you may notice as a vacuum static electron field)</p>
+<ol>
+  <li>make a solve space where \(u_{i,j}\) will stands for \(u(x_{i}, y_{j})\)</li>
+  <li>trun \(&part;_x^2 u\) into \(&Delta; u = u_{i+1,j} + u_{i-1,j} - 2 u_{i,j}\)</li>
+  <li>simplify the equation to \(u_{i,j} = \frac{1}{4} (u_{i+1,j} + u_{i-1,j} + u_{i,j+1} + u_{i,j+1})\)</li>
+  <li>iter on \(u_{i,j}\) for a solution</li>
+</ol>
+<p>so what is the question?</p>
+<ul>
+  <li>the solve space may in arbitrary shape</li>
+  <li>the boundary condition, how to deal with it?</li>
+  <li>what about \((&part;_x^2 + &part;_y^2) u = f(u, x, y)\)?</li>
+</ul>
+<details><summary>Why English? | 为啥用英文? </summary>
+<p>因为这个估计最后得写成一个英文报告 (如果成功了的话).</p>
+<p>就可以向老师证明 <del>我时间很多</del> 我可以做到这件事情.</p>
+<p>Just because I can.</p>
+</details>
+<h1>\(&part; &rarr; &Delta;\)?</h1>
+<p>This is quite simple if you consider the Talyor expansion:</p>
+<p>\[\left\{ &sum; \frac{h^i}{i!} f^{(i)}(x) = f(x + h_i) - f(x) \right\} = \boldsymbol{H} \{f^{(i)} (x)\} = \boldsymbol{F}\]</p>
+<p>so the problem now is truned to solving a linear equation
+  (find the inverse of \(\boldsymbol{H}\)).</p>
+<p><b>a sad story</b>: I though of it at class, implemented it and the
+  result is perfect. However, as you may guess, such method
+  had been already done at 1998 by Bengt Fornberg in the paper
+  <a href="https://www.jstor.org/stable/2653239">Calculation of Weights in Finite Difference Formulas</a>.</p>
+<details><summary>My Common Lisp Implementation</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-hs-matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">hs</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make H matrix for hs.</span>
+<span class="s">Return a n*n array (matrix).</span>
+
+<span class="s">  H { f^{(i)}(x) } = { f(x + h_i) - f(x) }</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">hs</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">hw</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">hi</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="nv">then</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">hi</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">i!</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">then</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i!</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">float</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">hi</span><span class="w"> </span><span class="nv">i!</span><span class="p">)))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">make-array</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">:initial-contents</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;hw</span><span class="w"> </span><span class="nv">hs</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-fs-matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a F matrix for `n&#39; f(x + h_i).</span>
+<span class="s">Return a (n+1)*n matrix.</span>
+
+<span class="s">  F { f(x), f(x + h_i) } = { f(x + h_i) - f(x) }</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">f-mat</span><span class="w"> </span><span class="p">(</span><span class="nb">make-array</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">n</span><span class="p">))</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">f-mat</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span><span class="w"> </span><span class="mi">1</span><span class="w">     </span><span class="c1">; f_{i+1,j} = 1</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">f-mat</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">      </span><span class="mi">-1</span><span class="p">))</span><span class="w">  </span><span class="c1">; f_{0,j}   = -1</span>
+<span class="w">    </span><span class="nv">f-mat</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-finite-differentor-matrix</span><span class="w"> </span><span class="p">(</span><span class="nf">hs</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a matrix for finite differentor calculation.</span>
+
+<span class="s">  M = H^{-1} F; M { f(x), f(x + h_i) } = { f^{(i)}(x) }</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">hs</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">mat-h</span><span class="w"> </span><span class="p">(</span><span class="nf">make-hs-matrix</span><span class="w"> </span><span class="nv">hs</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">mat-f</span><span class="w"> </span><span class="p">(</span><span class="nf">make-fs-matrix</span><span class="w"> </span><span class="nv">n</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">lla:mm</span><span class="w"> </span><span class="p">(</span><span class="nf">lla:invert</span><span class="w"> </span><span class="nv">mat-h</span><span class="p">)</span><span class="w"> </span><span class="nv">mat-f</span><span class="p">)))</span>
+</pre></div>
+</details>
+<p>and what's even worse, the result (inverse matrix) may be poor
+  in precision.</p>
+<p>But anyway, it's possible to do \(&part; &rarr; &Delta;\).</p>
+<h1>\(eq(u) = 0\)</h1>
+<p>So the next problem I encounter is to solve the equation.
+  Simply, you could use Newton's method or secant method.
+  Let's say that I use Newton's method:</p>
+<p>\[x_{k+1} = x_k - \frac{f(x_k)}{f'(x_k)}\]</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">newton-solve</span><span class="w"> </span><span class="p">(</span><span class="nf">f</span><span class="w"> </span><span class="nv">df</span><span class="w"> </span><span class="nv">x0</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">tol</span><span class="w"> </span><span class="mi">1e-5</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Solving the function `f&#39; == 0.</span>
+<span class="s">Given `df&#39; as derivative of `f&#39; and `x0&#39; as initial point.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">x0</span><span class="w"> </span><span class="nv">then</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">delta</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">delta</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">df</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="nv">delta</span><span class="p">)</span><span class="w"> </span><span class="nv">tol</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">return</span><span class="w"> </span><span class="nv">x</span>
+<span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span>
+</pre></div>
+<h2>Numerically <code>df</code></h2>
+<p>It is so easy to generate a <code>df</code> with \(&part; &rarr; &Delta;\) process introduced
+  before.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-finite-differentor</span><span class="w"> </span><span class="p">(</span><span class="nf">hs</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dx</span><span class="w"> </span><span class="mi">1e-3</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">d</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Make a finite differentor with `hs&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">rank</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">d</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dx</span><span class="w"> </span><span class="nv">dx</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">hs</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="nv">dx</span><span class="p">))</span><span class="w"> </span><span class="nv">hs</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">mat</span><span class="w"> </span><span class="p">(</span><span class="nf">make-finite-differentor-matrix</span><span class="w"> </span><span class="nv">hs</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">hs*</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">hs</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">h</span><span class="p">))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="p">(</span><span class="nf">lla:mm</span><span class="w"> </span><span class="nv">mat</span><span class="w"> </span><span class="p">(</span><span class="nb">map</span><span class="w"> </span><span class="ss">&#39;vector</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;f</span><span class="w"> </span><span class="nv">hs*</span><span class="p">))</span><span class="w"> </span><span class="nv">rank</span><span class="p">)))))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">finite-diff</span><span class="w"> </span><span class="p">((</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">hs</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">dx</span><span class="w"> </span><span class="mi">1e-3</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">d</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Wrapper for `make-finite-differentor&#39;. &quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">make-finite-differentor</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="o">,@</span><span class="nv">hs</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">dx</span><span class="w"> </span><span class="o">,</span><span class="nv">d</span><span class="p">))</span>
+</pre></div>
+<h2>But what about Symbolics <code>df</code>?</h2>
+<p>Yes, that's the main object of this blog post.</p>
+<h3>Basic <code>df</code> rules</h3>
+<p>Consider the fundamental four operators:</p>
+<p>\[C &rArr; 0\]
+  \[f(x) &plusmn; g(x) &rArr; f'(x) &plusmn; g'(x)\]
+  \[f(x) &times; g(x) &rArr; f'(x) &times; g(x) + f(x) &times; g'(x)\]
+  \[f(x) / g(x) &rArr; (f'(x) &times; g(x) + f(x) &times; g'(x)) / g^2(x)\]</p>
+<p>So the question will now be:</p>
+<ol>
+  <li>match expression
+    <ul>
+      <li>if it is number?
+        <ul>
+          <li>it is a constant irrelevant with <code>x</code>? \(&rarr; 0\)</li>
+          <li>it is <code>x</code>? \(&rarr; 1\)</li>
+        </ul>
+      </li>
+      <li>if it is function?
+        <ul>
+          <li>for \(+, -, &times;, /\), using the basic map rule</li>
+          <li>for other function, using <code>*df-rules*</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>transform it according to the rule</li>
+</ol>
+<h3>More <code>df</code> rules</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*df-rules*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">(((</span><span class="nb">sin</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">cos</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">((</span><span class="nb">cos</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">sin</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">((</span><span class="nb">sinh</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">cosh</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">((</span><span class="nb">cosh</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">sinh</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">((</span><span class="nb">log</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">    </span><span class="p">((</span><span class="nb">sqrt</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">sqrt</span><span class="w"> </span><span class="nv">x</span><span class="p">)))))</span>
+<span class="w">  </span><span class="s">&quot;Simple df rules using relacing method. &quot;</span><span class="p">)</span>
+</pre></div>
+<h3>Final <code>df</code></h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">symbolic-replace</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Replace symbolic in expression.</span>
+
+<span class="s">For example:</span>
+
+<span class="s">  (symbolic-replace &#39;(cos x) &#39;x &#39;(+ x 2))</span>
+<span class="s">  (symbolic-replace &#39;(sin (+ x 2)) &#39;(+ x 2) &#39;u)</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">subst</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">symbolic-df-expr</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Symbolic df for symbol `x&#39;.</span>
+<span class="s">Return a lambda function take expression and return its derivative form. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">basic-rule</span><span class="w"> </span><span class="p">(</span><span class="nf">op</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arg-len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="nv">op</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">+</span><span class="w"> </span><span class="nb">-</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">op</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;df</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">arg-len</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">arg-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nf">g</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                               </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">f</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">g</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="nv">f</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">g</span><span class="p">)))))))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">arg-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">f</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nf">g</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                               </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">f</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">g</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="nv">f</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">g</span><span class="p">)))</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="nv">g</span><span class="w"> </span><span class="o">,</span><span class="nv">g</span><span class="p">)))))))))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">op</span><span class="w">  </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">arg</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">expr</span><span class="p">)))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="nv">op</span>
+<span class="w">                     </span><span class="p">((</span><span class="nb">+</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nb">*</span><span class="w"> </span><span class="nb">/</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">basic-rule</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">expt</span>
+<span class="w">                      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">a</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">                        </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="o">,</span><span class="nv">a</span><span class="w"> </span><span class="o">,</span><span class="nv">n</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="nv">n</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">a</span><span class="p">))</span><span class="w"> </span><span class="o">,</span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">log</span><span class="w"> </span><span class="o">,</span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">n</span><span class="p">))))))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">otherwise</span>
+<span class="w">                      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">rule</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="nv">*df-rules*</span><span class="w"> </span><span class="nv">:key</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;car</span><span class="p">)))</span>
+<span class="w">                        </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">(</span><span class="nf">rule</span>
+<span class="w">                               </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span>
+<span class="w">                                 </span><span class="o">,@</span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="p">(</span><span class="nf">from-expr</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">to-expr</span><span class="p">)</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">rule</span>
+<span class="w">                                         </span><span class="nv">for</span><span class="w"> </span><span class="nv">from-arg</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">from-expr</span><span class="p">)</span>
+<span class="w">                                         </span><span class="nv">for</span><span class="w"> </span><span class="nv">to-arg</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arg</span>
+<span class="w">                                         </span><span class="nv">for</span><span class="w"> </span><span class="nv">d-to-arg</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">df</span><span class="w"> </span><span class="nv">to-arg</span><span class="p">)</span>
+<span class="w">                                         </span><span class="nv">collect</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">symbolic-replace</span>
+<span class="w">                                                       </span><span class="nv">to-expr</span><span class="w"> </span><span class="nv">from-arg</span><span class="w"> </span><span class="nv">to-arg</span><span class="p">)</span>
+<span class="w">                                                     </span><span class="o">,</span><span class="nv">d-to-arg</span><span class="p">))))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;No rule for ~a. ~%Avalible: ~a&quot;</span>
+<span class="w">                                        </span><span class="nv">op</span><span class="w"> </span><span class="nv">*df-rules*</span><span class="p">))))))))))</span>
+<span class="w">    </span><span class="o">#</span><span class="ss">&#39;df</span><span class="p">))</span>
+</pre></div>
+<p>Here the most difficult part is how to match for each part.
+  Let's see some examples:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-df-expr</span><span class="w"> </span><span class="ss">&#39;t</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">sinh</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">m</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+<pre class="example">
+(+
+ (+
+  (* (cosh (/ t (* g m)))
+     (/ (- (* 1 (* (* g m))) (* t (+ (* 0 (* m)) (* g 0))))
+        (* (* (* g m)) (* (* g m))))))
+ (/ (- (* (+ (* 1 (* t)) (* t 1)) (* 2)) (* (* t t) 0)) (* (* 2) (* 2))))
+</pre>
+<p>It's quite massy&#8230; Need some simplification.</p>
+<h3>Simple Simplify</h3>
+<p>Still, the rule works like this: match with simplify rules, and replace
+  with the simplify rules.</p>
+<details><summary>too long&#8230;</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">all-that?</span><span class="w"> </span><span class="p">(</span><span class="nf">test</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nb">list</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">return</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">symbolic-simplify</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">not-zerop*</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">num</span><span class="p">))))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">zerop*</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">num</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">not-num</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">num</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">not-onep*</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">num</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="mi">1</span><span class="p">))))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">length=</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">expr</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">op</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">arg</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;symbolic-simplify</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">expr</span><span class="p">))))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="nv">op</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arg</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">not-zerop*</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">num</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">not-num</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nb">exp</span>
+<span class="w">                     </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">                               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">num-val</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="nv">num</span><span class="p">)))</span>
+<span class="w">                                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">num-val</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                                         </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">length=</span><span class="w"> </span><span class="nb">exp</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="o">,@</span><span class="nb">exp</span><span class="p">)))</span>
+<span class="w">                                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="nv">num-val</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="o">,</span><span class="nv">num-val</span><span class="w"> </span><span class="o">,@</span><span class="nb">exp</span><span class="p">)))))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arg</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">not-onep*</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">num</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop*</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">return</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">not-num</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nb">exp</span>
+<span class="w">                     </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">                               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">num-val</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;*</span><span class="w"> </span><span class="nv">num</span><span class="p">)))</span>
+<span class="w">                                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">num-val</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                                         </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">length=</span><span class="w"> </span><span class="nb">exp</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,@</span><span class="nb">exp</span><span class="p">)))</span>
+<span class="w">                                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span><span class="w"> </span><span class="nv">num-val</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="o">,</span><span class="nv">num-val</span><span class="w"> </span><span class="o">,@</span><span class="nb">exp</span><span class="p">)))))))</span>
+<span class="w">            </span><span class="c1">;; (- x)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">:inverse</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">a</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">                        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="nv">a</span><span class="p">))))</span>
+<span class="w">            </span><span class="c1">;; (/ x)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">:reciprocal</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">a</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="nv">a</span><span class="p">))))</span>
+<span class="w">            </span><span class="c1">;; (/ a b ...)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arg-len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">arg-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-simplify</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">:reciprocal</span><span class="w"> </span><span class="o">,@</span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">val</span><span class="w">  </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-simplify</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span><span class="w">  </span><span class="c1">;; (/ num1 num2)</span>
+<span class="w">                                 </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w">             </span><span class="c1">;; (/ num1 (* num2 . exp))</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;*</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">rest</span><span class="p">)))</span>
+<span class="w">                                  </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">rest</span><span class="p">))))</span>
+<span class="w">                                 </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">))</span><span class="w">         </span><span class="c1">;; (/ 1 exp)</span>
+<span class="w">                                 </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">                  </span><span class="c1">;; (/ 0 exp)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">)))</span><span class="w">           </span><span class="c1">;; (/ exp1 exp2)</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;*</span><span class="p">))</span><span class="w"> </span><span class="c1">;; (/ exp (* num exp))</span>
+<span class="w">                                  </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">rest</span><span class="p">)))</span>
+<span class="w">                                 </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">rest</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w">    </span><span class="c1">;; (/ exp1 1)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">))))))))</span><span class="w">                </span><span class="c1">;; (/ exp1 exp2)</span>
+<span class="w">            </span><span class="c1">;; (- x y ...)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">arg-len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">arg-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-simplify</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">:inverse</span><span class="w"> </span><span class="o">,@</span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">val</span><span class="w">  </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-simplify</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span>
+<span class="w">                                 </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;+</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">numberp</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">rest</span><span class="p">)))</span>
+<span class="w">                                  </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">rest</span><span class="p">))))</span>
+<span class="w">                                 </span><span class="p">((</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">                                  </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">))</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">)))</span>
+<span class="w">                           </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;+</span><span class="p">))</span>
+<span class="w">                                  </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">rest</span><span class="p">)))</span>
+<span class="w">                                 </span><span class="p">((</span><span class="nf">zerop*</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="o">,</span><span class="nv">rest</span><span class="p">))))))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">otherwise</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">op</span><span class="w"> </span><span class="o">,@</span><span class="nv">arg</span><span class="p">)))))))</span>
+</pre></div>
+</details>
+<p>Note: the simplify function is not good, since the rules are not so flexible,
+  and could not produce perfect results.</p>
+<p>So:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">symbolic-simplify</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-df-expr</span><span class="w"> </span><span class="ss">&#39;t</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">sinh</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">m</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">))))</span>
+</pre></div>
+<pre class="example">
+(+ (* (cosh (/ t g m)) (/ (* g m) (* g m) (* g m))) (/ (+ 2 (+ t t)) 4))
+</pre>
+<p>Much better&#8230;</p>
+<h3>Symbolic-df-and-newton-solve</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">symbolic-df-and-newton-solve</span><span class="w"> </span><span class="p">(</span><span class="nf">eq-expr</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">x0</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">tol</span><span class="w"> </span><span class="mi">1e-5</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">eq-expr</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-simplify</span><span class="w"> </span><span class="nv">eq-expr</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">f</span><span class="w">       </span><span class="p">(</span><span class="nb">eval</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">eq-expr</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">df</span><span class="w">      </span><span class="p">(</span><span class="nb">eval</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">x</span><span class="p">)</span>
+<span class="w">                           </span><span class="o">,</span><span class="p">(</span><span class="nf">symbolic-simplify</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-df-expr</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="nv">eq-expr</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">newton-solve</span><span class="w"> </span><span class="nv">f</span><span class="w"> </span><span class="nv">df</span><span class="w"> </span><span class="nv">x0</span><span class="w"> </span><span class="nv">tol</span><span class="p">)))</span>
+</pre></div>
+<p>kinda like this:</p>
+<ol>
+  <li>Example 1
+<div class="highlight"><pre><span></span><span class="c1">;; Example 01: x * x == 2 =&gt; 1.414</span>
+<span class="p">(</span><span class="nf">symbolic-df-and-newton-solve</span>
+<span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w"> </span><span class="ss">&#39;x</span><span class="w"> </span><span class="mf">2.0</span><span class="p">)</span>
+</pre></div>
+    <pre class="example">
+1.4142157
+    </pre>
+  </li>
+  <li>Example 2
+    <p>\[\frac{m &times; \mathrm{log}(\mathrm{cosh}(\mathrm{sqrt}(\frac{g &times; k}{m}) &times; x))}{k} - 10\]</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">symbolic-replace*</span><span class="w"> </span><span class="p">(</span><span class="nf">pairs</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">expr</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">from</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">pairs</span>
+<span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-replace</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="p">))</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="c1">;; Example 02: m * log(cosh(sqrt(g * k / m) * t)) / k</span>
+<span class="p">(</span><span class="nf">symbolic-df-and-newton-solve</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">symbolic-replace*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">m</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">g</span><span class="w"> </span><span class="mf">9.8</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">k</span><span class="w"> </span><span class="mf">0.1</span><span class="p">))</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nb">log</span><span class="w"> </span><span class="p">(</span><span class="nb">cosh</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">sqrt</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">k</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span><span class="w"> </span><span class="nv">x</span><span class="p">))))</span><span class="w"> </span><span class="nv">k</span><span class="p">)</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span>
+<span class="w"> </span><span class="ss">&#39;x</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span>
+</pre></div>
+    <p>Note: using Mathematica got:</p>
+    <pre class="example">
+NSolve[(m  Log[Cosh[Sqrt[g*k/m]*x]])/k == 10 /. {
+  m -&gt; 1,
+  g -&gt; 9.8,
+  k -&gt; 0.1
+}, x] (* { { x -&gt; -1.67428, x -&gt; 1.67428 } } *)
+    </pre>
+  </li>
+</ol>
+<h3>Some LaTeX export</h3>
+<details><summary>Not the main object, folded</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">expr-&gt;tex</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Trun expression to LaTeX math. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">*env*</span><span class="w"> </span><span class="ss">&#39;top</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">special</span><span class="w"> </span><span class="nv">*env*</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">-&gt;tex</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">op</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span><span class="w">                          </span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">args</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">*env*</span><span class="w"> </span><span class="nv">op</span><span class="p">))</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">special</span><span class="w"> </span><span class="nv">*env*</span><span class="p">))</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;-&gt;tex</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">expr</span><span class="p">))))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">args-len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="nv">op</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">args-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">*env*</span><span class="w"> </span><span class="ss">&#39;*</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;(-~a)&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;-~a&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">*env*</span><span class="w"> </span><span class="ss">&#39;*</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;(~{~a~^ - ~})&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~{~a~^ - ~}&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">args-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">*env*</span><span class="w"> </span><span class="ss">&#39;*</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;(~{~a~^ + ~})&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">t</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~{~a~^ + ~}&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">args-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">t</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~{~a~^ </span><span class="se">\\</span><span class="s">times ~}&quot;</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">=</span><span class="w"> </span><span class="nv">args-len</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">frac{1}{~a}&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">t</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">frac{~a}{~a}&quot;</span>
+<span class="w">                                         </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">                                         </span><span class="p">(</span><span class="nf">-&gt;tex</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)))))))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~a^{~a}&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">otherwise</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">mathrm{~a}(~{~a~^, ~})&quot;</span>
+<span class="w">                                          </span><span class="nv">op</span><span class="w"> </span><span class="nv">args</span><span class="p">)))))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">-&gt;tex</span><span class="w"> </span><span class="nv">expr</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>like this:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~a&quot;</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">expr-&gt;tex</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">symbolic-simplify</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolic-df-expr</span><span class="w"> </span><span class="ss">&#39;x</span><span class="p">)</span>
+<span class="w">                   </span><span class="o">&#39;</span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">sinh</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">m</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">))))))</span>
+</pre></div>
+<p>\[\mathrm{cosh}(\frac{x}{g &times; m}) &times; \frac{g &times; m}{g &times; m &times; g &times; m} + \frac{2 + x + x}{4}\]</p>
+<p>kinda like this.</p>
+<h1>Post-thoughts</h1>
+<p>Does it really need to solve the equation for \(eq(u) = f(u, x, y)\)?
+  Maybe not really? Maybe just use \(u^{\mathrm{new}} = f(u^{\mathrm{old}}, x, y)\) will
+  be enough? I can't tell right now, need more experiments.</p>
+<p>More thoughts:</p>
+<ul>
+  <li>use this as Lisp to LaTeX helper to write documentations&#8230;</li>
+  <li>how does Maxima do such things? (and Mathematica, Matlab? )</li>
+</ul>
+<details><summary>Some excuse | 一些万一我鸽了的借口</summary>
+<p>我鸽的次数还少么? (乐)</p>
+<p>相信未来有时间的我吧, 写大作业去了.</p>
+</details>
+
+  </div><a class="u-url" href="/lisp/what-about-symbolic-df/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
