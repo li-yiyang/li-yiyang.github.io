@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Lem First Experience | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Lem First Experience" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About Lem 是一个用 Common Lisp 写的模仿 Emacs 的一个编辑器. 不过目前体验上来说和 Emacs 只能说不太能比, 有许多奇奇妙妙的小 bug (特性?) 以及一些比较遗憾功能缺失 (比如我现在觉得 directory-mode 和 Emacs 的 dired 完全不能比, 详见 一些吐槽)." />
+<meta property="og:description" content="About Lem 是一个用 Common Lisp 写的模仿 Emacs 的一个编辑器. 不过目前体验上来说和 Emacs 只能说不太能比, 有许多奇奇妙妙的小 bug (特性?) 以及一些比较遗憾功能缺失 (比如我现在觉得 directory-mode 和 Emacs 的 dired 完全不能比, 详见 一些吐槽)." />
+<link rel="canonical" href="/lem/lem-0/" />
+<meta property="og:url" content="/lem/lem-0/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-02T08:04:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Lem First Experience" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-08-02T08:04:00+00:00","datePublished":"2025-08-02T08:04:00+00:00","description":"About Lem 是一个用 Common Lisp 写的模仿 Emacs 的一个编辑器. 不过目前体验上来说和 Emacs 只能说不太能比, 有许多奇奇妙妙的小 bug (特性?) 以及一些比较遗憾功能缺失 (比如我现在觉得 directory-mode 和 Emacs 的 dired 完全不能比, 详见 一些吐槽).","headline":"Lem First Experience","mainEntityOfPage":{"@type":"WebPage","@id":"/lem/lem-0/"},"url":"/lem/lem-0/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Lem First Experience</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-08-02T08:04:00+00:00" itemprop="datePublished">Aug 2, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="about">About</h1>
+<p><a href="https://github.com/lem-project/lem">Lem</a> 
+是一个用 Common Lisp 写的模仿 Emacs 的一个编辑器. 
+不过目前体验上来说和 Emacs 只能说不太能比, 有许多奇奇妙妙的小 bug (特性?) 
+以及一些比较遗憾功能缺失 (比如我现在觉得 <code class="language-plaintext highlighter-rouge">directory-mode</code> 和 Emacs 的 
+<code class="language-plaintext highlighter-rouge">dired</code> 完全不能比, 详见 <a href="#一些吐槽">一些吐槽</a>).</p>
+
+<p>不过作为一个用来玩乐的编辑器, 我觉得是挺不错的.</p>
+
+<h1 id="clone-compile-patch-compile-right">Clone, Compile, Patch, Compile… Right?</h1>
+<h2 id="clone-and-compile">Clone and Compile</h2>
+<p>我不是很喜欢 <a href="https://github.com/fukamachi">fukamachi</a> qlot 那套依赖包管理的做法. 
+虽然现在觉得在本地保存所有的项目相关的包确实是一个超级明智的决定 
+(尤其是在未来有了一堆的包依赖的时候, 你说是吧 Python, NPM). 
+But anyway, 我更喜欢直接用 <a href="https://www.quicklisp.org/">quicklisp</a> 
+直接把所有的依赖都装在一起. 这是个人的喜好差异了, 
+假如你想要用官方推荐的方式来进行安装的话, 
+请参考 <a href="https://lem-project.github.io/installation/ncurses/linux/">Installation (Lem)</a> 
+的官方安装指南.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> <span class="nv">$HOME</span> <span class="o">&amp;&amp;</span> <span class="nb">mkdir</span> <span class="nt">-pv</span> common-lisp
+<span class="nb">cd </span>common-lisp
+git clone https://github.com/lem-project/lem.git
+</code></pre></div></div>
+
+<p>说明: <code class="language-plaintext highlighter-rouge">~/common-lisp</code> 是一个 lisp 构建系统 (<a href="https://asdf.common-lisp.dev/">ASDF</a>) 
+会搜索的地方, 将你的源代码目录置于其下方可以让其知道要如何载入. 
+而 quicklisp 的工作是根据在 <code class="language-plaintext highlighter-rouge">asdf</code> 中定义的依赖关系, 帮你从网上把源代码下载下来, 
+并放到一个 asdf 知道如何载入的地方.</p>
+
+<details><summary>等下, 假如你没有 Common Lisp 和 quicklisp 环境配置的话...</summary>
+1. 安装 SBCL 环境
+   + macOS: `brew install sbcl`
+   + Ubuntu: `sudo apt install sbcl`
+   + Windows: 不熟
+2. 下载并配置 quicklisp
+   + `curl -L https://beta.quicklisp.org/quicklisp.lisp -o quicklisp.lisp`
+   + `sbcl --load quicklisp.lisp --eval "(quicklisp-quickstart:install)" --eval "(ql:add-to-init-file)" --eval "(quit)"`
+
+详见 [Getting started with Common Lisp](https://lispcookbook.github.io/cl-cookbook/getting-started.html). 
+</details>
+
+<p>进入到 <code class="language-plaintext highlighter-rouge">lem</code> 项目目录下方, 这里并不使用 Lem 默认的 <code class="language-plaintext highlighter-rouge">Makefile</code> 进行编辑, 而是采用:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd </span>lem
+sbcl <span class="nt">--dynamic-space-size</span> 4GiB <span class="nt">--noinform</span> <span class="nt">--nosysinit</span> <span class="se">\</span>
+     <span class="nt">--eval</span> <span class="s2">"(ql:quickload :lem-sdl2)"</span> <span class="se">\</span>
+     <span class="nt">--eval</span> <span class="s2">"(lem:init-at-build-time)"</span> <span class="se">\</span>
+     <span class="nt">--eval</span> <span class="s2">"(sb-ext:save-lisp-and-die </span><span class="se">\"</span><span class="s2">lem</span><span class="se">\"</span><span class="s2"> </span><span class="se">\</span><span class="s2">
+                                       :compression t </span><span class="se">\</span><span class="s2">
+                                       :toplevel #'lem:main </span><span class="se">\</span><span class="s2">
+                                       :executable t </span><span class="se">\</span><span class="s2">
+                                       :save-runtime-options t)"</span>
+</code></pre></div></div>
+
+<p>手动进行编译.</p>
+
+<p>注: 这里 <code class="language-plaintext highlighter-rouge">:compression</code> 参数设置成了 <code class="language-plaintext highlighter-rouge">t</code>, 可以大幅减少最终二进制文件的大小;
+<code class="language-plaintext highlighter-rouge">:save-runtime-options</code> 让 Lem 使用和编译其时相同的运行时参数 
+(<code class="language-plaintext highlighter-rouge">--dynamic-space-size 4GiB</code>).</p>
+
+<p>运行 <code class="language-plaintext highlighter-rouge">./lem</code> 即可看到用 SDL2 作为前端显示的 Lem 编辑器了.</p>
+
+<h2 id="来点配置">来点配置</h2>
+<p>和 Emacs 的配置类似的, 我们把配置放在 <code class="language-plaintext highlighter-rouge">~/.lem/init.lisp</code> 处. 
+在里面你可以写各种各样的 Lisp 代码, 比如可以写一些简单的按键绑定:</p>
+
+<div class="language-lisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">in-package</span> <span class="ss">:lem</span><span class="p">)</span>
+
+<span class="c1">;;; Key binding</span>
+
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"C--"</span> <span class="ss">'undo</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S--"</span> <span class="ss">'font-size-decrease</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S-="</span> <span class="ss">'font-size-increase</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S-+"</span> <span class="ss">'font-size-increase</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S-f"</span> <span class="ss">'lem/isearch:isearch-forward</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S-v"</span> <span class="ss">'yank</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">define-key</span> <span class="vg">*global-keymap*</span> <span class="s">"S-c"</span> <span class="ss">'copy-region</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>注: 这里的按键绑定的命名规则同 Emacs. 会发现基本的设计都挺类似的.</p>
+
+<p>注2: 一个小技巧, 在 lisp-mode 中, 在一个 S-expr 上按快捷键 <code class="language-plaintext highlighter-rouge">C-c C-c</code> 可以</p>
+
+<p>注3: 发现用 ncurses 的版本配合 iTerm2 的效果其实也很不错 
+(尤其是那个比较炫酷的那个光标特效, 没啥用, 但是很帅).</p>
+
+<h2 id="来点-patch">来点 Patch</h2>
+<p>现在你就可以用 Lem 来编辑 Lem 的源代码了. 通常, 
+大家会认为改了代码之后我们需要重新编译代码并重启我们的程序… 
+但是在 Lisp 世界中, 这并不是必要的 – 你完全可以在运行 Lem 的同时修改其功能:</p>
+
+<p>比如 <code class="language-plaintext highlighter-rouge">M-x start-lisp-repl</code> 可以帮你打开一个 Lisp 的 REPL, 
+同时这个 REPL 也是 Lem 当前控制的环境. 你可以使用 <code class="language-plaintext highlighter-rouge">M-h</code> 快捷键来唤起一个小窗口,
+在其中有一堆的选项来帮助你了解当前光标下的东西是什么.</p>
+
+<p>比如你可以用 <code class="language-plaintext highlighter-rouge">Describe symbol</code> 来查看当前函数/变量对应的符号的文档, 
+或者用 <code class="language-plaintext highlighter-rouge">Find definition</code> 来查看函数的定义等等.</p>
+
+<h1 id="一些吐槽">一些吐槽</h1>
+<h2 id="性能和内存占用">性能和内存占用</h2>
+<p>貌似在 SBCL 里面的内存占用还是有点大… 
+开了几个 buffer 之后 sdl2 版本的内存占用来到了 800MB 左右, 
+啥也不开的状态是 290MB. 作为对比的, ncurses 的版本的内存占用大概是 200MB
+左右 (不过不清楚多开了几个 buffer 之后会有啥效果). 
+所以我感觉还是主要使用 ncurses 的版本会比较好一些.</p>
+
+<p>还没有测试过比较大的文件的编辑性能. 其他需要测试一下.</p>
+
+<p>总体上来说感觉还是挺流畅的, 不过也有一些因为不熟练导致的卡手感, 
+然后 sdl2 的版本因为没有平滑滚动 (对应 Emacs 中的 <code class="language-plaintext highlighter-rouge">pixel-scrolling</code>),
+感觉还是有点卡顿感.</p>
+
+<p>并且发现用 sdl2 的版本的耗电量还挺高的…</p>
+
+<p>不过 sdl2 的版本, 它可以支持各种图形和富媒体, 感觉还是有很多东西可以玩的.</p>
+
+<h2 id="多窗口">多窗口</h2>
+<p>还是很想要多窗口, 不过感觉不是什么大问题, 应该可以用一些别的方法来搞定.</p>
+
+<p>不过奇怪的是 <code class="language-plaintext highlighter-rouge">server</code> 版本的 Lem (用网页作为显示前端) 也是只能支持一个窗口, 
+这个就感觉有点搞了…</p>
+
+<h2 id="org-mode">Org-Mode</h2>
+<p>是的, 没有 <a href="https://orgmode.org/">Org-Mode</a>. (或者说没有很好的 Org-Mode 的支持), 
+所以这个博客也是用回了 Markdown 来做标记语言.</p>
+
+<p>我缺的 <code class="language-plaintext highlighter-rouge">C-c C-c</code> (文学编程) 这块谁来补啊…</p>
+
+<h2 id="directory-mode">Directory-Mode</h2>
+<p>感觉也不是很好用, <code class="language-plaintext highlighter-rouge">all-the-icons</code> 感觉虽然好看是好看, 
+但是感觉主要还是功能上缺失了好多. 感觉可以有空去 Emacs 那里抄.</p>
+
+<h2 id="compile">Compile</h2>
+<p>也是一个最近开始常用的小功能, 感觉配置好就是一个 <code class="language-plaintext highlighter-rouge">C-c C-c</code> 的事, 
+写代码快速开发感觉很舒服 – 什么才叫做代码的所见即所得啊 (bushi).</p>
+
+<h2 id="terminal-shell">Terminal, Shell</h2>
+<p>不好用就是说, 并且 vterm 貌似在 mac 这边的设置有些问题, 
+这个我觉得可以用别的方式去进行, 比如 port 一个 eshell 或者 eat.</p>
+
+<h2 id="tramp">Tramp</h2>
+<p>卧槽, 我超想要这个的… 虽然 Emacs 的 Tramp 有点慢… 
+但是 Tramp 感觉很爽诶.</p>
+
+<h1 id="other">Other</h1>
+<p>嘛, 没法要求一个新生的编辑器 (还是一个小众编程语言 + 没钱宣传) 
+和 Emacs OS 比较, 不过感觉有很多东西可以去写.</p>
+
+<p>已经自带的这些, 比如 lsp 或者 <code class="language-plaintext highlighter-rouge">auto-save-mode</code> 感觉还行, 
+不知道之后使用的时候会遇到啥或者有啥想法, 
+感觉可以之后做一些从 Emacs 那边抄代码和抄插件的一些工作.</p>
+
+  </div><a class="u-url" href="/lem/lem-0/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
