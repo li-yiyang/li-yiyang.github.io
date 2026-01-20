@@ -1,0 +1,410 @@
+#+title: 概统
+#+date: 2026-01-19
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* About
+#+html: <details><summary>挺一般的研究生课程</summary>
+评价是纯纯的 PPT 朗诵.
+#+html: </details>
+
+* 概率论初步
+** 随机试验, 随机事件, 样本空间
+#+html: <details><summary>GPT: 用一句话解释名词概念</summary>
++ 必然现象: 在特定条件下必定发生的现象, 任何情况下都会发生
++ 随机现象: 其结果不可预知, 受随机因素影响的现象
++ 随机试验: 可以重复进行且结果不确定的实验或过程
++ 互相独立: 两个或多个事件的发生与否互不影响
++ 随机事件: 随机试验中可能发生的结果或现象
++ 基本事件: 在随机试验中不再可以分解的最基本的事件
++ 样本空间: 随机试验中所有可能基本事件的集合
++ 元素: 样本空间中的每一个基本事件
++ 必然事件: 一定会发生的事件, 其概率为 1
++ 不可能事件: 一定不会发生的事件, 其概率为 0
+#+html: </details>
+
++ 事件关系
++ 事件运算 \(A \wedge B\), \(A \vee B\), \(\not A\)
+
+** 概率
+*Application*
++ 多项式分布
+
+  #+begin_quote
+  盒子里有 5 个红球, 4 个白球和 3 个蓝球,
+  从盒子里随机选一球, 记下颜色, 然后返回盒子里.
+  求挑选 6 次后出现 3 红, 2 白, 1 蓝的概率.
+  #+end_quote
+
+  + 有放回取样 (多项式分布):
+
+    \[P(\left\{ p_{i}, n_{i} \right\}) = \frac{(\sum n_{i})!}{\prod n_{i}!} \prod p_{i}^{n_{i}}\]
+  + 无放回取样 (超几何分布):
+
+    \[P(\left\{ p_{i}, n_{i} \right\}) = \frac{\prod \left(\begin{matrix} N_{i} \\\\ n_{i} \end{matrix}\right)}{\left(\begin{matrix} \sum N_{i} \\\\ \sum n_{i} \end{matrix}\right)}\]
+
+    *Definition*: \(\left(\begin{matrix} N \\\\ n \end{matrix}\right) = \frac{N \times (N - 1) \times \cdots \times (n+1)}{n \times \cdots \times 1}\)
+
+** 条件概率
++ \(P(B|A) = \frac{P(A \wedge B)}{P(A)}\)
++ 事件独立性
+
+  *Definition*:
+  \(P(A B) = P(A) P(B) \Leftrightarrow P(B|A) = P(B) \Leftrightarrow\) A, B 独立
+
+  *Application*
+  + 判断随机变量的独立性
+
+    #+begin_quote
+    设随机变量 \(X, Y\) 的 PDF 为
+    \(f(x, y) = A \mathrm{e}^{- a x^2 + b x y - c y^2}, - \infty < x < \infty, - \infty < y < \infty\),
+    问在什么条件下 \(X\) 与 \(Y\) 相互独立?
+    #+end_quote
+
+    + 证明需要证明 \(f(x, y) = f_{X}(x) f_{Y}(y)\)
+
+** 概率计算
+** 边沿概率, 全概率公式, 贝叶斯公式
++ 边沿概率
+
+  *Application*:
+  + 已知联合分布, 计算边缘分布
+  + 补全联合分布
++ 全概率公式 \(P(A) = \sum P(A | B_{i}) P(B_{i})\),
+  其中 \(\left\{ B_{i} \right\}\) 为样本空间的划分
++ 贝叶斯公式 \(P(B_{i} | A) = \frac{P(A|B_{i})P(B_{i})}{\sum_{j=1}^{n} P(A|B_{j}) P(B_{j})}\)
+
+  *Memonic*:
+  \(P(B_{i} | A) P(A) = P(B_{i} \wedge A) = P(A | B_{i}) P(B_{i})\)
+
+  *Application*:
+  + 误判概率计算
+
+    #+begin_quote
+    已知某放射源产生的射线中包含 A, B, C 三种粒子,
+    占比分别 1/2, 1/6, 1/3. 在实验的粒子鉴别过程中,
+    A 粒子被误判为其他粒子的概率为 10%,
+    B, C 粒子被误判为 A 粒子的概率分别为 12% 和 21%.
+    请计算出被鉴别为 A 粒子的事例来自真实的 A 粒子的概率.
+    #+end_quote
+
+    + 已知 \(P(S_{A})\) (\(S_{*}\) 对样本空间的划分) 以及 \(P(D_{A} | S_{ *})\), 求 \(P(D_{A} | S_{A})\)
+  + 逆概率计算
+
+* 随机变量及其分布
+** 随机变量
++ 为了和之后的子样 (\(x_{i}\)) 作区分, 这里用 \(X\) 表示随机变量
+
+  #+html: <details><summary>数学符号一坨乱麻</summary>
+  不知道是不是 PPT 里面的数学公式和文本是东拼西凑的,
+  里面的数学公式符号非常的不一致... 学起来很混乱.
+  #+html: </details>
++ 概率密度函数 (PDF): \(f(X)\)
++ 累计分布函数 (CDF): \(F(X) = \int f(X) \mathrm{d}x\)
++ 随机变量的映射:
+
+  *Algorithm I*: \(F_{y}(y) = P(g(x) \leq y)\)
+
+  *Algorithm II*:
+  \(g\) 为映射作用在随机变量 \(X\) 上, 则 \(f_{Y}(Y) = f_{X}(g^{-1}(Y)) \left| \frac{\mathrm{d}}{\mathrm{d} Y} g^{-1}(Y) \right|\).
+
+  *Memonic*:
+  \(F_{Y}(Y) = \int f_{Y}(Y) \mathrm{d} Y = \int f_{X}(X) \mathrm{d} X \frac{\mathrm{d} X}{\mathrm{d} Y} \Rightarrow f_{Y} = f_{X}(g^{-1}(Y)) \frac{\mathrm{d} X}{\mathrm{d} Y}\)
+
+  *Application*:
+  + 计算概率密度函数映射
+
+    #+begin_quote
+    随机变量 \(X\) 的概率密度函数为:
+
+    \[f(x) = \left\{ \begin{matrix} x^2 / 18 & -3 < x < 3 \\\\ 0 & \mathrm{other} \end{matrix} \right.\]
+
+    求 \(Y = (X + 1)^2\) 的概率密度函数.
+    #+end_quote
+
+    + 非单调映射 \(F_{Y}(y) = P(g(X) \leq y)\)
+  + 计算变换关系
+
+    #+begin_quote
+    已知 \(X, Y\) 为 \((0, 1)\) 区间上均匀分布的随机变量且相互独立,
+    二维随机变量 \(U, V\) 和 \(X, Y\) 之间存在变换关系:
+    \(U = \cos (2 \pi x) \sqrt{- 2 \ln y}, V = \sin (2 \pi x) \sqrt{- 2 \ln y}\),
+    证明 \(U, V\) 服从 \(N(0, 1)\).
+    #+end_quote
+  + 映射的数字特征
+
+    #+begin_quote
+    随机变量 \(X, Y\) 都服从 \(N(\mu, \sigma^2)\) 且相互独立, 令 \(U = a X + b Y, W = a X b Y\),
+    求 \(U\) 与 \(W\) 的相关系数 \(\rho_{UW}\).
+    #+end_quote
+
+    + \(E(a X + b Y) = a E(X) + b E(Y)\)
+    + \(\mathrm{cov}(a X + b Y) = \)
+** 随机变量的数字特征
++ 期望值 \(E(g(X)) = \int g(X) f(X) \mathrm{d} X\)
+
+  *Linear Property*: \(E(\sum a_{i} X_{i}) = a_{i} E(X_{i})\)
++ 中位数 (\(p\) 分位数)
++ 最可几值 (\(x |_{P(x) \rightarrow \mathrm{maximum}}\))
++ 矩 \(\alpha_{l} = E((X - C)^{l})\)
+  + 一阶原点矩 \(\mu = E(X)\)
+  + 二阶中心矩 \(\sigma^{2} = E(X - \mu)^{2} = V(X)\)
+
+  *Quick Calc*:
+  + \(V(\sum a_{i}^{2} X_{i}) = \sum a_{i}^{2} V(X_{i})\)
++ 偏度 \(\gamma_{1} = \frac{\mu_{3}}{\mu_{2}^{3/2}} = \frac{E((X - \mu)^{3})}{\sigma^{3}}\)
+
+  随机变量对其均值的不对称程度, 偏斜程度
++ 峰度 \(\gamma_{2} = \frac{\mu_{4}}{\mu_{2}^{2}} - 3 = \frac{E((X - \mu)^{4})}{\sigma^{4}} - 3\)
+
+  概率密度的尖锐程度于正态分布概率曲线尖锐程度的对比
++ 切比雪夫不等式 \(P(\left| X - \mu \right| \geq \varepsilon) \leq \frac{\sigma^{2} }{\varepsilon^{2} }\)
+
+  *GPT*: 不关心随机变量服从什么具体的分布, 只要知道期望 (均值) 和方差,
+  就能给概率划定一个界限.
+
+  令 \(\varepsilon = k \sigma\), 即 \(P(|X - \mu| \geq k \sigma) \leq \frac{1}{k^{2}}\),
+  限定了和均值偏差大于 \(k \sigma\) 的概率的上界.
+
+  #+html: <details><summary>GPT</summary>
+  感觉课件里面一堆乱七八糟的东西, 有点像是只言片语的梦话连不成线;
+  或者是有用的信息在长长的文字和定义证明中失去了信息的传递能力.
+
+  低情商发言就是: 不如 AI.
+
+  以后老师不如就给大纲和要点, 让学生问 AI 算了.
+  #+html: </details>
+
+** 随机变量的特征函数
++ \(\varphi_{X}(t) = E(e^{i t X})\)
+
+  *GPT*: 等价于傅里叶变换为频域.
++ \(\lambda_{n} = E(X^{n}) = i^{-n} \left[ \frac{\mathrm{d}^{n} \varphi_{X}(t)}{\mathrm{d} t^{n}} \right]\)
+
+** 随机变量的分布
++ 多项式分布
++ 泊松分布
++ 均匀分布
++ 正态分布
+
+* 多维随机变量及其分布
+** 二维随机变量的分布, 独立性
++ \(F(x, y) = P(X \leq x \wedge Y \leq y)\)
++ 独立性
+
+  *Definition*: \(f(x, y) = f_{X}(x) f_{Y}(y)\)
+
+** 条件概率分布
+** 二维随机变量的数字特征
++ 协方差 \(\mathrm{cov}(X, Y) = E((X - \mu_{X})(Y - \mu_{Y})) = E(XY) - E(X) E(Y)\)
++ 相关系数 \(\rho_{XY} = \frac{\mathrm{cov}(X, Y)}{\sigma_{X} \sigma_{Y}}\)
+
+  *Memonic*: \(\mathrm{cov}(X, X) = \sigma_{X}^{2}\)
++ 协方差矩阵 \(V_{ij} = \mathrm{cov}(X_{i}, X_{j})\)
+
+** 两个随机变量的函数的分布
+** 多维随机变量, 向量和矩阵记号
+* 随机变量分布
+* 中心极限定理
+*GPT*: 样本量 \(n\) 足够大, 均值分布趋向于正态分布.
+
+*Application*:
++ 二项分布的正态近似
+
+  ...
+
+* 子样及分布
+** 随机子样, 子样分布函数
++ 子样
++ 子样空间
++ 子样分布函数
+
+** 统计量及其数字特征
++ 子样中位数
++ 子样平均: \(\bar{x} = \frac{1}{n} \sum x_{i}\)
++ 子样方差: \(S^{2} = \frac{1}{n-1} \sum (x_{i} - \bar{x})^{2} = \frac{1}{n - 1} \left( (\sum x_{i}^{2})- n \bar{x}^{2} \right)\)
++ 子样标准值: \(S\)
++ 子样协方差: \(S_{xy} = \frac{1}{n-1} \sum (x_{i} - x) (y_{i} - y) = \frac{1}{n-1} \left( \sum x_{i} y_{i} - n \bar{x} \bar{y} \right)\)
++ 子样相关系数: \(\rho_{xy} = \frac{S_{XY}}{S_{X} S_{Y}} = \frac{\sum (x_{i} - \bar{x})(y_{i} - \bar{y})}{(\sum x_{i}^{2} - n \bar{x}^{2} )^{1/2} (\sum y_{i}^{2} - n \bar{y}^{2})^{1/2}}\)
+
+*Memonic*: 和随机变量一样, 但是平均的项变为 \(1/(n-1)\).
+
+*Application*
++ 根据子样数据计算数字特征
+
+** 抽样分布
++ \(\chi^{2}\) 分布: 总体服从正态分布时, 样本方差与总体方差的比值服从卡方分布
++ \(t\) 分布: 样本均值于标准误差的比值服从 t 分布
++ \(F\) 分布: 两个样本方差的比值
+
+*Application*
++ 已知子样总体, 计算统计量的概率分布
+
+** 抽样数据的图形表示, 概率分布
+* 参数估计的一般概念
+** 估计量, 似然函数
+** 区间估计
+*Algorithm*:
+
+*Application*:
++ 单正态总体的均值
++ 单正态总体的方差
++ 双正态总体的均值差
+
+** 正态总体方差的置信区间
+*Algorithm*
+
+*Application*
++ 已知样本总体, 给定置信水平, 计算置信区间
+
+  | 估计对象    | 已知条件    | 置信区间公式                                                            |
+  |-------------+-------------+-------------------------------------------------------------------------|
+  | 均值 \(\mu\)  | \(\sigma^{2}\) 已知 | \(\left[ \bar{x} \mp Z_{\alpha/2} \frac{\sigma}{\sqrt{n}} \right]\)                            |
+  | 均值 \(\mu\)  | \(\sigma^{2}\) 未知 | \(\left[ \bar{x} \mp t_{\alpha/2}(n-1) \frac{S}{\sqrt{n}} \right]\)                       |
+  | 方差 \(\sigma^{2}\) | \(\mu\) 未知  | \(\left[ \frac{(n-1) S^2}{\chi_{\alpha/2}^{2}(n-1)}, \frac{(n-1) S^{2}}{\chi_{1-\alpha/2}^{2} (n-1)} \right]\) |
+
+  *Calculation*:
+  + \(Z_{\alpha/2} = \Phi^{-1}(1 - \alpha/2)\), where \(\Phi\) 为 \(N(0, 1)\) 正态分布
+  + \(t_{\alpha/2}(n)\) 为自由度为 \(n-1\) 的 Student 分布
+  + \(\chi_{\alpha/2}^{2}(n)\), where \(\chi^{2}(n)\) 为自由度为 \(n-1\) 的卡方分布
+
+  明明是查表才能知道的东西...
+* 极大似然法
+** 极大似然原理
+*Algorithm*:
+1. 构造函数: \(L(\left\{ x_{i} \right\} | \theta) = \prod f(x_{i}|\theta)\)
+2. 极大似然条件约束下求解 \(\theta\): \(\partial_{\theta} \ln L = 0 \wedge \partial_{\theta}^{2} \ln L < 0\)
+
+*Application*:
++ 参数区间估计 (似然区间)
+
+  *Algorithm*:
+  1. \(\gamma = \frac{\int_{\theta_{a}}^{\theta_{b}} L(X|\theta) \mathrm{d}\theta}{\int_{-\infty}^{\infty} L(X|\theta) \mathrm{d}\theta}\)
+  2. 同上, 在 \(\partial_{\theta} \gamma = 0 \wedge \partial_{\theta}^{2} \gamma < 0\) 条件下求解
++ 子样观测值
+  + 几何分布
+
+    #+begin_quote
+    设 \(x_{1}, \cdots, x_{n}\) 是几何分布总体的子样观测值,
+    其分布律为 \(P(X = x) = p (1 - p)^{x-1}, x = 1, 2, \cdots, \infty\).
+    求参数 \(p\) 的极大似然估计.
+    #+end_quote
+
+    + \(L(\left\{ x_{i} \right\} | p) = \prod p(1-p)^{x-1}\)
+    + \(\partial_{p} \ln L = \partial_{p} \ln \left( p^{n} (1-p)^{\sum x_{i} - n} \right) = \frac{n - p \sum x_{i}}{p(1-p)}\)
+
+** 极大似然法应用于多个实验结果的合并
++ \(\mu = \frac{\sum \frac{\mu_{i}}{\sigma_{i}^{2}}}{ \sum \frac{1}{ \sigma_{i}^{2 }} } \)
++ \(V = \frac{1}{\sum \frac{1}{\sigma_{i}^{2} }}\)
+
+** 极大似然法用于直方图
+
+
+* 最小二乘法
+** 最小二乘拟合
+*Algorithm*:
+1. 构造误差函数 \(\mathrm{err}(\theta) = \sum (y_{i} - f(x_{i} | \theta))^{2}\)
+2. 最小化误差 \(\partial_{\theta} \mathrm{err} = 0 \wedge \partial_{\theta}^{2} \mathrm{err} > 0\)
+
+** 最小二乘用于直方图数据
+* 假设检验
+** 原假设和备择假设
++ 参数检验: 根据观测值检验参数是否等于某个给定值
++ 非参数检验: 根据观测值检验模型函数是否有某个特定函数形式
++ 原假设: 要验证的假设为原假设
++ 备择假设
+
+** 假设检验的一般方法
+*Algorithm*
+1. 原假设和备择假设 (Input)
+2. 原假设成立时的统计量
+3. 计算统计量观测值
+4. 计算拒绝域
+5. 判断统计决策
+
+*Application*
++ 已知正态分布 (子样分布) 和方差
+
+  #+begin_quote
+  某厂生产的一种电池, 其寿命长期以来服从方差 \(\sigma^{2} = 5000\ \mathrm{h}^{2}\) 的正态分布.
+  近期生产一批这种电池, 从生产的情况来看不能肯定寿命方差是否改变.
+  现随机地取 26 个电池, 测得寿命的样本方差为 \(S^{2} = 9200\ \mathrm{h}^{2}\).
+  问根据这一数据能否推断这批电池寿命方差较以往有显著变换 (取 \(\alpha = 0.02\))?
+  #+end_quote
+
+
+** 正态总体的参数检验
+** 拟合优度检验
++ \(\chi^{2}\) 检验
+
+  *Definition*:
+  + \(\chi^{2} = \sum \frac{(x_{i} - X)^{2}}{X}\)
++ 似然比检验
+
+** 信号的统计显著性
+* 贝叶斯公式
+* Monte Carlo 方法
+实际使用过程中, Monte Carlo 方法需要很好地构造随机过程...
+
+* 模式识别系统
+乐, 只有大段文字, 仿佛在看本科生大学写作课程作业的综述论文.
+(而且都还很老, 并且不知道为啥, 物理系这边的 AI 课特别喜欢讲 Hopfield 网络,
+哪怕他们讲的 Hopfield 网络都不太能用, 或者说不知道该怎么用. )
+
+#+html: <details><summary>理论课的通病</summary>
+不知道为啥, 讲理论课的老师往往会把定理/算法/规律的严格证明视作是实现的正确性,
+好像是只要我证明了我的做法是对的, 那么做的结果就一定是对的.
+
+然后对于如何评价实际结果的正确性的方法几乎不提.
+
+搞清楚课程定位啊淦, 这课不是 *物理* 中的概率统计吗? 不是实验类的课程吗?
+别告诉我说你们实验组有祖传代码拟合分析误差自动生成论文配图,
+只需要知道自己的原理是对的是吧...
+
+(当然, 假设检验确实是一个可用的方法, 但是什么叫做假设检验课在证明假设检验是对的? )
+
+又, 还有的困难是引入的新理论和旧的理论接不上, 有种粘连的感觉.
+这有种讲分析力学讲了半天的拉格朗日方程, 结果最后发现用的是牛顿三定律一样的奇怪.
+应该就直接抛弃旧的知识, 用新的视角去讲整个 (要么就干脆承认, 说我们不讲新的).
+在本科赵爹的课上的那个做法就很不错, 用新的视角去引入 (上来就是对称性守恒律,
+相信基础教育的牛顿三定律的普及教育, 而不是重新教一遍牛顿三定律再开始讲能量视角),
+然后在打好了新的视角的基础之后, 再回过头去审视旧的理论如何迁移到新的视角里.
+
+比如在概统的这边, 我觉得确实可以用测度空间的方法来解释很多东西,
+然后再回过头去讲其他东西, 就会很不错. 不过可能也要看具体的应用或者教学需求,
+用测度论来讲实验误差分析的话, 感觉不是很好理解 (也有可能只是我不会, 之后可以重新学),
+但是如果直接从实验误差为主线来重新讲课, 那估计就能够砍掉很多的垃圾学时,
+并且还能更有条理...
+#+html: </details>
+
+** 特征提取和选择
+** 效率, 误判率, 分辨能力
++ ...
+
+** 方法
++ 贝叶斯决策
++ 线性判别
++ 决策树方法
++ 人工神经网络
++ 近邻法
++ 概率密度估计量方法
++ H 矩阵判别
++ 函数判别
++ SVM
+
+* 小信号测量的区间估计
+* 测量误差及其分类
+#+html: <details><summary>和子样误差放在一起</summary>
+课上把测量误差和子样误差分开来讲了, 实际上我觉得这两个东西应当放在一起讲,
+毕竟这两个才是真的相关的知识, 也是在实验里真的用的东西.
+
+明明可以用一个实验数据的采集的全流程来讲随机子样, 子样分布函数这些知识,
+非要用概念朗诵, 鼠标扫扫公式 -- 大家要记住哦, 很重要哦, 这种方式来教课...
+
+不过也可以理解就是了 -- who cares?
+#+html: </details>
+
+*Application*:
++ 误差传递公式
++ 探测器效率计算
