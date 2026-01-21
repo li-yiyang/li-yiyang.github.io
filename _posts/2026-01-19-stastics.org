@@ -9,6 +9,42 @@
 评价是纯纯的 PPT 朗诵.
 #+html: </details>
 
+* Memonic
++ 贝叶斯公式 \(P(B_{i} | A) = \frac{P(A|B_{i})P(B_{i})}{\sum_{j=1}^{n} P(A|B_{j}) P(B_{j})}\)
++ 随机变量映射 \(F_{Y}(Y) = P(g(X) \leq Y)\)
++ 统计量数字特征计算
+
+  | 特征     | 随机变量                                                                     | 子样                                                                           |
+  |----------+------------------------------------------------------------------------------+--------------------------------------------------------------------------------|
+  | 平均     | \(\frac{1}{n} \sum x_i\)                                                            | \(\frac{1}{n} \sum x_{i}\)                                                               |
+  | 方差     | \(\sigma^{2} = \sum (X - \bar{X})^{2} = \sum X^{2} - (\sum X)^{2}\)                                    | \(S^{2} = \frac{1}{n-1} \sum (x_{i} - \bar{x}_{i})^{2} = \frac{1}{n-1} ((\sum x_{i}^{2}) - n \bar{x}^{2})\)       |
+  | 多元方差 | \(V(\sum a_{i} X_{i}) = \sum a_{i}^{2} V(X_{i}) + \sum a_{i} a_{j} \mathrm{cov}(X_{i}, X_{j})\)                        | -                                                                              |
+  | 协方差   | \(\mathrm{cov}(X, Y) = E((X - E(X))(Y - E(Y))) = \mathrm{cov}(X, Y) = E(XY) - E(X)E(Y)\) | \(S_{XY} = \frac{1}{n-1} \sum (x_{i} - \bar{x})(y_{i} - \bar{y})\)                             |
+  | 相关系数 | \(\rho_{XY} = \mathrm{cov}(X, Y) / (\sigma_{X} \sigma_{Y})\)                                             | \(r = \frac{\sum (x_{i} - \bar{x})(y_{i} - \bar{y})}{\sqrt{(x_{i} - \bar{x})} \sqrt{(y_{i} - \bar{y})}}\) |
++ 实验数据合并
+
+  \[\mu = \frac{\sum \frac{\mu_{i}}{\sigma_{i}^{2}}}{ \sum \frac{1}{ \sigma_{i}^{2 }} },\ V = \frac{1}{\sum \frac{1}{\sigma_{i}^{2} }}\]
++ 极大似然法
+
+  \[L = \prod f(x_{i}|\theta),\ \partial_{\theta} \ln L = 0 \wedge \partial_{\theta}^{2} \ln L < 0\]
++ 最小二乘法
+
+  \[\mathrm{err}(\theta) = \sum (y_{i} - f(x_{i}|\theta))^{2},\ \partial_{\theta} \mathrm{err} = 0 \wedge \partial_{\theta}^{2} \ln L > 0\]
++ 假设检验
+
+  | 条件        | 检验对象    | 统计量观测值                      | 拒绝域                                   |
+  |-------------+-------------+-----------------------------------+------------------------------------------|
+  | \(\sigma^{2}\) 已知 | 均值 \(\mu\)  | \(Z = \frac{\bar{X} - \mu_{0}}{\sigma / \sqrt{n}}\) | \(\left\vert Z \right\vert > Z_{\alpha/2}(n-1)\) |
+  | \(\sigma^{2}\) 未知 | 均质 \(\mu\)  | \(t = \frac{\bar{X} - \mu_{0}}{S / \sqrt{n}}\) | \(\left\vert t \right\vert > t_{\alpha/2}(n-1)\) |
+  |             | 方差 \(\sigma^{2}\) | \(\chi^{2} = \frac{(n-1) S^{2}}{\sigma_{0}^{2}}\)         | \(\chi^{2} < \chi_{1-\alpha/2}^{2}(n-1) \vee \chi^{2} > \chi_{\alpha/2}^{2}(n-1)\)  |
++ 几个分布
+
+  | 分布                 | PDF                                                         | E(X)   | V(X)        | Notes                   |
+  |----------------------+-------------------------------------------------------------+--------+-------------+-------------------------|
+  | 二项分布 \(B(n, p)\) | \(\left(\begin{matrix} n \\\\ k\end{matrix}\right) p^{k} (1-p)^{n-k}\) | \(np\) | \(np(1-p)\) | (多项式分布)            |
+  | 泊松分布 \(P(\lambda)\)    | \(\frac{\lambda^{k} \mathrm{e}^{-\lambda}}{k!}\)                                        | \(\lambda\)  | \(\lambda\)       | 粒子计数标准差 \(\sqrt{N}\) |
+  | 正态分布 \(N(\mu,\sigma^{2})\)     | \(\frac{1}{\sqrt{2 \pi} \sigma} \mathrm{exp}\left( - \frac{(x-\mu)^{2}}{2\sigma^{2}} \right)\)                               | \(\mu\)      | \(\sigma\)           |                         |
+
 * 概率论初步
 ** 随机试验, 随机事件, 样本空间
 #+html: <details><summary>GPT: 用一句话解释名词概念</summary>
@@ -140,7 +176,9 @@
     #+end_quote
 
     + \(E(a X + b Y) = a E(X) + b E(Y)\)
-    + \(\mathrm{cov}(a X + b Y) = \)
+    + \(E(X Y) = E(X) E(Y)\)
+    + \(\mathrm{cov}(a X + b Y, Z) = a \mathrm{cov}(X, Z) + b \mathrm{cov}(Y, Z)\)
+
 ** 随机变量的数字特征
 + 期望值 \(E(g(X)) = \int g(X) f(X) \mathrm{d} X\)
 
@@ -152,7 +190,7 @@
   + 二阶中心矩 \(\sigma^{2} = E(X - \mu)^{2} = V(X)\)
 
   *Quick Calc*:
-  + \(V(\sum a_{i}^{2} X_{i}) = \sum a_{i}^{2} V(X_{i})\)
+  + \(V(\sum a_{i} X_{i}) = \sum a_{i}^{2} V(X_{i}) + 2 \sum a_{i} a_{j} \mathrm{cov}(X_{i}, X_{j})\)
 + 偏度 \(\gamma_{1} = \frac{\mu_{3}}{\mu_{2}^{3/2}} = \frac{E((X - \mu)^{3})}{\sigma^{3}}\)
 
   随机变量对其均值的不对称程度, 偏斜程度
@@ -380,7 +418,22 @@
 
 ** 特征提取和选择
 ** 效率, 误判率, 分辨能力
-+ ...
++ 效率: 正确选定一个信号事例的效率 \(\varepsilon_{SS} = \int f_{S}(y) \mathrm{d}y\)
++ 误判率: 将本底错误选择为一个信号事例的误判率 \(\varepsilon_{SB} = \int f_{B}(y) \mathrm{d}y\)
++ 误判率: 效率与误判率的比 \(r = \varepsilon_{SS} / \varepsilon_{SB}\)
+
+*Memonic*: 引入误差矩阵
+
+| 判断 \ 实际 | 真   | 假   |
+|-------------+------+------|
+| 真          | 真真 | 真假 |
+| 假          | 假真 | 假假   |
+
++ 效率: 真真 / (真真 + 假真)
++ 误判率: 真假 / (真假 + 假假)
++ 方差:
+  + \(V(\varepsilon_{SS}) = \frac{\varepsilon_{SS} (1 - \varepsilon_{SS})}{N_{S}}\)
+  + \(V(r)/r^{2} = V(\varepsilon_{SS}) / \epsilon_{SS}^{2} + V(\varepsilon_{SB}) / \varepsilon_{SB}^{2}\)
 
 ** 方法
 + 贝叶斯决策
@@ -407,4 +460,8 @@
 
 *Application*:
 + 误差传递公式
-+ 探测器效率计算
++ 探测器效率计算: 实际计数 / 源计数
+
+  *Application*:
+  + 多层符合探测效率
+    + m 层中至少 k 触发: \(\varepsilon_{\mathrm{tol}} = \sum \left(\begin{matrix}m \\\\ k\end{matrix}\right) \varepsilon^{i} (1 - \varepsilon)^{m-i}\)
