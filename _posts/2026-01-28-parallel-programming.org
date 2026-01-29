@@ -156,7 +156,7 @@
     + 可拓展性
     + Amdahl 定律: 整个系统的理论最大加速比受限于无法被并行化的串行部分
 
-      \[S = \frac{1}{(1 - s) + \frac{s}{n}}\]
+      \[S = \frac{1}{(1 - s) + \frac{s}{n}} \leq 1 / s\]
 
       + \(s\) 可以并行化的部分占比
       + \(n\) 处理器的数量
@@ -266,3 +266,132 @@
     + 避免死锁
     + 组合
 
+* 并行处理基础
++ Dennard scaling (缩放比例定律): 晶体管尺寸变小, 功耗通比变小
++ 并行和共享
+  + *并行资源*:
+    处理器 (Sockets), 加速器 (GPU), 处理器核 (cores), 执行单元 (SIMD units),
+    核内 cache
+  + *共享资源*:
+    处理器内核间共享 cache, 内存总线, 处理器间总线, IO 总线, 互连网络, IO
++ 并行层级
+  + Job level
+  + TLP (Thread Level Parallelism)
+  + Instruction Level Parallelism
+    + 超标量 (指令流中的 ILP), 并行处理来自同一指令流的不同指令
+  + Processor/Core/Arithmetic/Bit Level Parallelism
+    + 多核
+    + SIMD: 相同指令流控制多个 ALU (同一个核内)
++ 并行编程原则
+  + 并行度 (Amdahl's Law): 提高任务中可以并行的部分占比
+  + 并行粒度: 每个并行任务应该有多大
+  + 局部性: 时间局部性, 空间 (数据) 局部性
+  + 负载均衡: 动态分配, 并行粒度
+  + 体系结构
++ 如何将任务合理分解以符合安全并行执行条件
++ 如何将任务分配到每个处理器
++ 如何管理好处理器之间的通信/同步, 避免成为并行加速瓶颈
++ 需要了解各种架构实现的性能特征
+
+* 并行处理中的抽象
++ Flynn 分类
+  + SISD (Single Instruction Single Data): 单指令单数据
+  + SIMD (Single Instruction Multiple Data): 单指令多数据
+  + MISD (Multiple Instruction Signle Data): 多指令单数据
+  + MIMD (Multiple Instruction Multiple Data): 多指令多数据
++ SPMD (Single Program Multiple Data)
++ 数据分配方式
+  + 交错分配 (按顺序依次发牌给不同实例)
+  + 阻塞分配 (分块给不同的实例)
+
+  需要考虑程序和数据之间的关系决定最好的数据分配方式
++ 并行模型
+  + 共享地址空间
+    + 读写共享变量
+    + 通过锁保证同步 (容易出现死锁或者冲突)
+    + 非结构化通信
+  + 消息传递
+    + MPI
+    + 机群编程模型
+    + 结构化信息
+    + 如何解决消息 (信息在所有节点间的同步) 死锁: 交错发送
+  + 数据并行
+    + =map=
+    + =function=
+  + 流编程模型
+    + streams: 元素集合
+    + kernels: 无副作用函数
+
+  混合编程模型: 多核节点内使用共享地址空间, 节点间使用消息传递
++ 任务分配
+  + 静态分配: 在成本和工作量可预测时
+  + 动态分配: 维护一个任务池 (或者队列 queue)
+    + 任务调度: 长时间的任务先执行
+    + 通过多个工作队列减少任务队列之间的同步
++ 局部性
+  + 时间局部性
+  + 空间局部性
+
+  优化目标: 减少额外的数据通信开销
++ 计算通信比率: 运算强度=计算量/通信量
++ Cache Missing 3C:
+  + Cold miss: 首次访问
+  + Capacity miss: 缓存容量不足
+  + Conflict miss: 冲突
+  + Communication miss: 通信 (减少人为通信)
++ 竞争
+  + 共享资源引入竞争
+  + 复制竞争资源 (本地副本, 细粒度锁)
+  + 错开对竞争资源的集中访问
+
+* 性能模型和评价方法
++ 可拓展性
+  + 强可拓展
+  + 弱可拓展
++ 加速比 \(S_{p} = \frac{T_{1}}{T_{p}}\)
++ 并行效率 \(\mathrm{Efficiency} = \frac{S_{p}}{p}\)
++ 并行开销 \(\mathrm{Cost} = p \times T_{p}\)
++ 可拓展并行架构
+  + 计算: 处理器的数量和核数
+  + 访存: 储存层次
+  + 互联: 互联网络结构
++ 关键路径 (Critical Path): 不同处理器上的计算过程之间的依赖关系,
+
+  + 过长的进程间依赖会制约性能提升
+  + 表现为性能停滞在一个相对固定的值上,
+  + 需要从关键路径中移除任务, 缩短依赖链
++ 瓶颈问题 (Bottlenecks):
+
+  某个或者某些处理器持有程序推进的关键信息但是执行太慢
+  + 表现为其他处理器等待结果
+  + 更加有效的通信手段和层次化主从计算架构
++ 算法开销 (Algorithmic overhead)
+
+  某些算法步骤并行化需要额外更多的开销
++ 通信开销 (Communication overhead)
+
+  额外画在不同进程之间的通信时间, 系统规模越大越大
++ 负载均衡 (Load Imbalance)
++ 无法预测的损失 (Speculative loss)
+
+  并行计算了 A 和 B, 但是 B 的结果不重要
++ Operations-Operands Graphs (操作-操作数图模型)
+  + 假设
+    + 所有计算操作开销为 1
+    + 计算单元之间的数据不计入开销
+  + 解决特定问题的算法看作是有向无环图
++ Amdahl's Law
+
+  \[S_{p} \leq \frac{1}{s + (1 - s) / n} \leq \frac{1}{s}\]
++ Gustafson 定律
+  + 任务规模随着处理器核数可拓展
+  + 在问题大小随着处理器数量增加而增加时
++ Isoefficiency Law
++ Sun-Ni's Law
++ PRAM 模型
++ BSP 模型
++ LogP 模型
++ Roofline
+
+* 并行文件系统
++ ... (Need More Learning)
