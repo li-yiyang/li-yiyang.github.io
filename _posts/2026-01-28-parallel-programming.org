@@ -1,0 +1,268 @@
+#+title: 并行处理
+#+date: 2026-01-28
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* About
+
+* 复习用
+1. 从上层应用出发的并行程序的两种通用模型是什么? 请列出并分别解释这两种模型.
+
+   + 数据并行 (Data Parallelism)
+
+     对不同数据子集执行相同操作, 强调任务的规整性
+
+     #+begin_src lisp
+     (lparallel:pmapcar #'do-something data)
+     #+end_src
+   + 任务并行 (Task Parallelism)
+
+     将不同的任务 (函数/逻辑) 分布在不同的核上执行
+
+     #+begin_src lisp
+     ;; gen-task -> run-task
+     (flet ((gen-task (n)
+              (dotimes (i n) (push-task (...))))
+            (run-task (n)
+              (loop :for task := (pop-task)
+                    :while task :do (funcall task))))
+       (bt:make-thread #'gen-task)
+       (bt:make-thread #'run-task))
+     #+end_src
+2. 列出现代处理器并行执行的主要形式, 并分别解释.
+
+   + 指令级并行 (ILP): 流水线, 乱序执行, 多发射
+   + 线程级并行 (TLP): 多核, 超线程同时执行多个线程
+   + 数据级并行 (DLP): 向量寄存器和 SIMD 处理数据向量
+
+3. 分析多线程的收益和代价, 并举例吞吐导向的多线程代表架构.
+
+   + 收益: 隐藏长延迟 (访存), 提高吞吐量, 提升 CPU 利用率
+   + 代价: 上下文切换开销, 同步与锁竞争, 缓存污染
+   + 吞吐导向: GPU
+
+4. Flynn 分类法是如何对并行分类的?
+   + SISD (Single Instruction Single Data): 单指令单数据
+   + SIMD (Single Instruction Multiple Data): 单指令多数据
+   + MISD (Multiple Instruction Signle Data): 多指令单数据
+   + MIMD (Multiple Instruction Multiple Data): 多指令多数据
+5. 多核有哪几种通信方式?
+   + 共享储存 (Shared Memory):
+     读写同一块内存进行隐式通信
+
+     #+begin_src lisp :exports both
+     (let* ((counter 0) ;; <- 共享内存 counter, 通过 lock 进行管理
+            (lock    (bt:make-lock)))
+       (flet ((count100 ()
+                (dotimes (i 100) (bt:with-lock-held (lock) (incf counter)))))
+         (let ((thread1 (bt:make-thread #'count100))
+               (thread2 (bt:make-thread #'count100)))
+           (bt:join-thread thread1)
+           (bt:join-thread thread2)))
+       counter)
+     #+end_src
+
+     #+RESULTS:
+     : 200
+
+   + 消息传递 (Message passing):
+     通过显式的 =send= 和 =receive= 操作在不同节点传输数据
+6. 列举减少访存延迟和隐藏访存延迟的方法.
+   + 减少访存延时: 提高 cache 命中率, 数据重用 (tiling), 非阻塞 cache
+   + 隐藏访存延时: 硬件/软件预提取, 多线程上下文切换, 乱序执行
+7. 分析 SMP 和 NUMA 架构各自的特点.
+   + SMP (Synmmetric Multi-Processing) 对称多处理
+     + 所有处理器地位平等, 共享同一个物理内存空间
+     + 任何一个核访问内存中的任何一个地址的延迟和带宽相同
+     + 总线连接: 所有的核通过共享总线连接到内存控制器
+     + 核心数量增加的时候, 共享总线容易争抢
+   + NUMA (Non-Uniform Memory Access) 非一致内存访问
+     + 物理内存被分散给不同节点, 每个节点通过几个 CPU 和部分本地内存组成
+     + 本地访问快
+     + 远端访问: 节点间通过互联网络访问其他节点的内存
+     + 拓展性强, 但是需要避免远端访问
+8. 并行编程模型分别是哪三种, 并分别阐述三种模型各自的特点.
+   + 共享地址空间 (Shared Address Space)
+   + 消息传递 (Message Passing)
+   + 数据并行 (Data Parallelism)
+9. 请举一个常用的混合编程模型的例子? 其好处是什么?
+
+   混合编程: 节点间, 节点内, 计算单元内
+
+   + MPI 节点间拓展性, 分布式
+   + OpenMP 节点内多核内存共享
+   + CUDA 节点内部 GPU 核心
+10. 基于共享地址空间的通用同步原语有哪些? 具体进行解释.
+    + 互斥锁 (Locks/Mutex): 确保同一时间只有一个线程进入临界区
+    + 屏障 (Barries): 强制所有线程在继续执行下一步前到达同一个点
+    + 条件变量 (Condition Variables): 允许线程在满足特定条件前处于睡眠状态,
+      由其他线程进行唤醒
+    + 原子操作 (Atomics): 利用硬件支持 (Compare-and-Swap) 实现无锁小数据更新
+11. 在讨论局部性时会从哪两个维度上进行讨论, 两种局部性分别指的是什么,
+    处理器的层次化存储利用了哪种局部性原理?
+    + 时间局部性: 最近访问过的数据很快会被再次访问
+    + 空间局部性: 访问某个地址后, 相邻的地址很快会被访问
+    + Cache Block 主要利用了空间局限性
+12. 导致 cache miss 的原因是什么? 并分析如何避免/减少每种 cache miss?
+
+    | 原因                  | 解释         | 对策                      |
+    |-----------------------+--------------+---------------------------|
+    | 强制缺失 (Compulsory) | 首次访问     | 预取                      |
+    | 容量缺失 (Capacity)   | cache 太小   | 增加容量, 循环展开        |
+    | 冲突缺失 (Conflict)   | 映射位置冲突 | 组相关联程度, 调整数据排布 |
+
+13. 请列举出降低通信开销的几种方法.
+    + 减少通信频率
+    + 重叠通信和计算 (非阻塞通信)
+    + 提高局部性
+    + 利用多播/广播
+14. 并行编程中, 造成竞争的原因有哪些, 如何减小竞争?
+    + 竞争: 同时访问共享资源 (Data Race, Lock Contention)
+    + 减小方法:
+      + 细粒度锁: 将大锁拆分成多个保护小块数据的锁
+      + 无锁编程: 原子指令或者读写锁
+      + 数据私有化: 每个线程维护本地副本, 最后规约 (Reduction) (MapReduce)
+15. 为了使工作负载更均衡, 在任务调度时可以采取哪些机制, 以及可能的困难.
+    + 机制
+      + 静态调度:
+
+        #+begin_src lisp
+        (defun make-splited-task-thread (tasks &optional (n 3))
+          (flet ((make-thread (tasks)
+                   (bt:make-thread (lambda () (dolist (task tasks) (funcall task))))))
+            (let ((threads (mapcar #'make-thread (split-list tasks n))))
+              (barrier threads))))
+        #+end_src
+      + 动态调度: 运行时按需取任务
+
+        #+begin_src lisp
+        (defun make-fetch-and-eval-thread ()
+          (bt:make-thread
+           (lambda () (loop :for fn := (pop-task-pool)
+                            :while fn :do (funcall fn)))))
+        #+end_src
+16. 导致应用可扩展性差的因素有哪些? 并从中选出两个因素分析如何发现这种因素
+    以及如何解决?
+
+    | 因素         | 表现                                           | 解决                                                 |
+    |--------------+------------------------------------------------+------------------------------------------------------|
+    | 串行部分占比 | 增加核数但是加速比迅速饱和                      | 算法重构                                             |
+    | 通信开销     | 性能分析工具显示 CPU 在等待 I/O                 | 增加计算密度, 异步通信                                |
+    | 负载不均衡   | 一核有难, 八核围观                             | 动态任务调度, 细化任务粒度                            |
+    | 同步等待     | 线程阻塞在 Barrier 和 Lock 上, CPU 利用率波动大 | 减少全局同步点, 使用无锁数据结构, 缩小锁的粒度         |
+    | 资源竞争     | 核数增加, 但是内存带宽和共享缓存达到饱和         | 优化数据局部性, 减少内存访问频率, 采用 NUMA 亲和性分配 |
+
+    + 可拓展性
+    + Amdahl 定律: 整个系统的理论最大加速比受限于无法被并行化的串行部分
+
+      \[S = \frac{1}{(1 - s) + \frac{s}{n}}\]
+
+      + \(s\) 可以并行化的部分占比
+      + \(n\) 处理器的数量
+17. 请解释程序并行分析领域中的强可扩展性和弱可扩展性.
+    + 强课拓展性:
+      总问题规模不变的情况下, 增加处理器数量可以等比缩短运行时间 (解决问题的速度)
+    + 弱可拓展性:
+      每个处理器承担的工作量不变, 增加处理器数量,
+      观察运行事件是否保持恒定 (解决大问题的能力)
+18. 导致并行计算无法达到理想加速比的并行性能开销有哪些?
+    + 同步开销
+    + 通信开销
+    + 冗余计算
+    + 调度开销
+19. 请画出 VGG 和 MobileNet 两个神经网络模型推理对应的 roofline 模型,
+    并标出 VGG 和 MobileNet 在图中的位置.
+
+    Roofline 模型: 评估程序在特定硬件平台上性能瓶颈的可视化模型
+    + 计算方法
+
+      \[\mathrm{Performance} = \mathrm{min} \left\{ \begin{matrix} \mathrm{Peak\ Floating\ Point\ Performance} \\\\ \mathrm{Peak\ Memory\ Bandwidth} \times \mathrm{Operation\ Intensity} \right.\]
+    + 绘制方法
+
+      *Algorithm*
+      1. 获得硬件性能:
+         + 峰值计算性能 \(P_{\mathrm{peak}}\)
+         + 峰值内存带宽 \(B_{\mathrm{peak}}\)
+      2. 绘制线
+         + 水平线 \(Y = P_{\mathrm{peak}}\)
+         + 斜线: 过原点, 斜率为 \(B_{\mathrm{peak}}\) 的直线 (坐标轴通常为 log-log)
+         + 水平线和斜线交点为拐点
+      3. 绘制点
+         + 计算密度 \(I = \frac{\mathrm{FLOPs}}{\mathrm{Bytes}} =\) 浮点运算总数 / 内存交换总数
+         + 实际性能 \(P = \frac{\mathrm{FLOPs}}{\mathrm{Seconds}} =\) 浮点计算总数 / 运行时间
+    + 特征及其意义
+      + 拐点 \(I_{\mathrm{crit}} = \frac{P_{\mathrm{peak}}}{B_{\mathrm{peak}}}\): 数值越大说明对算法计算密度要求越高
+      + 点在斜线上: 访存受限
+      + 点在水平线下: 计算受限
+20. 请简述并行程序 Benchmark 的选取原则是什么.
+    + 代表性: 覆盖典型应用场景
+    + 多样性: 包含不同计算访存比 (Arithmetic Intensity) 任务
+    + 可拓展性: 能支持单核到多核的测试
+    + 可重复性: 结果稳定, 环境配置透明
+21. SIMD 和 SIMT 架构分别有什么特点?
+    + SIMD (Single Instruction Multiple Data)
+      + 硬件显示暴露向量寄存器
+      + 显式打包数据
+    + 抽象层更高, 多个标量线程 Wrap 执行
+    + 支持分支发散, 硬件处理掩码逻辑
+22. 简述线程分组的两种方式, 并分析动态线程分组的缺点.
+    + 静态分组
+    + 动态分组
+23. 介绍一下 CUDA 编程中并发线程的层次结构以及 CUDA 对并行提供的支撑.
+    + 层次: Thread \(\rightarrow\) Block \(\rightarrow\) Grid
+    + 硬件: 通过 Streaming Multiprocessors (SM) 执行
+    + 存储: 提供 Shared Memory (Block 内共享)
+    + 同步: 提供 =__syncthreads= 实现 Block 线程同步
+24. 请列举至少三种提高 CUDA 代码效率的方法.
+    + 合并访存 (Memory Coalescing): 保证 Warp 内线程访问连续全局内存地址
+    + 共享内存 (Shared Memory): 减少对高延迟全局内存的访问
+    + 减少分支发散 (Warp Divergence): 保证一个 Warp 内线程走相同的分支路径
+25. 列举 4 种常见的共享存储多处理器架构, 并分别解释.
+    + UMA (Uniform Memory Access) 集中式共享内存
+    + NUMA (Non-Uniform Memory Access): 分布式共享内存
+    + COMA (Cache-Only Memory Architecture): 内存全部由 Cache 构成, 数据动态迁移
+    + ccNUMA (Cache-Coherent NUMA): 硬件缓存一致性协议的 NUMA
+26. 解释存储一致性模型、顺序一致性模型, 并各自给出一个实际的例子.
+    + 存储一致性: 规定了多个处理器对不同内存地址访问的合法顺序
+    + 顺序一致性: 所有执行结果就像所有处理器的操作按某种顺序排成一个序列,
+      且每个处理器的操作在序列中保持程序顺序
+27. 举例几种常见的互联拓扑结构, 并给出其网络直径, 对分带宽,
+    饱和吞吐和平均跳步分析.
+
+    | 互联拓扑结构 | 网络直径     | 对分带宽  | 饱和吞吐       | 平均跳步               |
+    |--------------+--------------+-----------+----------------+------------------------|
+    | Bus          | \(1\)        | \(1\)     | \(1 / N\)      | \(1\)                  |
+    | Ring         | \(N/2\)      | \(2\)     | \(8/N\) (双向) | \(N/4\)                |
+    | 2D-Mesh      | \(2 \sqrt{N}\)   | \(\sqrt{N}\)  | \(O(1 / \sqrt{N}\) | \(\frac{2}{3} \sqrt{N}\)       |
+    | Hypercube    | \(\mathrm{log} N\) | \(N / 2\) | \(1/2\)        | \(\frac{1}\mathrm{2} \mathrm{log}_{2} N\) |
+    | Crossbar     | \(1\)        | \(N/2\)   | \(1\)          | \(1\)                  |
+
+    + 网络直径 (Network Diameter): 网络中连接两节点间最短路径的最大值
+      (最坏情况下的消息延迟)
+    + 对分带宽 (Bisection Bandwidth): 将网络分成两半时, 切断的最小链路数量
+      (全模式通信时的瓶颈)
+    + 饱和吞吐 (Saturated Throughput): 网络达到稳定状态时能处理的最大负载
+    + 平均跳步 (Average Distance): 所有节点对之间最短路径的平均值
+      (平均通信延迟)
+28. 论述互连网络中, 死锁出现的原因和避免的方法, 给出一种避免方法的示例.
+    + 原因: 环路等待
+    + 避免方法
+      + 维序路由 (Dimension Order Routing):
+        规定数据包必须先沿 X 轴走, 再沿 Y 轴走, 打破环路
+      + 虚通道 (Virtual Channels): 通过逻辑上的缓冲区拆分来消除循环依赖
+29. 片上网络的流控按粒度划分可以分为哪几类, 并分别介绍一种对应的流控技术.
+    + 消息级 (Message): 整个消息作为单位
+    + 包级 (Packet): 存储转发 (Store-and-Forward)
+    + 切片级 (Flit): 虫蚀流控 (Wormhole Routing)
+      小切片头带路，后续紧跟，减少延迟且节省缓冲区
+30. 列举常用的利用空间局部性的方法.
+    + 更大的 Cache Block: 一次性存取相邻数据
+    + 数据对齐: 确保结构体对齐, 减少跨行访问
+    + 数据合并: 根据访问模式选择储存布局
+    + 数据预取: 提前将相邻数据加载进缓存
+31. 列举事务性内存的优势.
+    + 编程建但
+    + 避免死锁
+    + 组合
+
