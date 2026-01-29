@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ObjC 1: Basic Objective-C Programming | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ObjC 1: Basic Objective-C Programming" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 之前的活 (ObjC 0: WebDriver Download ObjC Runtime Documentation) 的下 一部分就该轮到写一些简单的 Objective-C 的代码了. 但是问题是: 我好像从 来没有写过 ObjC 的代码&#8230; 所以这里会参考 Silicon.h 和 RGFW Under the Hood: Cocoa in Pure C 中的 方案尝试只使用 C-side (即 ObjC Runtime) 来调用 Objective-C 的部分. 同 时借鉴 Ry’s Objective-C Tutorial 用于测试 ObjC Runtime 的 binding 是否 可用. ObjC to C, then, CFFI, to Lisp Simple main() 示例代码来自 Ry&#39;s Objective-C: #import &lt;Foundation/Foundation.h&gt;" />
+<meta property="og:description" content="About 之前的活 (ObjC 0: WebDriver Download ObjC Runtime Documentation) 的下 一部分就该轮到写一些简单的 Objective-C 的代码了. 但是问题是: 我好像从 来没有写过 ObjC 的代码&#8230; 所以这里会参考 Silicon.h 和 RGFW Under the Hood: Cocoa in Pure C 中的 方案尝试只使用 C-side (即 ObjC Runtime) 来调用 Objective-C 的部分. 同 时借鉴 Ry’s Objective-C Tutorial 用于测试 ObjC Runtime 的 binding 是否 可用. ObjC to C, then, CFFI, to Lisp Simple main() 示例代码来自 Ry&#39;s Objective-C: #import &lt;Foundation/Foundation.h&gt;" />
+<link rel="canonical" href="/lisp/objc1-basic-objc/" />
+<meta property="og:url" content="/lisp/objc1-basic-objc/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-04-05T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ObjC 1: Basic Objective-C Programming" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-04-05T00:00:00+00:00","datePublished":"2025-04-05T00:00:00+00:00","description":"About 之前的活 (ObjC 0: WebDriver Download ObjC Runtime Documentation) 的下 一部分就该轮到写一些简单的 Objective-C 的代码了. 但是问题是: 我好像从 来没有写过 ObjC 的代码&#8230; 所以这里会参考 Silicon.h 和 RGFW Under the Hood: Cocoa in Pure C 中的 方案尝试只使用 C-side (即 ObjC Runtime) 来调用 Objective-C 的部分. 同 时借鉴 Ry’s Objective-C Tutorial 用于测试 ObjC Runtime 的 binding 是否 可用. ObjC to C, then, CFFI, to Lisp Simple main() 示例代码来自 Ry&#39;s Objective-C: #import &lt;Foundation/Foundation.h&gt;","headline":"ObjC 1: Basic Objective-C Programming","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/objc1-basic-objc/"},"url":"/lisp/objc1-basic-objc/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ObjC 1: Basic Objective-C Programming</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-04-05T00:00:00+00:00" itemprop="datePublished">Apr 5, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>之前的活 (<a href="/lisp/objc-0-webdriver-download-objc-doc/">ObjC 0: WebDriver Download ObjC Runtime Documentation</a>) 的下
+  一部分就该轮到写一些简单的 Objective-C 的代码了. 但是问题是: 我好像从
+  来没有写过 ObjC 的代码&#8230;</p>
+<p>所以这里会参考 <a href="https://github.com/EimaMei/Silicon/">Silicon.h</a> 和 <a href="https://dev.to/colleagueriley/rgfw-under-the-hood-cocoa-in-pure-c-1c7j">RGFW Under the Hood: Cocoa in Pure C</a> 中的
+  方案尝试只使用 C-side (即 ObjC Runtime) 来调用 Objective-C 的部分. 同
+  时借鉴 <a href="https://fullonrager.github.io/rys-objective-c-tutorial-archive/">Ry’s Objective-C Tutorial</a> 用于测试 ObjC Runtime 的 binding 是否
+  可用.</p>
+<h1>ObjC to C, then, CFFI, to Lisp</h1>
+<h2>Simple <code>main()</code></h2>
+<p>示例代码来自 <a href="https://fullonrager.github.io/rys-objective-c-tutorial-archive/introduction.html">Ry's Objective-C</a>:</p>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@autoreleasepool</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;ObjC Test&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>使用 <code>clang -o &lt;out&gt; &lt;src&gt; -ObjC -framework Foundation</code> 进行编译. 效果如
+  下:</p>
+<pre class="example">
+~/Buff
+[੧ᐛ੭] &gt; clang -o objc objc.m -ObjC -framework Foundation
+~/Buff
+[੧ᐛ੭] &gt; ./objc
+2025-04-02 02:12:45.622 objc[75447:24806460] ObjC Test
+</pre>
+<p>嘛, 至少能动了.</p>
+<h3>The <code>@</code> mark</h3>
+<p>询问 DeepSeek 可以得知, <code>@</code> 表示这后面跟着的东西是 ObjC 的东西, 比如
+  <code>@&quot;balabala&quot;= 表示 =NSString</code> 的字面量, <code>@[...]</code>, <code>@{...}</code> 分别表示 <code>NSArray</code> 和
+  <code>NSDictionary</code>, 之类的. 那么差不多就需要一个 C literal value 转换为 ObjC
+  量的操作.</p>
+<p>比如可以用 <code>[NSString stringWithUTF8String:&quot;ObjC Test&quot;]</code> 的方式来表示这
+  个字面量. 区别就是 <code>@&quot;&quot;= 会在编译的时候被当作常量储存, 而 =[]</code> 的形式会让
+  字符串在运行时被转换.</p>
+<p>比如可以用 Clang 将 ObjC 代码 transcompile 到 C++ 代码:</p>
+<div class="highlight"><pre><span></span>clang<span class="w"> </span>-rewrite-objc<span class="w"> </span>objc.m<span class="w"> </span>-o<span class="w"> </span>objc.c<span class="w"> </span>-Wno-everything<span class="w"> </span>-fno-ms-extensions
+</pre></div>
+<ul>
+  <li>=@&#8221;&#8220;= 形式:
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* @autoreleasepool */</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">__AtAutoreleasePool</span><span class="w"> </span><span class="n">__autoreleasepool</span><span class="p">;</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">((</span><span class="n">NSString</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">__NSConstantStringImpl__var_folders_rm_bjy42f597pjbncssb6l_766m0000gn_T_objc_1497c2_mi_0</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+    <p>会编成常量形式进行储存:</p>
+<div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">__NSConstantStringImpl</span><span class="w"> </span><span class="n">__NSConstantStringImpl__var_folders_rm_bjy42f597pjbncssb6l_766m0000gn_T_objc_1497c2_mi_0</span><span class="w"> </span><span class="n">__attribute__</span><span class="w"> </span><span class="p">((</span><span class="n">section</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;__DATA, __cfstring&quot;</span><span class="p">)))</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">__CFConstantStringClassReference</span><span class="p">,</span><span class="mh">0x000007c8</span><span class="p">,</span><span class="s">&quot;ObjC Test&quot;</span><span class="p">,</span><span class="mi">9</span><span class="p">};</span>
+</pre></div>
+    <p>不过考虑到从 Lisp 侧调用的时候应该没法通过这种方式进行调用, 所以估计
+      得通过 Runtime <code>[]</code> 的形式调用.</p>
+  </li>
+  <li><code>[]</code> 形式:
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="cm">/* @autoreleasepool */</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">__AtAutoreleasePool</span><span class="w"> </span><span class="n">__autoreleasepool</span><span class="p">;</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(((</span><span class="n">NSString</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">_Nullable</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">_Nonnull</span><span class="p">))(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">objc_msgSend</span><span class="p">)((</span><span class="n">id</span><span class="p">)</span><span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;NSString&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="s">&quot;ObjC Test&quot;</span><span class="p">));</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+</ul>
+<h3>The <code>[]</code> square</h3>
+<p>这里参考 <a href="https://github.com/EimaMei/Silicon/blob/a64f695f00fe589fa3a20ad8df508487a023f2f4/silicon.h#L3495">Silicon.h</a> 的实现:</p>
+<div class="highlight"><pre><span></span><span class="n">NSString</span><span class="o">*</span><span class="w"> </span><span class="nf">NSString_stringWithUTF8String</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">	</span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">func</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SI_NS_FUNCTIONS</span><span class="p">[</span><span class="n">NS_STRING_WIDTH_UTF8_STRING_CODE</span><span class="p">];</span>
+<span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="p">((</span><span class="n">id</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="p">))</span><span class="n">objc_msgSend</span><span class="p">)</span>
+<span class="w">				</span><span class="p">(</span><span class="n">SI_NS_CLASSES</span><span class="p">[</span><span class="n">NS_STRING_CODE</span><span class="p">],</span><span class="w"> </span><span class="n">func</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>其中 <code>SI_NS_FUNCTIONS[NS_STRING_WIDTH_UTF8_STRING_CODE]</code> 和
+  <code>SI_NS_CLASSES[NS_STRING_CODE]</code> 为缓存机制:</p>
+<div class="highlight"><pre><span></span><span class="n">SI_NS_CLASSES</span><span class="p">[</span><span class="n">NS_STRING_CODE</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;NSString&quot;</span><span class="p">);</span>
+<span class="n">SI_NS_FUNCTIONS</span><span class="p">[</span><span class="n">NS_STRING_WIDTH_UTF8_STRING_CODE</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">);</span>
+</pre></div>
+<p>于是应当可以改写 <code>main</code>:</p>
+<div class="highlight"><pre><span></span><span class="n">NSLog</span><span class="p">(</span><span class="n">NSString_stringWithUTF8String</span><span class="p">(</span><span class="s">&quot;ObjC Test&quot;</span><span class="p">));</span>
+</pre></div>
+<p>其中对应的 <code>NSString_stringWithUTF8String</code> 的实现如下:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nf">NSString_stringWithUTF8String</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">str</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">func</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sel_registerName</span><span class="p">(</span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">((</span><span class="n">id</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">SEL</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="p">))</span><span class="n">objc_msgSend</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="n">objc_getClass</span><span class="p">(</span><span class="s">&quot;NSString&quot;</span><span class="p">),</span><span class="w"> </span><span class="n">func</span><span class="p">,</span><span class="w"> </span><span class="n">str</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>同样的, 可以学习 <code>SI_NS_FUNCTIONS</code> 和 <code>SI_NS_CLASSES</code>, 通过对 ObjC 的对象
+  访问添加 <code>cache</code> 来减少重复查询的开销.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun-cached</span><span class="w"> </span><span class="nv">coerce-to-objc-class</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="p">)</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">objc-get-class</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun-cached</span><span class="w"> </span><span class="nv">coerce-to-selector</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="p">)</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">sel-register-name</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+</pre></div>
+<details><summary>defun-cached 的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">defun-cached</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">lambda-list</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">cache</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;CACHE&quot;</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">keyv</span><span class="w">  </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;KEY&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">cache</span><span class="w"> </span><span class="p">(</span><span class="nb">make-hash-table</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="ss">&#39;equal</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="w"> </span><span class="o">,</span><span class="nv">lambda-list</span>
+<span class="w">         </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">keyv</span><span class="w"> </span><span class="o">,</span><span class="nv">key</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="o">,</span><span class="nv">keyv</span><span class="w"> </span><span class="o">,</span><span class="nv">cache</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="o">,</span><span class="nv">keyv</span><span class="w"> </span><span class="o">,</span><span class="nv">cache</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">))))))))</span>
+</pre></div>
+</details>
+<h3>The <code>@autorealeasepool</code></h3>
+<p>根据 <a href="https://stackoverflow.com/a/10290255">stackoverflow</a> 上的这个帖子, 可以参考 <a href="https://developer.apple.com/documentation/foundation/nsautoreleasepool">文档</a>, 会发现用
+  <code>[[NSAutoreleasePool alloc] init]</code> 不如 <code>@autoreleasepool</code>.</p>
+<p>通过 Clang transcompile 的结果里面, 可以发现:</p>
+<div class="highlight"><pre><span></span><span class="k">struct</span><span class="w"> </span><span class="nc">__AtAutoreleasePool</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">__AtAutoreleasePool</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="n">atautoreleasepoolobj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">objc_autoreleasePoolPush</span><span class="p">();}</span>
+<span class="w">  </span><span class="o">~</span><span class="n">__AtAutoreleasePool</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="n">objc_autoreleasePoolPop</span><span class="p">(</span><span class="n">atautoreleasepoolobj</span><span class="p">);}</span>
+<span class="w">  </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">atautoreleasepoolobj</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+<p>于是可以通过直接调用 <code>objc_autoreleasePoolPush()</code> 以及
+  <code>objc_autorelasePoolPop()</code> 来解决这个问题.</p>
+<p>于是可以尝试:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-autorelease-pool</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">autorelease-pool-obj</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-autorelease-pool-push</span><span class="p">)))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">unwind-protect</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">objc-autorelease-pool-pop</span><span class="w"> </span><span class="nv">autorelease-pool-obj</span><span class="p">))))</span>
+</pre></div>
+<details><summary>对自动生成的 binding 的 patch</summary>
+<p>这里发现在原本自动生成的绑定里面缺少了 <code>objc_autoreleasePoolPush</code> 和
+  <code>objc_autoreleasePoolPop</code> 这两个函数, 一开始以为是被移除的 API, 但是发现
+  貌似在我的电脑上也不是不能直接调用, 于是就直接进行一个的引用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-autorelease-pool-push</span><span class="w"> </span><span class="s">&quot;objc_autoreleasePoolPush&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:pointer</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-autorelease-pool-pop</span><span class="w"> </span><span class="s">&quot;objc_autoreleasePoolPop&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:void</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">autorelease-pool-obj</span><span class="w"> </span><span class="nv">:pointer</span><span class="p">))</span>
+</pre></div>
+</details>
+<p>当然, 在 LispWorks 里面的写法应该是这样的 (类似如此):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-autorelease-pool</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">ns-log</span><span class="w"> </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="s">&quot;NSString&quot;</span><span class="w"> </span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="w"> </span><span class="s">&quot;ObjC Test&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>我的目标就是去模拟这个表示方式&#8230; 可以如下地实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">with-autorelease-pool</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">ns-log</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">                    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce-to-objc-class</span><span class="w"> </span><span class="s">&quot;NSString&quot;</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce-to-selector</span><span class="w"> </span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">:string</span><span class="w">  </span><span class="s">&quot;OBJC Test&quot;</span>
+<span class="w">                    </span><span class="nv">:pointer</span><span class="p">)))</span>
+</pre></div>
+<details><summary>这里为什么不用绑定的函数? </summary>
+<p>因为自动生成的的绑定是这样的:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-msg-send</span><span class="w"> </span><span class="s">&quot;objc_msgSend&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:void</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">self</span><span class="w"> </span><span class="nv">objc-id</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">op</span><span class="w">   </span><span class="nv">objc-sel</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">&amp;rest</span><span class="p">)</span>
+</pre></div>
+<p>由于其是 <code>:void</code> 返回值, 其没法传值给 <code>ns-log</code>. 其中 <code>ns-log</code> 定义如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defcfun</span><span class="w"> </span><span class="p">(</span><span class="nf">ns-log</span><span class="w"> </span><span class="s">&quot;NSLog&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">:void</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">formatter</span><span class="w"> </span><span class="nv">:pointer</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">&amp;rest</span><span class="p">)</span>
+</pre></div>
+</details>
+<h2>Simulate LispWorks API</h2>
+<p>于是接下来的目标就是去模拟 LispWorks 的 API? 这里的困难在于缺少测试集,
+  只能根据其 API 文档和 LispWorks Personal Edition 来进行一个黑箱逆向了.
+  不过逆向这种事情, 我熟啊 (并没有).</p>
+<details><summary>科技靠考古 (bushi)</summary>
+<p>很多东西都留到了历史书里面去了. 然而历史书往往不过只是短短的一句话, 可
+  能这一句话里面就有好几百人数十年的努力&#8230; 但是随着潮流和发展方向的转变,
+  可能这些技术就会被慢慢地淡忘甚至无人维护导致成为 &#8220;失传&#8221; 技术了.</p>
+<p>这有点像是非物质文化遗产, 因为没有人去维护于是就最后消失了, 只能等待后
+  来的有志考古的人们去重新实现. 不过在计算机领域, 因为技术发展迭代速度实
+  在是太快了, 可能十几年就是一个新的潮流了&#8230; 就比如最近老是刷到华为三进
+  制, 虽然感觉媒体的宣传有点过分抽象了, 但是能有维护或者探索这些技术的尝
+  试感觉其实也挺不错的.</p>
+<p>所以搞逆向还是有点用处的 (bushi).</p>
+</details>
+<h3>Lisp Machine 方向的逆向</h3>
+<p>在 Lisp 的世界里面, 你就是神. 理论上你可以干各种事情&#8230; 只是可能没有源
+  代码在手里&#8230; 所以只能通过检查 symbols, lambda list, documentation 之
+  类的方式进行检查了.</p>
+<p>以下是一些我使用的简单的 Lisp Image 检查函数:</p>
+<ul>
+  <li><code>function-lambda-list</code>
+<div class="highlight"><pre><span></span><span class="o">#</span><span class="nv">+sbcl</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">function-lambda-list</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">errorp</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Given a function, return its lambda list.</span>
+<span class="s">If given a symbol, use the `symbol-function&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nb">symbol</span><span class="p">)</span><span class="w"> </span><span class="nv">function</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">errorp</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">functionp</span><span class="w"> </span><span class="nv">function</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">sb-introspect:function-lambda-list</span><span class="w"> </span><span class="nv">function</span><span class="p">))</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">symbolp</span><span class="w">   </span><span class="nv">function</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">sb-introspect:function-lambda-list</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-function</span><span class="w"> </span><span class="nv">function</span><span class="p">)))))</span>
+</pre></div>
+  </li>
+  <li><code>sym-in-package-p</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">sym-in-package-p</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">package</span><span class="w"> </span><span class="nv">*package*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Test if `sym&#39; is intern `package&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">symbol</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">package</span><span class="w"> </span><span class="nb">symbol</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span><span class="w"> </span><span class="nv">package</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-package</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-package</span><span class="w"> </span><span class="nv">package</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li><code>sym-match-regexp-p</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">sym-match-regexp-p</span><span class="w"> </span><span class="p">(</span><span class="nf">regexp</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Test if `sym&#39; matches `regexp&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">symbol</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:scan</span><span class="w"> </span><span class="nv">regexp</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-name</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-package-symbols</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">package</span><span class="w"> </span><span class="nv">*package*</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">no-other-package</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">external-only</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">regexp</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nb">regexp?</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">test</span><span class="w"> </span><span class="p">(</span><span class="nf">constantly</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Find symbols in package as list. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">symbols</span><span class="w"> </span><span class="p">())</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">regexp</span><span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nb">regexp?</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">ppcre:create-scanner</span><span class="w"> </span><span class="nv">regexp</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">external-only</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">do-external-symbols</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">package</span><span class="w"> </span><span class="nv">symbols</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nb">regexp?</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-match-regexp-p</span><span class="w"> </span><span class="nv">regexp</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">symbols</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">do-symbols</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">package</span><span class="w"> </span><span class="nv">symbols</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">no-other-package</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-in-package-p</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">package</span><span class="p">)</span><span class="w">  </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nb">regexp?</span><span class="w">          </span><span class="p">(</span><span class="nf">sym-match-regexp-p</span><span class="w"> </span><span class="nv">regexp</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">symbols</span><span class="p">))))))</span>
+</pre></div>
+  <details><summary>于是可以去寻找函数</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">find-package-symbols</span><span class="w"> </span><span class="nv">:package</span><span class="w"> </span><span class="nv">:objc</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;fboundp</span><span class="p">)</span>
+</pre></div>
+    <p>可以发现函数名称类似于:</p>
+<div class="highlight"><pre><span></span><span class="nv">OBJC::|invoke</span><span class="w"> </span><span class="p">(</span><span class="nf">FUNCTION</span><span class="w"> </span><span class="p">(</span><span class="nf">OBJC-OBJECT-POINTER</span><span class="w"> </span><span class="nv">SEL</span><span class="p">)</span><span class="w"> </span><span class="nv">INT</span><span class="p">)</span><span class="nv">|</span>
+<span class="nv">OBJC::|invoke</span><span class="w"> </span><span class="p">(</span><span class="nf">FUNCTION</span><span class="w"> </span><span class="p">(</span><span class="nf">OBJC-OBJECT-POINTER</span><span class="w"> </span><span class="nv">SEL</span><span class="w"> </span><span class="nv">INT</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">SIGNED</span><span class="w"> </span><span class="nv">CHAR</span><span class="p">))</span><span class="nv">|</span>
+<span class="nv">OBJC::|invoke</span><span class="w"> </span><span class="p">(</span><span class="nf">FUNCTION</span><span class="w"> </span><span class="p">(</span><span class="nf">OBJC-OBJECT-POINTER</span><span class="w"> </span><span class="nv">SEL</span><span class="w"> </span><span class="nv">SEL</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">SIGNED</span><span class="w"> </span><span class="nv">CHAR</span><span class="p">))</span><span class="nv">|</span>
+</pre></div>
+    <p>这样的看起来就是程序自动化生成的函数, 以及:</p>
+<div class="highlight"><pre><span></span><span class="nv">OBJC::OBJECT_SETIVAR</span>
+<span class="nv">OBJC::CLASS_GETCLASSMETHOD</span>
+<span class="nv">OBJC::METHOD_GETNUMBEROFARGUMENTS</span>
+<span class="nv">OBJC::CLASS_GETINSTANCEMETHOD</span>
+<span class="nv">OBJC::OBJECT_GETIVAR</span>
+</pre></div>
+    <p>这样的看起来就是 FFI 绑定的函数, 以及:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">find-package-symbols</span><span class="w"> </span><span class="nv">:package</span><span class="w"> </span><span class="nv">:objc</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;boundp</span><span class="p">)</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="nv">OBJC::*METHOD-SIGNATURE-TABLE*</span>
+<span class="nv">OBJC::*OBJC-LIBRARY-PATH*</span>
+<span class="nv">OBJC::*POINTER-OBJC-OBJECTS*</span>
+<span class="nv">OBJC::*ALLOW-NULL-POINTER-INVOKE*</span>
+</pre></div>
+    <p>这样看起来就是 cache table 之类的东西, 以及:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">find-package-symbols</span><span class="w"> </span><span class="nv">:package</span><span class="w"> </span><span class="nv">:objc</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-class</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="nv">OBJC:STANDARD-OBJC-OBJECT</span>
+<span class="nv">OBJC::OBJC-CLASS-INFO</span>
+<span class="nv">OBJC::INTERNED-METHOD-SIGNATURE</span>
+<span class="nv">OBJC::STRUCT-CONVERTER</span>
+</pre></div>
+    <p>这样类似 CLASS 的符号.</p>
+  </details>
+  </li>
+  <li><code>func-disassemble-comments</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">func-disassemble-comments</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">capture</span><span class="w"> </span><span class="s">&quot;.*&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Get a list of disassmble comments. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="nv">function</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">line</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">str:lines</span><span class="w"> </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">*standard-output*</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">disassemble</span><span class="w"> </span><span class="nv">function</span><span class="p">)))</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">cmt</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:register-groups-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">cmt</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">((</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                               </span><span class="o">#</span><span class="nv">+lispworks</span><span class="w"> </span><span class="s">&quot;;</span><span class="se">\\</span><span class="s">s*(~A)</span><span class="se">\\</span><span class="s">s*&quot;</span>
+<span class="w">                               </span><span class="o">#</span><span class="nv">+sbcl</span><span class="w"> </span><span class="s">&quot;;[^;]*;</span><span class="se">\\</span><span class="s">s*(~A)</span><span class="se">\\</span><span class="s">s*&quot;</span>
+<span class="w">                               </span><span class="nv">capture</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">line</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">str:trim</span><span class="w"> </span><span class="nv">cmt</span><span class="p">))</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="nv">cmt</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">cmt</span><span class="p">))</span>
+</pre></div>
+  <details><summary>注: 为啥有这个函数</summary>
+    <p>理论上你可以通过 <code>disassemble</code> 来看看 Lisp 函数的具体实现, 不过那也太
+      麻烦了点&#8230; 毕竟没有人会喜欢阅读没有 <code>F5</code> 的汇编代码吧&#8230; 并且在
+      LispWorks 中貌似并非直接编译到机器码? 也有可能是机器码, 但是我不是很
+      熟就是了. 不过通过读 <code>;</code> 后面的注释文本倒是感觉有点可行性.</p>
+    <p>比如对于 <code>objc:invoke</code> 函数, 可以看到其 commet 中包含
+      <code>objc::invoke-into*</code>, 于是可以大胆猜测调用 <code>invoke</code> 过程中调用了
+      <code>invoke-into*</code> 的函数 (也可以通过添加 <code>trace</code> 进一步确认).</p>
+    <p>并且也可以用来确定 <code>objc::objc_getclass</code> 函数中有调用
+      <code>#&lt;FLI::EXTERNAL-SYMBOL &quot;objc_getClass&quot; : addr = #x199F15EFC&gt;</code>,
+      可以猜测其等效为 CFFI 中调用 <code>objc_getClass</code>.</p>
+  </details>
+  </li>
+</ul>
+<p>嗯, 有了这些简单的根据, 配合 LispWorks 的神一样的 Class Browser 和
+  General Method Browser, 应该是比较容易进行分析逆向的. 同时也可以使用
+  <code>disassemble</code>, <code>documentation</code> 配合分析, 这样的话会轻松一些&#8230;</p>
+<details><summary>笑, 这让我想到了 IDA Pro&#8230; </summary>
+<p>著名的逆向工具, IDA Pro, 据说每次破解版的释出都是被自己 (IDA Pro) 给逆
+  向破解的. 笑. 虽然 LispWorks 的 Personal Edition 并没有携带很多的函数
+  (估计是给 tree-shake 掉了, 比如 <code>deliver</code> 之类的). 但是携带的一些功能和
+  模块, 比如 ObjC-bridge 和 CAPI 我觉得就可以通过这种方式来进行逆向尝试
+  做兼容模拟.</p>
+</details>
+<details><summary>一些可视化的分析 CAPI 函数</summary>
+<p>首先可以从 <code>disassemble</code> 的注释中找到所有类似于 symbol 形式的字符串, 然
+  后把它们当作符号读进一个列表:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">func-disassemble-symbols</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="ss">&#39;pushnew</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Get a list of disassemble comments symbols. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">symbols</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">func-disassemble-comments</span><span class="w"> </span><span class="nv">function</span><span class="w"> </span><span class="s">&quot;[a-zA-Z]+:{1,2}[a-zA-Z%</span><span class="se">\\</span><span class="s">*</span><span class="se">\\</span><span class="s">-</span><span class="se">\\</span><span class="s">_]+&quot;</span><span class="p">)</span>
+<span class="w">             </span><span class="nv">symbols</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">ignore-errors</span>
+<span class="w">        </span><span class="p">(</span><span class="k">case</span><span class="w"> </span><span class="nv">push</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">push</span><span class="w">    </span><span class="p">(</span><span class="nf">push</span><span class="w">    </span><span class="p">(</span><span class="nf">read-from-string</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">symbols</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">pushnew</span><span class="w"> </span><span class="p">(</span><span class="nf">pushnew</span><span class="w"> </span><span class="p">(</span><span class="nf">read-from-string</span><span class="w"> </span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">symbols</span><span class="p">)))))))</span>
+</pre></div>
+<p>于是可以定义一个简单的 CAPI interface:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">capi:define-interface</span><span class="w"> </span><span class="nv">disassemble-comment-tree</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">root-func</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:root-func</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">all-nodes</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="p">())</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">pkgs</span><span class="w">      </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:pkgs</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:panes</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">capi:graph-pane</span>
+<span class="w">         </span><span class="nv">:roots</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">root-func</span><span class="p">)</span><span class="w"> </span><span class="nv">root-func</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">root-func</span><span class="p">))</span>
+<span class="w">         </span><span class="nv">:font</span><span class="w"> </span><span class="p">(</span><span class="nf">gp:make-font-description</span><span class="w"> </span><span class="nv">:size</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span>
+<span class="w">         </span><span class="nv">:children-function</span>
+<span class="w">         </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">fboundp</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">all-nodes</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">find-if</span><span class="w"> </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pkg</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sym-in-package-p</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">pkg</span><span class="p">))</span><span class="w"> </span><span class="nv">pkgs</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">pushnew</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">all-nodes</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">func-disassemble-symbols</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-function</span><span class="w"> </span><span class="nv">func</span><span class="p">))))</span>
+<span class="w">         </span><span class="nv">:print-function</span><span class="w"> </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~S&quot;</span><span class="w"> </span><span class="nv">func</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:layouts</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">default-layout</span><span class="w"> </span><span class="nv">capi:simple-layout</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">tree</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:default-initargs</span>
+<span class="w">   </span><span class="nv">:title</span><span class="w"> </span><span class="s">&quot;Disassemble Comment Tree&quot;</span><span class="p">))</span>
+</pre></div>
+<p>于是可以有:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">analyze-disassmble-func-comments</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">pkgs</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:objc</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nb">symbol</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">capi:display</span><span class="w"> </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;disassemble-comment-tree</span><span class="w"> </span><span class="nv">:root-func</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">:pkgs</span><span class="w"> </span><span class="nv">pkgs</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">analyze-disassmble-func-comments</span>
+<span class="w"> </span><span class="o">&#39;</span><span class="p">(</span>
+<span class="w">   </span><span class="nv">objc:coerce-to-objc-class</span>
+<span class="w">   </span><span class="nv">objc:coerce-to-selector</span>
+<span class="w">   </span><span class="p">))</span>
+</pre></div>
+<p>这样的可以绘制出调用树, 于是可以适当折叠, 类似如下效果:</p>
+<p><img src="/_img/lisp/objc/analyze-disassmble-func-comments.png" alt="/_img/lisp/objc/analyze-disassmble-func-comments.png" /></p>
+</details>
+<h3>一些函数的 Wrapping</h3>
+<ul>
+  <li><code>coerce-to-objc-class</code>
+    <p>使用 <code>func-disassemble-comments</code> 可以得知其包含如下的 comments:</p>
+    <pre class="example">
+OBJC::INTERNED-OBJC-CLASS-P
+OBJC::RESOLVE-CLASS
+SYSTEM::*%WRONG-NUMBER-OF-ARGUMENTS-STUB
+OBJC::INTERN-CLASS
+OBJC::RESOLVE-CLASS
+FLI:POINTER-POINTER-TYPE
+OBJC:OBJC-CLASS
+:POINTER-TYPE
+OBJC:OBJC-CLASS
+FLI:COPY-POINTER
+    </pre>
+    <p>其中 <code>OBJC::INTERN-CLASS</code> 的 comments 如下:</p>
+    <pre class="example">
+OBJC::*CLASS-TABLE*
+OBJC::*CLASS-TABLE*
+#&lt;structure descriptor: INTERNED-OBJC-CLASS&gt;
+SYSTEM::%STRUCTURE-ALLOCATE
+    </pre>
+    <p>这里猜测和之前我的 <code>defun-cached</code> 的想法应该是一样的, 用
+      <code>OBJC::*CLASS-TABLE*</code> 来实现 cache.</p>
+    <p>继续跟踪会发现 <code>objc::objc_getclass</code> 是在 <code>objc::resolve-class</code> 中调用的.
+      (或者可以通过 <code>(trace objc::objc_getclass)</code> 然后调用
+      <code>(objc:coerce-to-objc-class &quot;NSString&quot;)</code> 来进行跟踪.</p>
+  <details><summary>我的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*class-table*</span><span class="w"> </span><span class="p">(</span><span class="nb">make-hash-table</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="ss">&#39;equal</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defstruct</span><span class="w"> </span><span class="p">(</span><span class="nf">interned-objc-class</span><span class="w"> </span><span class="p">(</span><span class="nf">:conc-name</span><span class="w"> </span><span class="nv">interned-objc-class-</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">obj</span><span class="w">  </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nv">objc-pointer</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">intern-class</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*class-table*</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*class-table*</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">ptr</span><span class="w"> </span><span class="p">(</span><span class="nf">objc_getclass</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null-objc-pointer-p</span><span class="w"> </span><span class="nv">ptr</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Cannot find class ~S. &quot;</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">make-interned-objc-class</span><span class="w"> </span><span class="nv">:name</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">:obj</span><span class="w"> </span><span class="nv">ptr</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">coerce-to-objc-class</span><span class="w"> </span><span class="p">(</span><span class="nf">class</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">interned-objc-class-p</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">interned-objc-class-obj</span><span class="w"> </span><span class="nv">class</span><span class="p">))</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span><span class="w">               </span><span class="p">(</span><span class="nf">interned-objc-class-obj</span><span class="w"> </span><span class="p">(</span><span class="nf">intern-class</span><span class="w"> </span><span class="nv">class</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">objc-class-pointer-p</span><span class="w">  </span><span class="nv">class</span><span class="p">)</span><span class="w"> </span><span class="nv">class</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Cannot coerce ~S to ~S with type ~S. &quot;</span>
+<span class="w">                  </span><span class="nv">class</span><span class="w"> </span><span class="ss">&#39;objc-pointer</span><span class="w"> </span><span class="ss">&#39;objc-class</span><span class="p">))))</span>
+</pre></div>
+    <p>这里我没有使用 <code>resolve-class</code> (在 LispWorks 中有这个函数). 目前并没有
+      看出 <code>resolve-class</code> 的用处是啥.</p>
+    <p>以及为啥不直接使用 <code>objc-pointer</code> 来作为 <code>*class-table*</code> 的值, 而是需要
+      用一个 <code>interned-objc-class</code> 结构做储存? 我觉得可以&#8230;</p>
+  </details>
+  </li>
+  <li><code>objc:coerce-to-selector</code> 实现同上</li>
+</ul>
+<p>既然都知道了 <code>[]</code> 就是 <code>obj_msgSend(*, SEL, ...)</code>, 所以可以做一个非常简单
+  的操作:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; [NSString stringWithUTF8String: &quot;测试&quot;]</span>
+<span class="p">(</span><span class="nf">cffi:foreign-funcall</span><span class="w"> </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">                      </span><span class="nv">objc-class</span><span class="w"> </span><span class="p">(</span><span class="nf">objc:coerce-to-objc-class</span><span class="w"> </span><span class="s">&quot;NSString&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">sel</span><span class="w">        </span><span class="p">(</span><span class="nf">objc:coerce-to-objc-class</span><span class="w"> </span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:string</span><span class="w">    </span><span class="s">&quot;测试&quot;</span>
+<span class="w">                      </span><span class="nv">objc-object-pointer</span><span class="p">)</span>
+</pre></div>
+<p>目标是实现类似于: <code>(invoke &quot;NSString&quot; &quot;stringWithUTF8String:&quot; &quot;测试&quot;)</code>
+  这样的功能. 为了实现这个目标, 只有两个 <code>coerce-to-*</code> 函数还是不够的&#8230;
+  不过思路是这样的: 通过 <code>receiver</code> 和 <code>sel</code> 来确定函数的入参和返回值, 然后
+  自动生成 <code>cffi:foreign-funcall</code> 的结构, 最后实现 <code>invoke</code>.</p>
+<h3>Detour: Method Signature</h3>
+<p>即如何自动确定函数的入参和返回值? 答案是通过 <code>method_getTypeEncoding</code> 得
+  到类似于 =&#8221;@24@0:8r*16&#8221;= 这样的表示. 其结构在 <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html">官方文档 Type Encoding</a> 中
+  亦有记载. 我写了一个比较丑陋的 parser 来处理这个, 将其映射成一个 CFFI
+  type list, 类似如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">objc-object-pointer</span><span class="w"> </span><span class="nv">objc-object-pointer</span><span class="w"> </span><span class="nv">sel</span><span class="w"> </span><span class="p">(</span><span class="nf">:const</span><span class="w"> </span><span class="nv">:string</span><span class="p">))</span>
+</pre></div>
+<details><summary>我的丑陋 parser</summary>
+<p>至少我让 DeepSeek 给我生成了几个测试用的 type encoding 都没有什么问题,
+  可以正常解析. (不过发现 DeepSeek 的括号闭合能力其实并不是很强, 有些时
+  候会生成不闭合的括号对. )</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">decode-encoded-type</span><span class="w"> </span><span class="p">(</span><span class="nf">encoding</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nv">encoding</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">encoding</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">pos</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">parse-num</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="nv">next-pos</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">parse-integer</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">:start</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">:junk-allowed</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">next-pos</span><span class="p">)</span><span class="w"> </span><span class="nv">num</span><span class="p">)))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">parse-name</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">                                </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">char</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">)))</span>
+<span class="w">                                  </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">char/=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\=</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">char/=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\)</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">char/=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="o">#</span><span class="err">\}</span><span class="p">))))</span>
+<span class="w">                     </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">pos</span><span class="p">))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">parse-method-type</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">char</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\r</span><span class="p">)</span><span class="w"> </span><span class="nv">:const</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\n</span><span class="p">)</span><span class="w"> </span><span class="nv">:in</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\N</span><span class="p">)</span><span class="w"> </span><span class="nv">:inout</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\o</span><span class="p">)</span><span class="w"> </span><span class="nv">:out</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\O</span><span class="p">)</span><span class="w"> </span><span class="nv">:bycopy</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\R</span><span class="p">)</span><span class="w"> </span><span class="nv">:byref</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="sc">#\V</span><span class="p">)</span><span class="w"> </span><span class="nv">:oneway</span><span class="p">)))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">val</span><span class="w">  </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type</span><span class="p">))))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">val</span><span class="p">)))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">parse-type</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">char</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\c</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:char</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\i</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\s</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:short</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\l</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:long</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\q</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:long-long</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\C</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:unsigned-char</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\I</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:unsigned-int</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\S</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:unsigned-short</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\L</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:unsigned-long</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\Q</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:unsigned-long-long</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\f</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:float</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\d</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:double</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\B</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:bool</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\v</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="nb">*</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:string</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="k">@</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;objc-object-pointer</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="o">#</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;objc-class</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="nv">:</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;sel</span><span class="p">)</span>
+<span class="w">                                    </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\?</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="nv">:objc-unknown</span><span class="p">))))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w">             </span><span class="c1">;; parse simple type</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">)</span><span class="w"> </span><span class="c1">;; trim tailing number</span>
+<span class="w">                          </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="p">[</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="c1">;; parse array</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">size</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type</span><span class="p">)))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Malfromed type encoding: ~S, missing `]&#39; at index ~D. &quot;</span>
+<span class="w">                                     </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">)</span><span class="w"> </span><span class="c1">;; trim tailing number</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="ss">&#39;objc-array</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\{</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="c1">;; parse struct</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w">  </span><span class="p">(</span><span class="nf">parse-name</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">types</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\=</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                                              </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type*</span><span class="p">))</span>
+<span class="w">                                             </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="nv">nil</span><span class="p">))))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\}</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Malfromed type encoding: ~S, missing `}&#39; at index ~D. &quot;</span>
+<span class="w">                                     </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">)</span><span class="w"> </span><span class="c1">;; trim tailing number</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="ss">&#39;objc-struct</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">types</span><span class="p">)))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\(</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="c1">;; parse union</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w">  </span><span class="p">(</span><span class="nf">parse-name</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">types</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\=</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                                              </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type*</span><span class="p">))</span>
+<span class="w">                                             </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="nv">nil</span><span class="p">))))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\)</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Malfromed type encoding: ~S, missing `)&#39; at index ~D. &quot;</span>
+<span class="w">                                     </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">)</span><span class="w"> </span><span class="c1">;; trim tailing number</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="ss">&#39;objc-union</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">types</span><span class="p">)))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="sc">#\b</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="c1">;; parse bitfield</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">num</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">)))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">num</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Malfromed type encoding: ~S, missing bitfield number at index ~D. &quot;</span>
+<span class="w">                                     </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="ss">&#39;objc-bitfield</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-num</span><span class="p">))))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">char=</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="nv">^</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span><span class="w"> </span><span class="c1">;; parse pointer</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type</span><span class="p">)))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">type</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Malfromed type encoding: ~S, missing pointer type at index ~D. &quot;</span>
+<span class="w">                                     </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type</span><span class="p">))))))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">parse-method-type*</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-method-type</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">type</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">parse-type*</span><span class="w"> </span><span class="p">()</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-type</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-method-type*</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Unknown encoding ~S character `~C&#39; at index ~D. &quot;</span>
+<span class="w">                 </span><span class="nv">encoding</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">encoding</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">        </span><span class="nb">list</span><span class="p">))))</span>
+</pre></div>
+</details>
+<h3>Detour: CFFI types</h3>
+<p>即如何拓展 CFFI 的标准类型来支持类似于 <code>objc-object-pointer</code> 这样的类型.
+  在 LispWorks 的 FLI:Pointer 里面有类型的提示 (不知道是不是自动推断的).
+  不过要模拟也非常容易:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defstruct</span><span class="w"> </span><span class="nv">objc-pointer</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nb">symbol</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">ptr</span><span class="w">  </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nv">foreign-pointer</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-foreign-type</span><span class="w"> </span><span class="nv">%objc-pointer</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">type</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:type</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:actual-type</span><span class="w"> </span><span class="nv">:pointer</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-parse-method</span><span class="w"> </span><span class="nv">objc-pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;%objc-pointer</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nv">type</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">translate-to-foreign</span><span class="w"> </span><span class="p">(</span><span class="nf">pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">%objc-pointer</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">objc-pointer-ptr</span><span class="w"> </span><span class="nv">pointer</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">translate-from-foreign</span><span class="w"> </span><span class="p">(</span><span class="nf">pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">%objc-pointer</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-objc-pointer</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="ss">&#39;type</span><span class="p">)</span><span class="w"> </span><span class="nv">:ptr</span><span class="w"> </span><span class="nv">pointer</span><span class="p">))</span>
+</pre></div>
+<p>就是这么简单喵.</p>
+<details><summary>如果我用这种方式来构造 wrapper? </summary>
+<p>这里有一个想法, 如果我给 <code>translate-to-foreign</code> 同样来点类似于
+  <code>coerce-to-objc-class</code> 这样的判断, 会不会更好玩一些?</p>
+</details>
+<h3>Invoke</h3>
+<p>这里做了一个我觉得挺有意思的操作, 就是根据 signature 自动生成
+  <code>CFFI:FOREIGN-FUNCALL</code> 表达式:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">cffi-lambda-form-from-method-signature</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">arg-types</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Generate CFFI lambda form from given ObjC signature. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">arg-types</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                </span><span class="c1">;; Note: not knowing what to do with ObjC method description</span>
+<span class="w">                </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:const</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">:out</span><span class="w"> </span><span class="nv">:inout</span><span class="w"> </span><span class="nv">:out</span>
+<span class="w">                                       </span><span class="nv">:bycopy</span><span class="w"> </span><span class="nv">:byref</span><span class="w"> </span><span class="nv">:oneway</span><span class="p">)))</span>
+<span class="w">          </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">call-args</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">call-args</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">          </span><span class="nv">collect</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">call-args</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">call-args</span>
+<span class="w">        </span><span class="nv">collect</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">args</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">receiver</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">sel</span><span class="w">      </span><span class="p">(</span><span class="nb">gensym</span><span class="p">)))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">eval</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">receiver</span><span class="w"> </span><span class="o">,</span><span class="nv">sel</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;objc_msgSend&quot;</span>
+<span class="w">                                              </span><span class="nv">objc-pointer</span><span class="w"> </span><span class="o">,</span><span class="nv">receiver</span>
+<span class="w">                                              </span><span class="nv">sel</span><span class="w">          </span><span class="o">,</span><span class="nv">sel</span>
+<span class="w">                                              </span><span class="o">,@</span><span class="nv">call-args</span>
+<span class="w">                                              </span><span class="o">,</span><span class="nv">return</span><span class="p">)))))))</span>
+</pre></div>
+<p>于是 <code>invoke-into*</code> 的实现即可如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">invoke-into*</span><span class="w"> </span><span class="p">(</span><span class="nf">result</span><span class="w"> </span><span class="nv">pointer-or-class-name</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nv">objc-pointer</span><span class="p">)</span><span class="w"> </span><span class="nv">pointer-or-class-name</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span><span class="w"> </span><span class="nv">method</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">selector</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce-to-selector</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span><span class="w"> </span><span class="nv">method</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">receiver</span><span class="w"> </span><span class="p">(</span><span class="nf">etypecase</span><span class="w"> </span><span class="nv">pointer-or-class-name</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">string</span><span class="w">       </span><span class="p">(</span><span class="nf">intern-class</span><span class="w"> </span><span class="nv">pointer-or-class-name</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">objc-pointer</span><span class="w"> </span><span class="nv">pointer-or-class-name</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">method*</span><span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-class-pointer-p</span><span class="w"> </span><span class="nv">receiver</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">class_getClassMethod</span><span class="w"> </span><span class="nv">receiver</span><span class="w"> </span><span class="nv">selector</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">class_getInstanceMethod</span><span class="w"> </span><span class="p">(</span><span class="nf">object_getClass</span><span class="w"> </span><span class="nv">receiver</span><span class="p">)</span><span class="w"> </span><span class="nv">selector</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">null-objc-pointer-p</span><span class="w"> </span><span class="nv">method*</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Cannot invoke method ~S on ~S. &quot;</span>
+<span class="w">             </span><span class="nv">method</span><span class="w"> </span><span class="nv">pointer-or-class-name</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">signature</span><span class="w"> </span><span class="p">(</span><span class="nf">intern-method-signature</span><span class="w"> </span><span class="nv">method*</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">listp</span><span class="w"> </span><span class="nv">method</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Not imeplement yet... &quot;</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">result</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="nf">cffi-lambda-form-from-method-signature</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="p">(</span><span class="nb">cdddr</span><span class="w"> </span><span class="nv">signature</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">receiver</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">selector</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">T</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-pointer-addr</span><span class="w"> </span><span class="nv">method*</span><span class="p">)</span><span class="w"> </span><span class="nv">*invoke-fuction-table*</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">receiver</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">selector</span><span class="w"> </span><span class="nv">args</span><span class="p">))))))))</span>
+</pre></div>
+<h1>The End</h1>
+<p>不多说了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;NSLog&quot;</span>
+<span class="w">                 </span><span class="nv">objc-pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">invoke</span><span class="w"> </span><span class="s">&quot;NSString&quot;</span><span class="w"> </span><span class="s">&quot;stringWithUTF8String:&quot;</span><span class="w"> </span><span class="s">&quot;测试&quot;</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">:void</span><span class="p">)</span>
+</pre></div>
+<p>你在 <code>*sly-inferior-lisp for sbcl*</code> buffer 中应当能看到:</p>
+<pre class="example">
+2025-04-05 02:47:39.644 sbcl[75196:28411918] 测试
+</pre>
+<p>类似的效果.</p>
+<p>接下来要做的估计就是 CFFI type 的 wrapping 以及错误处理等故障的解决了.</p>
+
+  </div><a class="u-url" href="/lisp/objc1-basic-objc/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

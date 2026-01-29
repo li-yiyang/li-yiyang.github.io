@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Metropolis Hastings Algorithm | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Metropolis Hastings Algorithm" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 软物质物理课里面讲到的一个 Monte Caro 模拟算法, 感觉比较有意思. 免责声明: 这玩意我写的不一定对, 估计里面有一堆的 bug. Metropolis Hastings Algorithm 解决的问题 物理量计算困难 对于物理量的平均: \[\left\langle A \right\rangle = \frac{1}{Z} &int; A(\boldsymbol{R}^N) e^{- &beta; U(\boldsymbol{R}^N)} \mathrm{d}\boldsymbol{R}^N\] 发现积分不是很好积分, 于是将问题变换为随机采样: 找一个描述分布的概率函数 \(\left\{ \boldsymbol{R}^N_i \right\} &rarr; &rho;(\boldsymbol{R}^N)\), 于是可以有: \[\left\langle A \right\rangle &asymp; \frac{1}{M} &sum;_i A(\boldsymbol{R}^N_i) \frac{e^{- &beta; U(\boldsymbol{R}^N_i)}}{Z &rho;(\boldsymbol{R}^N_i)}\] 数学的说法 可以去找找看 Monte Carlo Integratoin: 对于 \(&Omega; &sub; \boldsymbol{R}^m\) 上的积分 \(I = &int;_{&Omega;} f(\boldsymbol{x}) \mathrm{d} \boldsymbol{x}\) 在 \(&Omega;\) 上取随机采样点: \(\left\{ \boldsymbol{x}_1, \cdots, \boldsymbol{x}_N \right\} &isin; &Omega;\) 用求和代替积分: \(I \overset{N &rarr; &infin;}{&asymp;} Q_N = \frac{V}{N} &sum;_{i=1}^N f(\boldsymbol{x}_i) = V \left\langle f \right\rangle\). 其中 \(V = &int;_{&Omega;} \mathrm{d} \boldsymbol{x}\) 为 \(&Omega;\) 的体积. 算法 通过 Markov 链进行采样: \(X^1 &rarr; \cdots &rarr; X^m &rarr; X^{m+1} &rarr; \cdots &rarr; X^{m + M}\). 具体的做法如下: 选择一个初始状态 计算一个随机游走, 得到下一个可能的状态: 计算下一个状态可能存在的概率 若存在, 则将该状态记录, 并重复 2 步骤 若不存在, 则重新生成 (defun importance-sampling (state gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (when (not (zerop samples)) ; 若仍然需要进行采样 (let ((candidate (funcall gen state))) ;; 若不接受, 则重新生成 (loop while (not (funcall acc candidate state)) do (setf candidate (funcall gen state))) ;; 抛弃前 burn-in 个状态, 记录 samples 个状态 (if (zerop burn-in) (cons state (importance-sampling candidate gen acc (1- samples))) (importance-sampling candidate gen acc samples (1- burn-in)))))) 循环版本的代码 (defun sampling (init gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (let ((state init) (candidate (funcall gen init))) (labels ((update () ; 采样 (loop do (setf candidate (funcall gen state)) while (not (funcall acc candidate state))) (setf state candidate))) ;; 抛弃前 burn-in 个状态 (loop for - below burn-in do (update)) ;; 收集后 samples 个状态 (loop for - below samples do (update) collect candidate)))) 注: 这里建议还是使用循环版本的代码. 一些例子 一维势场中游走 随机往正/负方向行走一定的距离: (defun 1-d-gen (state) &quot;随机往正方向或者负方向行走 [0,1) 的距离.&quot; (let ((sign (- 1 (* 2 (random 2)))) (len (random 1.0))) (+ state (* sign len)))) 认为势场 \(U = (x - 3)^2 (x + 10)^2\): (defun 1-d-U (state) &quot;U(x) = (x - 3)^2 (x + 10)^2&quot; (* (expt (- state 3) 2) (expt (+ state 10) 2))) 判断函数如下: \(\mathrm{d}E = U(s&#39;) - U(s)\) 若 \(\mathrm{d}E &lt; 0\), 则允许 若 \(\mathrm{d}E &gt; 0\), 则以概率 \(min \left\{ 1, e^{- \frac{\mathrm{d}E}{k T}} \right\}\) 进行判断 (defun 1-d-acc (state2 state1) &quot;从 state1 变成 state2 是否接受.&quot; (let ((dE (- (1-d-U state2) (1-d-U state1))) (kT 300)) ; 瞎取的数 (or (&lt; dE 0) (&lt; (random 1.0) (exp (- (/ dE kT))))))) 于是一个可能的模拟如下: (importance-sampling 0 #&#39;1-d-gen #&#39;1-d-acc 10000 50) 注: 大概感觉是这样, 实际上代码还要一些修改 (手动写成循环形式). 为了方便, 我将其转写成 Mathematica 的代码: Sampling[init_, genF_, accF_, samples_, burnIn_] := Module[{state = init, candidate = genF[init]}, (*去掉前面 burnIn 个采样点*) Do[Until[accF[candidate, state], candidate = genF[state]], burnIn]; state = candidate; (*记录 samples 个采样点*) Table[Until[accF[candidate, state], candidate = genF[state]]; state = candidate, samples]];" />
+<meta property="og:description" content="About 软物质物理课里面讲到的一个 Monte Caro 模拟算法, 感觉比较有意思. 免责声明: 这玩意我写的不一定对, 估计里面有一堆的 bug. Metropolis Hastings Algorithm 解决的问题 物理量计算困难 对于物理量的平均: \[\left\langle A \right\rangle = \frac{1}{Z} &int; A(\boldsymbol{R}^N) e^{- &beta; U(\boldsymbol{R}^N)} \mathrm{d}\boldsymbol{R}^N\] 发现积分不是很好积分, 于是将问题变换为随机采样: 找一个描述分布的概率函数 \(\left\{ \boldsymbol{R}^N_i \right\} &rarr; &rho;(\boldsymbol{R}^N)\), 于是可以有: \[\left\langle A \right\rangle &asymp; \frac{1}{M} &sum;_i A(\boldsymbol{R}^N_i) \frac{e^{- &beta; U(\boldsymbol{R}^N_i)}}{Z &rho;(\boldsymbol{R}^N_i)}\] 数学的说法 可以去找找看 Monte Carlo Integratoin: 对于 \(&Omega; &sub; \boldsymbol{R}^m\) 上的积分 \(I = &int;_{&Omega;} f(\boldsymbol{x}) \mathrm{d} \boldsymbol{x}\) 在 \(&Omega;\) 上取随机采样点: \(\left\{ \boldsymbol{x}_1, \cdots, \boldsymbol{x}_N \right\} &isin; &Omega;\) 用求和代替积分: \(I \overset{N &rarr; &infin;}{&asymp;} Q_N = \frac{V}{N} &sum;_{i=1}^N f(\boldsymbol{x}_i) = V \left\langle f \right\rangle\). 其中 \(V = &int;_{&Omega;} \mathrm{d} \boldsymbol{x}\) 为 \(&Omega;\) 的体积. 算法 通过 Markov 链进行采样: \(X^1 &rarr; \cdots &rarr; X^m &rarr; X^{m+1} &rarr; \cdots &rarr; X^{m + M}\). 具体的做法如下: 选择一个初始状态 计算一个随机游走, 得到下一个可能的状态: 计算下一个状态可能存在的概率 若存在, 则将该状态记录, 并重复 2 步骤 若不存在, 则重新生成 (defun importance-sampling (state gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (when (not (zerop samples)) ; 若仍然需要进行采样 (let ((candidate (funcall gen state))) ;; 若不接受, 则重新生成 (loop while (not (funcall acc candidate state)) do (setf candidate (funcall gen state))) ;; 抛弃前 burn-in 个状态, 记录 samples 个状态 (if (zerop burn-in) (cons state (importance-sampling candidate gen acc (1- samples))) (importance-sampling candidate gen acc samples (1- burn-in)))))) 循环版本的代码 (defun sampling (init gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (let ((state init) (candidate (funcall gen init))) (labels ((update () ; 采样 (loop do (setf candidate (funcall gen state)) while (not (funcall acc candidate state))) (setf state candidate))) ;; 抛弃前 burn-in 个状态 (loop for - below burn-in do (update)) ;; 收集后 samples 个状态 (loop for - below samples do (update) collect candidate)))) 注: 这里建议还是使用循环版本的代码. 一些例子 一维势场中游走 随机往正/负方向行走一定的距离: (defun 1-d-gen (state) &quot;随机往正方向或者负方向行走 [0,1) 的距离.&quot; (let ((sign (- 1 (* 2 (random 2)))) (len (random 1.0))) (+ state (* sign len)))) 认为势场 \(U = (x - 3)^2 (x + 10)^2\): (defun 1-d-U (state) &quot;U(x) = (x - 3)^2 (x + 10)^2&quot; (* (expt (- state 3) 2) (expt (+ state 10) 2))) 判断函数如下: \(\mathrm{d}E = U(s&#39;) - U(s)\) 若 \(\mathrm{d}E &lt; 0\), 则允许 若 \(\mathrm{d}E &gt; 0\), 则以概率 \(min \left\{ 1, e^{- \frac{\mathrm{d}E}{k T}} \right\}\) 进行判断 (defun 1-d-acc (state2 state1) &quot;从 state1 变成 state2 是否接受.&quot; (let ((dE (- (1-d-U state2) (1-d-U state1))) (kT 300)) ; 瞎取的数 (or (&lt; dE 0) (&lt; (random 1.0) (exp (- (/ dE kT))))))) 于是一个可能的模拟如下: (importance-sampling 0 #&#39;1-d-gen #&#39;1-d-acc 10000 50) 注: 大概感觉是这样, 实际上代码还要一些修改 (手动写成循环形式). 为了方便, 我将其转写成 Mathematica 的代码: Sampling[init_, genF_, accF_, samples_, burnIn_] := Module[{state = init, candidate = genF[init]}, (*去掉前面 burnIn 个采样点*) Do[Until[accF[candidate, state], candidate = genF[state]], burnIn]; state = candidate; (*记录 samples 个采样点*) Table[Until[accF[candidate, state], candidate = genF[state]]; state = candidate, samples]];" />
+<link rel="canonical" href="/learning/metropolis-hastings-algorithm/" />
+<meta property="og:url" content="/learning/metropolis-hastings-algorithm/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-09-14T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Metropolis Hastings Algorithm" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-09-14T00:00:00+00:00","datePublished":"2023-09-14T00:00:00+00:00","description":"About 软物质物理课里面讲到的一个 Monte Caro 模拟算法, 感觉比较有意思. 免责声明: 这玩意我写的不一定对, 估计里面有一堆的 bug. Metropolis Hastings Algorithm 解决的问题 物理量计算困难 对于物理量的平均: \\[\\left\\langle A \\right\\rangle = \\frac{1}{Z} &int; A(\\boldsymbol{R}^N) e^{- &beta; U(\\boldsymbol{R}^N)} \\mathrm{d}\\boldsymbol{R}^N\\] 发现积分不是很好积分, 于是将问题变换为随机采样: 找一个描述分布的概率函数 \\(\\left\\{ \\boldsymbol{R}^N_i \\right\\} &rarr; &rho;(\\boldsymbol{R}^N)\\), 于是可以有: \\[\\left\\langle A \\right\\rangle &asymp; \\frac{1}{M} &sum;_i A(\\boldsymbol{R}^N_i) \\frac{e^{- &beta; U(\\boldsymbol{R}^N_i)}}{Z &rho;(\\boldsymbol{R}^N_i)}\\] 数学的说法 可以去找找看 Monte Carlo Integratoin: 对于 \\(&Omega; &sub; \\boldsymbol{R}^m\\) 上的积分 \\(I = &int;_{&Omega;} f(\\boldsymbol{x}) \\mathrm{d} \\boldsymbol{x}\\) 在 \\(&Omega;\\) 上取随机采样点: \\(\\left\\{ \\boldsymbol{x}_1, \\cdots, \\boldsymbol{x}_N \\right\\} &isin; &Omega;\\) 用求和代替积分: \\(I \\overset{N &rarr; &infin;}{&asymp;} Q_N = \\frac{V}{N} &sum;_{i=1}^N f(\\boldsymbol{x}_i) = V \\left\\langle f \\right\\rangle\\). 其中 \\(V = &int;_{&Omega;} \\mathrm{d} \\boldsymbol{x}\\) 为 \\(&Omega;\\) 的体积. 算法 通过 Markov 链进行采样: \\(X^1 &rarr; \\cdots &rarr; X^m &rarr; X^{m+1} &rarr; \\cdots &rarr; X^{m + M}\\). 具体的做法如下: 选择一个初始状态 计算一个随机游走, 得到下一个可能的状态: 计算下一个状态可能存在的概率 若存在, 则将该状态记录, 并重复 2 步骤 若不存在, 则重新生成 (defun importance-sampling (state gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (when (not (zerop samples)) ; 若仍然需要进行采样 (let ((candidate (funcall gen state))) ;; 若不接受, 则重新生成 (loop while (not (funcall acc candidate state)) do (setf candidate (funcall gen state))) ;; 抛弃前 burn-in 个状态, 记录 samples 个状态 (if (zerop burn-in) (cons state (importance-sampling candidate gen acc (1- samples))) (importance-sampling candidate gen acc samples (1- burn-in)))))) 循环版本的代码 (defun sampling (init gen acc samples &amp;optional (burn-in 0)) &quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. 返回状态列表.&quot; (let ((state init) (candidate (funcall gen init))) (labels ((update () ; 采样 (loop do (setf candidate (funcall gen state)) while (not (funcall acc candidate state))) (setf state candidate))) ;; 抛弃前 burn-in 个状态 (loop for - below burn-in do (update)) ;; 收集后 samples 个状态 (loop for - below samples do (update) collect candidate)))) 注: 这里建议还是使用循环版本的代码. 一些例子 一维势场中游走 随机往正/负方向行走一定的距离: (defun 1-d-gen (state) &quot;随机往正方向或者负方向行走 [0,1) 的距离.&quot; (let ((sign (- 1 (* 2 (random 2)))) (len (random 1.0))) (+ state (* sign len)))) 认为势场 \\(U = (x - 3)^2 (x + 10)^2\\): (defun 1-d-U (state) &quot;U(x) = (x - 3)^2 (x + 10)^2&quot; (* (expt (- state 3) 2) (expt (+ state 10) 2))) 判断函数如下: \\(\\mathrm{d}E = U(s&#39;) - U(s)\\) 若 \\(\\mathrm{d}E &lt; 0\\), 则允许 若 \\(\\mathrm{d}E &gt; 0\\), 则以概率 \\(min \\left\\{ 1, e^{- \\frac{\\mathrm{d}E}{k T}} \\right\\}\\) 进行判断 (defun 1-d-acc (state2 state1) &quot;从 state1 变成 state2 是否接受.&quot; (let ((dE (- (1-d-U state2) (1-d-U state1))) (kT 300)) ; 瞎取的数 (or (&lt; dE 0) (&lt; (random 1.0) (exp (- (/ dE kT))))))) 于是一个可能的模拟如下: (importance-sampling 0 #&#39;1-d-gen #&#39;1-d-acc 10000 50) 注: 大概感觉是这样, 实际上代码还要一些修改 (手动写成循环形式). 为了方便, 我将其转写成 Mathematica 的代码: Sampling[init_, genF_, accF_, samples_, burnIn_] := Module[{state = init, candidate = genF[init]}, (*去掉前面 burnIn 个采样点*) Do[Until[accF[candidate, state], candidate = genF[state]], burnIn]; state = candidate; (*记录 samples 个采样点*) Table[Until[accF[candidate, state], candidate = genF[state]]; state = candidate, samples]];","headline":"Metropolis Hastings Algorithm","mainEntityOfPage":{"@type":"WebPage","@id":"/learning/metropolis-hastings-algorithm/"},"url":"/learning/metropolis-hastings-algorithm/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Metropolis Hastings Algorithm</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-09-14T00:00:00+00:00" itemprop="datePublished">Sep 14, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>软物质物理课里面讲到的一个 Monte Caro 模拟算法, 感觉比较有意思.</p>
+<p>免责声明: 这玩意我写的不一定对, 估计里面有一堆的 bug.</p>
+<h1>Metropolis Hastings Algorithm</h1>
+<h2>解决的问题</h2>
+<p>物理量计算困难</p>
+<p>对于物理量的平均:</p>
+<p>\[\left\langle A \right\rangle = \frac{1}{Z} &int; A(\boldsymbol{R}^N) e^{- &beta; U(\boldsymbol{R}^N)} \mathrm{d}\boldsymbol{R}^N\]</p>
+<p>发现积分不是很好积分, 于是将问题变换为随机采样:
+  找一个描述分布的概率函数 \(\left\{ \boldsymbol{R}^N_i \right\} &rarr; &rho;(\boldsymbol{R}^N)\),
+  于是可以有:</p>
+<p>\[\left\langle A \right\rangle &asymp; \frac{1}{M} &sum;_i A(\boldsymbol{R}^N_i) \frac{e^{- &beta; U(\boldsymbol{R}^N_i)}}{Z &rho;(\boldsymbol{R}^N_i)}\]</p>
+<details><summary>数学的说法</summary>
+<p>可以去找找看 <a href="https://en.wikipedia.org/wiki/Monte_Carlo_integration">Monte Carlo Integratoin</a>:</p>
+<ul>
+  <li>对于 \(&Omega; &sub; \boldsymbol{R}^m\) 上的积分 \(I = &int;_{&Omega;} f(\boldsymbol{x}) \mathrm{d} \boldsymbol{x}\)</li>
+  <li>在 \(&Omega;\) 上取随机采样点: \(\left\{ \boldsymbol{x}_1, \cdots, \boldsymbol{x}_N \right\} &isin; &Omega;\)</li>
+  <li>用求和代替积分: \(I \overset{N &rarr; &infin;}{&asymp;} Q_N = \frac{V}{N} &sum;_{i=1}^N f(\boldsymbol{x}_i) = V \left\langle f \right\rangle\).
+    其中 \(V = &int;_{&Omega;} \mathrm{d} \boldsymbol{x}\) 为 \(&Omega;\) 的体积.</li>
+</ul>
+</details>
+<h2>算法</h2>
+<p>通过 Markov 链进行采样: \(X^1 &rarr; \cdots &rarr; X^m &rarr; X^{m+1} &rarr; \cdots &rarr; X^{m + M}\).
+  具体的做法如下:</p>
+<ol>
+  <li>选择一个初始状态</li>
+  <li>计算一个随机游走, 得到下一个可能的状态:
+    <ul>
+      <li>计算下一个状态可能存在的概率</li>
+      <li>若存在, 则将该状态记录, 并重复 2 步骤</li>
+      <li>若不存在, 则重新生成</li>
+    </ul>
+  </li>
+</ol>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">importance-sampling</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">burn-in</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. </span>
+<span class="s">返回状态列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">samples</span><span class="p">))</span><span class="w">           </span><span class="c1">; 若仍然需要进行采样</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; 若不接受, 则重新生成</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="nv">state</span><span class="p">))</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; 抛弃前 burn-in 个状态, 记录 samples 个状态</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">burn-in</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">(</span><span class="nf">importance-sampling</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">samples</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">importance-sampling</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">burn-in</span><span class="p">))))))</span>
+</pre></div>
+<details><summary>循环版本的代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">sampling</span><span class="w"> </span><span class="p">(</span><span class="nf">init</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">burn-in</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;使用 Markov 链进行采样: 初始状态 `state&#39;, 下一个状态函数 `gen&#39;, 判断函数 `acc&#39;, 采样数 `samples&#39;, 初始抛弃 `burn-in&#39; 个样本. </span>
+<span class="s">返回状态列表.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">state</span><span class="w"> </span><span class="nv">init</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">init</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">update</span><span class="w"> </span><span class="p">()</span><span class="w">                 </span><span class="c1">; 采样</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">state</span><span class="p">))</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="nv">candidate</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; 抛弃前 burn-in 个状态</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">burn-in</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">update</span><span class="p">))</span>
+<span class="w">      </span><span class="c1">;; 收集后 samples 个状态</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">update</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">collect</span><span class="w"> </span><span class="nv">candidate</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>注: 这里建议还是使用循环版本的代码.</p>
+<h2>一些例子</h2>
+<h3>一维势场中游走</h3>
+<ul>
+  <li>随机往正/负方向行走一定的距离:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-gen</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;随机往正方向或者负方向行走 [0,1) 的距离.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sign</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">2</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">len</span><span class="w">  </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">sign</span><span class="w"> </span><span class="nv">len</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>认为势场 \(U = (x - 3)^2 (x + 10)^2\):
+    <p><img src="/_img/lisp/misc/metropolis/metropolis-1-d-U.svg" alt="/_img/lisp/misc/metropolis/metropolis-1-d-U.svg" /></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-U</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;U(x) = (x - 3)^2 (x + 10)^2&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>判断函数如下:
+    <ul>
+      <li>\(\mathrm{d}E = U(s') - U(s)\)</li>
+      <li>若 \(\mathrm{d}E &lt; 0\), 则允许</li>
+      <li>若 \(\mathrm{d}E &gt; 0\), 则以概率 \(min \left\{ 1, e^{- \frac{\mathrm{d}E}{k T}} \right\}\) 进行判断</li>
+    </ul>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-acc</span><span class="w"> </span><span class="p">(</span><span class="nf">state2</span><span class="w"> </span><span class="nv">state1</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;从 state1 变成 state2 是否接受.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">dE</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-U</span><span class="w"> </span><span class="nv">state2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-U</span><span class="w"> </span><span class="nv">state1</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">kT</span><span class="w"> </span><span class="mi">300</span><span class="p">))</span><span class="w">          </span><span class="c1">; 瞎取的数</span>
+<span class="w">    </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="nv">kT</span><span class="p">)))))))</span>
+</pre></div>
+  </li>
+  <li>于是一个可能的模拟如下:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">importance-sampling</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-gen</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-acc</span><span class="w"> </span><span class="mi">10000</span><span class="w"> </span><span class="mi">50</span><span class="p">)</span>
+</pre></div>
+  </li>
+</ul>
+<p>注: 大概感觉是这样, 实际上代码还要一些修改 (手动写成循环形式).
+  为了方便, 我将其转写成 Mathematica 的代码:</p>
+<div class="highlight"><pre><span></span><span class="n">Sampling</span><span class="p">[</span><span class="nv">init_</span><span class="p">,</span><span class="w"> </span><span class="nv">genF_</span><span class="p">,</span><span class="w"> </span><span class="nv">accF_</span><span class="p">,</span><span class="w"> </span><span class="nv">samples_</span><span class="p">,</span><span class="w"> </span><span class="nv">burnIn_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span>
+<span class="w">  </span><span class="n">Module</span><span class="p">[{</span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">,</span><span class="w"> </span><span class="n">candidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">genF</span><span class="p">[</span><span class="n">init</span><span class="p">]},</span>
+<span class="w">   </span><span class="c">(*去掉前面 burnIn 个采样点*)</span>
+<span class="w">   </span><span class="n">Do</span><span class="p">[</span><span class="n">Until</span><span class="p">[</span><span class="n">accF</span><span class="p">[</span><span class="n">candidate</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">],</span><span class="w"> </span><span class="n">candidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">genF</span><span class="p">[</span><span class="n">state</span><span class="p">]],</span><span class="w"> </span><span class="n">burnIn</span><span class="p">];</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">candidate</span><span class="p">;</span>
+<span class="w">   </span><span class="c">(*记录 samples 个采样点*)</span>
+<span class="w">   </span><span class="n">Table</span><span class="p">[</span><span class="n">Until</span><span class="p">[</span><span class="n">accF</span><span class="p">[</span><span class="n">candidate</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">],</span><span class="w"> </span><span class="n">candidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">genF</span><span class="p">[</span><span class="n">state</span><span class="p">]];</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">candidate</span><span class="p">,</span><span class="w"> </span><span class="n">samples</span><span class="p">]];</span>
+
+<span class="n">oneDU</span><span class="p">[</span><span class="nv">state_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="p">(</span><span class="n">state</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">state</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="o">^</span><span class="mi">2</span><span class="p">;</span>
+<span class="n">oneDGen</span><span class="p">[</span><span class="nv">state_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="n">RandomReal</span><span class="p">[{</span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">}]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">state</span><span class="p">;</span>
+<span class="n">oneDAcc</span><span class="p">[</span><span class="nv">state2_</span><span class="p">,</span><span class="w"> </span><span class="nv">state1_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span>
+<span class="w">  </span><span class="n">With</span><span class="p">[{</span><span class="n">dE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">oneDU</span><span class="p">[</span><span class="n">state2</span><span class="p">]</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">oneDU</span><span class="p">[</span><span class="n">state1</span><span class="p">],</span><span class="w"> </span><span class="n">kT</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">300</span><span class="p">},</span>
+<span class="w">   </span><span class="n">Or</span><span class="p">[</span><span class="n">dE</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">RandomReal</span><span class="p">[]</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">Exp</span><span class="p">[</span><span class="o">-</span><span class="n">dE</span><span class="o">/</span><span class="n">kT</span><span class="p">]]];</span>
+</pre></div>
+<p>最终的效果如下:</p>
+<p><img src="/_img/lisp/misc/metropolis/oneDSim.gif" alt="/_img/lisp/misc/metropolis/oneDSim.gif" /></p>
+<p>(使用 Mathematica 导出, Mathematica 的代码可以在此下载: <a href="/_img/lisp/misc/metropolis/metropolis.nb">metropolis.nb</a>).</p>
+<details><summary>关于速度和优雅的问题</summary>
+<p>我承认我的代码写得很狗屎. 所以请不要用速度和优雅程度来评判我.</p>
+<p>更早一版的代码更加烂:</p>
+<div class="highlight"><pre><span></span><span class="n">ImportanceSampling</span><span class="p">[</span><span class="nv">init_</span><span class="p">,</span><span class="w"> </span><span class="nv">genF_</span><span class="p">,</span><span class="w"> </span><span class="nv">accF_</span><span class="p">,</span><span class="w"> </span><span class="nv">samples_</span><span class="p">,</span><span class="w"> </span><span class="nv">burnIn_</span><span class="p">]</span><span class="w"> </span><span class="o">:=</span>
+<span class="w">  </span><span class="n">Module</span><span class="p">[{</span>
+<span class="w">    </span><span class="n">samplesC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">samples</span><span class="p">,</span>
+<span class="w">    </span><span class="n">burnInC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">burnIn</span><span class="p">,</span>
+<span class="w">    </span><span class="n">states</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">    </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">init</span><span class="p">,</span>
+<span class="w">    </span><span class="n">candidate</span><span class="p">},</span>
+<span class="w">   </span><span class="n">While</span><span class="p">[</span><span class="n">samplesC</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="n">candidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">genF</span><span class="p">[</span><span class="n">state</span><span class="p">];</span>
+<span class="w">    </span><span class="n">While</span><span class="p">[</span><span class="n">Not</span><span class="p">[</span><span class="n">accF</span><span class="p">[</span><span class="n">candidate</span><span class="p">,</span><span class="w"> </span><span class="n">state</span><span class="p">]],</span><span class="w"> </span><span class="n">candidate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">genF</span><span class="p">[</span><span class="n">state</span><span class="p">]];</span>
+<span class="w">    </span><span class="n">AppendTo</span><span class="p">[</span><span class="n">states</span><span class="p">,</span><span class="w"> </span><span class="n">candidate</span><span class="p">];</span>
+<span class="w">    </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">candidate</span><span class="p">;</span>
+<span class="w">    </span><span class="n">If</span><span class="p">[</span><span class="n">burnInC</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">burnInC</span><span class="o">--</span><span class="p">,</span><span class="w"> </span><span class="n">samplesC</span><span class="o">--</span><span class="p">]];</span>
+<span class="w">   </span><span class="n">states</span><span class="p">];</span>
+</pre></div>
+<p>对于两个规模在 <code>10000</code> 的代码:</p>
+<div class="highlight"><pre><span></span><span class="n">Timing</span><span class="p">[</span><span class="n">Sampling</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">oneDGen</span><span class="p">,</span><span class="w"> </span><span class="n">oneDAcc</span><span class="p">,</span><span class="w"> </span><span class="mi">100000</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">];]</span><span class="w">           </span><span class="c">(* {0.888991, Null} *)</span>
+<span class="n">Timing</span><span class="p">[</span><span class="n">ImportanceSampling</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">oneDGen</span><span class="p">,</span><span class="w"> </span><span class="n">oneDAcc</span><span class="p">,</span><span class="w"> </span><span class="mi">100000</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">];]</span><span class="w"> </span><span class="c">(* {9.30457,  Null} *)</span>
+</pre></div>
+<p>注: 不过怎么说呢, Mathematica 的性能和其他的比起来可能还是差了一些吧&#8230;</p>
+<pre class="example">
+METROPOLIS&gt; (time (sampling 0 #&#39;1-d-gen #&#39;1-d-acc 1000000 50))
+Evaluation took:
+  0.156 seconds of real time
+  0.156800 seconds of total run time (0.151595 user, 0.005205 system)
+  [ Real times consist of 0.007 seconds GC time, and 0.149 seconds non-GC time. ]
+  [ Run times consist of 0.007 seconds GC time, and 0.150 seconds non-GC time. ]
+  100.64% CPU
+  15,986,880 bytes consed
+</pre>
+<p>并且这个 Lisp 代码还是没有优化的那种呢&#8230;</p>
+<p>当然, 估计和 C 还有 C++ 比起来的话, 肯定还是有点距离的.
+  但是至少和 C 比起来, 我稍微更加熟练这类型的写码风格吧.</p>
+</details>
+<h3>对程序进行一些修改</h3>
+<p>在写程序的时候发现了一个问题, 貌似我并不关心中间采样的东西究竟长什么样,
+  因为我只关心最终的分布是什么样的. 所以稍微修改一下程序:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">sampling-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">init</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="nv">burn-in</span><span class="w"> </span><span class="nv">yield</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;使用 Markov 链进行采样: </span>
+<span class="s">  + 初始状态 `init</span>
+<span class="s">  + 下一个状态函数 `gen&#39;</span>
+<span class="s">  + 判断函数 `acc&#39;</span>
+<span class="s">  + 直方图函数 `hist&#39;. </span>
+<span class="s">  + 采样数 `samples&#39;</span>
+<span class="s">  + 初始抛弃 `burn-in&#39; 个样本</span>
+<span class="s">  + 取样判断函数 `yield&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">state</span><span class="w"> </span><span class="nv">init</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">init</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">update</span><span class="w"> </span><span class="p">()</span><span class="w">                 </span><span class="c1">; 采样</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">gen</span><span class="w"> </span><span class="nv">state</span><span class="p">))</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">candidate</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="nv">candidate</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; 抛弃前 burn-in 个状态</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">burn-in</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">update</span><span class="p">))</span>
+<span class="w">      </span><span class="c1">;; 收集后 samples 个状态</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nb">-</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">update</span><span class="p">)</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">yield</span><span class="w"> </span><span class="nv">candidate</span><span class="p">)))))</span>
+</pre></div>
+<details><summary>一些 &#8220;作弊&#8221; 内容</summary>
+<p>为了简单处理问题, 以及我不会写直方图统计代码, 所以我决定直接调用库: <a href="https://gsll.common-lisp.dev">GSLL</a>.</p>
+<p>虽然原则上使用 <a href="https://cffi.common-lisp.dev">CFFI</a> 来直接调用 <a href="https://www.gnu.org/software/gsl/">GSL</a>,
+  但是对于已经写好了的东西我觉得还是直接拿来最好. :)</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">hist</span><span class="w">    </span><span class="p">(</span><span class="nf">make-histogram</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">min</span><span class="w">     </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">bin</span><span class="w">     </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">binsize</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-read-hist</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">bin</span>
+<span class="w">          </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="nv">hist</span><span class="w"> </span><span class="nv">i</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-integrate</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">bin</span>
+<span class="w">             </span><span class="nv">for</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">binsize</span>
+<span class="w">             </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="nv">hist</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">into</span><span class="w"> </span><span class="nv">f</span>
+<span class="w">             </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="nv">f</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">sum</span><span class="w"> </span><span class="nv">hist</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-hist-set-range</span><span class="w"> </span><span class="p">(</span><span class="nf">x-min</span><span class="w"> </span><span class="nv">x-max</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">set-ranges-uniform</span><span class="w"> </span><span class="nv">hist</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="nv">x-min</span><span class="w"> </span><span class="ss">&#39;double-float</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="nv">x-max</span><span class="w"> </span><span class="ss">&#39;double-float</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-renew-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">bin-num</span><span class="w"> </span><span class="nv">x-min</span><span class="w"> </span><span class="nv">x-max</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">hist</span><span class="w">    </span><span class="p">(</span><span class="nf">make-histogram</span><span class="w"> </span><span class="nv">bin-num</span><span class="p">)</span>
+<span class="w">          </span><span class="nb">min</span><span class="w">     </span><span class="nv">x-min</span>
+<span class="w">          </span><span class="nv">bin</span><span class="w">     </span><span class="nv">bin-num</span>
+<span class="w">          </span><span class="nv">binsize</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">x-max</span><span class="w"> </span><span class="nv">x-min</span><span class="p">))</span><span class="w"> </span><span class="nv">bin-num</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">1-d-hist-set-range</span><span class="w"> </span><span class="nv">x-min</span><span class="w"> </span><span class="nv">x-max</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">sample</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">increment</span><span class="w"> </span><span class="nv">hist</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="nv">sample</span><span class="w"> </span><span class="ss">&#39;double-float</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">draw-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">eazy-gnuplot:with-plots</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">eazy-gnuplot:gp-setup</span><span class="w"> </span><span class="nv">:output</span><span class="w"> </span><span class="nv">output</span>
+<span class="w">                             </span><span class="nv">:terminal</span><span class="w"> </span><span class="nv">:png</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">eazy-gnuplot:plot</span>
+<span class="w">       </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">bin</span>
+<span class="w">               </span><span class="nv">for</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">binsize</span><span class="w"> </span><span class="k">do</span>
+<span class="w">           </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">value</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="nv">hist</span><span class="w"> </span><span class="nv">i</span><span class="p">)))</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="s">&quot;~&amp;~a ~a&quot;</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">value</span><span class="p">))))</span>
+<span class="w">       </span><span class="nv">:with</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:boxes</span><span class="p">)</span>
+<span class="w">       </span><span class="nv">:notitle</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">output</span><span class="p">))</span>
+</pre></div>
+<p>以及一些简单的绘图程序, 使用的是 <a href="https://github.com/guicho271828/eazy-gnuplot">eazy-gnuplot</a>.</p>
+<p>那么修改后的一维势场游走模型如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-sim</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">x-min</span><span class="w"> </span><span class="mi">-20</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">x-max</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">bin</span><span class="w"> </span><span class="mi">50</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">sample</span><span class="w"> </span><span class="mi">10000</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">burn-in</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">1-d-renew-hist</span><span class="w"> </span><span class="nv">bin</span><span class="w"> </span><span class="nv">x-min</span><span class="w"> </span><span class="nv">x-max</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">sampling-hist</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-gen</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-acc</span><span class="w"> </span><span class="nv">sample</span><span class="w"> </span><span class="nv">burn-in</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-hist</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">draw-hist</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">output</span><span class="p">)</span>
+</pre></div>
+<p>绘制得到的结果如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">1-d-sim</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+</pre></div>
+<p><img src="/_img/lisp/misc/metropolis/oneDSimHist.png" alt="/_img/lisp/misc/metropolis/oneDSimHist.png" /></p>
+<p>注: 之所以隐藏, 除了是因为引用了库, 还有的原因是因为我觉得写得并不是很好.</p>
+</details>
+<h3>1D Ising Model</h3>
+<p>注: 这个我不好说我到底有没有学过, 既然对这个名字完全没啥感觉,
+  那么就当作没有学过吧. 只是这个处理感觉非常熟悉. 怪.</p>
+<ul>
+  <li>Ising 模型状态的描述: <code>(1 -1 -1 ...)</code> 使用这样一个列表来进行描述.</li>
+  <li>Ising 模型的能量:
+    <p>\[E = - J &sum;_{\left\langle i, j \right\rangle} S_i S_j - &mu;\sum h_j S_j\]</p>
+  <details><summary>以防你和我一样热统没学得太好</summary>我对 Ising 模型的理解是:
+    <ul>
+      <li>Ising 模型描述的是一堆磁矩在外场中随着不同温度变化的一个分布</li>
+      <li>\(- &mu; &sum; h_j S_j\): 磁矩在外磁场中的能量, 其中 \(h_j\) 为第 \(j\) 个粒子受到的磁场</li>
+      <li>\(- J &sum;_{\left\langle i, j \right\rangle} S_i S_j\): 磁矩相互之间的作用, 这里仅考虑最临近的相互作用,
+        对于一维模型来说, 就是左右粒子, 对于二维模型来说, 就是上下左右.</li>
+      <li>边界条件</li>
+    </ul>
+  </details>
+    <p>在这里仅从物理的描述上对能量进行计算,
+      并不涉及为了之后的仿真做计算量上的优化:</p>
+    <ul>
+      <li>相互作用项:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">J-ij</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w">                  </span><span class="c1">; 默认只有上下</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span>
+<span class="w">              </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-set-J</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">J-ij</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-interaction-e</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">    </span><span class="s">&quot;E_interaction = - ∑ J_ij S_i S_j; i, j = nearest neighors&quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sum</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">sj</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">            </span><span class="nv">for</span><span class="w"> </span><span class="nv">si</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">state</span><span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">J-ij</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">si</span><span class="w"> </span><span class="nv">sj</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="nv">sum</span><span class="p">))))</span>
+</pre></div>
+      </li>
+      <li>外场项:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">field</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span><span class="w">              </span><span class="c1">; 默认为和外场无关的恒磁场</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">n</span><span class="p">))</span>
+<span class="w">               </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">μ</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-set-μ</span><span class="w"> </span><span class="p">(</span><span class="nf">μ-value</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">μ</span><span class="w"> </span><span class="nv">μ-value</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-set-field</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">field</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-field-e</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">    </span><span class="s">&quot;E_field = - μ ∑ hj sj&quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sum</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">sj</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">state</span>
+<span class="w">            </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w">                </span><span class="c1">; 从 1 开始对 j 进行标号</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">field</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">sj</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="nv">μ</span><span class="w"> </span><span class="nv">sum</span><span class="p">))))</span>
+</pre></div>
+      </li>
+      <li>总场
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-e</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-ising-interaction-e</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">1-d-ising-field-e</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+  <li>状态转移的生成: 随机翻转一个磁矩.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-gen</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">i</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">new</span><span class="w"> </span><span class="p">(</span><span class="nf">copy-list</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">new</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">state</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">new</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>判断函数
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">kT</span><span class="w"> </span><span class="mi">300</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-set-kT</span><span class="w"> </span><span class="p">(</span><span class="nf">kT-value</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">kT</span><span class="w"> </span><span class="nv">kT-value</span><span class="p">))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">1-d-ising-acc</span><span class="w"> </span><span class="p">(</span><span class="nf">state2</span><span class="w"> </span><span class="nv">state1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">dE</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-ising-e</span><span class="w"> </span><span class="nv">state2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-ising-e</span><span class="w"> </span><span class="nv">state1</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="nv">kT</span><span class="p">))))))))</span>
+</pre></div>
+  </li>
+  <li>采样后的后处理
+    <p>(注: 使用的问题来自 <a href="https://web.northeastern.edu/afeiguin/phys5870/phys5870/node85.html">Exercise: One-dimensional Ising model</a>,
+      但是不建议把那个网站当作学习参考, 当大纲估计挺好.)</p>
+    <ol>
+      <li>\(N = 20, T = 1.0\), 计算每一步的能量并估计稳定所需要的步数
+        (也就是之后仿真用的 <code>burn-in</code> 参数).
+        <p>没时间优化代码了, 就这么看吧:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res-list</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">kT</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">kT-list</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">1-d-ising-set-kt</span><span class="w"> </span><span class="nv">kT</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">energy-hist</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">sampling-hist</span><span class="w"> </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">#</span><span class="ss">&#39;1-d-ising-gen</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-ising-acc</span>
+<span class="w">                       </span><span class="nv">samples</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">energy-hist</span>
+<span class="w">                               </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-ising-e</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span><span class="w"> </span><span class="nv">energy-hist</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">NIL</span><span class="w"> </span><span class="s">&quot;kT = ~a&quot;</span><span class="w"> </span><span class="nv">kT</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">energy-hist</span><span class="p">))</span>
+<span class="w">              </span><span class="nv">res-list</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">lists-plot</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">res-list</span><span class="p">))</span>
+</pre></div>
+        <p>能量 (纵坐标) 随仿真步数 (横坐标) 的变化:</p>
+        <p><img src="/_img/lisp/misc/metropolis/1-d-ising-n-20-t-1.png" alt="/_img/lisp/misc/metropolis/1-d-ising-n-20-t-1.png" /></p>
+        <p>基本可以看到, 基本只要大约 50 步左右就稳定了.
+          但是随着温度的升高, 热运动占主导, 就变得比较不稳定.
+          而当温度进一步提高, 则会导致场的影响变弱.</p>
+     <details><summary>绘图代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">list-points-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="w"> </span><span class="nv">lst</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;图片输出路径: `output&#39;, 输入点列表: `lst&#39;, 元素为 `(x . y)&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">eazy-gnuplot:with-plots</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">eazy-gnuplot:gp-setup</span><span class="w"> </span><span class="nv">:terminal</span><span class="w"> </span><span class="nv">:png</span><span class="w"> </span><span class="nv">:output</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">eazy-gnuplot:plot</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">lst</span><span class="w"> </span><span class="k">do</span>
+<span class="w">                           </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="s">&quot;~&amp;~a ~a&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">point</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">point</span><span class="p">))))</span>
+<span class="w">                       </span><span class="nv">:with</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">line</span><span class="p">)</span><span class="w"> </span><span class="nv">:title</span><span class="w"> </span><span class="nv">title</span><span class="p">))</span>
+<span class="w">  </span><span class="nv">output</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">lists-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">output</span><span class="w"> </span><span class="nv">lists</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;输出路径: `output&#39;, 绘制元素列表: `lists&#39;, 元素为: `(标题 (y 值))&#39;&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">eazy-gnuplot:with-plots</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="w"> </span><span class="nv">:debug</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">eazy-gnuplot:gp-setup</span><span class="w"> </span><span class="nv">:terminal</span><span class="w"> </span><span class="nv">:png</span><span class="w"> </span><span class="nv">:output</span><span class="w"> </span><span class="nv">output</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">lst-desc</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">lists</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">eazy-gnuplot:plot</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="nv">lst-desc</span><span class="p">)</span>
+<span class="w">                                 </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                                 </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">s</span><span class="w"> </span><span class="s">&quot;~&amp;~a ~a&quot;</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))</span>
+<span class="w">                         </span><span class="nv">:with</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:lines</span><span class="p">)</span><span class="w"> </span><span class="nv">:title</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">lst-desc</span><span class="p">))))</span>
+<span class="w">  </span><span class="nv">output</span><span class="p">)</span>
+</pre></div>
+     </details>
+      </li>
+      <li>不同温度下的平均能量和平均磁矩
+        <p>(同上, 没时间写代码)</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">average-e</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">kt</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">1-d-ising-set-kt</span><span class="w"> </span><span class="nv">kt</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">energy-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">make-histogram</span><span class="w"> </span><span class="mi">500</span><span class="p">)))</span><span class="w"> </span><span class="c1">; 500 bins</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">set-ranges-uniform</span><span class="w"> </span><span class="nv">energy-hist</span><span class="w"> </span><span class="mi">-50d0</span><span class="w"> </span><span class="mi">50d0</span><span class="p">)</span><span class="w"> </span><span class="c1">; hist from -50 to 50</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">sampling-hist</span><span class="w"> </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">#</span><span class="ss">&#39;1-d-ising-gen</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-ising-acc</span>
+<span class="w">                       </span><span class="mi">1000</span><span class="w"> </span><span class="mi">50</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">increment</span><span class="w"> </span><span class="nv">energy-hist</span>
+<span class="w">                                    </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="p">(</span><span class="nf">1-d-ising-e</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;double-float</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sum</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">500</span>
+<span class="w">                </span><span class="nv">for</span><span class="w"> </span><span class="nv">e</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">-50</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="mi">500</span><span class="p">)</span>
+<span class="w">                </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">e</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="nv">energy-hist</span><span class="w"> </span><span class="nv">i</span><span class="p">)))))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">kT</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="mi">500</span><span class="p">))</span><span class="w"> </span><span class="nv">average-e</span><span class="p">)))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">list-points-plot</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">average-e</span><span class="w"> </span><span class="nv">:title</span><span class="w"> </span><span class="s">&quot;&lt;E&gt;&quot;</span><span class="p">))</span>
+</pre></div>
+        <p><img src="/_img/lisp/misc/metropolis/1-d-ising-average-e-by-kT.png" alt="/_img/lisp/misc/metropolis/1-d-ising-average-e-by-kT.png" /></p>
+        <p>平均磁矩:</p>
+        <p>(真没时间写代码)</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">average-m</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">kt</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">1-d-ising-set-kt</span><span class="w"> </span><span class="nv">kt</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">m-hist</span><span class="w"> </span><span class="p">(</span><span class="nf">make-histogram</span><span class="w"> </span><span class="mi">500</span><span class="p">)))</span><span class="w"> </span><span class="c1">; 500 bins</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">set-ranges-uniform</span><span class="w"> </span><span class="nv">m-hist</span><span class="w"> </span><span class="mi">-25d0</span><span class="w"> </span><span class="mi">25d0</span><span class="p">)</span><span class="w"> </span><span class="c1">; hist from -50 to 50</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">sampling-hist</span><span class="w"> </span><span class="p">(</span><span class="nb">make-list</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="mi">-1</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">#</span><span class="ss">&#39;1-d-ising-gen</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1-d-ising-acc</span>
+<span class="w">                       </span><span class="mi">1000</span><span class="w"> </span><span class="mi">50</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">increment</span><span class="w"> </span><span class="nv">m-hist</span>
+<span class="w">                                    </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="nv">state</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;double-float</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sum</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">500</span>
+<span class="w">                </span><span class="nv">for</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">-25</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="mi">25</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="mi">500</span><span class="p">)</span>
+<span class="w">                </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="nv">m-hist</span><span class="w"> </span><span class="nv">i</span><span class="p">)))))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">kT</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="mi">500</span><span class="p">))</span><span class="w"> </span><span class="nv">average-m</span><span class="p">)))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">list-points-plot</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">average-m</span><span class="w"> </span><span class="nv">:title</span><span class="w"> </span><span class="s">&quot;&lt;M&gt;&quot;</span><span class="p">))</span>
+</pre></div>
+        <p><img src="/_img/lisp/misc/metropolis/1-d-ising-average-m-by-kT.png" alt="/_img/lisp/misc/metropolis/1-d-ising-average-m-by-kT.png" /></p>
+      </li>
+    </ol>
+  </li>
+</ul>
+<p><del>代码实在是太丑了</del></p>
+<h2>2D Ising Model</h2>
+<p>现在开始写了一点, 出来的结果狗屁不通. 决定重新开始写. 欸.</p>
+<p>目标: <code>(2-d-ising-sim (n m) kt samples :sample-step 100 :init 1 :plot (e m))</code>.</p>
+<ul>
+  <li>初始化 2D Ising 模型:
+<div class="highlight"><pre><span></span><span class="c1">;;; (at mat x y) -&gt; (nth x (nth y mat))</span>
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="p">(</span><span class="nf">mat</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="nv">mat</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">mat</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">pos</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">init-2-d-ising</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">init</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;2D Ising model: nxm matrix, n is x size, m is y size.</span>
+<span class="s">`init&#39; can be fixed constant or symbol `random&#39; or specific function. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">functionp</span><span class="w"> </span><span class="nv">init</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">m</span>
+<span class="w">                                </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">                                              </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">init</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">numberp</span><span class="w"> </span><span class="nv">init</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">m</span>
+<span class="w">                              </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">init</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">m</span>
+<span class="w">                 </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">                               </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">2</span><span class="p">))))))))</span>
+</pre></div>
+  </li>
+  <li>每次记录一个翻转位置 <code>(i . j)</code> 而不是记录翻转后的整个模型.
+    (其实 Lisp 应该传的是指针, 所以应该并不会减少传值开销,
+    只是为了之后计算能量的时候可以减少一些计算量而已).</li>
+  <li>每次更新的时候, 需要根据模型刷新一个新的位置.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-2-d-ising-gen</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成一个 gen 函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="nv">m</span><span class="p">)))))</span>
+</pre></div>
+  </li>
+  <li>对于已有的系统, 在翻转了一个元素之后计算能量改变的时候,
+    只需要计算临近前后的能量变化而不需要计算整个系统.
+    (这样可以把计算速度大大提高)</li>
+  <li>每次判断的时候判断能量改变:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-2-d-ising-acc</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="w"> </span><span class="nv">kT</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成一个 acc 函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pos2</span><span class="w"> </span><span class="nv">pos1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">pos1</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">i</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pos2</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">j</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">pos2</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">spin</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">near</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">dE</span><span class="w">   </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">spin</span><span class="w"> </span><span class="nv">near</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="nv">kT</span><span class="p">)))))))))</span>
+</pre></div>
+  </li>
+  <li>每次模拟后进行一个数据记录:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-store-function</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;返回一个添加函数和读取函数.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">stored</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">stored</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">stored</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-2-d-ising-yield</span><span class="w"> </span><span class="p">(</span><span class="nf">step</span><span class="w"> </span><span class="nv">store-fn</span><span class="w"> </span><span class="nv">store-place-fn</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">counter</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pos</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">counter</span><span class="p">)</span><span class="w"> </span><span class="nv">step</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">counter</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">store-place-fn</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span><span class="w"> </span><span class="nv">store-fn</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span><span class="w"> </span><span class="nv">store-fn</span><span class="p">)))))</span>
+</pre></div>
+    <p>其中数据记录函数可以有:</p>
+    <ul>
+      <li>能量
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">2-d-ising-e</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">energy</span><span class="w"> </span><span class="mf">0.0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">spin</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">near</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">)))))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">spin</span><span class="w"> </span><span class="nv">near</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="mi">4</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-2-d-ising-energy-rec</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成一个根据 dE 来计算模型能量的函数&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">n</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">model</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">energy</span><span class="w"> </span><span class="p">(</span><span class="nf">2-d-ising-e</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pos</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">i</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">j</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">pos</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">spin</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">near</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">)))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">spin</span><span class="w"> </span><span class="nv">near</span><span class="p">))))))</span>
+</pre></div>
+      </li>
+      <li>磁矩
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">2-d-ising-m</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;计算系统的磁矩.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">m</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">line</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="nv">line</span><span class="p">))))</span>
+<span class="w">    </span><span class="nv">m</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-2-d-ising-m-rec</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mag-m</span><span class="w"> </span><span class="p">(</span><span class="nf">2-d-ising-m</span><span class="w"> </span><span class="nv">model</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pos</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">spin</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">pos</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">mag-m</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">mag-m</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">spin</span><span class="p">)))))))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+  <li>于是一个模拟过程如下:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">2-d-ising-sim</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="nv">kT</span><span class="w"> </span><span class="nv">samples</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">sample-step</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">burn-in</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">init</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">model</span><span class="w"> </span><span class="p">(</span><span class="nf">init-2-d-ising</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">size</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">size</span><span class="p">)</span><span class="w"> </span><span class="nv">init</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">write-rec</span><span class="w"> </span><span class="nv">read-rec</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">make-store-function</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">sampling-hist</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">make-2-d-ising-gen</span><span class="w"> </span><span class="nv">model</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">make-2-d-ising-acc</span><span class="w"> </span><span class="nv">model</span><span class="w"> </span><span class="nv">kT</span><span class="p">)</span>
+<span class="w">                     </span><span class="nv">samples</span><span class="w"> </span><span class="nv">burn-in</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">make-2-d-ising-yield</span><span class="w"> </span><span class="nv">sample-step</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">make-2-d-ising-energy-rec</span><span class="w"> </span><span class="nv">model</span><span class="p">)</span>
+<span class="w">                                                 </span><span class="p">(</span><span class="nf">make-2-d-ising-m-rec</span><span class="w"> </span><span class="nv">model</span><span class="p">))</span>
+<span class="w">                                           </span><span class="nv">write-rec</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">read-rec</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>一次可能的模拟:</li>
+</ul>
+<h2>如何更强一些?</h2>
+<ul>
+  <li>随机数算法: 如何让随机数产生得更加合理?</li>
+  <li>代码的更进一步的优化.
+    <ul>
+      <li>比如使用 vector (array) 来代替 list 作为向量表示,
+        进一步提高计算速度 (虽然不清楚会快多少).</li>
+      <li>计算能量的代码通过 Hash 对代码计算值进行缓存处理, 提高计算速度.
+        (这个我在 On Lisp 里面看到过, 但是具体怎么做已经忘光了).</li>
+      <li>使用多线程计算, 不过该怎样把这个一条 Markov 链的计算变成多线程,
+        我觉得可能可以把长度减少, 然后同时并行运行多个计算链.</li>
+    </ul>
+  </li>
+  <li>物理, 我要学更多的物理!</li>
+  <li>自动判断是否在稳定状态: 通过接受率和拒取率来判断, 具体怎么做还没看.</li>
+</ul>
+<h1>Others</h1>
+<p>那么就让这篇文章成为一个简单的小笔记吧.</p>
+<h2>一些问题的无聊解答</h2>
+<ul>
+  <li>这 TMD 什么编程语言?
+    <p>Lisp, Common Lisp, Common Lisp via SBCL distribution.</p>
+  </li>
+  <li>为什么用 Lisp 而不用 XXX?
+    <p>因为好玩? 且 C 不太会用, Python 很少用, Ruby 太慢, 其他语言不熟.</p>
+  </li>
+  <li>那么如何学 Lisp 呢?
+    <p>实际上我觉得计算逻辑部分的代码非常好懂, 如果知道要算法算的是啥,
+      那么这个 Lisp 代码我觉得就是没学过的人随便看看也能看懂吧.</p>
+  </li>
+  <li>等一下, 这个和退火算法有什么关系?
+    <p>好问题, 虽然不一定是好问题, 但是我觉得是个好问题.</p>
+    <p>退火算法 (具体大概就是一个加上一个随时间逐渐确定的随机游走的贪心算法来找最大值),
+      在这里用物理的角度就是: 外场一开始的影响在温度的影响下比较小,
+      所以在 Markov 链游走的时候, 会尽可能地去历遍更多可能的状态;
+      而随着温度的降低, 外场开始起主导作用, 这个时候就会去势场最低,
+      也就是极值点.</p>
+    <p>之所以不简单使用梯度下降, 是因为梯度下降是局域贪心算法,
+      不一定找到的就是全局极值. 而退火算法因为引入了随机游走,
+      有一定概率能够漂移出局部极值的坑.</p>
+    <p>所以可以将这样的算法应用到极值问题中,
+      从而可以对多维极值优化进行求解.</p>
+    <p>欸, 那么这是否就是一个当代显学人工智能需要操心的问题了呢?</p>
+    <p>看, 这就是学统计物理常用的话术: 学会统计物理, 你就会机器学习了.
+      <del>然而并没有</del>.</p>
+  </li>
+</ul>
+
+  </div><a class="u-url" href="/learning/metropolis-hastings-algorithm/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

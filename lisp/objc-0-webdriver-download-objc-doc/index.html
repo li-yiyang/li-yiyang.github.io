@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ObjC 0: WebDriver Download ObjC Runtime Documentation | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ObjC 0: WebDriver Download ObjC Runtime Documentation" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 记录一下我尝试复刻 objectvie-c-bridge (参考的是 LispWorks 的 API, CCL 也有一个 objective-c-bridge, 但是因为 CCL arm port 目前是缺失的, 所以我没法在我的电脑上面测试其表现, 我不是一个善于读文档的人). 注: 因为我做这个的目标完全只是为了不花钱去买 LispWorks 的 Licence, 以及给比较无聊的生活加点乐子和非游戏的打发时间的事做. 所以该项目在我能 被批准用学校的钱去购买 Licence 或者很忙的情况下就会被中断. 目前我的计划是这样的: 用 CFFI 建立 Objcective-C Runtime 的一个绑定 去了解一下 Objective-C Runtime 该怎么 编写 去模拟 LispWorks 的 ObjC 的函数 去添加其他的库, 或者做一些高层的 wrapping 之类的 去尝试实现 CLIM 的 backend 或者模拟 CAPI 的 API? 这估计会是一个跨越时间非常长的项目了&#8230; 不过这个 post 的主要内容是如何从苹果的官网上把文档给爬下来, 并解析成 CFFI 可以使用的形式. 其中使用了我对之前 WebDriver 协议的一个小小改进 版本的代码 (gist). 一些基于 WebDriver 库的小小 wrapper (defmacro map-find-elems ((elem selector &amp;optional (node &#39;*session*)) &amp;body body) `(mapcar (lambda (,elem) ,@body) (wd:find-elems ,node ,selector)))" />
+<meta property="og:description" content="About 记录一下我尝试复刻 objectvie-c-bridge (参考的是 LispWorks 的 API, CCL 也有一个 objective-c-bridge, 但是因为 CCL arm port 目前是缺失的, 所以我没法在我的电脑上面测试其表现, 我不是一个善于读文档的人). 注: 因为我做这个的目标完全只是为了不花钱去买 LispWorks 的 Licence, 以及给比较无聊的生活加点乐子和非游戏的打发时间的事做. 所以该项目在我能 被批准用学校的钱去购买 Licence 或者很忙的情况下就会被中断. 目前我的计划是这样的: 用 CFFI 建立 Objcective-C Runtime 的一个绑定 去了解一下 Objective-C Runtime 该怎么 编写 去模拟 LispWorks 的 ObjC 的函数 去添加其他的库, 或者做一些高层的 wrapping 之类的 去尝试实现 CLIM 的 backend 或者模拟 CAPI 的 API? 这估计会是一个跨越时间非常长的项目了&#8230; 不过这个 post 的主要内容是如何从苹果的官网上把文档给爬下来, 并解析成 CFFI 可以使用的形式. 其中使用了我对之前 WebDriver 协议的一个小小改进 版本的代码 (gist). 一些基于 WebDriver 库的小小 wrapper (defmacro map-find-elems ((elem selector &amp;optional (node &#39;*session*)) &amp;body body) `(mapcar (lambda (,elem) ,@body) (wd:find-elems ,node ,selector)))" />
+<link rel="canonical" href="/lisp/objc-0-webdriver-download-objc-doc/" />
+<meta property="og:url" content="/lisp/objc-0-webdriver-download-objc-doc/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-31T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ObjC 0: WebDriver Download ObjC Runtime Documentation" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-31T00:00:00+00:00","datePublished":"2025-03-31T00:00:00+00:00","description":"About 记录一下我尝试复刻 objectvie-c-bridge (参考的是 LispWorks 的 API, CCL 也有一个 objective-c-bridge, 但是因为 CCL arm port 目前是缺失的, 所以我没法在我的电脑上面测试其表现, 我不是一个善于读文档的人). 注: 因为我做这个的目标完全只是为了不花钱去买 LispWorks 的 Licence, 以及给比较无聊的生活加点乐子和非游戏的打发时间的事做. 所以该项目在我能 被批准用学校的钱去购买 Licence 或者很忙的情况下就会被中断. 目前我的计划是这样的: 用 CFFI 建立 Objcective-C Runtime 的一个绑定 去了解一下 Objective-C Runtime 该怎么 编写 去模拟 LispWorks 的 ObjC 的函数 去添加其他的库, 或者做一些高层的 wrapping 之类的 去尝试实现 CLIM 的 backend 或者模拟 CAPI 的 API? 这估计会是一个跨越时间非常长的项目了&#8230; 不过这个 post 的主要内容是如何从苹果的官网上把文档给爬下来, 并解析成 CFFI 可以使用的形式. 其中使用了我对之前 WebDriver 协议的一个小小改进 版本的代码 (gist). 一些基于 WebDriver 库的小小 wrapper (defmacro map-find-elems ((elem selector &amp;optional (node &#39;*session*)) &amp;body body) `(mapcar (lambda (,elem) ,@body) (wd:find-elems ,node ,selector)))","headline":"ObjC 0: WebDriver Download ObjC Runtime Documentation","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/objc-0-webdriver-download-objc-doc/"},"url":"/lisp/objc-0-webdriver-download-objc-doc/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ObjC 0: WebDriver Download ObjC Runtime Documentation</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-31T00:00:00+00:00" itemprop="datePublished">Mar 31, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>记录一下我尝试复刻 objectvie-c-bridge (参考的是 LispWorks 的 <a href="https://www.lispworks.com/documentation/pdf/lw80/objc-8-0.pdf">API</a>,
+  CCL 也有一个 <a href="https://ccl.clozure.com/manual/chapter14.html#The-Objective-C-Bridge">objective-c-bridge</a>, 但是因为 CCL arm port 目前是缺失的,
+  所以我没法在我的电脑上面测试其表现, 我不是一个善于读文档的人).</p>
+<p>注: 因为我做这个的目标完全只是为了不花钱去买 LispWorks 的 Licence,
+  以及给比较无聊的生活加点乐子和非游戏的打发时间的事做. 所以该项目在我能
+  被批准用学校的钱去购买 Licence 或者很忙的情况下就会被中断.</p>
+<p>目前我的计划是这样的:</p>
+<ol>
+  <li>用 CFFI 建立 Objcective-C Runtime 的一个绑定</li>
+  <li>去了解一下 Objective-C Runtime 该怎么 <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Introduction/Introduction.html">编写</a></li>
+  <li>去模拟 LispWorks 的 ObjC 的函数</li>
+  <li>去添加其他的库, 或者做一些高层的 wrapping 之类的</li>
+  <li>去尝试实现 CLIM 的 backend 或者模拟 CAPI 的 API?</li>
+</ol>
+<p>这估计会是一个跨越时间非常长的项目了&#8230;</p>
+<p>不过这个 post 的主要内容是如何从苹果的官网上把文档给爬下来, 并解析成
+  CFFI 可以使用的形式. 其中使用了我对之前 <a href="/lisp/lisp-webdriver-macros/">WebDriver</a> 协议的一个小小改进
+  版本的代码 (<a href="https://gist.github.com/li-yiyang/e777ea711e39c554703f520ff7c75f34">gist</a>).</p>
+<details><summary>一些基于 WebDriver 库的小小 wrapper</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">map-find-elems</span><span class="w"> </span><span class="p">((</span><span class="nf">elem</span><span class="w"> </span><span class="nv">selector</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="ss">&#39;*session*</span><span class="p">))</span>
+<span class="w">                          </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">elem</span><span class="p">)</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:find-elems</span><span class="w"> </span><span class="o">,</span><span class="nv">node</span><span class="w"> </span><span class="o">,</span><span class="nv">selector</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-text</span><span class="w"> </span><span class="p">(</span><span class="nf">selector</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">*session*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">retry</span><span class="w"> </span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">wait</span><span class="w"> </span><span class="mf">1.0</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">handler-case</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:text</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:find-elem</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">selector</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">wd::webdriver-error</span><span class="w"> </span><span class="p">(</span><span class="nf">err</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">retry</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="nv">wait</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">find-text</span><span class="w"> </span><span class="nv">selector</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">retry</span><span class="p">)</span><span class="w"> </span><span class="nv">wait</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">T</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="nv">err</span><span class="p">))))))</span>
+</pre></div>
+</details>
+<h1>Objective-C 文档的读取</h1>
+<p>新建一个 WebDriver Session:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*session*</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:make-webdriver-session</span><span class="p">))</span>
+</pre></div>
+<p>然后访问苹果 Objective-C Runtime 的网页:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">wd:navigate</span><span class="w"> </span><span class="nv">*session*</span><span class="w"> </span><span class="s">&quot;https://developer.apple.com/documentation/objectivec/objective-c-runtime?language=objc&quot;</span><span class="p">)</span>
+</pre></div>
+<h2>Section</h2>
+<p>其被分隔成多个 section, 于是可以提取到 <code>sections</code> 中, 并提取每章的子文档
+  的链接用于之后分章节进行实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">sections</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">section</span><span class="w"> </span><span class="s">&quot;div.contenttable-section&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">find-text</span><span class="w"> </span><span class="s">&quot;h3.contenttable-title&quot;</span><span class="w"> </span><span class="nv">section</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nb">link</span><span class="w"> </span><span class="s">&quot;a:not(.deprecated):has(code)&quot;</span><span class="w"> </span><span class="nv">section</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:text</span><span class="w"> </span><span class="nb">link</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:property</span><span class="w"> </span><span class="nb">link</span><span class="w"> </span><span class="s">&quot;href&quot;</span><span class="p">))))))</span>
+</pre></div>
+<p>注: 这里用 <code>:has(code)</code> 的 CSS selector 来选择是子节点 <code>code</code> 类型的链接而
+  不是链接到其他的说明文档去.</p>
+<p>类似如下:</p>
+<table>
+  <tr><td>Section</td><td>Links Counts</td></tr>
+  <tr><td>Working with Classes</td><td>30</td></tr>
+  <tr><td>Adding Classes</td><td>5</td></tr>
+  <tr><td>Instantiating Classes</td><td>3</td></tr>
+  <tr><td>Working with Instances</td><td>10</td></tr>
+  <tr><td>Obtaining Class Definitions</td><td>6</td></tr>
+  <tr><td>Working with Instance Variables</td><td>3</td></tr>
+  <tr><td>Associative References</td><td>3</td></tr>
+  <tr><td>Sending Messages</td><td>5</td></tr>
+  <tr><td>Working with Methods</td><td>13</td></tr>
+  <tr><td>Working with Libraries</td><td>3</td></tr>
+  <tr><td>Working with Selectors</td><td>4</td></tr>
+  <tr><td>Working with Protocols</td><td>15</td></tr>
+  <tr><td>Working with Properties</td><td>4</td></tr>
+  <tr><td>Using Objective-C Language Features</td><td>9</td></tr>
+  <tr><td>Class-Definition Data Structures</td><td>9</td></tr>
+  <tr><td>Instance Data Types</td><td>3</td></tr>
+  <tr><td>Boolean Value</td><td>1</td></tr>
+  <tr><td>Associative References</td><td>1</td></tr>
+  <tr><td>Constants</td><td>0</td></tr>
+  <tr><td>Related Documentation</td><td>0</td></tr>
+  <tr><td>Reference</td><td>0</td></tr>
+</table>
+<h2>Function, Type Alias, Structure</h2>
+<p>对于单个文档, 例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nb">link</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">section</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">sections</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="p">(</span><span class="nf">code</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span><span class="w"> </span><span class="nv">section</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;;;; ~A~%&quot;</span><span class="w"> </span><span class="nv">title</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A~%~A~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">code</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">code</span><span class="p">))))</span>
+</pre></div>
+<pre class="example">
+;;; Working with Classes
+class_getName
+https://developer.apple.com/documentation/objectivec/class_getname(_:)?language=objc
+</pre>
+<p>其有一些比较有用的信息:</p>
+<ul>
+  <li><code>div.topictitle</code>: 类别和简要文档说明 <code>objc-doc-type</code>, <code>objc-doc-short</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-type</span><span class="w">  </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-text</span><span class="w"> </span><span class="s">&quot;div.topictitle &gt; span&quot;</span><span class="w"> </span><span class="nv">session</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-short</span><span class="w"> </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-text</span><span class="w"> </span><span class="s">&quot;div.abstract&quot;</span><span class="w"> </span><span class="nv">session</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li><code>pre.source &gt; code</code>: lambda list <code>objc-doc-lambda</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">find-text</span><span class="w"> </span><span class="s">&quot;pre.source &gt; code&quot;</span><span class="w"> </span><span class="nv">session</span><span class="p">))</span>
+</pre></div>
+    <p>例:</p>
+    <pre class="example">
+extern const char * class_getName(Class cls);
+    </pre>
+    <p>这里有一个比较有趣的事情是如何解析这个 <code>objc-lambda</code>.</p>
+  </li>
+  <li><code>#parameters</code>: 参数说明 <code>objc-doc-params</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-params</span><span class="w"> </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">param</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:find-elems</span><span class="w"> </span><span class="nv">session</span><span class="w"> </span><span class="s">&quot;#parameters + dl&quot;</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">param</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cons</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="s">&quot;dt&quot;</span><span class="w"> </span><span class="nv">param</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">get-nickname</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:text</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">doc-paras</span><span class="w"> </span><span class="s">&quot;dd&quot;</span><span class="w"> </span><span class="nv">param</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;p&quot;</span><span class="w"> </span><span class="nv">doc-paras</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">objc-doc-text</span><span class="w"> </span><span class="nv">para</span><span class="p">)))))))</span>
+</pre></div>
+    <p>例:</p>
+    <table>
+      <tr><td>class</td><td>A class object.</td></tr>
+    </table>
+  <details><summary>objc-doc-text 的一个说明</summary>
+    <p>用于将 HTML 转换为可读的 Lisp 文档:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*objc-nickname-alist*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="s">&quot;cls&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;class&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;id&quot;</span><span class="w">       </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-id&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;objc_property_t&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-property&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;Class&quot;</span><span class="w">    </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-class&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;Method&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-method&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;IMP&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-imp&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;SEL&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-sel&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;Protocol&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="s">&quot;objc-protocol&quot;</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">get-nickname</span><span class="w"> </span><span class="p">(</span><span class="nf">key</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">*objc-nickname-alist*</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nb">cons</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">str:param-case</span><span class="w"> </span><span class="nv">key</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-text</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">dom</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:parse</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:property</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="s">&quot;innerHTML&quot;</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">parse</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:text-node-p</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">string=</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:tag-name</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;code&quot;</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">/=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:children</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">plump:text</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;`~A&#39;&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">get-nickname</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:text</span><span class="w"> </span><span class="nv">node</span><span class="p">))))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">str:join</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">map</span><span class="w"> </span><span class="ss">&#39;list</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;parse</span><span class="w"> </span><span class="p">(</span><span class="nf">plump:children</span><span class="w"> </span><span class="nv">dom</span><span class="p">))))))</span>
+</pre></div>
+  </details>
+  </li>
+  <li><code>#return-value</code>: 返回值 <code>objc-doc-return-value</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-return-value</span><span class="w"> </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="s">&quot;#return-value ~ p&quot;</span><span class="w"> </span><span class="nv">session</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">objc-doc-text</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))</span>
+</pre></div>
+    <p>例:</p>
+    <table>
+      <tr><td>The name of the class, or the empty string if class is nil.</td></tr>
+    </table>
+  </li>
+  <li><code>#Discussion</code>: 一些额外的说明 <code>objc-doc-discussion</code>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-discussion</span><span class="w"> </span><span class="p">(</span><span class="nf">session</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">map-find-elems</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="s">&quot;#Discussion ~ p&quot;</span><span class="w"> </span><span class="nv">session</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">objc-doc-text</span><span class="w"> </span><span class="nv">elem</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+<p>于是可以实现 <code>objc-doc-parse-url</code> 的功能:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-doc-parse-name-url-cons</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nb">cons</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">url</span><span class="w">  </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nb">cons</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nb">string=</span><span class="w"> </span><span class="p">(</span><span class="nf">wd:url</span><span class="w"> </span><span class="nv">*session*</span><span class="p">)</span><span class="w"> </span><span class="nv">url</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">wd:navigate</span><span class="w"> </span><span class="nv">*session*</span><span class="w"> </span><span class="nv">url</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:name</span><span class="w">   </span><span class="nv">name</span>
+<span class="w">          </span><span class="nv">:type</span><span class="w">   </span><span class="p">(</span><span class="nf">objc-doc-type</span><span class="w">   </span><span class="nv">*session*</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">:doc</span><span class="w">    </span><span class="p">(</span><span class="nf">objc-doc-short</span><span class="w">  </span><span class="nv">*session*</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">:lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-doc-lambda</span><span class="w"> </span><span class="nv">*session*</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">:params</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-doc-params</span><span class="w"> </span><span class="nv">*session*</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">:return</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-doc-return-value</span><span class="w"> </span><span class="nv">*session*</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">:discussion</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-doc-discussion</span><span class="w"> </span><span class="nv">*session*</span><span class="p">))))</span>
+</pre></div>
+<p>例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">objc-doc-parse-name-url-cons</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">sections</span><span class="p">))))</span>
+</pre></div>
+<pre class="example">
+(:name &quot;class_getName&quot; :type &quot;Function&quot; :doc &quot;Returns the name of a class.&quot;
+ :lambda &quot;extern const char * class_getName(Class cls);&quot; :params
+ ((&quot;class&quot; &quot;A class object.&quot;)) :return
+ (&quot;The name of the class, or the empty string if `class&#39; is `nil&#39;.&quot;)
+ :discussion nil)
+</pre>
+<h2>Parse Function Lambda</h2>
+<h3>Tokenrize</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*objc-keywords-alist*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="s">&quot;extern&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:extern</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;struct&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:struct</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;unsigned&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">:unsigned</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;const&quot;</span><span class="w">    </span><span class="o">.</span><span class="w"> </span><span class="nv">:const</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*objc-type-alist*</span>
+<span class="w">  </span><span class="o">&#39;</span><span class="p">((</span><span class="s">&quot;char&quot;</span><span class="w">     </span><span class="o">.</span><span class="w"> </span><span class="nv">:char</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;int&quot;</span><span class="w">      </span><span class="o">.</span><span class="w"> </span><span class="nv">:int</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;void&quot;</span><span class="w">     </span><span class="o">.</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;uint8_t&quot;</span><span class="w">  </span><span class="o">.</span><span class="w"> </span><span class="nv">:uint8</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;size_t&quot;</span><span class="w">   </span><span class="o">.</span><span class="w"> </span><span class="nv">:size</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; 注: 这里开了一个 parser 的洞</span>
+<span class="w">    </span><span class="p">(</span><span class="s">&quot;void (*)(id)&quot;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="p">(</span><span class="nf">:function</span><span class="w"> </span><span class="nv">objc-id</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-token-regexp</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;void </span><span class="se">\\</span><span class="s">(</span><span class="se">\\</span><span class="s">*</span><span class="se">\\</span><span class="s">)</span><span class="se">\\</span><span class="s">(id</span><span class="se">\\</span><span class="s">)|[a-zA-Z][a-zA-Z0-9_]*|</span><span class="se">\\</span><span class="s">(|</span><span class="se">\\</span><span class="s">)|</span><span class="se">\\</span><span class="s">;|</span><span class="se">\\</span><span class="s">,|</span><span class="se">\\</span><span class="s">*&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-lexer</span><span class="w"> </span><span class="p">(</span><span class="nf">str</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">tokenrize</span><span class="w"> </span><span class="p">(</span><span class="nf">token</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="s">&quot;;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:eol</span><span class="w">        </span><span class="nv">:eol</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:pointer</span><span class="w">    </span><span class="nv">:pointer</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:args-start</span><span class="w"> </span><span class="nv">:args-start</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:args-end</span><span class="w">   </span><span class="nv">:args-end</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="s">&quot;,&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:comma</span><span class="w">      </span><span class="nv">:comma</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">*objc-keywords-alist*</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">token</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">*objc-keywords-alist*</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">))))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">token</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">((</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">*objc-type-alist*</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">token</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">token</span><span class="w"> </span><span class="nv">*objc-type-alist*</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;equal</span><span class="p">))))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="ss">&#39;type</span><span class="w"> </span><span class="nv">token</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="ss">&#39;name</span><span class="w"> </span><span class="p">(</span><span class="nf">intern</span><span class="w"> </span><span class="p">(</span><span class="nf">str:upcase</span><span class="w"> </span><span class="p">(</span><span class="nf">get-nickname</span><span class="w"> </span><span class="nv">token</span><span class="p">))))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">search</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">regexp</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:create-scanner</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-token-regexp</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">start</span><span class="w"> </span><span class="nv">end</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:scan</span><span class="w"> </span><span class="nv">regexp</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">:start</span><span class="w"> </span><span class="nv">search</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">end</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">search</span><span class="w"> </span><span class="nv">end</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">start</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">tokenrize</span><span class="w"> </span><span class="p">(</span><span class="nf">str:substring</span><span class="w"> </span><span class="nv">start</span><span class="w"> </span><span class="nv">end</span><span class="w"> </span><span class="nv">str</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-tokenrize</span><span class="w"> </span><span class="p">(</span><span class="nf">str</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">lexer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-lexer</span><span class="w"> </span><span class="nv">str</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">terminal</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-list</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">lexer</span><span class="p">))</span>
+<span class="w">          </span><span class="k">while</span><span class="w"> </span><span class="nv">terminal</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">terminal</span><span class="w"> </span><span class="nv">value</span><span class="p">))))</span>
+</pre></div>
+<p>这个 tokenizer 的实现还是挺 trivial 的, 毕竟需要处理的问题有限,
+  可以进行一个肮脏的开洞.</p>
+<p>例:</p>
+<table>
+  <tr><td>:extern</td><td>:extern</td></tr>
+  <tr><td>name</td><td>ivar</td></tr>
+  <tr><td>name</td><td>class-get-instance-variable</td></tr>
+  <tr><td>:args-start</td><td>:args-start</td></tr>
+  <tr><td>name</td><td>objc-class</td></tr>
+  <tr><td>name</td><td>class</td></tr>
+  <tr><td>:comma</td><td>:comma</td></tr>
+  <tr><td>:const</td><td>:const</td></tr>
+  <tr><td>type</td><td>:char</td></tr>
+  <tr><td>:pointer</td><td>:pointer</td></tr>
+  <tr><td>name</td><td>name</td></tr>
+  <tr><td>:args-end</td><td>:args-end</td></tr>
+  <tr><td>:eol</td><td>:eol</td></tr>
+</table>
+<h3>Grammer Parser</h3>
+<p>使用 <a href="https://www.irif.fr/~jch/software/cl-yacc/">cl-yacc</a> 作为 parser generator:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">yacc:define-parser</span><span class="w"> </span><span class="nv">*objc-lambda-parser*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:start-symbol</span><span class="w"> </span><span class="nv">objc-lambda</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:terminals</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">:comma</span><span class="w"> </span><span class="nv">:extern</span><span class="w"> </span><span class="nv">:const</span><span class="w"> </span><span class="nv">:struct</span><span class="w"> </span><span class="nv">:unsigned</span>
+<span class="w">                         </span><span class="nv">:pointer</span><span class="w"> </span><span class="nv">:args-start</span><span class="w"> </span><span class="nv">:args-end</span><span class="w"> </span><span class="nv">:eol</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">objc-lambda</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:extern</span><span class="w"> </span><span class="nv">types</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">:eol</span>
+<span class="w">            </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">extern</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">eol</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">extern</span><span class="w"> </span><span class="nv">eol</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="nv">args</span><span class="p">))))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">types</span>
+<span class="w">   </span><span class="nv">type</span>
+<span class="w">   </span><span class="nv">name</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:const</span><span class="w">    </span><span class="nv">types</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nb">const</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nb">const</span><span class="p">))</span>
+<span class="w">                      </span><span class="nv">type</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:unsigned</span><span class="w"> </span><span class="nv">types</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">unsigned</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">unsigned</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:struct</span><span class="w">   </span><span class="nv">name</span><span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">struct</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">struct</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">types</span><span class="w">  </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">pointer</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">pointer</span><span class="w"> </span><span class="nv">type</span><span class="p">))))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">args</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:args-start</span><span class="w"> </span><span class="nv">pair*</span><span class="w"> </span><span class="nv">:args-end</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">pairs</span><span class="w"> </span><span class="nv">c</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">c</span><span class="p">))</span>
+<span class="w">                                  </span><span class="nv">pairs</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:args-start</span><span class="w"> </span><span class="nv">:args-end</span><span class="w">       </span><span class="p">(</span><span class="nf">constantly</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">pair*</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">types</span><span class="w"> </span><span class="nv">name</span><span class="w">              </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">type</span><span class="p">))))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">types</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">:comma</span><span class="w"> </span><span class="nv">pair*</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">comma</span><span class="w"> </span><span class="nv">pairs</span><span class="p">)</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">comma</span><span class="p">))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="nv">pairs</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">objc-parse-lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-lambda</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">yacc:parse-with-lexer</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-lexer</span><span class="w"> </span><span class="nv">objc-lambda</span><span class="p">)</span><span class="w"> </span><span class="nv">*objc-lambda-parser*</span><span class="p">))</span>
+</pre></div>
+<details><summary>语法的设计的问题</summary>
+<p>这里有个小问题就是在 <code>types</code> 节点的 <code>types :pointer</code> 的语法, 这可能会导致
+  parser 陷入无限循环的 bug 中. 但是能跑就行了?</p>
+</details>
+<p>例:</p>
+<pre class="example">
+((class-get-name :char) ((class objc-class)))
+</pre>
+<h2>Lisp-Spider, Go!</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*objc-runtime-doc*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dolist-bind-collect</span><span class="w"> </span><span class="p">((</span><span class="nf">title</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span><span class="w"> </span><span class="nv">sections</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">title</span><span class="w"> </span><span class="p">(</span><span class="nf">dolist-bind-collect</span><span class="w"> </span><span class="p">((</span><span class="nf">method</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">url</span><span class="p">)</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">property</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-doc-parse-name-url-cons</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">url</span><span class="p">))))</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">string=</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">property</span><span class="w"> </span><span class="nv">:type</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;Function&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">property</span><span class="w"> </span><span class="nv">:cffi</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">objc-parse-lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">property</span><span class="w"> </span><span class="nv">:lambda</span><span class="p">))))</span>
+<span class="w">                    </span><span class="nv">property</span><span class="p">)))))</span>
+</pre></div>
+<h1>End</h1>
+<p>最终处理结束的结果可以见 <a href="https://gist.github.com/li-yiyang/468b042bdf399435d0c5f561dba0d279">gist</a>, 理论上来说通过一些简单的 <code>format</code> 操作就
+  能够生成 CFFI 的 bindings 了. 不过考虑到自动生成的 bingdings 可能并不
+  是那么的可用 (不知道正确性, 毕竟不太会 CFFI 和 ObjC Runtime), 所以我决
+  定先去看看 ObjC Runtime 的一些 Hello World 的例子, 然后去尝试构建模拟
+  兼容 LispWorks 的 ObjC-Bridge API.</p>
+<details><summary>输出 format</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">section</span><span class="w"> </span><span class="nv">*objc-runtime-doc*</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="nv">elems</span><span class="p">)</span><span class="w"> </span><span class="nv">section</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;;;; ~A~%~%&quot;</span><span class="w"> </span><span class="nv">title</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="nv">elems</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:cffi</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">((</span><span class="nf">lisp-name</span><span class="w"> </span><span class="nv">type</span><span class="p">)</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:cffi</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;(defcfun (~A ~S)~%    &quot;</span>
+<span class="w">                  </span><span class="nv">lisp-name</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:name</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">write</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">:stream</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%  ~S&quot;</span>
+<span class="w">                  </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">*standard-output*</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">split-long-lines</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:doc</span><span class="p">)))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%    ~A~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:lambda</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:params</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%Parameters:~%&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">dolist-bind-collect</span><span class="w"> </span><span class="p">((</span><span class="nf">para</span><span class="w"> </span><span class="nv">doc</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:params</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;+ `~A&#39;: ~A~%&quot;</span><span class="w"> </span><span class="nv">para</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">split-long-lines</span><span class="w"> </span><span class="nv">doc</span>
+<span class="w">                                                  </span><span class="nv">:indent</span><span class="w"> </span><span class="mi">2</span>
+<span class="w">                                                  </span><span class="nv">:start</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">para</span><span class="p">))))))</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:return</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%Return Values:~%&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:return</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">split-long-lines</span><span class="w"> </span><span class="nv">para</span><span class="p">))))</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:discussion</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%Discussion:~%&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">:discussion</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~A~%&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">split-long-lines</span><span class="w"> </span><span class="nv">para</span><span class="p">))))))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">args</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">arg</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;~%  &quot;</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">write</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="nv">:stream</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;)~%~%&quot;</span><span class="p">))))))</span>
+</pre></div>
+</details>
+
+  </div><a class="u-url" href="/lisp/objc-0-webdriver-download-objc-doc/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

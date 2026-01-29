@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Stack | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Stack" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Stack 算是之前Untitled(1) 的接续吧. 原因是因为我做到了汇编的题, 然后对stack的了解实在是不深, 导致之前的参数几乎都是靠蒙和猜得到的, 就是不知道参数和 [ebp+x]的对应关系, 导致了现在卡住了, 前进不了就要学习." />
+<meta property="og:description" content="Stack 算是之前Untitled(1) 的接续吧. 原因是因为我做到了汇编的题, 然后对stack的了解实在是不深, 导致之前的参数几乎都是靠蒙和猜得到的, 就是不知道参数和 [ebp+x]的对应关系, 导致了现在卡住了, 前进不了就要学习." />
+<link rel="canonical" href="/ctf/stack/" />
+<meta property="og:url" content="/ctf/stack/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2021-11-04T09:20:45+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Stack" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2021-11-04T09:20:45+00:00","datePublished":"2021-11-04T09:20:45+00:00","description":"Stack 算是之前Untitled(1) 的接续吧. 原因是因为我做到了汇编的题, 然后对stack的了解实在是不深, 导致之前的参数几乎都是靠蒙和猜得到的, 就是不知道参数和 [ebp+x]的对应关系, 导致了现在卡住了, 前进不了就要学习.","headline":"Stack","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/stack/"},"url":"/ctf/stack/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Stack</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2021-11-04T09:20:45+00:00" itemprop="datePublished">Nov 4, 2021
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="stack">Stack</h1>
+<p>算是之前<code class="language-plaintext highlighter-rouge">Untitled(1)</code> 的接续吧. 原因是因为我做到了汇编的题, 
+然后对<code class="language-plaintext highlighter-rouge">stack</code>的了解实在是不深, 
+导致之前的参数几乎都是靠蒙和猜得到的, 就是不知道参数和
+<code class="language-plaintext highlighter-rouge">[ebp+x]</code>的对应关系, 导致了现在卡住了, 前进不了就要学习.</p>
+
+<p>唯一的问题是, 网上的相关的信息是在是太少了, 虽然有些人也有做笔记, 
+但是他们的笔记我看不懂(QAQ, 不是说别人不好, 只是因为我太菜了. )</p>
+
+<p>所以我只好去看难懂的外文文章了.</p>
+
+<p>(虽然我也很想要系统地学习, 但是我毕竟只是一个在CTF骗钱的烂人, 
+所以暂时还是学一点做一点吧. 假如手头闲下来的话, 我想读编码. )</p>
+
+<h2 id="the-stack-overview">The Stack Overview</h2>
+<blockquote>
+  <p>In computer architecture, the stack is a hardware 
+manifestation of the stack data structure 
+(a Last In, First Out queue).</p>
+
+  <p>In x86, the stack is simply an area in RAM 
+that was chosen to be the stack - 
+there is no special hardware to store stack contents. 
+The <code class="language-plaintext highlighter-rouge">esp</code>/<code class="language-plaintext highlighter-rouge">rsp</code> register holds the address in memory 
+where the bottom of the stack resides. 
+When something is pushed to the stack, 
+<code class="language-plaintext highlighter-rouge">esp</code> decrements by 4 (or 8 on 64-bit x86), 
+and the value that was pushed is stored 
+at that location in memory. Likewise, 
+when a pop instruction is executed, 
+the value at <code class="language-plaintext highlighter-rouge">esp</code> is retrieved 
+(i.e. esp is dereferenced), 
+and <code class="language-plaintext highlighter-rouge">esp</code> is then incremented by 4 (or 8).</p>
+
+  <p>Conventionally, <code class="language-plaintext highlighter-rouge">ebp</code>/<code class="language-plaintext highlighter-rouge">rbp</code> contains the address of 
+the top of the current stack frame, 
+and so sometimes local variables are referenced 
+as an offset relative to <code class="language-plaintext highlighter-rouge">ebp</code> 
+rather than an offset to esp. 
+A stack frame is essentially just the space 
+used on the stack by a given function.</p>
+
+  <p>from <a href="https://ctf101.org/binary-exploitation/what-is-the-stack/">CTF101</a></p>
+</blockquote>
+
+<p>stack 是一个后进先出(LIFO)的队列. 在x86机器中, 
+stack只是RAM中的一部分, 不是物理意义上的单独一块.</p>
+
+<p><code class="language-plaintext highlighter-rouge">esp</code>/<code class="language-plaintext highlighter-rouge">rsp</code>指向stack的底部, 当<code class="language-plaintext highlighter-rouge">push a</code>的时候, 先<code class="language-plaintext highlighter-rouge">esp -= 4</code>, 
+(如果是64位机器, <code class="language-plaintext highlighter-rouge">esp -= 8</code>), 然后把<code class="language-plaintext highlighter-rouge">a</code>放到<code class="language-plaintext highlighter-rouge">esp</code>的地址里.</p>
+
+<p>同样的在<code class="language-plaintext highlighter-rouge">pop a</code>时, 先<code class="language-plaintext highlighter-rouge">esp += 4</code>, (如果是64位机器, <code class="language-plaintext highlighter-rouge">esp += 8</code>)
+然后再把<code class="language-plaintext highlighter-rouge">a</code>放到<code class="language-plaintext highlighter-rouge">esp</code>的地址里.</p>
+
+<p>这里有一个点:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Memory: 
+|==PARA  2==| : higher memory address
+|==SYSTEM===| : [ebp] + 12
+|==PARA  1==| : [ebp] + 8
+|=RET  ADDR=| : [ebp] + 4
+|=SAVED EBP=| : ebp
+|=LOCAL  V1=|
+|=LOCAL  V2=|
+|=SAVED EDI=|
+|=SAVED ESI=|
+|====...====|
+|STACKBUTTOM| : esp--the buttom of the stack contents
+|==UNUSED===| : 
+|====...====|
+|===HEAP====|
+|====BSS====|
+|===DATA====|
+|===TEXT====| : lower memory address
+</code></pre></div></div>
+
+<p>大概是这样?</p>
+
+<h2 id="简单的一点点归纳-可能很混乱">简单的一点点归纳, 可能很混乱</h2>
+<p>在我们做<code class="language-plaintext highlighter-rouge">push ..</code>这个动作的时候, 相当于是把数据放到栈里面. 
+举个例子:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>push 0xd73346ed
+
+; stack: (in bite)
+; +0x8 +0x9 +0xA +0xB 
+; +----+----+----+----+
+; | ed | 46 | 33 | d7 |
+; +----+----+----+----+
+</code></pre></div></div>
+<p>这样的话当我们用<code class="language-plaintext highlighter-rouge">BYTE PTR [ebp+0xa]</code>的时候, 里面的值就是<code class="language-plaintext highlighter-rouge">0x33</code>.</p>
+
+<h2 id="后记">后记</h2>
+<p>我懂了. 原来我掌握的还不错. 之所以会卡住的原因竟然简单得令人窒息. 
+咳, 原来是因为Ruby里面在处理二进制的时候会自动把前面的<code class="language-plaintext highlighter-rouge">0</code>给扔了. 
+导致了我把少了一个<code class="language-plaintext highlighter-rouge">0</code>, 然后就错了.</p>
+
+<p>好的, 以后记住了.</p>
+
+  </div><a class="u-url" href="/ctf/stack/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

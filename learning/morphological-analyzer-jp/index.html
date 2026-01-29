@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Morphological Analyzer for Japanese 01 Dictionary Tree | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Morphological Analyzer for Japanese 01 Dictionary Tree" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 参考了何晗 (开发 HanLP 的大佬) 写的自然语言处理入门一书. 主要是为了做一个玩具分词工具, 目标并不是为了能够有啥使用性. 词典的准备 在自然语言处理入门一书中, 提供了中文的词典用于使用, 但是我的目标是用来做日语分词的, 所以得找一些日语词典. 这里考虑的是使用 EDICT Dictionary File 来作为简单的日语词典, 并且仅使用其词条信息, 并不考虑其他的各种信息. 获取和处理方法 从网页上下载 edict.gz 文件包并解压可以得到一个 EUC-JP 编码的文件, 将其使用 iconv (iconv (Wikipedia), 对于 macOS 可以通过 homebrew 安装) 转换为 UTF-8 的编码: 下载词典 (去网站上直接下载也不是不行): wget http://ftp.edrdg.org/pub/Nihongo/edict.gz 解压 .gz 文件: gunzip edict.gz 然后转换文字编码: iconv -f EUC-JP -t UTF-8 edict &gt; edict-utf8 你可以用 head edict-utf8 命令来预览部分的词典. tail edict-utf8 # head is also ok 凜々しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 凜乎 [りんこ] /(adj-t,adv-to) commanding/awe-inspiring/ 凜然 [りんぜん] /(adj-t,adv-to) (1) commanding/awe-inspiring/(adj-t,adv-to) (2) bitter (cold)/piercing/ 凜烈 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜冽 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜凜 [りんりん] /(adj-t,adv-to) (1) severe/intense/awe-inspiring/commanding/(adj-t,adv-to) (2) biting/bitter (cold)/piercing/frigid/ 凜凜しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 熙々 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 熙春茶 [ひちゅんちゃ] /(n) hyson (Chinese green tea)/ 熙熙 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 可以看到里面的数据大概如下: 词条 [读音] /(词性) 定义.../ 用 Lisp 把它提取出来: (defparameter *dictionary* (with-open-file (stream file) (let ((scaner (ppcre:create-scanner &quot;[^ ]+&quot;))) (loop for line = (read-line stream nil) while line collect (ppcre:scan-to-strings scaner line)))) &quot;EDict Dictionary for Japanese word.&quot;) 在之后会考虑使用其他的日语词典来进行替换. 词典分词 完全切分 朴素的切分方法如下: (defun simple-full-segment (text &amp;optional (dic *dictionary*)) &quot;对 `text&#39; 使用简单的匹配进行完全切分.&quot; (let ((word-list nil)) (loop for i below (length text) do (loop for j from (1+ i) upto (length text) for word = (subseq text i j) if (find word dic :test #&#39;string=) do (push word word-list))) ;; output shall be in sequence (nreverse word-list))) 一个简单的效果如下: (&quot;大&quot; &quot;大学&quot; &quot;学&quot; &quot;で&quot; &quot;日&quot; &quot;日本&quot; &quot;日本語&quot; &quot;本&quot; &quot;語&quot; &quot;を&quot; &quot;勉強&quot; &quot;強&quot; &quot;し&quot; &quot;しま&quot; &quot;ま&quot; &quot;ます&quot; &quot;す&quot;) 显然易见的可以提升的部分 这个历遍搜索的部分就看起来让人很想去修改 然后字符串匹配的部分也很需要去修改, 用自动机的话估计可以快一些 最长匹配 目标是能够将句子划分成词的序列, 完全分割可能没啥用处. 正向最长匹配算法 一个简单的伪代码如下: (defun forward-segment (text &amp;optional (dict *dictionary*)) &quot;正向最长匹配算法&quot; (if (zerop (length text)) nil (multiple-value-bind (longest-word rest-text) (longest-prefix-segment text dict) (cons longest-word (forward-segment rest-text dict)))))" />
+<meta property="og:description" content="About 参考了何晗 (开发 HanLP 的大佬) 写的自然语言处理入门一书. 主要是为了做一个玩具分词工具, 目标并不是为了能够有啥使用性. 词典的准备 在自然语言处理入门一书中, 提供了中文的词典用于使用, 但是我的目标是用来做日语分词的, 所以得找一些日语词典. 这里考虑的是使用 EDICT Dictionary File 来作为简单的日语词典, 并且仅使用其词条信息, 并不考虑其他的各种信息. 获取和处理方法 从网页上下载 edict.gz 文件包并解压可以得到一个 EUC-JP 编码的文件, 将其使用 iconv (iconv (Wikipedia), 对于 macOS 可以通过 homebrew 安装) 转换为 UTF-8 的编码: 下载词典 (去网站上直接下载也不是不行): wget http://ftp.edrdg.org/pub/Nihongo/edict.gz 解压 .gz 文件: gunzip edict.gz 然后转换文字编码: iconv -f EUC-JP -t UTF-8 edict &gt; edict-utf8 你可以用 head edict-utf8 命令来预览部分的词典. tail edict-utf8 # head is also ok 凜々しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 凜乎 [りんこ] /(adj-t,adv-to) commanding/awe-inspiring/ 凜然 [りんぜん] /(adj-t,adv-to) (1) commanding/awe-inspiring/(adj-t,adv-to) (2) bitter (cold)/piercing/ 凜烈 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜冽 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜凜 [りんりん] /(adj-t,adv-to) (1) severe/intense/awe-inspiring/commanding/(adj-t,adv-to) (2) biting/bitter (cold)/piercing/frigid/ 凜凜しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 熙々 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 熙春茶 [ひちゅんちゃ] /(n) hyson (Chinese green tea)/ 熙熙 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 可以看到里面的数据大概如下: 词条 [读音] /(词性) 定义.../ 用 Lisp 把它提取出来: (defparameter *dictionary* (with-open-file (stream file) (let ((scaner (ppcre:create-scanner &quot;[^ ]+&quot;))) (loop for line = (read-line stream nil) while line collect (ppcre:scan-to-strings scaner line)))) &quot;EDict Dictionary for Japanese word.&quot;) 在之后会考虑使用其他的日语词典来进行替换. 词典分词 完全切分 朴素的切分方法如下: (defun simple-full-segment (text &amp;optional (dic *dictionary*)) &quot;对 `text&#39; 使用简单的匹配进行完全切分.&quot; (let ((word-list nil)) (loop for i below (length text) do (loop for j from (1+ i) upto (length text) for word = (subseq text i j) if (find word dic :test #&#39;string=) do (push word word-list))) ;; output shall be in sequence (nreverse word-list))) 一个简单的效果如下: (&quot;大&quot; &quot;大学&quot; &quot;学&quot; &quot;で&quot; &quot;日&quot; &quot;日本&quot; &quot;日本語&quot; &quot;本&quot; &quot;語&quot; &quot;を&quot; &quot;勉強&quot; &quot;強&quot; &quot;し&quot; &quot;しま&quot; &quot;ま&quot; &quot;ます&quot; &quot;す&quot;) 显然易见的可以提升的部分 这个历遍搜索的部分就看起来让人很想去修改 然后字符串匹配的部分也很需要去修改, 用自动机的话估计可以快一些 最长匹配 目标是能够将句子划分成词的序列, 完全分割可能没啥用处. 正向最长匹配算法 一个简单的伪代码如下: (defun forward-segment (text &amp;optional (dict *dictionary*)) &quot;正向最长匹配算法&quot; (if (zerop (length text)) nil (multiple-value-bind (longest-word rest-text) (longest-prefix-segment text dict) (cons longest-word (forward-segment rest-text dict)))))" />
+<link rel="canonical" href="/learning/morphological-analyzer-jp/" />
+<meta property="og:url" content="/learning/morphological-analyzer-jp/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-01-25T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Morphological Analyzer for Japanese 01 Dictionary Tree" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-01-25T00:00:00+00:00","datePublished":"2024-01-25T00:00:00+00:00","description":"About 参考了何晗 (开发 HanLP 的大佬) 写的自然语言处理入门一书. 主要是为了做一个玩具分词工具, 目标并不是为了能够有啥使用性. 词典的准备 在自然语言处理入门一书中, 提供了中文的词典用于使用, 但是我的目标是用来做日语分词的, 所以得找一些日语词典. 这里考虑的是使用 EDICT Dictionary File 来作为简单的日语词典, 并且仅使用其词条信息, 并不考虑其他的各种信息. 获取和处理方法 从网页上下载 edict.gz 文件包并解压可以得到一个 EUC-JP 编码的文件, 将其使用 iconv (iconv (Wikipedia), 对于 macOS 可以通过 homebrew 安装) 转换为 UTF-8 的编码: 下载词典 (去网站上直接下载也不是不行): wget http://ftp.edrdg.org/pub/Nihongo/edict.gz 解压 .gz 文件: gunzip edict.gz 然后转换文字编码: iconv -f EUC-JP -t UTF-8 edict &gt; edict-utf8 你可以用 head edict-utf8 命令来预览部分的词典. tail edict-utf8 # head is also ok 凜々しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 凜乎 [りんこ] /(adj-t,adv-to) commanding/awe-inspiring/ 凜然 [りんぜん] /(adj-t,adv-to) (1) commanding/awe-inspiring/(adj-t,adv-to) (2) bitter (cold)/piercing/ 凜烈 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜冽 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/ 凜凜 [りんりん] /(adj-t,adv-to) (1) severe/intense/awe-inspiring/commanding/(adj-t,adv-to) (2) biting/bitter (cold)/piercing/frigid/ 凜凜しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/ 熙々 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 熙春茶 [ひちゅんちゃ] /(n) hyson (Chinese green tea)/ 熙熙 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/ 可以看到里面的数据大概如下: 词条 [读音] /(词性) 定义.../ 用 Lisp 把它提取出来: (defparameter *dictionary* (with-open-file (stream file) (let ((scaner (ppcre:create-scanner &quot;[^ ]+&quot;))) (loop for line = (read-line stream nil) while line collect (ppcre:scan-to-strings scaner line)))) &quot;EDict Dictionary for Japanese word.&quot;) 在之后会考虑使用其他的日语词典来进行替换. 词典分词 完全切分 朴素的切分方法如下: (defun simple-full-segment (text &amp;optional (dic *dictionary*)) &quot;对 `text&#39; 使用简单的匹配进行完全切分.&quot; (let ((word-list nil)) (loop for i below (length text) do (loop for j from (1+ i) upto (length text) for word = (subseq text i j) if (find word dic :test #&#39;string=) do (push word word-list))) ;; output shall be in sequence (nreverse word-list))) 一个简单的效果如下: (&quot;大&quot; &quot;大学&quot; &quot;学&quot; &quot;で&quot; &quot;日&quot; &quot;日本&quot; &quot;日本語&quot; &quot;本&quot; &quot;語&quot; &quot;を&quot; &quot;勉強&quot; &quot;強&quot; &quot;し&quot; &quot;しま&quot; &quot;ま&quot; &quot;ます&quot; &quot;す&quot;) 显然易见的可以提升的部分 这个历遍搜索的部分就看起来让人很想去修改 然后字符串匹配的部分也很需要去修改, 用自动机的话估计可以快一些 最长匹配 目标是能够将句子划分成词的序列, 完全分割可能没啥用处. 正向最长匹配算法 一个简单的伪代码如下: (defun forward-segment (text &amp;optional (dict *dictionary*)) &quot;正向最长匹配算法&quot; (if (zerop (length text)) nil (multiple-value-bind (longest-word rest-text) (longest-prefix-segment text dict) (cons longest-word (forward-segment rest-text dict)))))","headline":"Morphological Analyzer for Japanese 01 Dictionary Tree","mainEntityOfPage":{"@type":"WebPage","@id":"/learning/morphological-analyzer-jp/"},"url":"/learning/morphological-analyzer-jp/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Morphological Analyzer for Japanese | 01 Dictionary Tree</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-01-25T00:00:00+00:00" itemprop="datePublished">Jan 25, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>参考了何晗 (开发 <a href="https://github.com/hankcs/HanLP">HanLP</a> 的大佬) 写的自然语言处理入门一书.</p>
+<p>主要是为了做一个玩具分词工具, 目标并不是为了能够有啥使用性.</p>
+<h1>词典的准备</h1>在自然语言处理入门一书中, 提供了中文的词典用于使用,
+  但是我的目标是用来做日语分词的, 所以得找一些日语词典.
+  这里考虑的是使用 <a href="http://www.edrdg.org/jmdict/edict.html">EDICT Dictionary File</a> 来作为简单的日语词典,
+  并且仅使用其词条信息, 并不考虑其他的各种信息.
+<details><summary>获取和处理方法</summary>
+<p>从网页上下载 <code>edict.gz</code> 文件包并解压可以得到一个 <code>EUC-JP</code> 编码的文件,
+  将其使用 <code>iconv</code> (<a href="https://en.wikipedia.org/wiki/Iconv">iconv (Wikipedia)</a>, 对于 macOS 可以通过 homebrew 安装)
+  转换为 UTF-8 的编码:</p>
+<p>下载词典 (去网站上直接下载也不是不行):</p>
+<div class="highlight"><pre><span></span>wget<span class="w"> </span>http://ftp.edrdg.org/pub/Nihongo/edict.gz
+</pre></div>
+<p>解压 <code>.gz</code> 文件:</p>
+<div class="highlight"><pre><span></span>gunzip<span class="w"> </span>edict.gz
+</pre></div>
+<p>然后转换文字编码:</p>
+<div class="highlight"><pre><span></span>iconv<span class="w"> </span>-f<span class="w"> </span>EUC-JP<span class="w"> </span>-t<span class="w"> </span>UTF-8<span class="w"> </span>edict<span class="w"> </span>&gt;<span class="w"> </span>edict-utf8
+</pre></div>
+<p>你可以用 <code>head edict-utf8</code> 命令来预览部分的词典.</p>
+<div class="highlight"><pre><span></span>tail<span class="w"> </span>edict-utf8<span class="w"> </span><span class="c1"># head is also ok</span>
+</pre></div>
+<pre class="example">
+凜々しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/
+凜乎 [りんこ] /(adj-t,adv-to) commanding/awe-inspiring/
+凜然 [りんぜん] /(adj-t,adv-to) (1) commanding/awe-inspiring/(adj-t,adv-to) (2) bitter (cold)/piercing/
+凜烈 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/
+凜冽 [りんれつ] /(adj-na,adj-t,adv-to) (form) biting (cold)/severe/intense/piercing/
+凜凜 [りんりん] /(adj-t,adv-to) (1) severe/intense/awe-inspiring/commanding/(adj-t,adv-to) (2) biting/bitter (cold)/piercing/frigid/
+凜凜しい [りりしい] /(adj-i) gallant/manly/brave/imposing/awe-inspiring/chivalrous/dignified/
+熙々 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/
+熙春茶 [ひちゅんちゃ] /(n) hyson (Chinese green tea)/
+熙熙 [きき] /(adj-t,adv-to) (1) (rare) relaxed and enjoyable/(adj-t,adv-to) (2) (rare) spacious/vast/(adj-t,adv-to) (3) (rare) heavily trafficked/bustling/busy/
+</pre>
+<p>可以看到里面的数据大概如下:</p>
+<pre class="example">
+词条 [读音] /(词性) 定义.../
+</pre>
+<p>用 Lisp 把它提取出来:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*dictionary*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-open-file</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">file</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">scaner</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:create-scanner</span><span class="w"> </span><span class="s">&quot;[^ ]+&quot;</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">line</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">read-line</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="nv">line</span>
+<span class="w">            </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">ppcre:scan-to-strings</span><span class="w"> </span><span class="nv">scaner</span><span class="w"> </span><span class="nv">line</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;EDict Dictionary for Japanese word.&quot;</span><span class="p">)</span>
+</pre></div>
+</details>
+<p>在之后会考虑使用其他的日语词典来进行替换.</p>
+<h1>词典分词</h1>
+<h2>完全切分</h2>
+<p>朴素的切分方法如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">simple-full-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dic</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;对 `text&#39; 使用简单的匹配进行完全切分.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">word-list</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">j</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">dic</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">)</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">word-list</span><span class="p">)))</span>
+<span class="w">    </span><span class="c1">;; output shall be in sequence</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">nreverse</span><span class="w"> </span><span class="nv">word-list</span><span class="p">)))</span>
+</pre></div>
+<p>一个简单的效果如下:</p>
+<pre class="example">
+(&quot;大&quot; &quot;大学&quot; &quot;学&quot; &quot;で&quot; &quot;日&quot; &quot;日本&quot; &quot;日本語&quot; &quot;本&quot; &quot;語&quot; &quot;を&quot; &quot;勉強&quot; &quot;強&quot; &quot;し&quot; &quot;しま&quot; &quot;ま&quot; &quot;ます&quot; &quot;す&quot;)
+</pre>
+<details><summary>显然易见的可以提升的部分</summary>
+<ul>
+  <li>这个历遍搜索的部分就看起来让人很想去修改</li>
+  <li>然后字符串匹配的部分也很需要去修改, 用自动机的话估计可以快一些</li>
+</ul>
+</details>
+<h2>最长匹配</h2>
+<p>目标是能够将句子划分成词的序列, 完全分割可能没啥用处.</p>
+<h3>正向最长匹配算法</h3>
+<p>一个简单的伪代码如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">forward-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;正向最长匹配算法&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">nil</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">longest-word</span><span class="w"> </span><span class="nv">rest-text</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">longest-prefix-segment</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">dict</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">longest-word</span><span class="w"> </span><span class="p">(</span><span class="nf">forward-segment</span><span class="w"> </span><span class="nv">rest-text</span><span class="w"> </span><span class="nv">dict</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">longest-prefix-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;找到并返回在 `text&#39; 中的开头在字典 `dict&#39; 中的最长单词和剩下的字符串.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">longest-word</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+<span class="w">        </span><span class="nv">with</span><span class="w"> </span><span class="nv">longest-len</span><span class="w">  </span><span class="nb">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">        </span><span class="nv">with</span><span class="w"> </span><span class="nv">longest-idx</span><span class="w">  </span><span class="nb">=</span><span class="w"> </span><span class="mi">0</span>
+
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">for</span><span class="w"> </span><span class="nv">word-len</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">word</span><span class="p">)</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">dict</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">word-len</span><span class="w"> </span><span class="nv">longest-len</span><span class="p">))</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">longest-word</span><span class="w"> </span><span class="nv">word</span>
+<span class="w">                   </span><span class="nv">longest-len</span><span class="w">  </span><span class="nv">word-len</span>
+<span class="w">                   </span><span class="nv">longest-idx</span><span class="w">  </span><span class="nv">i</span><span class="p">)</span>
+
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">                  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">longest-len</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">:fail</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">longest-word</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">longest-idx</span><span class="p">))))))</span>
+</pre></div>
+<details><summary>这里有一些补注</summary>
+<p>这里假定所有的匹配一定是最长匹配是正确的, 但是如果不一定最长匹配是对的,
+  或者第二长的才是正确的匹配? 但是这样的算法并没有做到这样的 fallback 处理,
+  所以这里有一个小小的修改.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">forward-segment*</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;正向最长匹配算法&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">nil</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">longest-prefix-segments</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">dict</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">word</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">shift-idx</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">patterns</span>
+<span class="w">              </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">:fail</span><span class="p">))</span>
+<span class="w">                </span><span class="nv">return</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">word</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">forward-segment*</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">shift-idx</span><span class="p">)</span><span class="w"> </span><span class="nv">dict</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">longest-prefix-segments</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;找到并返回在 `text&#39; 中的开头在字典 `dict&#39; 中的最长单词和剩下的字符串.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">              </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span>
+<span class="w">              </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">dict</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">)</span>
+<span class="w">                </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+<span class="w">        </span><span class="o">#</span><span class="ss">&#39;string&gt;</span><span class="w"> </span><span class="nv">:key</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;car</span><span class="p">))</span>
+</pre></div>
+<p>相当于变成了一个深度搜索的算法了.</p>
+</details>
+<h3>反向匹配算法</h3>
+<p>反过来也不是不行, 这样就变成了反向最长匹配:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">backward-segment*</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;反向最长匹配算法&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span>
+<span class="w">      </span><span class="p">((</span><span class="nf">backward-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">))</span>
+<span class="w">             </span><span class="nv">nil</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">word</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">shift-idx</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">longest-postfix-segments</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">dict</span><span class="p">)</span>
+<span class="w">                   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">:fail</span><span class="p">))</span>
+<span class="w">                     </span><span class="nv">return</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">word</span>
+<span class="w">                                  </span><span class="p">(</span><span class="nf">backward-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">shift-idx</span><span class="p">)))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="p">(</span><span class="nf">backward-segment</span><span class="w"> </span><span class="nv">text</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">longest-postfix-segments</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;找到并返回在 `text&#39; 中的结尾在字典 `dict&#39; 中的最长单词和剩下的字符串.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">))</span><span class="w"> </span><span class="nv">downto</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">dict</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+<span class="w">          </span><span class="o">#</span><span class="ss">&#39;&gt;</span><span class="w"> </span><span class="nv">:key</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))))))</span>
+</pre></div>
+<p>注: 但是感觉效果一般, 很多都匹配不出来, 并且还很慢&#8230; 一个原因是词典可能不够大,
+  另外一个可能是这个字符串匹配的过程有点太慢了.</p>
+<h3>双向匹配算法</h3>
+<p>对正向和反向的匹配结果进行比较, 选择较优的结果, 批判标准如下:</p>
+<ul>
+  <li>优先返回词数较少的</li>
+  <li>以及单字数量较少的</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">bidirectional-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;双向匹配算法&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">single-word-count</span><span class="w"> </span><span class="p">(</span><span class="nf">seq</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">seq</span>
+<span class="w">                   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">word</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nb">count</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nb">count</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">forward</span><span class="w">  </span><span class="p">(</span><span class="nf">forward-segment*</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">dict</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">backward</span><span class="w"> </span><span class="p">(</span><span class="nf">backward-segment*</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">dict</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">forward-len</span><span class="w">  </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">forward</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">backward-len</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">backward</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="nv">forward-len</span><span class="w"> </span><span class="nv">backward-len</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">forward-len</span><span class="w"> </span><span class="nv">backward-len</span><span class="p">)</span><span class="w"> </span><span class="nv">forward</span><span class="w"> </span><span class="nv">backward</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">forward-count</span><span class="w">  </span><span class="p">(</span><span class="nf">single-word-count</span><span class="w"> </span><span class="nv">forward</span><span class="p">))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">backward-count</span><span class="w"> </span><span class="p">(</span><span class="nf">single-word-count</span><span class="w"> </span><span class="nv">backward</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">forward-count</span><span class="w"> </span><span class="nv">backward-count</span><span class="p">)</span><span class="w"> </span><span class="nv">forward</span><span class="w"> </span><span class="nv">backward</span><span class="p">))))))</span>
+</pre></div>
+<p>缺点就是更慢了 (汗).</p>
+<h2>字典树</h2>
+<p>Lisp 的树的实现应该可以如下实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">dictionary-tree-node</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">chr</span><span class="w">       </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">chr</span>
+<span class="w">              </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:chr</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">terminal</span><span class="w">  </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">dictionary-terminal-p</span>
+<span class="w">              </span><span class="nv">:initform</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:terminal</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">children</span><span class="w">  </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">dictionary-children</span>
+<span class="w">              </span><span class="nv">:initform</span><span class="w"> </span><span class="p">(</span><span class="nb">make-hash-table</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="ss">&#39;equal</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">parent</span><span class="w">    </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">dictionary-parent</span>
+<span class="w">              </span><span class="nv">:initform</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;字典树的节点&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-dictionary-tree-node</span><span class="w"> </span><span class="p">(</span><span class="nf">char</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">terminal</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;创建一个字典树的节点&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;dictionary-tree-node</span><span class="w"> </span><span class="nv">:chr</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="nv">:terminal</span><span class="w"> </span><span class="nv">terminal</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">insert-word</span><span class="w"> </span><span class="p">((</span><span class="nf">tree</span><span class="w"> </span><span class="nv">dictionary-tree-node</span><span class="p">)</span><span class="w"> </span><span class="nv">word</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">word</span><span class="p">))</span>
+<span class="w">      </span><span class="c1">;; end of word -&gt; terminal</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w">  </span><span class="p">(</span><span class="nf">dictionary-terminal-p</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">    </span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">char</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="p">(</span><span class="nf">dictionary-children</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span><span class="w">        </span>
+<span class="w">        </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">node</span>
+<span class="w">          </span><span class="c1">;; append tree if not exists</span>
+<span class="w">          </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">new-node</span><span class="w"> </span><span class="p">(</span><span class="nf">make-dictionary-tree-node</span><span class="w"> </span><span class="nv">char</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="p">(</span><span class="nf">dictionary-children</span><span class="w"> </span><span class="nv">tree</span><span class="p">))</span><span class="w"> </span><span class="nv">new-node</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">dictionary-parent</span><span class="w"> </span><span class="nv">new-node</span><span class="p">)</span><span class="w">              </span><span class="nv">tree</span>
+<span class="w">                  </span><span class="nv">node</span><span class="w">                                      </span><span class="nv">new-node</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">insert-word</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="mi">1</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-dictionary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">dict</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;生成字典树&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">tree</span><span class="w"> </span><span class="p">(</span><span class="nf">make-dictionary-tree-node</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">dict</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">insert-word</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="nv">word</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">tree</span><span class="p">))</span>
+</pre></div>
+<p>看看效果, 生成一个词典所需用时:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">time</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*dictionary-tree*</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">make-dictionary-tree</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">)</span>
+<span class="w">   </span><span class="s">&quot;简单的日语字典树&quot;</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+jp-nlp&gt; (time
+         (dotimes (i 100) (make-dictionary-tree *dictionary*)))
+Evaluation took:
+  63.475 seconds of real time
+  63.065967 seconds of total run time (58.132774 user, 4.933193 system)
+  [ Real times consist of 38.394 seconds GC time, and 25.081 seconds non-GC time. ]
+  [ Run times consist of 37.901 seconds GC time, and 25.165 seconds non-GC time. ]
+  99.36% CPU
+  35,816,351,920 bytes consed
+</pre>
+<p>注: 感觉运算很多时间都花在 GC 上了, 估计是哪里程序写得不是很好&#8230;</p>
+<details><summary>一些没用的可视化工作</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">graphviz-render</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">headers</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;Render the tree into graphviz code.&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">graphviz-render</span><span class="w"> </span><span class="p">((</span><span class="nf">tree</span><span class="w"> </span><span class="nv">dictionary-tree-node</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">headers</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span>
+<span class="w">      </span><span class="p">((</span><span class="nf">renderer</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">point</span><span class="w"> </span><span class="p">(</span><span class="nf">chr</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">type</span><span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">string=</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;point&quot;</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">((</span><span class="nf">dictionary-terminal-p</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;doublecircle&quot;</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="s">&quot;circle&quot;</span><span class="p">)))</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">nexts</span><span class="w"> </span><span class="p">(</span><span class="nf">alexandria:hash-table-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">dictionary-children</span><span class="w"> </span><span class="nv">node</span><span class="p">))))</span>
+<span class="w">           </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">nexts</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [shape=~a,label=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">];&quot;</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">point</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">char</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">next</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">nexts</span>
+<span class="w">                 </span><span class="nv">for</span><span class="w"> </span><span class="nv">next-node-name</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="nv">char</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">collect</span><span class="w"> </span><span class="nv">next-node-name</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">next-node-names</span>
+<span class="w">                 </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">renderer</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="nv">next-node-name</span><span class="p">)</span><span class="w"> </span><span class="nv">into</span><span class="w"> </span><span class="nv">next-nodes</span>
+<span class="w">                 </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> [shape=~a,label=</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">];~&amp;</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s"> -&gt; { ~{</span><span class="se">\&quot;</span><span class="s">~a</span><span class="se">\&quot;</span><span class="s">~^, ~} };~&amp;~{~&amp;~a~}&quot;</span>
+<span class="w">                                         </span><span class="nv">name</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">point</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">next-node-names</span>
+<span class="w">                                         </span><span class="nv">next-nodes</span><span class="p">)))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;digraph {~&amp;~a~&amp;~a~&amp;}&quot;</span><span class="w"> </span><span class="nv">headers</span><span class="w"> </span><span class="p">(</span><span class="nf">renderer</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="s">&quot;root&quot;</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">graphviz-&gt;svg</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">output</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">headers</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="nv">debug</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;把 `tree&#39; 用 Graphviz 渲染 SVG 输出到 `output&#39; 处. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">with-input-from-string</span><span class="w"> </span><span class="p">(</span><span class="nf">input</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">debug</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="p">(</span><span class="nf">graphviz-render</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="nv">headers</span><span class="p">))</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">graphviz-render</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="nv">headers</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">uiop:run-program</span><span class="w"> </span><span class="s">&quot;dot -Tsvg&quot;</span><span class="w"> </span><span class="nv">:input</span><span class="w"> </span><span class="nv">input</span><span class="w"> </span><span class="nv">:output</span><span class="w"> </span><span class="p">(</span><span class="nf">pathname</span><span class="w"> </span><span class="nv">output</span><span class="p">))</span>
+<span class="w">  </span><span class="nv">output</span><span class="p">))</span>
+</pre></div>
+<p>简单的一些尝试:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">pivot</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="p">)</span><span class="w"> </span><span class="mi">20</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">graphviz-&gt;svg</span><span class="w"> </span><span class="p">(</span><span class="nf">make-dictionary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="w"> </span><span class="nv">pivot</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="nv">pivot</span><span class="p">)))</span>
+<span class="w">                 </span><span class="nv">output</span><span class="w"> </span><span class="nv">:headers</span><span class="w"> </span><span class="s">&quot;rankdir=LR;&quot;</span><span class="p">))</span>
+</pre></div>
+<p><img src="/_img/lisp/jp-word-segmentation/20-word-dict-tree.svg" alt="/_img/lisp/jp-word-segmentation/20-word-dict-tree.svg" /></p>
+<p>注: 我有一个变态的想法&#8230; 不过只能说我的电脑跑不动那么大的输出渲染,
+  或者也有可能是我的算法还不够优化, 只能跑一个小的图显示一下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">graphviz-&gt;svg</span><span class="w"> </span><span class="p">(</span><span class="nf">make-dictionary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">ryo:random-samples</span><span class="w"> </span><span class="nv">*dictionary*</span><span class="w"> </span><span class="mi">100</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">output</span><span class="w"> </span><span class="nv">:headers</span><span class="w"> </span><span class="s">&quot;layout=fdp;&quot;</span><span class="p">)</span>
+</pre></div>
+<p><img src="/_img/lisp/jp-word-segmentation/crazy-word-dict-tree.svg" alt="/_img/lisp/jp-word-segmentation/crazy-word-dict-tree.svg" /></p>
+</details>
+<p>用字典树看看能不能修改一下原来的最大正向匹配算法, 让其跑得稍微快一点:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">forward-segment</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;使用字典树 `tree&#39; 来分割 `text&#39;. &quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">longest-prefix-segments</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;使用字典树 `tree&#39; 来匹配所有 `text&#39; 开头的词.</span>
+<span class="s">返回一个包含 (单词 . 相对开头位移) 的一个列表. &quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">longest-prefix-segments</span><span class="w"> </span><span class="p">((</span><span class="nf">tree</span><span class="w"> </span><span class="nv">dictionary-tree-node</span><span class="p">)</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">node</span><span class="w"> </span><span class="nv">tree</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">tree</span>
+<span class="w">          </span><span class="nv">with</span><span class="w"> </span><span class="nv">word-list</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">shift</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">upto</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">shift</span><span class="p">)</span><span class="w"> </span><span class="nv">shift</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">dictionary-children</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">          </span><span class="k">while</span><span class="w"> </span><span class="nv">node</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">dictionary-terminal-p</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">shift</span><span class="p">)</span><span class="w"> </span><span class="nv">shift</span><span class="p">)</span><span class="w"> </span><span class="nv">word-list</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">word-list</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">forward-segment</span><span class="w"> </span><span class="p">((</span><span class="nf">tree</span><span class="w"> </span><span class="nv">dictionary-tree-node</span><span class="p">)</span><span class="w"> </span><span class="nv">text</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">text</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">nil</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">patterns</span><span class="w"> </span><span class="p">(</span><span class="nf">longest-prefix-segments</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="nv">text</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">patterns</span>
+<span class="w">            </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">word</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">shift</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">patterns</span>
+<span class="w">                             </span><span class="nv">for</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nf">forward-segment</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">text</span><span class="w"> </span><span class="nv">shift</span><span class="p">))</span>
+<span class="w">                             </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="nv">:fail</span><span class="p">))</span>
+<span class="w">                               </span><span class="nv">return</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">word</span><span class="w"> </span><span class="nv">next</span><span class="p">))))</span>
+<span class="w">              </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">:fail</span><span class="p">))</span>
+<span class="w">            </span><span class="nv">:fail</span><span class="p">))))</span>
+</pre></div>
+<p>嗯, 这下子快多了. 不过感觉效果还是一般, 菜得很&#8230;</p>
+<h1>暂时停止</h1>
+<p>打算先去做点别的东西之后再回来继续, 反正也是玩玩.</p>
+
+  </div><a class="u-url" href="/learning/morphological-analyzer-jp/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Reading] Natural Language Processing in Lisp 01 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[Reading] Natural Language Processing in Lisp 01" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="又是一个新坑 我不管, 好玩玩它就是了. 又, 这本书里面现在看起来故事挺多的, 感觉挺有意思的. Finite-State Techniques Finite-state automata (FSAs) are among the simplest computing machines that can be envisaged. They are well understood mathematically, easy to implement and efficient at doing what they do. If an NLP problem can be conveniently solved with a finite-state automaton, then it is probably a good idea to solve it that way. However. FSAs are subject to certain formal limitations that render them ill suited to certain computational linguistic tasks. This chapter provides a fairly comprehensive introduction to these machines and their implementation, indicates possible areas of application and gives some concrete examples of their use, and examines their limitations. Finite-state transition networks 如何判断输入的文本的语言类型? 词频分析: 比如对于不同的语言文本, 其字母出现的频率不同, 所以可以通过这样的方式来判断. 暴力枚举: 假设所有的语言都存在对应的处理程序, 对所有的处理程序, 都进行一次匹配, 如果不成功的话就使用下一个语言, 这样的坏处是比较慢. 简单的自动机的例子 一个开怀大笑的例子: 上图即为一个简单的 (只有四个状态的) 描述 FSA (有限自动机) 的 FSTN (有限状态转移图). 其中在第三个状态 3 处, 在两条道路 &#8221;h&#8221; 和 &#8221;!&#8221; 之间会有一定的机率发生转换. 这个转换的依据可以是外部的一个随机数生成器这样之类的东西. 使用上述自动机, 还能够用来处理输入, 比如将输入的符号扔到里面进行匹配. (那么说起来, 这个的感觉有点像是一种正则表达式进行匹配的感觉. ) 当然, 描述一个自动机可以有多种可能: 不过和前一种自动机不同的是, 这个自动机是 non-deterministic (非确定的) 的自动机. 从 2 状态的两个 a 转换的规则即可看出. 除了上面的未定分支, 还可以出现跳转分支 (jump arc, 或者说, 无标签的跳转 unlabelled arcs): 注: 这一段是想要说明 FSTN 和 FSA 的一些细微的区别, 即对于 FSTN 来说, 上面的网络都是可行的, 但是对于 FSA 来说, 这样的网络并不都是可行的. 但是一般为了方便, 所以会在不出现歧义的情况下将二者等同. 于是上面就给出了一个如何处理语言 (或者说, 如何识别特定语言) 的思路: 即对一种语言, 构建出关于其的自动机网络 FSTN, 然后对其识别即可. A notation for networks 为了达到使用 FSTN 对语言进行识别的目的, 首先需要想一种用来描述 FSTN 的形式标记. 而对于一个 FSTN, 其应该由如下组成: (显然, 这就是一个有向图) 网络需要有一个名称 尽管在描述 FSTN 的时候, 一个名字仅仅只是助记用途 (mnemonic), 但是在 RTN 种, the name of network plays an absolutely crucial role in the definition of RTNs. 在这里用: Name TO-LAUGH: 来标记之前的 laughing 机. 网络的节点的集合 对于节点的集合, 其必须包含一个初始节点 Initial, 以及一个终止节点 Final. 于是一个图的节点集合可以记为: Initial 1 Final 4 对于这样的一个集合, 一个更加方便的方法则是对集合进行划分 (引入子集和缩写 abbreviates 的方式来进行描述): V abbreviates: a, e, i, o, u. C abbreviates: b, c, d, f, g, h, j, k, l, m, n, p, q, r, s, t, v, w, x, y, z. 对于这样的缩写, 在绘图的时候通过用缩写名字来代替各种线的方式来简化图的结构. 连接网络中节点的有向线段 对于有向线段的描述, 通过 From &lt;node&gt; to &lt;node&gt; by &lt;label&gt; 的方式进行定义. 其中在用 # 来表述 &lt;label&gt; 的时候, 认为其为无 label 的跳转. 于是一个完整的描述如下: (为上面的最后一个自动机的图) Name TO-LAUGH: Initial 1 Final 4 From 1 to 2 by h From 2 to 3 by a From 3 to 1 by # From 3 to 4 by !. 其中, &lt;label&gt; 可以是多个字符的子集. 并且还能够通过这样的方式来对其进行描述: (通过一个转移矩阵来描述和储存) ha! 1200 2030 3204 4000 其中用 0 表示没有线段, 用其他的数字来表示到达的目的地. 英语的一些例子 英语语句 一个英语的例子 (代码以及解释) 对于一个英语的语句结构, 可以用如下的 FSTN 来进行表述: Name ENGLISH-1: Initial 1 Final 9 From 1 to 3 by NP From 1 to 2 by DET From 2 to 3 by N From 3 to 4 by BV From 4 to 5 by ADV From 4 to 5 by # From 5 to 6 by DET From 5 to 7 by DET From 5 to 8 by # From 6 to 6 by MOD From 6 to 7 by ADJ From 7 to 9 by N From 8 to 8 by MOD From 8 to 9 by ADJ From 9 to 4 by CNJ From 9 to 1 by CNJ" />
+<meta property="og:description" content="又是一个新坑 我不管, 好玩玩它就是了. 又, 这本书里面现在看起来故事挺多的, 感觉挺有意思的. Finite-State Techniques Finite-state automata (FSAs) are among the simplest computing machines that can be envisaged. They are well understood mathematically, easy to implement and efficient at doing what they do. If an NLP problem can be conveniently solved with a finite-state automaton, then it is probably a good idea to solve it that way. However. FSAs are subject to certain formal limitations that render them ill suited to certain computational linguistic tasks. This chapter provides a fairly comprehensive introduction to these machines and their implementation, indicates possible areas of application and gives some concrete examples of their use, and examines their limitations. Finite-state transition networks 如何判断输入的文本的语言类型? 词频分析: 比如对于不同的语言文本, 其字母出现的频率不同, 所以可以通过这样的方式来判断. 暴力枚举: 假设所有的语言都存在对应的处理程序, 对所有的处理程序, 都进行一次匹配, 如果不成功的话就使用下一个语言, 这样的坏处是比较慢. 简单的自动机的例子 一个开怀大笑的例子: 上图即为一个简单的 (只有四个状态的) 描述 FSA (有限自动机) 的 FSTN (有限状态转移图). 其中在第三个状态 3 处, 在两条道路 &#8221;h&#8221; 和 &#8221;!&#8221; 之间会有一定的机率发生转换. 这个转换的依据可以是外部的一个随机数生成器这样之类的东西. 使用上述自动机, 还能够用来处理输入, 比如将输入的符号扔到里面进行匹配. (那么说起来, 这个的感觉有点像是一种正则表达式进行匹配的感觉. ) 当然, 描述一个自动机可以有多种可能: 不过和前一种自动机不同的是, 这个自动机是 non-deterministic (非确定的) 的自动机. 从 2 状态的两个 a 转换的规则即可看出. 除了上面的未定分支, 还可以出现跳转分支 (jump arc, 或者说, 无标签的跳转 unlabelled arcs): 注: 这一段是想要说明 FSTN 和 FSA 的一些细微的区别, 即对于 FSTN 来说, 上面的网络都是可行的, 但是对于 FSA 来说, 这样的网络并不都是可行的. 但是一般为了方便, 所以会在不出现歧义的情况下将二者等同. 于是上面就给出了一个如何处理语言 (或者说, 如何识别特定语言) 的思路: 即对一种语言, 构建出关于其的自动机网络 FSTN, 然后对其识别即可. A notation for networks 为了达到使用 FSTN 对语言进行识别的目的, 首先需要想一种用来描述 FSTN 的形式标记. 而对于一个 FSTN, 其应该由如下组成: (显然, 这就是一个有向图) 网络需要有一个名称 尽管在描述 FSTN 的时候, 一个名字仅仅只是助记用途 (mnemonic), 但是在 RTN 种, the name of network plays an absolutely crucial role in the definition of RTNs. 在这里用: Name TO-LAUGH: 来标记之前的 laughing 机. 网络的节点的集合 对于节点的集合, 其必须包含一个初始节点 Initial, 以及一个终止节点 Final. 于是一个图的节点集合可以记为: Initial 1 Final 4 对于这样的一个集合, 一个更加方便的方法则是对集合进行划分 (引入子集和缩写 abbreviates 的方式来进行描述): V abbreviates: a, e, i, o, u. C abbreviates: b, c, d, f, g, h, j, k, l, m, n, p, q, r, s, t, v, w, x, y, z. 对于这样的缩写, 在绘图的时候通过用缩写名字来代替各种线的方式来简化图的结构. 连接网络中节点的有向线段 对于有向线段的描述, 通过 From &lt;node&gt; to &lt;node&gt; by &lt;label&gt; 的方式进行定义. 其中在用 # 来表述 &lt;label&gt; 的时候, 认为其为无 label 的跳转. 于是一个完整的描述如下: (为上面的最后一个自动机的图) Name TO-LAUGH: Initial 1 Final 4 From 1 to 2 by h From 2 to 3 by a From 3 to 1 by # From 3 to 4 by !. 其中, &lt;label&gt; 可以是多个字符的子集. 并且还能够通过这样的方式来对其进行描述: (通过一个转移矩阵来描述和储存) ha! 1200 2030 3204 4000 其中用 0 表示没有线段, 用其他的数字来表示到达的目的地. 英语的一些例子 英语语句 一个英语的例子 (代码以及解释) 对于一个英语的语句结构, 可以用如下的 FSTN 来进行表述: Name ENGLISH-1: Initial 1 Final 9 From 1 to 3 by NP From 1 to 2 by DET From 2 to 3 by N From 3 to 4 by BV From 4 to 5 by ADV From 4 to 5 by # From 5 to 6 by DET From 5 to 7 by DET From 5 to 8 by # From 6 to 6 by MOD From 6 to 7 by ADJ From 7 to 9 by N From 8 to 8 by MOD From 8 to 9 by ADJ From 9 to 4 by CNJ From 9 to 1 by CNJ" />
+<link rel="canonical" href="/reading/natural-language-processing-in-lisp/" />
+<meta property="og:url" content="/reading/natural-language-processing-in-lisp/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-02-23T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Reading] Natural Language Processing in Lisp 01" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-02-23T00:00:00+00:00","datePublished":"2023-02-23T00:00:00+00:00","description":"又是一个新坑 我不管, 好玩玩它就是了. 又, 这本书里面现在看起来故事挺多的, 感觉挺有意思的. Finite-State Techniques Finite-state automata (FSAs) are among the simplest computing machines that can be envisaged. They are well understood mathematically, easy to implement and efficient at doing what they do. If an NLP problem can be conveniently solved with a finite-state automaton, then it is probably a good idea to solve it that way. However. FSAs are subject to certain formal limitations that render them ill suited to certain computational linguistic tasks. This chapter provides a fairly comprehensive introduction to these machines and their implementation, indicates possible areas of application and gives some concrete examples of their use, and examines their limitations. Finite-state transition networks 如何判断输入的文本的语言类型? 词频分析: 比如对于不同的语言文本, 其字母出现的频率不同, 所以可以通过这样的方式来判断. 暴力枚举: 假设所有的语言都存在对应的处理程序, 对所有的处理程序, 都进行一次匹配, 如果不成功的话就使用下一个语言, 这样的坏处是比较慢. 简单的自动机的例子 一个开怀大笑的例子: 上图即为一个简单的 (只有四个状态的) 描述 FSA (有限自动机) 的 FSTN (有限状态转移图). 其中在第三个状态 3 处, 在两条道路 &#8221;h&#8221; 和 &#8221;!&#8221; 之间会有一定的机率发生转换. 这个转换的依据可以是外部的一个随机数生成器这样之类的东西. 使用上述自动机, 还能够用来处理输入, 比如将输入的符号扔到里面进行匹配. (那么说起来, 这个的感觉有点像是一种正则表达式进行匹配的感觉. ) 当然, 描述一个自动机可以有多种可能: 不过和前一种自动机不同的是, 这个自动机是 non-deterministic (非确定的) 的自动机. 从 2 状态的两个 a 转换的规则即可看出. 除了上面的未定分支, 还可以出现跳转分支 (jump arc, 或者说, 无标签的跳转 unlabelled arcs): 注: 这一段是想要说明 FSTN 和 FSA 的一些细微的区别, 即对于 FSTN 来说, 上面的网络都是可行的, 但是对于 FSA 来说, 这样的网络并不都是可行的. 但是一般为了方便, 所以会在不出现歧义的情况下将二者等同. 于是上面就给出了一个如何处理语言 (或者说, 如何识别特定语言) 的思路: 即对一种语言, 构建出关于其的自动机网络 FSTN, 然后对其识别即可. A notation for networks 为了达到使用 FSTN 对语言进行识别的目的, 首先需要想一种用来描述 FSTN 的形式标记. 而对于一个 FSTN, 其应该由如下组成: (显然, 这就是一个有向图) 网络需要有一个名称 尽管在描述 FSTN 的时候, 一个名字仅仅只是助记用途 (mnemonic), 但是在 RTN 种, the name of network plays an absolutely crucial role in the definition of RTNs. 在这里用: Name TO-LAUGH: 来标记之前的 laughing 机. 网络的节点的集合 对于节点的集合, 其必须包含一个初始节点 Initial, 以及一个终止节点 Final. 于是一个图的节点集合可以记为: Initial 1 Final 4 对于这样的一个集合, 一个更加方便的方法则是对集合进行划分 (引入子集和缩写 abbreviates 的方式来进行描述): V abbreviates: a, e, i, o, u. C abbreviates: b, c, d, f, g, h, j, k, l, m, n, p, q, r, s, t, v, w, x, y, z. 对于这样的缩写, 在绘图的时候通过用缩写名字来代替各种线的方式来简化图的结构. 连接网络中节点的有向线段 对于有向线段的描述, 通过 From &lt;node&gt; to &lt;node&gt; by &lt;label&gt; 的方式进行定义. 其中在用 # 来表述 &lt;label&gt; 的时候, 认为其为无 label 的跳转. 于是一个完整的描述如下: (为上面的最后一个自动机的图) Name TO-LAUGH: Initial 1 Final 4 From 1 to 2 by h From 2 to 3 by a From 3 to 1 by # From 3 to 4 by !. 其中, &lt;label&gt; 可以是多个字符的子集. 并且还能够通过这样的方式来对其进行描述: (通过一个转移矩阵来描述和储存) ha! 1200 2030 3204 4000 其中用 0 表示没有线段, 用其他的数字来表示到达的目的地. 英语的一些例子 英语语句 一个英语的例子 (代码以及解释) 对于一个英语的语句结构, 可以用如下的 FSTN 来进行表述: Name ENGLISH-1: Initial 1 Final 9 From 1 to 3 by NP From 1 to 2 by DET From 2 to 3 by N From 3 to 4 by BV From 4 to 5 by ADV From 4 to 5 by # From 5 to 6 by DET From 5 to 7 by DET From 5 to 8 by # From 6 to 6 by MOD From 6 to 7 by ADJ From 7 to 9 by N From 8 to 8 by MOD From 8 to 9 by ADJ From 9 to 4 by CNJ From 9 to 1 by CNJ","headline":"[Reading] Natural Language Processing in Lisp 01","mainEntityOfPage":{"@type":"WebPage","@id":"/reading/natural-language-processing-in-lisp/"},"url":"/reading/natural-language-processing-in-lisp/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[Reading] Natural Language Processing in Lisp 01</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-02-23T00:00:00+00:00" itemprop="datePublished">Feb 23, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>又是一个新坑</h1>
+<p>我不管, 好玩玩它就是了.</p>
+<p>又, 这本书里面现在看起来故事挺多的, 感觉挺有意思的.</p>
+<h1>Finite-State Techniques</h1>
+<blockquote>
+  <p>Finite-state automata (FSAs) are among the simplest computing machines
+    that can be envisaged. They are well understood mathematically, easy to
+    implement and efficient at doing what they do. If an NLP problem can be
+    conveniently solved with a finite-state automaton, then it is probably
+    a good idea to solve it that way. However. FSAs are subject to certain
+    formal limitations that render them ill suited to certain computational
+    linguistic tasks. This chapter provides a fairly comprehensive introduction
+    to these machines and their implementation, indicates possible areas of
+    application and gives some concrete examples of their use, and examines
+    their limitations.</p>
+</blockquote>
+<h2>Finite-state transition networks</h2>
+<p>如何判断输入的文本的语言类型?</p>
+<ul>
+  <li>词频分析:
+    <p>比如对于不同的语言文本, 其字母出现的频率不同,
+      所以可以通过这样的方式来判断.</p>
+  </li>
+  <li>暴力枚举:
+    <p>假设所有的语言都存在对应的处理程序, 对所有的处理程序,
+      都进行一次匹配, 如果不成功的话就使用下一个语言,
+      这样的坏处是比较慢.</p>
+  </li>
+</ul>
+<h3>简单的自动机的例子</h3>
+<p>一个开怀大笑的例子:</p>
+<p><img src="/_img/reading/lisp-nlp/laughing-machine.svg" alt="/_img/reading/lisp-nlp/laughing-machine.svg" /></p>
+<p>上图即为一个简单的 (只有四个状态的) 描述 FSA (有限自动机) 的 FSTN (有限状态转移图).
+  其中在第三个状态 <b>3</b> 处, 在两条道路 &#8221;<b>h</b>&#8221; 和 &#8221;<b>!</b>&#8221; 之间会有一定的机率发生转换.
+  这个转换的依据可以是外部的一个随机数生成器这样之类的东西.</p>
+<p>使用上述自动机, 还能够用来处理输入, 比如将输入的符号扔到里面进行匹配.
+  (那么说起来, 这个的感觉有点像是一种正则表达式进行匹配的感觉. )</p>
+<p>当然, 描述一个自动机可以有多种可能:</p>
+<p><img src="/_img/reading/lisp-nlp/laughing-machine-reading.svg" alt="/_img/reading/lisp-nlp/laughing-machine-reading.svg" /></p>
+<p>不过和前一种自动机不同的是, 这个自动机是 <b>non-deterministic</b> (非确定的) 的自动机.
+  从 <b>2</b> 状态的两个 <b>a</b> 转换的规则即可看出.</p>
+<p>除了上面的未定分支, 还可以出现跳转分支 (<b>jump arc</b>, 或者说, 无标签的跳转 unlabelled arcs):</p>
+<p><img src="/_img/reading/lisp-nlp/laughing-machine-with-jump-arc.svg" alt="/_img/reading/lisp-nlp/laughing-machine-with-jump-arc.svg" /></p>
+<p>注: 这一段是想要说明 FSTN 和 FSA 的一些细微的区别, 即对于 FSTN 来说,
+  上面的网络都是可行的, 但是对于 FSA 来说, 这样的网络并不都是可行的.
+  但是一般为了方便, 所以会在不出现歧义的情况下将二者等同.</p>
+<p>于是上面就给出了一个如何处理语言 (或者说, 如何识别特定语言) 的思路:
+  即对一种语言, 构建出关于其的自动机网络 FSTN, 然后对其识别即可.</p>
+<h2>A notation for networks</h2>
+<p>为了达到使用 FSTN 对语言进行识别的目的, 首先需要想一种用来描述 FSTN 的形式标记.
+  而对于一个 FSTN, 其应该由如下组成: (显然, 这就是一个有向图)</p>
+<ol>
+  <li>网络需要有一个名称
+    <p>尽管在描述 FSTN 的时候, 一个名字仅仅只是助记用途 (mnemonic), 但是在 RTN 种,
+      the name of network plays an absolutely crucial role in the definition of RTNs.</p>
+    <p>在这里用:</p>
+<div class="highlight"><pre><span></span>Name TO-LAUGH:
+</pre></div>
+    <p>来标记之前的 <b>laughing</b> 机.</p>
+  </li>
+  <li>网络的节点的集合
+    <p>对于节点的集合, 其必须包含一个初始节点 <b>Initial</b>, 以及一个终止节点 <b>Final</b>.
+      于是一个图的节点集合可以记为:</p>
+<div class="highlight"><pre><span></span>Initial 1
+Final 4
+</pre></div>
+    <p>对于这样的一个集合, 一个更加方便的方法则是对集合进行划分
+      (引入子集和缩写 <code>abbreviates</code> 的方式来进行描述):</p>
+<div class="highlight"><pre><span></span>V abbreviates:
+  a, e, i, o, u.
+C abbreviates:
+  b, c, d, f, g, h, j, k, l, m, n, p, q, r, s, t, v, w, x, y, z.
+</pre></div>
+    <p>对于这样的缩写, 在绘图的时候通过用缩写名字来代替各种线的方式来简化图的结构.</p>
+  </li>
+  <li>连接网络中节点的有向线段
+    <p>对于有向线段的描述, 通过 <code>From &lt;node&gt; to &lt;node&gt; by &lt;label&gt;</code> 的方式进行定义.
+      其中在用 <code>#</code> 来表述 <code>&lt;label&gt;</code> 的时候, 认为其为无 label 的跳转.</p>
+    <p>于是一个完整的描述如下: (为上面的最后一个自动机的图)</p>
+<div class="highlight"><pre><span></span>Name TO-LAUGH:
+  Initial 1
+  Final 4
+  From 1 to 2 by h
+  From 2 to 3 by a
+  From 3 to 1 by #
+  From 3 to 4 by !.
+</pre></div>
+    <p>其中, <code>&lt;label&gt;</code> 可以是多个字符的子集.</p>
+    <p>并且还能够通过这样的方式来对其进行描述:
+      (通过一个转移矩阵来描述和储存)</p>
+    <table>
+      <tr><td></td><td>h</td><td>a</td><td>!</td></tr>
+      <tr><td>1</td><td>2</td><td>0</td><td>0</td></tr>
+      <tr><td>2</td><td>0</td><td>3</td><td>0</td></tr>
+      <tr><td>3</td><td>2</td><td>0</td><td>4</td></tr>
+      <tr><td>4</td><td>0</td><td>0</td><td>0</td></tr>
+    </table>
+    <p>其中用 <b>0</b> 表示没有线段, 用其他的数字来表示到达的目的地.</p>
+  </li>
+</ol>
+<h3>英语的一些例子</h3>
+<h4>英语语句</h4>
+<details>
+<summary>一个英语的例子 (代码以及解释)</summary>
+<p>对于一个英语的语句结构, 可以用如下的 FSTN 来进行表述:</p>
+<div class="highlight"><pre><span></span>Name ENGLISH-1:
+  Initial 1
+  Final 9
+  From 1 to 3 by NP
+  From 1 to 2 by DET
+  From 2 to 3 by N
+  From 3 to 4 by BV
+  From 4 to 5 by ADV
+  From 4 to 5 by #
+  From 5 to 6 by DET
+  From 5 to 7 by DET
+  From 5 to 8 by #
+  From 6 to 6 by MOD
+  From 6 to 7 by ADJ
+  From 7 to 9 by N
+  From 8 to 8 by MOD
+  From 8 to 9 by ADJ
+  From 9 to 4 by CNJ
+  From 9 to 1 by CNJ
+
+  NP abbreviates:
+    kim, sandy, lee.
+  DET abbreviates:
+    a, the, her.
+  N abbreviates:
+    consumer, man, woman.
+  BV abbreviates:
+    is, was.
+  CNJ abbreviates:
+    and, or.
+  ADJ abbreviates:
+    happy, stupid.
+  MOD abbreviates:
+    very.
+  ADV abbreviates:
+    often, always, sometimes.
+</pre></div>
+<p>其中的缩写分别对应:</p>
+<ul>
+  <li>N: noun 名词</li>
+  <li>NP: noun phrase 名词性短语</li>
+  <li>DET: determiners 定冠词 (words that can come before (common) nouns)</li>
+  <li>ADJ: adjectives 形容词</li>
+  <li>MOD: modify adjecitves 形容词修饰短语, 如 &#8220;stupid&#8221; 和 &#8220;very stupid&#8221;</li>
+  <li>V: verb 动词</li>
+  <li>VP: verb phrase 动词短语</li>
+  <li>BV: be 动词</li>
+  <li>CNJ: conjuction 连接词</li>
+</ul>
+<p>说明:</p>
+<ul>
+  <li>尽管这样的 FSTN 看起来并不是很容易理解, 但是却很容易实现.</li>
+  <li>感觉可以用类似于正则表达式或者是 <a href="https://bnfplayground.pauliankline.com/?bnf=%3Csentence%3E%20%3A%3A%3D%20%3Cobject%3E%20%3CBV%3E%20%3Cdescription%3E%0A%3Cobject%3E%20%3A%3A%3D%20%3CDET%3E%20%3CN%3E%20%7C%20%3CNP%3E%0A%3Cdescription%3E%20%3A%3A%3D%20(%3Cadj_pharse%3E%20%7C%20%3Cnoun_pharse%3E)%20%3Cmore%3E*%0A%3Cadj_pharse%3E%20%3A%3A%3D%20%3CADV%3E%20%3CMOD%3E*%20%3CADJ%3E%0A%3Cnoun_pharse%3E%20%3A%3A%3D%20(%3CADV%3E%20%7C%20%22%20%22)%20(%3CDET%3E%20(%3CMOD%3E*%20%3CADJ%3E%20%7C%20%22%20%22)%20%3CN%3E%20%7C%20%3CMOD%3E*%20%3CADJ%3E)%0A%3Cmore%3E%20%3A%3A%3D%20%3CCNJ%3E%20(%3Cdescription%3E%20%7C%20%3Csentence%3E)%0A%3CDET%3E%20%3A%3A%3D%20(%22a%22%20%7C%20%22the%22%20%7C%20%22her%22)%20%22%20%22%0A%3CN%3E%20%3A%3A%3D%20(%22consumer%22%20%7C%20%22man%22%20%7C%20%22woman%22)%20%22%20%22%0A%3CNP%3E%20%3A%3A%3D%20(%22kim%22%20%7C%20%22sandy%22%20%7C%20%22lee%22)%20%22%20%22%0A%3CBV%3E%20%3A%3A%3D%20(%22is%22%20%7C%20%22was%22)%20%22%20%22%0A%3CADV%3E%20%3A%3A%3D%20(%22often%22%20%7C%20%22always%22%20%7C%20%22sometimes%22)%20%22%20%22%0A%3CCNJ%3E%20%3A%3A%3D%20(%22and%22%20%7C%20%22or%22)%20%22%20%22%0A%3CADJ%3E%20%3A%3A%3D%20(%22happy%22%20%7C%20%22stupid%22)%20%22%20%22%0A%3CMOD%3E%20%3A%3A%3D%20(%22very%22)%20%22%20%22&amp;name=English-1">ENBF</a> 的方式来表述上面的语句:
+<div class="highlight"><pre><span></span><span class="p">&lt;</span><span class="nc">sentence</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">object</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">BV</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">description</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nc">object</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">DET</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">N</span><span class="p">&gt;</span> | <span class="p">&lt;</span><span class="nc">NP</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nc">description</span><span class="p">&gt;</span> <span class="o">::=</span> (<span class="p">&lt;</span><span class="nc">adj_pharse</span><span class="p">&gt;</span> | <span class="p">&lt;</span><span class="nc">noun_pharse</span><span class="p">&gt;</span>) <span class="p">&lt;</span><span class="nc">more</span><span class="p">&gt;</span>*
+<span class="p">&lt;</span><span class="nc">adj_pharse</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">ADV</span><span class="p">&gt;</span> <span class="p">&lt;</span><span class="nc">MOD</span><span class="p">&gt;</span>* <span class="p">&lt;</span><span class="nc">ADJ</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nc">noun_pharse</span><span class="p">&gt;</span> <span class="o">::=</span> (<span class="p">&lt;</span><span class="nc">ADV</span><span class="p">&gt;</span> | &quot; &quot;) (<span class="p">&lt;</span><span class="nc">DET</span><span class="p">&gt;</span> (<span class="p">&lt;</span><span class="nc">MOD</span><span class="p">&gt;</span>* <span class="p">&lt;</span><span class="nc">ADJ</span><span class="p">&gt;</span> | &quot; &quot;) <span class="p">&lt;</span><span class="nc">N</span><span class="p">&gt;</span> | <span class="p">&lt;</span><span class="nc">MOD</span><span class="p">&gt;</span>* <span class="p">&lt;</span><span class="nc">ADJ</span><span class="p">&gt;</span>)
+<span class="p">&lt;</span><span class="nc">more</span><span class="p">&gt;</span> <span class="o">::=</span> <span class="p">&lt;</span><span class="nc">CNJ</span><span class="p">&gt;</span> (<span class="p">&lt;</span><span class="nc">description</span><span class="p">&gt;</span> | <span class="p">&lt;</span><span class="nc">sentence</span><span class="p">&gt;</span>)
+</pre></div>
+    <p>(差不多这样的感觉, 写得不是很干净&#8230; )</p>
+  </li>
+  <li>不过上面的 FSTN 仅仅实现了 A is B 这样的语句.
+    因为语句比较简单, 所以可以通过一些非常直接的方式来进行构造:
+    <ol>
+      <li>主体肯定是 <code>&lt;A&gt; &lt;BV&gt; &lt;B&gt;</code> 这样的构造</li>
+      <li>对于 <code>&lt;A&gt;</code> 的部分, 需要构造名词性短语, 即 <code>&lt;DET&gt; &lt;N&gt;</code> 或者 <code>&lt;NP&gt;</code> 短语</li>
+      <li>对于 <code>&lt;B&gt;</code> 的部分, 需要构造的是一个形容词性短语或者是名词性短语.
+        <p>对于形容词性短语, 简单的方式就是 <code>&lt;ADV&gt; &lt;MOD&gt;* &lt;ADJ&gt;</code> 这样构造</p>
+        <p>对于名词性短语, 通过形容词性短语修饰的名词即可得到</p>
+      </li>
+    </ol>
+    <p>并且通过拓展语料库的方式, 应该就能够实现更多复杂的语句.
+      不过这个目前并没有上下文一致性的判断.</p>
+  </li>
+</ul>
+</details>
+<p><img src="/_img/reading/lisp-nlp/english-1-fstn.svg" alt="/_img/reading/lisp-nlp/english-1-fstn.svg" /></p>
+<details>
+<summary>一些其他的例子</summary>
+<h4>英语的单音节词</h4>
+<p>其中对于英语的单音节的单词:</p>
+<p><img src="/_img/reading/lisp-nlp/eng-monosyl-fstn.svg" alt="/_img/reading/lisp-nlp/eng-monosyl-fstn.svg" /></p>
+<details>
+<summary>代码以及解释</summary>
+<div class="highlight"><pre><span></span>Name ENG-MONOSYL:
+  Initial 1, 2
+  Final 3, 4, 5
+  From 1 to 2 by C0
+  From 2 to 3 by V
+  From 3 to 4 by C8
+  From 4 to 5 by s
+  From 1 to 7 by C3
+  From 7 to 2 by w
+  From 1 to 6 by C2
+  From 6 to 2 by l
+  From 6 to 5 by #
+  From 1 to 5 by C1
+  From 5 to 2 by r
+  From 1 to 8 by s
+  From 8 to 5 by C4
+  From 8 to 2 by C5
+  From 3 to 9 by l
+  From 3 to 10 by s
+  From 3 to 11 by C7
+  From 9 to 4 by C6
+  From 10 to 4 by C4
+  From 11 to 4 by th.
+
+  V abbreviates:
+    a, ae, ai, au, e, ea, ee, ei, eu, i, ia, ie, o, oa, oe, oi, oo, ou, ue, ui.
+  CO abbreviates:
+    b, c, ch, d, f, g, h, j, k, I, m, n, p, qu, r, s, sh, t, th, v, w, x.
+  C1 abbreviates:
+    d, sh, th.
+  C2 abbreviates:
+    b, c, f, g, k.
+  C3 abbreviates:
+    d, g, h, t, th.
+  C4 abbreviates:
+    c, k, p, t.
+  C5 abbreviates:
+    c, k, l, m, n, p, pl, qu, t, w.
+  C6 abbreviates:
+    b, t, m.
+  C7 abbreviates:
+    d, f, i, n, x.
+  C8 abbreviates:
+    b, c, ch, ck, d, f, g, h, k, l, m, mp, mph, n, ng, p, que, r, s, sh, th, v, w, x, y, z.
+</pre></div>
+<details>
+<summary>题外话</summary>
+<h5>随机的英文单词</h5>
+<p>突然很好奇一个想法, 如果我有一个足够大的英语单词库 (比如 <a href="https://www.mit.edu/~ecprice/wordlist.10000">这个</a>), 然后对其进行统计,
+  比如说将 26 个字母每个字母都做一遍统计, 统计其从前一个字母,
+  或者说前几个字母向下一个字母变化的概率.</p>
+<p>比如说用这样的一个程序来统计:
+  (请忽略我丑陋的四不像代码)</p>
+<p>从 <a href="https://www.mit.edu/~ecprice/wordlist.10000">这里</a> 下载一个 10000 词的词典:</p>
+<div class="highlight"><pre><span></span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;open-uri&#39;</span>
+<span class="n">words</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">URI</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="no">URI</span><span class="p">(</span><span class="s2">&quot;https://www.mit.edu/~ecprice/wordlist.10000&quot;</span><span class="p">))\</span>
+<span class="w">	    </span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sr">/\s+/</span><span class="p">)\</span>
+<span class="w">	    </span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">word</span><span class="o">|</span><span class="w"> </span><span class="n">word</span><span class="o">.</span><span class="n">downcase</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">c</span><span class="o">|</span><span class="w"> </span><span class="n">c</span><span class="o">.</span><span class="n">ord</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">97</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+
+<span class="n">words</span><span class="o">.</span><span class="n">length</span><span class="w"> </span><span class="c1"># =&gt; 10000</span>
+</pre></div>
+<p>其中统计的方法是这样的:</p>
+<ul>
+  <li>对于一个 arc, 用 From <b>A</b> to <b>B</b> by <b>P</b> 的形式来记录</li>
+  <li>通过使用一个矩阵 <code>trans</code> 来记录数据.
+    规定第 <b>A</b> 行为 From, 第 <b>B</b> 列为 to,
+    即第 <b>A</b> 行的第 <b>B</b> 列的元素记录了 From <b>A</b> to <b>B</b> 的 arc 次数.
+<div class="highlight"><pre><span></span><span class="n">trans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">27</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">27</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+
+<span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;You got a 27x27 matrix with default value of 0.&quot;</span>
+</pre></div>
+  </li>
+<div class="highlight"><pre><span></span><span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">pre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="w"> </span><span class="c1"># input as C style word</span>
+<span class="w">  </span><span class="p">(</span><span class="mi">1</span><span class="o">...</span><span class="n">word</span><span class="o">.</span><span class="n">length</span><span class="p">)</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">i</span><span class="o">|</span><span class="w"> </span><span class="c1"># start from second character</span>
+<span class="w">    </span><span class="n">trans</span><span class="o">[</span><span class="n">pre</span><span class="o">][</span><span class="n">word</span><span class="o">[</span><span class="n">i</span><span class="o">]]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">    </span><span class="n">pre</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">word</span><span class="o">[</span><span class="n">i</span><span class="o">]</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="w">  </span><span class="n">trans</span><span class="o">[</span><span class="n">word</span><span class="o">[-</span><span class="mi">1</span><span class="o">]][</span><span class="mi">26</span><span class="o">]</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="c1"># end of word</span>
+<span class="p">}</span>
+
+<span class="n">words</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">word</span><span class="o">|</span><span class="w"> </span><span class="n">count</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">word</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+
+<span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Count each arcs to the matrix.&quot;</span>
+</pre></div>
+  <details><summary>归一化前</summary>
+  <table>
+    <tr><td>6</td><td>132</td><td>323</td><td>237</td><td>8</td><td>40</td><td>147</td><td>21</td><td>218</td><td>3</td><td>59</td><td>653</td><td>215</td><td>727</td><td>6</td><td>170</td><td>10</td><td>678</td><td>311</td><td>781</td><td>83</td><td>79</td><td>34</td><td>17</td><td>101</td><td>20</td><td>299</td></tr>
+    <tr><td>160</td><td>15</td><td>8</td><td>4</td><td>170</td><td>0</td><td>1</td><td>2</td><td>128</td><td>8</td><td>1</td><td>150</td><td>11</td><td>3</td><td>128</td><td>3</td><td>0</td><td>116</td><td>51</td><td>7</td><td>101</td><td>2</td><td>3</td><td>0</td><td>15</td><td>1</td><td>53</td></tr>
+    <tr><td>362</td><td>2</td><td>63</td><td>9</td><td>388</td><td>2</td><td>2</td><td>314</td><td>192</td><td>1</td><td>153</td><td>125</td><td>3</td><td>6</td><td>591</td><td>3</td><td>5</td><td>131</td><td>41</td><td>303</td><td>120</td><td>2</td><td>1</td><td>0</td><td>35</td><td>2</td><td>169</td></tr>
+    <tr><td>148</td><td>6</td><td>9</td><td>36</td><td>489</td><td>4</td><td>26</td><td>5</td><td>362</td><td>9</td><td>1</td><td>31</td><td>15</td><td>9</td><td>115</td><td>5</td><td>1</td><td>71</td><td>117</td><td>9</td><td>85</td><td>28</td><td>11</td><td>1</td><td>34</td><td>0</td><td>880</td></tr>
+    <tr><td>377</td><td>48</td><td>322</td><td>685</td><td>176</td><td>94</td><td>94</td><td>18</td><td>44</td><td>3</td><td>16</td><td>370</td><td>224</td><td>844</td><td>38</td><td>126</td><td>36</td><td>1114</td><td>941</td><td>276</td><td>28</td><td>120</td><td>73</td><td>175</td><td>45</td><td>4</td><td>1310</td></tr>
+    <tr><td>101</td><td>1</td><td>4</td><td>2</td><td>121</td><td>76</td><td>3</td><td>1</td><td>192</td><td>0</td><td>0</td><td>61</td><td>1</td><td>0</td><td>126</td><td>1</td><td>0</td><td>61</td><td>7</td><td>30</td><td>62</td><td>0</td><td>2</td><td>1</td><td>11</td><td>0</td><td>63</td></tr>
+    <tr><td>124</td><td>6</td><td>3</td><td>3</td><td>274</td><td>2</td><td>23</td><td>104</td><td>103</td><td>0</td><td>1</td><td>33</td><td>8</td><td>50</td><td>63</td><td>5</td><td>0</td><td>133</td><td>62</td><td>15</td><td>67</td><td>0</td><td>0</td><td>0</td><td>24</td><td>1</td><td>613</td></tr>
+    <tr><td>248</td><td>4</td><td>3</td><td>6</td><td>294</td><td>0</td><td>0</td><td>1</td><td>188</td><td>0</td><td>1</td><td>16</td><td>10</td><td>16</td><td>231</td><td>3</td><td>2</td><td>44</td><td>14</td><td>69</td><td>54</td><td>1</td><td>5</td><td>0</td><td>30</td><td>3</td><td>186</td></tr>
+    <tr><td>258</td><td>87</td><td>456</td><td>174</td><td>282</td><td>93</td><td>158</td><td>1</td><td>10</td><td>6</td><td>25</td><td>270</td><td>160</td><td>1325</td><td>603</td><td>110</td><td>8</td><td>170</td><td>441</td><td>455</td><td>19</td><td>184</td><td>1</td><td>22</td><td>1</td><td>50</td><td>92</td></tr>
+    <tr><td>33</td><td>0</td><td>2</td><td>1</td><td>40</td><td>0</td><td>0</td><td>0</td><td>9</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>43</td><td>3</td><td>0</td><td>1</td><td>1</td><td>0</td><td>37</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>10</td></tr>
+    <tr><td>27</td><td>6</td><td>0</td><td>2</td><td>156</td><td>4</td><td>3</td><td>2</td><td>96</td><td>2</td><td>1</td><td>11</td><td>3</td><td>21</td><td>12</td><td>2</td><td>0</td><td>4</td><td>68</td><td>2</td><td>6</td><td>0</td><td>1</td><td>0</td><td>10</td><td>0</td><td>153</td></tr>
+    <tr><td>372</td><td>14</td><td>14</td><td>84</td><td>572</td><td>21</td><td>9</td><td>1</td><td>469</td><td>0</td><td>19</td><td>302</td><td>15</td><td>7</td><td>290</td><td>16</td><td>0</td><td>3</td><td>106</td><td>88</td><td>97</td><td>24</td><td>3</td><td>0</td><td>217</td><td>0</td><td>488</td></tr>
+    <tr><td>338</td><td>64</td><td>6</td><td>2</td><td>430</td><td>5</td><td>2</td><td>2</td><td>254</td><td>1</td><td>0</td><td>6</td><td>68</td><td>7</td><td>193</td><td>185</td><td>0</td><td>3</td><td>61</td><td>4</td><td>47</td><td>1</td><td>3</td><td>1</td><td>21</td><td>0</td><td>208</td></tr>
+    <tr><td>276</td><td>9</td><td>257</td><td>358</td><td>414</td><td>46</td><td>706</td><td>11</td><td>274</td><td>10</td><td>48</td><td>25</td><td>13</td><td>98</td><td>135</td><td>4</td><td>5</td><td>8</td><td>454</td><td>661</td><td>60</td><td>53</td><td>6</td><td>2</td><td>46</td><td>5</td><td>838</td></tr>
+    <tr><td>62</td><td>63</td><td>124</td><td>116</td><td>21</td><td>43</td><td>90</td><td>10</td><td>39</td><td>6</td><td>56</td><td>282</td><td>284</td><td>1067</td><td>154</td><td>149</td><td>0</td><td>613</td><td>175</td><td>186</td><td>275</td><td>100</td><td>131</td><td>20</td><td>34</td><td>8</td><td>144</td></tr>
+    <tr><td>249</td><td>3</td><td>7</td><td>9</td><td>308</td><td>2</td><td>8</td><td>95</td><td>124</td><td>1</td><td>2</td><td>178</td><td>11</td><td>5</td><td>232</td><td>100</td><td>0</td><td>307</td><td>66</td><td>90</td><td>74</td><td>1</td><td>0</td><td>0</td><td>12</td><td>1</td><td>142</td></tr>
+    <tr><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>3</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td><td>2</td><td>103</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>11</td></tr>
+    <tr><td>593</td><td>34</td><td>86</td><td>130</td><td>999</td><td>25</td><td>77</td><td>7</td><td>559</td><td>1</td><td>61</td><td>53</td><td>109</td><td>100</td><td>410</td><td>36</td><td>1</td><td>114</td><td>320</td><td>231</td><td>98</td><td>51</td><td>12</td><td>1</td><td>152</td><td>1</td><td>599</td></tr>
+    <tr><td>140</td><td>12</td><td>143</td><td>10</td><td>473</td><td>12</td><td>7</td><td>204</td><td>360</td><td>0</td><td>37</td><td>53</td><td>38</td><td>13</td><td>184</td><td>161</td><td>7</td><td>7</td><td>262</td><td>646</td><td>208</td><td>2</td><td>28</td><td>0</td><td>35</td><td>0</td><td>2043</td></tr>
+    <tr><td>379</td><td>9</td><td>40</td><td>5</td><td>798</td><td>6</td><td>4</td><td>256</td><td>995</td><td>0</td><td>2</td><td>67</td><td>28</td><td>13</td><td>306</td><td>10</td><td>0</td><td>353</td><td>278</td><td>122</td><td>166</td><td>6</td><td>18</td><td>1</td><td>137</td><td>1</td><td>760</td></tr>
+    <tr><td>101</td><td>72</td><td>93</td><td>58</td><td>87</td><td>16</td><td>65</td><td>1</td><td>86</td><td>2</td><td>10</td><td>142</td><td>113</td><td>232</td><td>7</td><td>70</td><td>2</td><td>317</td><td>217</td><td>184</td><td>1</td><td>3</td><td>2</td><td>5</td><td>8</td><td>8</td><td>37</td></tr>
+    <tr><td>116</td><td>2</td><td>5</td><td>3</td><td>415</td><td>0</td><td>2</td><td>1</td><td>205</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>59</td><td>2</td><td>0</td><td>1</td><td>4</td><td>2</td><td>2</td><td>0</td><td>0</td><td>1</td><td>4</td><td>0</td><td>25</td></tr>
+    <tr><td>129</td><td>4</td><td>3</td><td>3</td><td>104</td><td>3</td><td>0</td><td>31</td><td>104</td><td>2</td><td>1</td><td>9</td><td>2</td><td>31</td><td>61</td><td>3</td><td>0</td><td>18</td><td>32</td><td>6</td><td>1</td><td>1</td><td>3</td><td>1</td><td>5</td><td>0</td><td>75</td></tr>
+    <tr><td>18</td><td>1</td><td>24</td><td>0</td><td>24</td><td>1</td><td>0</td><td>6</td><td>25</td><td>0</td><td>0</td><td>1</td><td>2</td><td>1</td><td>2</td><td>53</td><td>0</td><td>0</td><td>0</td><td>32</td><td>8</td><td>0</td><td>0</td><td>4</td><td>4</td><td>0</td><td>58</td></tr>
+    <tr><td>18</td><td>10</td><td>14</td><td>8</td><td>48</td><td>0</td><td>2</td><td>1</td><td>24</td><td>0</td><td>0</td><td>16</td><td>23</td><td>16</td><td>21</td><td>15</td><td>0</td><td>11</td><td>49</td><td>10</td><td>5</td><td>0</td><td>7</td><td>0</td><td>0</td><td>2</td><td>727</td></tr>
+    <tr><td>22</td><td>1</td><td>0</td><td>2</td><td>44</td><td>0</td><td>0</td><td>0</td><td>14</td><td>0</td><td>0</td><td>2</td><td>0</td><td>0</td><td>16</td><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td><td>5</td><td>0</td><td>0</td><td>0</td><td>4</td><td>7</td><td>17</td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+  </table>
+  </details>
+  <p>归一化代码: (保留百分号后两位小数)</p>
+<div class="highlight"><pre><span></span><span class="mi">26</span><span class="o">.</span><span class="n">times</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">alphabet</span><span class="o">|</span>
+<span class="w">  </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">trans</span><span class="o">[</span><span class="n">alphabet</span><span class="o">].</span><span class="n">sum</span>
+<span class="w">  </span><span class="n">trans</span><span class="o">[</span><span class="n">alphabet</span><span class="o">].</span><span class="n">map!</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">count</span><span class="o">|</span><span class="w"> </span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">100</span><span class="o">.</span><span class="mi">0</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">total</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="k">end</span>
+</pre></div>
+  <details><summary>归一化后 (单位 %)</summary>
+  <table>
+    <tr><td>0.11</td><td>2.45</td><td>6.01</td><td>4.41</td><td>0.15</td><td>0.74</td><td>2.73</td><td>0.39</td><td>4.05</td><td>0.06</td><td>1.1</td><td>12.14</td><td>4.0</td><td>13.52</td><td>0.11</td><td>3.16</td><td>0.19</td><td>12.61</td><td>5.78</td><td>14.52</td><td>1.54</td><td>1.47</td><td>0.63</td><td>0.32</td><td>1.88</td><td>0.37</td><td>5.56</td></tr>
+    <tr><td>14.02</td><td>1.31</td><td>0.7</td><td>0.35</td><td>14.9</td><td>0.0</td><td>0.09</td><td>0.18</td><td>11.22</td><td>0.7</td><td>0.09</td><td>13.15</td><td>0.96</td><td>0.26</td><td>11.22</td><td>0.26</td><td>0.0</td><td>10.17</td><td>4.47</td><td>0.61</td><td>8.85</td><td>0.18</td><td>0.26</td><td>0.0</td><td>1.31</td><td>0.09</td><td>4.65</td></tr>
+    <tr><td>11.97</td><td>0.07</td><td>2.08</td><td>0.3</td><td>12.83</td><td>0.07</td><td>0.07</td><td>10.38</td><td>6.35</td><td>0.03</td><td>5.06</td><td>4.13</td><td>0.1</td><td>0.2</td><td>19.54</td><td>0.1</td><td>0.17</td><td>4.33</td><td>1.36</td><td>10.02</td><td>3.97</td><td>0.07</td><td>0.03</td><td>0.0</td><td>1.16</td><td>0.07</td><td>5.59</td></tr>
+    <tr><td>5.9</td><td>0.24</td><td>0.36</td><td>1.44</td><td>19.51</td><td>0.16</td><td>1.04</td><td>0.2</td><td>14.44</td><td>0.36</td><td>0.04</td><td>1.24</td><td>0.6</td><td>0.36</td><td>4.59</td><td>0.2</td><td>0.04</td><td>2.83</td><td>4.67</td><td>0.36</td><td>3.39</td><td>1.12</td><td>0.44</td><td>0.04</td><td>1.36</td><td>0.0</td><td>35.1</td></tr>
+    <tr><td>4.96</td><td>0.63</td><td>4.24</td><td>9.01</td><td>2.32</td><td>1.24</td><td>1.24</td><td>0.24</td><td>0.58</td><td>0.04</td><td>0.21</td><td>4.87</td><td>2.95</td><td>11.1</td><td>0.5</td><td>1.66</td><td>0.47</td><td>14.66</td><td>12.38</td><td>3.63</td><td>0.37</td><td>1.58</td><td>0.96</td><td>2.3</td><td>0.59</td><td>0.05</td><td>17.23</td></tr>
+    <tr><td>10.9</td><td>0.11</td><td>0.43</td><td>0.22</td><td>13.05</td><td>8.2</td><td>0.32</td><td>0.11</td><td>20.71</td><td>0.0</td><td>0.0</td><td>6.58</td><td>0.11</td><td>0.0</td><td>13.59</td><td>0.11</td><td>0.0</td><td>6.58</td><td>0.76</td><td>3.24</td><td>6.69</td><td>0.0</td><td>0.22</td><td>0.11</td><td>1.19</td><td>0.0</td><td>6.8</td></tr>
+    <tr><td>7.22</td><td>0.35</td><td>0.17</td><td>0.17</td><td>15.96</td><td>0.12</td><td>1.34</td><td>6.06</td><td>6.0</td><td>0.0</td><td>0.06</td><td>1.92</td><td>0.47</td><td>2.91</td><td>3.67</td><td>0.29</td><td>0.0</td><td>7.75</td><td>3.61</td><td>0.87</td><td>3.9</td><td>0.0</td><td>0.0</td><td>0.0</td><td>1.4</td><td>0.06</td><td>35.7</td></tr>
+    <tr><td>17.35</td><td>0.28</td><td>0.21</td><td>0.42</td><td>20.57</td><td>0.0</td><td>0.0</td><td>0.07</td><td>13.16</td><td>0.0</td><td>0.07</td><td>1.12</td><td>0.7</td><td>1.12</td><td>16.17</td><td>0.21</td><td>0.14</td><td>3.08</td><td>0.98</td><td>4.83</td><td>3.78</td><td>0.07</td><td>0.35</td><td>0.0</td><td>2.1</td><td>0.21</td><td>13.02</td></tr>
+    <tr><td>4.72</td><td>1.59</td><td>8.35</td><td>3.19</td><td>5.16</td><td>1.7</td><td>2.89</td><td>0.02</td><td>0.18</td><td>0.11</td><td>0.46</td><td>4.94</td><td>2.93</td><td>24.26</td><td>11.04</td><td>2.01</td><td>0.15</td><td>3.11</td><td>8.08</td><td>8.33</td><td>0.35</td><td>3.37</td><td>0.02</td><td>0.4</td><td>0.02</td><td>0.92</td><td>1.68</td></tr>
+    <tr><td>18.03</td><td>0.0</td><td>1.09</td><td>0.55</td><td>21.86</td><td>0.0</td><td>0.0</td><td>0.0</td><td>4.92</td><td>0.55</td><td>0.0</td><td>0.0</td><td>0.55</td><td>0.0</td><td>23.5</td><td>1.64</td><td>0.0</td><td>0.55</td><td>0.55</td><td>0.0</td><td>20.22</td><td>0.55</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>5.46</td></tr>
+    <tr><td>4.56</td><td>1.01</td><td>0.0</td><td>0.34</td><td>26.35</td><td>0.68</td><td>0.51</td><td>0.34</td><td>16.22</td><td>0.34</td><td>0.17</td><td>1.86</td><td>0.51</td><td>3.55</td><td>2.03</td><td>0.34</td><td>0.0</td><td>0.68</td><td>11.49</td><td>0.34</td><td>1.01</td><td>0.0</td><td>0.17</td><td>0.0</td><td>1.69</td><td>0.0</td><td>25.84</td></tr>
+    <tr><td>11.51</td><td>0.43</td><td>0.43</td><td>2.6</td><td>17.7</td><td>0.65</td><td>0.28</td><td>0.03</td><td>14.52</td><td>0.0</td><td>0.59</td><td>9.35</td><td>0.46</td><td>0.22</td><td>8.98</td><td>0.5</td><td>0.0</td><td>0.09</td><td>3.28</td><td>2.72</td><td>3.0</td><td>0.74</td><td>0.09</td><td>0.0</td><td>6.72</td><td>0.0</td><td>15.1</td></tr>
+    <tr><td>17.68</td><td>3.35</td><td>0.31</td><td>0.1</td><td>22.49</td><td>0.26</td><td>0.1</td><td>0.1</td><td>13.28</td><td>0.05</td><td>0.0</td><td>0.31</td><td>3.56</td><td>0.37</td><td>10.09</td><td>9.68</td><td>0.0</td><td>0.16</td><td>3.19</td><td>0.21</td><td>2.46</td><td>0.05</td><td>0.16</td><td>0.05</td><td>1.1</td><td>0.0</td><td>10.88</td></tr>
+    <tr><td>5.72</td><td>0.19</td><td>5.33</td><td>7.42</td><td>8.59</td><td>0.95</td><td>14.64</td><td>0.23</td><td>5.68</td><td>0.21</td><td>1.0</td><td>0.52</td><td>0.27</td><td>2.03</td><td>2.8</td><td>0.08</td><td>0.1</td><td>0.17</td><td>9.42</td><td>13.71</td><td>1.24</td><td>1.1</td><td>0.12</td><td>0.04</td><td>0.95</td><td>0.1</td><td>17.38</td></tr>
+    <tr><td>1.46</td><td>1.48</td><td>2.92</td><td>2.73</td><td>0.49</td><td>1.01</td><td>2.12</td><td>0.24</td><td>0.92</td><td>0.14</td><td>1.32</td><td>6.63</td><td>6.68</td><td>25.09</td><td>3.62</td><td>3.5</td><td>0.0</td><td>14.42</td><td>4.12</td><td>4.37</td><td>6.47</td><td>2.35</td><td>3.08</td><td>0.47</td><td>0.8</td><td>0.19</td><td>3.39</td></tr>
+    <tr><td>12.28</td><td>0.15</td><td>0.35</td><td>0.44</td><td>15.19</td><td>0.1</td><td>0.39</td><td>4.69</td><td>6.12</td><td>0.05</td><td>0.1</td><td>8.78</td><td>0.54</td><td>0.25</td><td>11.45</td><td>4.93</td><td>0.0</td><td>15.15</td><td>3.26</td><td>4.44</td><td>3.65</td><td>0.05</td><td>0.0</td><td>0.0</td><td>0.59</td><td>0.05</td><td>7.01</td></tr>
+    <tr><td>0.81</td><td>0.0</td><td>0.81</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.81</td><td>0.0</td><td>0.0</td><td>2.44</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.81</td><td>1.63</td><td>83.74</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>8.94</td></tr>
+    <tr><td>12.2</td><td>0.7</td><td>1.77</td><td>2.67</td><td>20.56</td><td>0.51</td><td>1.58</td><td>0.14</td><td>11.5</td><td>0.02</td><td>1.26</td><td>1.09</td><td>2.24</td><td>2.06</td><td>8.44</td><td>0.74</td><td>0.02</td><td>2.35</td><td>6.58</td><td>4.75</td><td>2.02</td><td>1.05</td><td>0.25</td><td>0.02</td><td>3.13</td><td>0.02</td><td>12.33</td></tr>
+    <tr><td>2.75</td><td>0.24</td><td>2.81</td><td>0.2</td><td>9.3</td><td>0.24</td><td>0.14</td><td>4.01</td><td>7.08</td><td>0.0</td><td>0.73</td><td>1.04</td><td>0.75</td><td>0.26</td><td>3.62</td><td>3.17</td><td>0.14</td><td>0.14</td><td>5.15</td><td>12.7</td><td>4.09</td><td>0.04</td><td>0.55</td><td>0.0</td><td>0.69</td><td>0.0</td><td>40.18</td></tr>
+    <tr><td>7.96</td><td>0.19</td><td>0.84</td><td>0.11</td><td>16.76</td><td>0.13</td><td>0.08</td><td>5.38</td><td>20.9</td><td>0.0</td><td>0.04</td><td>1.41</td><td>0.59</td><td>0.27</td><td>6.43</td><td>0.21</td><td>0.0</td><td>7.42</td><td>5.84</td><td>2.56</td><td>3.49</td><td>0.13</td><td>0.38</td><td>0.02</td><td>2.88</td><td>0.02</td><td>15.97</td></tr>
+    <tr><td>5.21</td><td>3.71</td><td>4.8</td><td>2.99</td><td>4.49</td><td>0.83</td><td>3.35</td><td>0.05</td><td>4.44</td><td>0.1</td><td>0.52</td><td>7.32</td><td>5.83</td><td>11.96</td><td>0.36</td><td>3.61</td><td>0.1</td><td>16.35</td><td>11.19</td><td>9.49</td><td>0.05</td><td>0.15</td><td>0.1</td><td>0.26</td><td>0.41</td><td>0.41</td><td>1.91</td></tr>
+    <tr><td>13.66</td><td>0.24</td><td>0.59</td><td>0.35</td><td>48.88</td><td>0.0</td><td>0.24</td><td>0.12</td><td>24.15</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.0</td><td>6.95</td><td>0.24</td><td>0.0</td><td>0.12</td><td>0.47</td><td>0.24</td><td>0.24</td><td>0.0</td><td>0.0</td><td>0.12</td><td>0.47</td><td>0.0</td><td>2.94</td></tr>
+    <tr><td>20.41</td><td>0.63</td><td>0.47</td><td>0.47</td><td>16.46</td><td>0.47</td><td>0.0</td><td>4.91</td><td>16.46</td><td>0.32</td><td>0.16</td><td>1.42</td><td>0.32</td><td>4.91</td><td>9.65</td><td>0.47</td><td>0.0</td><td>2.85</td><td>5.06</td><td>0.95</td><td>0.16</td><td>0.16</td><td>0.47</td><td>0.16</td><td>0.79</td><td>0.0</td><td>11.87</td></tr>
+    <tr><td>6.82</td><td>0.38</td><td>9.09</td><td>0.0</td><td>9.09</td><td>0.38</td><td>0.0</td><td>2.27</td><td>9.47</td><td>0.0</td><td>0.0</td><td>0.38</td><td>0.76</td><td>0.38</td><td>0.76</td><td>20.08</td><td>0.0</td><td>0.0</td><td>0.0</td><td>12.12</td><td>3.03</td><td>0.0</td><td>0.0</td><td>1.52</td><td>1.52</td><td>0.0</td><td>21.97</td></tr>
+    <tr><td>1.75</td><td>0.97</td><td>1.36</td><td>0.78</td><td>4.67</td><td>0.0</td><td>0.19</td><td>0.1</td><td>2.34</td><td>0.0</td><td>0.0</td><td>1.56</td><td>2.24</td><td>1.56</td><td>2.04</td><td>1.46</td><td>0.0</td><td>1.07</td><td>4.77</td><td>0.97</td><td>0.49</td><td>0.0</td><td>0.68</td><td>0.0</td><td>0.0</td><td>0.19</td><td>70.79</td></tr>
+    <tr><td>16.18</td><td>0.74</td><td>0.0</td><td>1.47</td><td>32.35</td><td>0.0</td><td>0.0</td><td>0.0</td><td>10.29</td><td>0.0</td><td>0.0</td><td>1.47</td><td>0.0</td><td>0.0</td><td>11.76</td><td>0.0</td><td>0.0</td><td>0.74</td><td>0.74</td><td>0.0</td><td>3.68</td><td>0.0</td><td>0.0</td><td>0.0</td><td>2.94</td><td>5.15</td><td>12.5</td></tr>
+    <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+  </table>
+  </details>
+  <li>其中关于绘图的代码:
+    在输出的时候为了美观起见, 最多只输出前 3 (<code>n = 3</code>) 个可能的 arc.
+    且并不输出休止符.
+<div class="highlight"><pre><span></span><span class="n">n</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3</span>
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+
+<span class="mi">26</span><span class="o">.</span><span class="n">times</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">alphabet</span><span class="o">|</span>
+<span class="w">  </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-</span><span class="mi">1</span>
+<span class="w">  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="n">trans</span><span class="o">[</span><span class="n">alphabet</span><span class="o">][</span><span class="mi">0</span><span class="o">...-</span><span class="mi">1</span><span class="o">]</span>
+<span class="w">            </span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">percent</span><span class="o">|</span><span class="w"> </span><span class="o">[</span><span class="n">percent</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">index</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">            </span><span class="o">.</span><span class="n">sort_by</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">x</span><span class="o">|</span><span class="w"> </span><span class="n">x</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">            </span><span class="o">.</span><span class="n">reverse</span><span class="p">)</span><span class="o">[</span><span class="mi">0</span><span class="o">...</span><span class="n">n</span><span class="o">]</span>
+<span class="w">           </span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="p">(</span><span class="n">alphabet</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">97</span><span class="p">)</span><span class="o">.</span><span class="n">chr</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">#{</span><span class="p">(</span><span class="n">item</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">97</span><span class="p">)</span><span class="o">.</span><span class="n">chr</span><span class="si">}</span><span class="s2"> [label = </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">item</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">];</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">           </span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">res</span>
+</pre></div>
+    <p>最终得到的图的结果:</p>
+    <p><img src="/_img/reading/lisp-nlp/cout-of-english-words.svg" alt="/_img/reading/lisp-nlp/cout-of-english-words.svg" /></p>
+    <p>没什么想法美化了, 只能说真的丑啊&#8230;
+      看来之后还要想想办法钻研一下如何出漂亮的图.</p>
+  </li>
+  <li>造词部分则通过如下的方式来实现
+  <details><summary>准备的代码</summary>
+<div class="highlight"><pre><span></span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;pickup&#39;</span><span class="w"> </span><span class="c1"># https://github.com/fl00r/pickup</span>
+
+<span class="n">hashed_trans</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="n">trans</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">tos</span><span class="p">,</span><span class="w"> </span><span class="n">from_index</span><span class="o">|</span>
+<span class="w">  </span><span class="n">hashed_tos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">  </span><span class="n">tos</span><span class="o">.</span><span class="n">each_with_index</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">possibility</span><span class="p">,</span><span class="w"> </span><span class="n">to_index</span><span class="o">|</span>
+<span class="w">    </span><span class="n">hashed_tos</span><span class="o">[</span><span class="p">(</span><span class="n">to_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">97</span><span class="p">)</span><span class="o">.</span><span class="n">chr</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">possibility</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="n">hashed_trans</span><span class="o">[</span><span class="p">(</span><span class="n">from_index</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">97</span><span class="p">)</span><span class="o">.</span><span class="n">chr</span><span class="o">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Pickup</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">hashed_tos</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">word</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">iter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">char</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nb">rand</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">97</span><span class="p">)</span><span class="o">.</span><span class="n">chr</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">iter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">    </span><span class="n">c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">)</span>
+<span class="w">  </span><span class="k">elsif</span><span class="w"> </span><span class="n">iter</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span>
+<span class="w">    </span><span class="n">c</span>
+<span class="w">  </span><span class="k">else</span>
+<span class="w">    </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hashed_trans</span><span class="o">[</span><span class="n">char</span><span class="o">].</span><span class="n">pick</span>
+<span class="w">    </span><span class="n">c</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;{&#39;</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">word</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">iter</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="p">}</span>
+</pre></div>
+    <p>注: 其中使用了一个叫做 <code>pickup</code> 的 gem,
+      原因是我懒得写随机生成的算法了.</p>
+  </details>
+    <p>来输出一段话吧:</p>
+<div class="highlight"><pre><span></span><span class="mi">10</span><span class="o">.</span><span class="n">times</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">word</span><span class="o">.</span><span class="n">call</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+</pre></div>
+    <pre class="example">
+thice baddicana b ran gug on f ronstintotag veacadonamaw erarivore
+    </pre>
+    <p>感觉有点样子了.</p>
+  </li>
+</ul>
+<p>不过这样的方法还是太粗鲁了一些. (有一种概率论里面的无记忆性掷色子的感觉. )
+  一些可能可以改进的方向:</p>
+<ul>
+  <li>增加对前一字母的判断</li>
+  <li>细化对字母的一些处理, 比如上面的计数部分就做得不是很好</li>
+  <li>增加对开始标记的处理 (我真的不想再重新写了&#8230; )</li>
+</ul>
+</details>
+<p>和上面的题外话类似的, 也能够根据上面的方式来进行处理生成.</p>
+<p><b>[2023-1-25]</b>: 先暂停一下, 去搞一个</p>
+<p>(乐: 这个就是一个例题里面的一个东西. )</p>
+</details>
+<p><b>[2023-2-21]</b>: 回来继续</p>
+</details>
+<h3>FSTN in LISP</h3>
+<h4>使用代码来储存 FSTN 的结构</h4>
+<p>注: 如果有时间的话, 可以考虑直接用 <code>defmarco</code> 来实现类似的操作.
+  并且为了防止占用 <code>#</code>, 在 clisp 里面用 <code>|#|</code> 的形式来描述.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">haha-fstn</span><span class="w"> </span><span class="s">&quot;FSTN for haha! &quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">haha-fstn</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">!</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">swahili-1</span><span class="w"> </span><span class="s">&quot;FSTN for Swahili. &quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">swahili-1</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">subj</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">tense</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">stem</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">abbreviations</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">abbreviations</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">subj</span><span class="w"> </span><span class="nv">ni</span><span class="w"> </span><span class="nv">u</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">tu</span><span class="w"> </span><span class="nv">wa</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">obj</span><span class="w"> </span><span class="nv">ni</span><span class="w"> </span><span class="nv">ku</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">tu</span><span class="w"> </span><span class="nv">wa</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">tense</span><span class="w"> </span><span class="nv">ta</span><span class="w"> </span><span class="nv">na</span><span class="w"> </span><span class="nv">me</span><span class="w"> </span><span class="nv">li</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">stem</span><span class="w"> </span><span class="nv">penda</span><span class="w"> </span><span class="nv">piga</span><span class="w"> </span><span class="nv">sumbua</span><span class="w"> </span><span class="nv">lipa</span><span class="p">)))</span>
+</pre></div>
+<details><summary>一些数据结构的其他代码</summary>
+<div class="highlight"><pre><span></span><span class="c1">;;; The Network Rules</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">initial-nodes</span><span class="w"> </span><span class="p">(</span><span class="nf">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Find Initial nodes in NETWORK. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;Initial</span><span class="w"> </span><span class="nv">network</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">final-nodes</span><span class="w"> </span><span class="p">(</span><span class="nf">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Find Final nodes in NETWORK. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;Final</span><span class="w"> </span><span class="nv">network</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">transitions</span><span class="w"> </span><span class="p">(</span><span class="nf">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Find Transitions for NETWORK. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cddr</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+
+<span class="c1">;;; The Transistion Rules</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">trans-node</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Get From node from the TRANSITION. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">transition</span><span class="w"> </span><span class="ss">&#39;From</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">trans-newnode</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Get To node from the TRANSISTION. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">transition</span><span class="w"> </span><span class="ss">&#39;To</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">trans-label</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Get By node from the TRANSITION. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">transition</span><span class="w"> </span><span class="ss">&#39;by</span><span class="p">))</span>
+</pre></div>
+<p>注: 这里有一个小小的吐槽. 这样的话就相当于把一个 FSTN
+  的形式给写死了. (指 <code>transitions</code> 的代码, 相当于是认为
+  FSTN 的前两行就是 Initial 和 Final, 然后后面的全都是转移关系.</p>
+</details>
+<h4>根据 FSTN 的历遍机器 - Recognizer [低端版本]</h4>
+<p>先定义算法的过程:</p>
+<ol>
+  <li>根据可能的 <code>Initial</code> nodes 建立一组可能的状态 (initial pool)</li>
+  <li>执行如下操作:
+    <ol>
+      <li>选择其中的一个可能的状态 (将其从 pool 中移除)</li>
+      <li>如果它处于 <code>Final</code> 状态, 则停止并说明识别成功,
+        否则执行下面的操作:
+        <ol>
+          <li>计算它下一步可能的状态</li>
+          <li>将那些可能的状态放到 initial pool 里面</li>
+        </ol>
+      </li>
+    </ol>
+  </li>
+  <li>如果可选的 pool 被清空了, 那么就说明识别不成功</li>
+</ol>
+<p>那么一个可能的状态长什么样呢? 即希望通过: <code>(state , remaining input)</code>
+  的形式来记录. 这个计算下一步可能的状态的话, 分为三种情况:</p>
+<ul>
+  <li>若 label 和 <code>remaining input</code> 的符合</li>
+  <li>若 abbreviate 和 <code>remaining input</code> 符合</li>
+  <li>若 label 是 <code>#</code></li>
+</ul>
+<p>于是代码如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">recognize</span><span class="w"> </span><span class="p">(</span><span class="nf">network</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Test if the TAPE matches NETWORK, return t if true, nil otherwise. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">catch</span><span class="w"> </span><span class="ss">&#39;stop</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">initial</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-nodes</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">      </span><span class="c1">;; Iterating the inital pool</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">recognize-next</span><span class="w"> </span><span class="nv">initial</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">    </span><span class="c1">;; return nil if fails</span>
+<span class="w">    </span><span class="nv">nil</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">recognize-next</span><span class="w"> </span><span class="p">(</span><span class="nf">state</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="nv">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Iterate the tape by shorten the TAPE, move to next state by NETWORK. </span>
+<span class="s">If TAPE is empties and in final STATE, meaning case matched, it will throw &#39;stop.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">(</span><span class="nf">final-nodes</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">tape</span><span class="p">))</span><span class="w">                 </span><span class="c1">; final state and empty tape</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">throw</span><span class="w"> </span><span class="ss">&#39;stop</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w">                   </span><span class="c1">; success and abort</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="w"> </span><span class="p">(</span><span class="nf">transitions</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">state</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-node</span><span class="w"> </span><span class="nv">transition</span><span class="p">))</span><span class="w"> </span><span class="c1">; select start</span>
+<span class="w">            </span><span class="c1">;; for every possible next-nodes</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">newtape</span><span class="w"> </span><span class="p">(</span><span class="nf">recognize-move</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-label</span><span class="w"> </span><span class="nv">transition</span><span class="p">)</span><span class="w"> </span><span class="nv">tape</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">recognize-next</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-newnode</span><span class="w"> </span><span class="nv">transition</span><span class="p">)</span><span class="w"> </span><span class="nv">newtape</span><span class="w"> </span><span class="nv">network</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">recognize-move</span><span class="w"> </span><span class="p">(</span><span class="nf">label</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return a list of possible new tape by label. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span><span class="w"> </span><span class="nv">label</span><span class="p">)</span><span class="w">          </span><span class="c1">; first of tape matches label </span>
+<span class="w">      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">tape</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">label</span><span class="w"> </span><span class="nv">abbreviations</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">tape</span><span class="p">))</span><span class="w">             </span><span class="c1">; if matches abbreviations</span>
+<span class="w">          </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">label</span><span class="w"> </span><span class="ss">&#39;|</span><span class="cm">#|)        ; jump if #</span>
+<span class="cm">              (list tape)</span>
+<span class="cm">              &#39;()))))                   ; return nil if all fails</span>
+</pre></div>
+<details><summary>注: 关于这个代码的一些注释</summary>
+<p>在计科导里面我们实现了一个图灵机,
+  这里的状态转移基本上就非常像图灵机了,
+  只是规则已经固定且形式上是一个变短的形式.</p>
+<p>不过现在还没有搞定如何处理位置和无限长度纸带的一个写法,
+  之后有时间再试试看用 Common Lisp 来写一个图灵机.</p>
+<p>不过这个我觉得实在有点不太合理, 因为如果要按照上面的算法来进行的话,
+  我们输入的文本就有很多的要求, 比如我们对于一个 Swahili 的语言,
+  就需要提前分词: '(wa me tu lipa) 否则就无法处理.
+  这显然是和一开始的想法是违背的吧,
+  毕竟一般可能会希望通过 'wametulip 这样直接的形式来.</p>
+<p>一个可能的想法就是将 Abbreviations 通过展开的方式,
+  来替代提前分割的一个做法.</p>
+<p>并且还有一个问题就是这个问题里面的算法, 如果对于很多分支的话,
+  就会因为搜索空间过大而搜索无力而死机了. 这样就非常痛苦.
+  现实世界中这样的单词空间可以说是成百上千的量级了,
+  如果不能够解决的话, 就会有一个搜索爆炸的问题.</p>
+<p>关于这个的话, 我觉得 Steven Wolfram 的一个 <a href="https://www.bilibili.com/video/BV1uj411V7ch/">视频</a> 应该讲得挺好的,
+  大致的一个思路就是通过概率的方式来减少历遍所有的可能域.
+  而通过谈话模型来缩小可能的空间或者改变倾向. 有点像是蚁群算法,
+  或者和我之前整的那个完全随机的那个单词生成的感觉很像,
+  但是需要更加精细的操作.</p>
+<p>而生成的代码就变得更加简单一点了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">generate</span><span class="w"> </span><span class="p">(</span><span class="nf">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Print all possible tapes by NETWORK. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">initial</span><span class="w"> </span><span class="p">(</span><span class="nf">initial-nodes</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">generate-next</span><span class="w"> </span><span class="nv">initial</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()</span><span class="w"> </span><span class="nv">network</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">generate-next</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="nv">network</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Append the TAPE and change NODE by NETWORK. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">final-nodes</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="nv">tape</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="w"> </span><span class="p">(</span><span class="nf">transitions</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-node</span><span class="w"> </span><span class="nv">transition</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">generate-move</span><span class="w"> </span><span class="nv">transition</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="nv">network</span><span class="p">))</span>
+<span class="w">        </span><span class="o">&#39;</span><span class="p">())))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">generate-move</span><span class="w"> </span><span class="p">(</span><span class="nf">transition</span><span class="w"> </span><span class="nv">tape</span><span class="w"> </span><span class="nv">network</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">by</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-label</span><span class="w"> </span><span class="nv">transition</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">to</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-newnode</span><span class="w"> </span><span class="nv">transition</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">equal</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="ss">&#39;|</span><span class="cm">#|)</span>
+<span class="cm">           (generate-next to tape network))</span>
+<span class="cm">          ((assoc by abbreviations)</span>
+<span class="cm">           (dolist (pattern (rest (assoc by abbreviations)))</span>
+<span class="cm">             (generate-next to (generate-append tape pattern) network)))</span>
+<span class="cm">          (t</span>
+<span class="cm">           (generate-next to (generate-append tape by) network)))))</span>
+
+<span class="cm">(defun generate-append (list value)</span>
+<span class="cm">  (append list (list value)))</span>
+</pre></div>
+<p>注: 这样的话如果有那种死循环的 FSTN.
+  那么你运行的时候就会非常痛苦.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">deadly-fstn</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nb">-</span><span class="p">)))</span>
+</pre></div>
+<p>一个可能的做法就是加入栈深度检查, 只要过深就退出,
+  或者别的什么之类的. 并且这个程序也不能够让 Final node
+  上的节点去选择其他可能的点.</p>
+<p>对上面网络的一个简单解释 (无 <code>#</code> 分支版本):</p>
+<ol>
+  <li>若当前状态不是 Final State:
+    <ul>
+      <li>若纸带为空, 则退出 (<code>nil</code>)</li>
+      <li>若纸带非空, 则:
+        <ul>
+          <li>若满足纸带匹配缩写规则或者缩写规则, 那么就按照规则缩短纸带</li>
+          <li>若不满足任何的以上两种规则, 就退出 (<code>nil</code>)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>若当前状态是 Final State
+    <ul>
+      <li>若纸带为空, 则停止查找 (<code>stop</code>)</li>
+      <li>若纸带非空, 则退出 (<code>nil</code>)</li>
+    </ul>
+  </li>
+  <li>因为纸带长度有限, 且因为不存在 <code>#</code>, 即纸带长度总会减少,
+    所以纸带总会为空, 若纸带为空:
+    若当前状态是 Final State, 则停止 (<code>stop</code>);
+    若当前状态不是 Final State, 则退出 (<code>nil</code>).</li>
+  <li>综上, 是成立的.</li>
+</ol>
+</details>
+<h4>Finite-state Transducer</h4>
+<blockquote>
+  <p>An FST is a more interesting kind of FSA that allows
+    a string of output symbols to be produced as an input
+    string is recognized.</p>
+</blockquote>
+<p>就是什么呢, 如果看过上面的一些注释或者看过代码的话,
+  肯定会对这个代码感到十分不爽, 因为只能认证, 或者说识别,
+  没法做更多的事情.</p>
+<p>于是就有了 Finite-State Transducer 的一个需求,
+  即通过 FSTN 的规则来将将输入转换为输出.
+  (有点像是带有写功能的图灵机? 很像啊. )</p>
+<p>于是有一个简单的记法:</p>
+<pre class="example">
+Name ENG_FRE:
+  Initial 1
+  Final 5
+  From 1 to 2 by WHERE
+  From 2 to 3 by BV
+  From 3 to 4 by DET-FEMN
+  From 4 to 5 by N-FEMN
+  From 3 to 6 by DET-MASC
+  From 6 to 5 by N-MASC.
+
+WHERE abbreviates:
+  where_ou.
+BV abbreviates:
+  is_est.
+DET-FEMN abbreviates:
+  the_la.
+DET-MASC abbreviates:
+  the_le.
+N-FEMN abbreviates:
+  exit_sortie, shop_boutique, toliet_toilette.
+N-MASC abbreviates:
+  policeman_gendarme. 
+</pre>
+<p>上面的例子实际上就是一个简单的 English-French 的翻译 FSTN.
+  其中通过 <code>from_to</code> 的形式来记录 arc, 表示将读到的 <code>from</code> 转换为 <code>to</code>.</p>
+<p>于是在 Lisp 表述里面, 将 <code>from_to</code> 用 <code>(from to)</code> 的 List 形式来记录.</p>
+<details><summary>大概类似这样吧</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defvar</span><span class="w"> </span><span class="nv">eng-fre</span><span class="w"> </span><span class="s">&quot;English-French FSTN. &quot;</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">eng-fre</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">Initial</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">Final</span><span class="w"> </span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">WHERE</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">BV</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">DET-FEMN</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">DET-MASC</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">DET-MASC</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">From</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="nv">N-MASC</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">abbreviations</span>
+<span class="w">      </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">WHERE</span><span class="w"> </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="nv">ou</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">BE</span><span class="w"> </span><span class="p">(</span><span class="nf">is</span><span class="w"> </span><span class="nv">est</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">DET-FEMN</span><span class="w"> </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="nv">la</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">DET-MASC</span><span class="w"> </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="nv">le</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">N-FEMN</span><span class="w"> </span><span class="p">(</span><span class="nb">exit</span><span class="w"> </span><span class="nv">sortie</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">shop</span><span class="w"> </span><span class="nv">boutique</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">toliet</span><span class="w"> </span><span class="nv">toilette</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">N-MASC</span><span class="w"> </span><span class="p">(</span><span class="nf">policeman</span><span class="w"> </span><span class="nv">gendarme</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>那么前面的 <code>generate</code> 和 <code>recognize</code> 的函数实际上现在就是被重新合在一起了.
+  通过 <code>recognize</code> 来读取, 再通过 <code>generate</code> 来转换并生成新的结果.</p>
+<p><b>[2023/02/24]</b>: 先滚去学一点 Lisp, 不然写代码太难受了.</p>
+<h1>附录</h1>
+<h2>Common Lisp 补注</h2>
+<p>可以参考的一个 <a href="http://clhs.lisp.se/Front/index.htm">在线文档</a>.</p>
+<details><summary>Common Lisp 补注</summary>
+<h3>简单的数据结构和类型</h3>
+<p>嘿嘿, 想不到吧, 在 Lisp (Common Lisp) 里面, 只要用 List 就能够干翻一切乐.</p>
+<p>是否厌倦了在 List 里面使用 <code>car</code>, <code>cdr</code>? 试试 <code>nth</code>?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">4</span><span class="p">))</span>
+</pre></div>
+<p>比如要一个 Hash 表?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="ss">&#39;key</span>
+<span class="w">       </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">key</span><span class="w"> </span><span class="nv">value</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">other-key</span><span class="w"> </span><span class="nv">value</span><span class="w"> </span><span class="nb">list</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="nv">so</span><span class="w"> </span><span class="nv">on</span><span class="p">)))</span>
+</pre></div>
+<h3>Debugging and Testing</h3>
+<p>平时写代码的时候我都忽略了一点, 就是如何调试和测试. (尤其是后者)</p>
+<p>在 Lisp 里面有 <a href="https://lispcookbook.github.io/cl-cookbook/debugging.html#trace">各种调试的方法</a>, 其中我认为比较好用的 (<del>我会的</del>):</p>
+<ul>
+  <li><code>trace</code> 以及 <code>untrace</code>, 可以记录 (或取消) 一个方法的调用的参数</li>
+</ul>
+</details>
+<h2>黑话表</h2>
+<table>
+  <tr><td>ATN</td><td>augmented transition network</td></tr>
+  <tr><td>CF-PSG</td><td>context-free phrase structure grammar</td></tr>
+  <tr><td>CFL</td><td>context-free language</td></tr>
+  <tr><td>DAG</td><td>directed acyclic graph</td></tr>
+  <tr><td>DBQ</td><td>database query (language)</td></tr>
+  <tr><td>DCG</td><td>definite clause grammar</td></tr>
+  <tr><td>FSA</td><td>finite-state automaton</td></tr>
+  <tr><td>FST</td><td>finite-state transducer</td></tr>
+  <tr><td>FSTN</td><td>finite-state transition network</td></tr>
+  <tr><td>MRL</td><td>meaning representation language</td></tr>
+  <tr><td>MT</td><td>machine translation</td></tr>
+  <tr><td>NATR</td><td>network and transducer representation</td></tr>
+  <tr><td>PA</td><td>pushdown automation</td></tr>
+  <tr><td>PT</td><td>pushdown transducer</td></tr>
+  <tr><td>RTN</td><td>recursive transition network</td></tr>
+  <tr><td>WFC</td><td>word form clause</td></tr>
+  <tr><td>WFST</td><td>well-formed substring table</td></tr>
+</table>
+<h2>一些无关的代码</h2>
+<details><summary>简单的自动机绘图代码</summary>
+<h3>简单的自动机绘图代码</h3>
+<div class="highlight"><pre><span></span><span class="n">nodes</span><span class="w"> </span><span class="o">=</span> <span class="sr">/(Initial|Final)\s+((((\w+),\s*)|\w+)+)/</span>
+<span class="n">arcs</span><span class="w"> </span><span class="o">=</span> <span class="sr">/From\s+(\w+)\sto\s+(\w+)\s+by\s+(\w+|#)/</span>
+
+<span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;  rankdir = LR;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">\</span>
+<span class="w">      </span><span class="s2">&quot;  node [shape = point]; qi qa;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">\</span>
+<span class="w">      </span><span class="s2">&quot;  node [shape = circle];</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+<span class="n">raw</span><span class="o">.</span><span class="n">each_line</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">line</span><span class="o">|</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="n">line</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+<span class="w">    </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Regexp</span><span class="o">.</span><span class="n">last_match</span>
+<span class="w">    </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">node_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="o">[</span><span class="mi">2</span><span class="o">]</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;Initial&quot;</span>
+<span class="w">      </span><span class="n">node_names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sr">/,\s*/</span><span class="p">)</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node_name</span><span class="o">|</span>
+<span class="w">        </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;  qi -&gt; </span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">unless</span><span class="w"> </span><span class="n">node_name</span><span class="o">.</span><span class="n">empty?</span>
+<span class="w">      </span><span class="k">end</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="c1"># type == &quot;Final&quot;</span>
+<span class="w">      </span><span class="n">node_names</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sr">/,\s*/</span><span class="p">)</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node_name</span><span class="o">|</span>
+<span class="w">        </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;  </span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2"> -&gt; qa;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">unless</span><span class="w"> </span><span class="n">node_name</span><span class="o">.</span><span class="n">empty?</span>
+<span class="w">      </span><span class="k">end</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="w">  </span><span class="k">elsif</span><span class="w"> </span><span class="n">line</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">arcs</span><span class="p">)</span>
+<span class="w">    </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Regexp</span><span class="o">.</span><span class="n">last_match</span>
+<span class="w">    </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="o">[</span><span class="mi">2</span><span class="o">]</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="n">m</span><span class="o">[</span><span class="mi">3</span><span class="o">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;#&#39;</span>
+<span class="w">      </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;;</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">      </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot; [label = </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">m</span><span class="o">[</span><span class="mi">3</span><span class="o">]</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">];</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="k">end</span>
+<span class="w">    </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;  </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">from</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2"> -&gt; </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">to</span><span class="si">}</span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">return</span><span class="w"> </span><span class="n">res</span>
+</pre></div>
+</details>
+<details><summary>FSTN Parser</summary>
+<h3>FSTN Parser</h3>
+<p>一个简单的 FSTN Parser 在 <a href="/ruby/ruby-ebnf-try/">Ruby and EBNF</a> 里面介绍了.</p>
+</details>
+
+  </div><a class="u-url" href="/reading/natural-language-processing-in-lisp/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

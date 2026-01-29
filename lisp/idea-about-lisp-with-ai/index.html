@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Ideas about Lisp with AI | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Ideas about Lisp with AI" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 感觉自己都没有怎么在写代码的时候使用过 AI, 还是有些落伍了 (bushi). 所以试试给自己做一个简单的 AI agent. API API 的部分折叠了, 毕竟大家可能不是很喜欢看 首先是依赖: (ql:quickload &#39;(:dexador :str :shasht :parse-float)) Ladder 这里使用 DeepSeek 的 API: (defparameter *host* &quot;api.deepseek.com&quot; &quot;DeepSeek API host. &quot;)" />
+<meta property="og:description" content="About 感觉自己都没有怎么在写代码的时候使用过 AI, 还是有些落伍了 (bushi). 所以试试给自己做一个简单的 AI agent. API API 的部分折叠了, 毕竟大家可能不是很喜欢看 首先是依赖: (ql:quickload &#39;(:dexador :str :shasht :parse-float)) Ladder 这里使用 DeepSeek 的 API: (defparameter *host* &quot;api.deepseek.com&quot; &quot;DeepSeek API host. &quot;)" />
+<link rel="canonical" href="/lisp/idea-about-lisp-with-ai/" />
+<meta property="og:url" content="/lisp/idea-about-lisp-with-ai/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-15T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Ideas about Lisp with AI" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-15T00:00:00+00:00","datePublished":"2025-03-15T00:00:00+00:00","description":"About 感觉自己都没有怎么在写代码的时候使用过 AI, 还是有些落伍了 (bushi). 所以试试给自己做一个简单的 AI agent. API API 的部分折叠了, 毕竟大家可能不是很喜欢看 首先是依赖: (ql:quickload &#39;(:dexador :str :shasht :parse-float)) Ladder 这里使用 DeepSeek 的 API: (defparameter *host* &quot;api.deepseek.com&quot; &quot;DeepSeek API host. &quot;)","headline":"Ideas about Lisp with AI","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/idea-about-lisp-with-ai/"},"url":"/lisp/idea-about-lisp-with-ai/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Ideas about Lisp with AI</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-15T00:00:00+00:00" itemprop="datePublished">Mar 15, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>感觉自己都没有怎么在写代码的时候使用过 AI, 还是有些落伍了 (bushi).
+  所以试试给自己做一个简单的 AI agent.</p>
+<h1>API</h1>
+<details><summary>API 的部分折叠了, 毕竟大家可能不是很喜欢看</summary>
+<p>首先是依赖:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">ql:quickload</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:dexador</span><span class="w"> </span><span class="nv">:str</span><span class="w"> </span><span class="nv">:shasht</span><span class="w"> </span><span class="nv">:parse-float</span><span class="p">))</span>
+</pre></div>
+<h2>Ladder</h2>
+<p>这里使用 <a href="https://api-docs.deepseek.com">DeepSeek</a> 的 API:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*host*</span><span class="w"> </span><span class="s">&quot;api.deepseek.com&quot;</span>
+<span class="w">  </span><span class="s">&quot;DeepSeek API host. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*api-key*</span><span class="w"> </span><span class="s">&quot;sk-you-should-set-it-your-self&quot;</span>
+<span class="w">  </span><span class="s">&quot;DeepSeek API key. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*temperature*</span><span class="w"> </span><span class="mf">1.0</span>
+<span class="w">  </span><span class="s">&quot;Default temperature. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*model*</span><span class="w"> </span><span class="s">&quot;deepseek-chat&quot;</span>
+<span class="w">  </span><span class="s">&quot;Default LLM model&quot;</span><span class="p">)</span>
+</pre></div>
+<p>一个 JSON object 的 API 的请求和接受处理可以如下抽象:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">query</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="nv">api</span><span class="w"> </span><span class="nv">content</span>
+<span class="w">              </span><span class="nv">&amp;key</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">headers</span><span class="w"> </span><span class="nv">*headers*</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">api-key</span><span class="w"> </span><span class="nv">*api-key*</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">host</span><span class="w">    </span><span class="nv">*host*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Query for `api&#39; by `method&#39;.</span>
+<span class="s">Return a JSON object as hash-table. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">shasht:read-json*</span>
+<span class="w">   </span><span class="nv">:stream</span><span class="w"> </span><span class="p">(</span><span class="nf">dex:request</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;https://~A/~A&quot;</span><span class="w"> </span><span class="nv">host</span><span class="w"> </span><span class="nv">api</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">:method</span><span class="w"> </span><span class="nv">method</span>
+<span class="w">            </span><span class="nv">:headers</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="s">&quot;Authorization&quot;</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;Bearer ~A&quot;</span><span class="w"> </span><span class="nv">api-key</span><span class="p">))</span>
+<span class="w">                           </span><span class="nv">headers</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">:content</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">content</span><span class="p">)</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">json</span><span class="w"> </span><span class="nv">content</span><span class="p">)))</span>
+<span class="w">   </span><span class="nv">:null-value</span><span class="w">    </span><span class="nv">:null</span>
+<span class="w">   </span><span class="nv">:false-value</span><span class="w">   </span><span class="nv">nil</span>
+<span class="w">   </span><span class="nv">:true-value</span><span class="w">    </span><span class="nv">t</span>
+<span class="w">   </span><span class="nv">:array-format</span><span class="w">  </span><span class="nv">:list</span>
+<span class="w">   </span><span class="nv">:object-format</span><span class="w"> </span><span class="nv">:hash-table</span>
+<span class="w">   </span><span class="nv">:eof-error</span><span class="w">     </span><span class="nv">t</span><span class="p">))</span>
+</pre></div>
+<p>这里不使用 <code>shasht:write-json</code> 来产生 JSON 输入, 而是通过 <code>json</code> 函数进行处理.</p>
+<details><summary>JSON 函数的定义</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">json</span><span class="w"> </span><span class="p">(</span><span class="nf">obj</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Turn Lisp `obj&#39; to JSON string. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">with-output-to-string</span><span class="w"> </span><span class="p">(</span><span class="nf">json</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">write-json</span><span class="w"> </span><span class="p">(</span><span class="nf">obj</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">null</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span><span class="w">      </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"> </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w">      </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w">  </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">:null</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="s">&quot;null&quot;</span><span class="w">  </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">:true</span><span class="p">)</span><span class="w">  </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="s">&quot;true&quot;</span><span class="w">  </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">:false</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="s">&quot;false&quot;</span><span class="w"> </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">((</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span><span class="w">   </span><span class="p">(</span><span class="nf">shasht:write-json-string</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">T</span><span class="w">               </span><span class="p">(</span><span class="nf">shasht:write-json</span><span class="w">        </span><span class="nv">obj</span><span class="w"> </span><span class="nv">json</span><span class="p">)))</span>
+<span class="w">                   </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">evenp</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">obj</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">keywordp</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">obj</span><span class="p">)))</span>
+<span class="w">                          </span><span class="c1">;; plist as object</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\{</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">shasht:write-json-string</span><span class="w"> </span><span class="p">(</span><span class="nf">str:snake-case</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">obj</span><span class="p">))</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="nv">:</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">write-json</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">obj</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">do-plist</span><span class="w"> </span><span class="p">(</span><span class="nf">key</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="o">,</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">shasht:write-json-string</span><span class="w"> </span><span class="p">(</span><span class="nf">str:snake-case</span><span class="w"> </span><span class="nv">key</span><span class="p">)</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="nv">:</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">write-json</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\}</span><span class="w"> </span><span class="nv">json</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">T</span>
+<span class="w">                          </span><span class="c1">;; normal list write as array</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="p">[</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">write-json</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">obj</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="nv">obj</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="o">,</span><span class="w"> </span><span class="nv">json</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">write-json</span><span class="w"> </span><span class="nv">elem</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">write-char</span><span class="w"> </span><span class="o">#</span><span class="err">\</span><span class="p">]</span><span class="w"> </span><span class="nv">json</span><span class="p">))))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">write-json</span><span class="w"> </span><span class="nv">obj</span><span class="p">))))</span>
+</pre></div>
+<p>其中的 <code>do-plist</code> 的宏定义类似于 <code>dolist</code> 宏:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">do-plist</span><span class="w"> </span><span class="p">((</span><span class="nf">key</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">plist</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">result</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Like `dolist&#39; but on plist. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">val-rest</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;VAL-REST&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">key</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="o">,</span><span class="nv">val-rest</span><span class="p">)</span><span class="w"> </span><span class="nv">on</span><span class="w"> </span><span class="o">,</span><span class="nv">plist</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;cddr</span>
+<span class="w">           </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="o">,</span><span class="nv">val-rest</span><span class="p">)</span>
+<span class="w">             </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;Not property list: ~A. &quot;</span><span class="w"> </span><span class="o">,</span><span class="nv">plist</span><span class="p">))</span>
+<span class="w">           </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">val</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="o">,</span><span class="nv">val-rest</span><span class="p">)))</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)</span>
+<span class="w">           </span><span class="o">,@</span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">result</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="o">,</span><span class="nv">result</span><span class="p">))))))</span>
+</pre></div>
+</details>
+<p>比如可以测试一下如何了解自己还剩下多少的 API 用量:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="nv">:get</span><span class="w"> </span><span class="s">&quot;user/balance&quot;</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">gethash*</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="s">&quot;balance_infos&quot;</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="w"> </span><span class="s">&quot;total_balance&quot;</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+9.99
+</pre>
+<p>(剩得不多了&#8230; )</p>
+<details><summary>其中的 GETHASH* 的函数定义</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gethash*</span><span class="w"> </span><span class="p">(</span><span class="nf">hash-table</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Recursively get keys from `hash-table&#39;.</span>
+<span class="s">Return `default&#39; if not found. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nv">keys</span><span class="p">)</span><span class="w"> </span><span class="nv">hash-table</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">key</span><span class="w">  </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">keys</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">hash</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">functionp</span><span class="w"> </span><span class="nv">key</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">hash-table</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">hash-table</span><span class="p">))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;gethash*</span><span class="w"> </span><span class="nb">hash</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">keys</span><span class="p">)))))</span>
+</pre></div>
+</details>
+<p>于是可以定义一个简单的 wrapper:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">define-api</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="p">(</span><span class="nf">response</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">api</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">required</span><span class="w"> </span><span class="nv">optional</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Define LLMisp API function. &quot;</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="w"> </span><span class="p">(</span><span class="o">,@</span><span class="nv">required</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="o">,@</span><span class="nv">optional</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">     </span><span class="c1">;; docstring</span>
+<span class="w">     </span><span class="o">,@</span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">body</span><span class="p">)))</span>
+<span class="w">     </span><span class="c1">;; check parameters before query</span>
+<span class="w">     </span><span class="o">,@</span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span><span class="w"> </span><span class="nv">:check</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">test</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">assert</span><span class="w"> </span><span class="o">,</span><span class="nv">test</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">body</span><span class="p">))))</span>
+<span class="w">     </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">response</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="o">,</span><span class="nv">method</span><span class="w"> </span><span class="o">,</span><span class="nv">api</span>
+<span class="w">                    </span><span class="c1">;; generate the content plist</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">param</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">var</span><span class="w"> </span><span class="nv">required</span><span class="w"> </span><span class="p">(</span><span class="nf">nreverse</span><span class="w"> </span><span class="nv">param</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nf">intern</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-name</span><span class="w"> </span><span class="nv">var</span><span class="p">)</span><span class="w"> </span><span class="nv">:keyword</span><span class="p">)</span><span class="w"> </span><span class="nv">param</span><span class="p">)</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">var</span><span class="w"> </span><span class="nv">param</span><span class="p">)))</span>
+<span class="w">                          </span><span class="o">,@</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">param</span><span class="w"> </span><span class="p">()))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">do-bind-list</span><span class="w"> </span><span class="p">((</span><span class="nf">var</span><span class="p">)</span><span class="w"> </span><span class="nv">optional</span><span class="w"> </span><span class="p">(</span><span class="nf">nreverse</span><span class="w"> </span><span class="nv">param</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nf">intern</span><span class="w"> </span><span class="p">(</span><span class="nf">symbol-name</span><span class="w"> </span><span class="nv">var</span><span class="p">)</span><span class="w"> </span><span class="nv">:keyword</span><span class="p">)</span><span class="w"> </span><span class="nv">param</span><span class="p">)</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">var</span><span class="w"> </span><span class="nv">param</span><span class="p">)))))))</span>
+<span class="w">       </span><span class="c1">;; return `response&#39; directly if not used in `body&#39;</span>
+<span class="w">       </span><span class="o">,@</span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="nv">body</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">response</span><span class="p">)))))</span>
+</pre></div>
+<h2>DeepSeek API</h2>
+<p>以下是抄袭至 <a href="https://api-docs.deepseek.com/api/deepseek-api">文档</a> 的说明:</p>
+<ul>
+  <li>Get User Balance
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-api</span><span class="w"> </span><span class="nv">balance</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">:get</span><span class="w"> </span><span class="s">&quot;user/balance&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Get user current balance.</span>
+<span class="s">Return values are total balance and raw JSON obj hash-table. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;is_available&quot;</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-float:parse-float</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">gethash*</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="s">&quot;balance_infos&quot;</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="w"> </span><span class="s">&quot;total_balance&quot;</span><span class="p">))</span>
+<span class="w">            </span><span class="nv">res</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>Lists Models
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-api</span><span class="w"> </span><span class="nv">models</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">:get</span><span class="w"> </span><span class="s">&quot;models&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return a list of models name and raw JSON obj hash-table.</span>
+
+<span class="s">Lists the currently available models, and provides basic</span>
+<span class="s">information about each one such as the owner and availability.</span>
+
+<span class="s">Check Models &amp; Pricing for our currently supported models.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">model</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;id&quot;</span><span class="w"> </span><span class="nv">model</span><span class="p">))</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">gethash</span><span class="w"> </span><span class="s">&quot;data&quot;</span><span class="w"> </span><span class="nv">res</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>Create Chat Completion
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-api</span><span class="w"> </span><span class="nv">chat-complete</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">:post</span><span class="w"> </span><span class="s">&quot;chat/completions&quot;</span>
+<span class="w">                               </span><span class="nv">:required</span><span class="w"> </span><span class="p">(</span><span class="nf">messages</span><span class="p">)</span>
+<span class="w">                               </span><span class="nv">:optional</span><span class="w"> </span><span class="p">((</span><span class="nf">model</span><span class="w">             </span><span class="nv">*model*</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">frequency-penalty</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">max-tokens</span><span class="w">        </span><span class="mi">4096</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">presence-penalty</span><span class="w">  </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">response-format</span><span class="w">   </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">stop</span><span class="w">              </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">stream</span><span class="w">            </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">stream-options</span><span class="w">    </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">temperature</span><span class="w">       </span><span class="nv">*temperature*</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">top-p</span><span class="w">             </span><span class="mf">1.0</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">tools</span><span class="w">             </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">tool-choice</span><span class="w">       </span><span class="s">&quot;none&quot;</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">logprobs</span><span class="w">          </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                                          </span><span class="p">(</span><span class="nf">top-logprobs</span><span class="w">      </span><span class="nv">:null</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Creates a model response for the given chat conversation.</span>
+<span class="s">Return output message and raw JSON obj hash-table. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:check</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">frequency-penalty</span><span class="w"> </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="mi">-2</span><span class="w"> </span><span class="nv">frequency-penalty</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">max-tokens</span><span class="w">        </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">max-tokens</span><span class="w"> </span><span class="mi">8192</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">presence-penalty</span><span class="w">  </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="mi">-2</span><span class="w"> </span><span class="nv">presence-penalty</span><span class="w">  </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">temperature</span><span class="w">       </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="mi">0</span><span class="w">  </span><span class="nv">temperature</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">temperature</span><span class="w">       </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="nv">top-p</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash*</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="s">&quot;choices&quot;</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="w"> </span><span class="s">&quot;message&quot;</span><span class="w"> </span><span class="s">&quot;content&quot;</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>FIM: Create FIM Completion
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-api</span><span class="w"> </span><span class="nv">fill-in-middle</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">:post</span><span class="w"> </span><span class="s">&quot;beta/completions&quot;</span>
+<span class="w">                                </span><span class="nv">:required</span><span class="w"> </span><span class="p">(</span><span class="nf">prompt</span><span class="p">)</span>
+<span class="w">                                </span><span class="nv">:optional</span><span class="w"> </span><span class="p">((</span><span class="nf">model</span><span class="w">             </span><span class="nv">*model*</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">echo</span><span class="w">              </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">frequency-penalty</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">logprobs</span><span class="w">          </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">max-tokens</span><span class="w">        </span><span class="mi">4096</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">presence-penalty</span><span class="w">  </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">stop</span><span class="w">              </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">stream</span><span class="w">            </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">suffix</span><span class="w">            </span><span class="nv">:null</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">temperature</span><span class="w">       </span><span class="nv">*temperature*</span><span class="p">)</span>
+<span class="w">                                           </span><span class="p">(</span><span class="nf">top-p</span><span class="w">             </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;The FIM (Fill-In-the-Middle) Completion API.</span>
+<span class="s">Return values are message and raw JSON obj hash-table. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:check</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">frequency-penalty</span><span class="w"> </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="mi">-2</span><span class="w"> </span><span class="nv">frequency-penalty</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">logprobs</span><span class="w">          </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="nv">logprobs</span><span class="w"> </span><span class="mi">20</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">presence-penalty</span><span class="w">  </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="mi">-2</span><span class="w"> </span><span class="nv">presence-penalty</span><span class="w">  </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">temperature</span><span class="w">       </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="nv">temperature</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">top-p</span><span class="w">             </span><span class="nv">:null</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="nv">top-p</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">gethash*</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="s">&quot;choices&quot;</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="w"> </span><span class="s">&quot;text&quot;</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+  </li>
+</ul>
+<p>假如折叠隐藏前面的 Ladder 一节, 估计只看这部分的 <code>define-api</code> 会有一种:
+  &#8220;啊? 这 Lisp 好简单哦&#8221; 的错觉吧. 虽然并不是想要强调 Lisp 其实很复杂
+  (复杂吗? 并没有吧&#8230; 毕竟实际的行数也不多).</p>
+<details><summary>这里吐槽一下</summary>
+<p>之前的看了一个 Lisp 的书, 里面把代码放在 Github 上, 结果发现其实实现得也不咋的.
+  还不如我自己写的优雅容易拓展. (bushi)</p>
+</details>
+<p>这里给个例子试试吧:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">chat-complete</span><span class="w"> </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">:content</span><span class="w"> </span><span class="s">&quot;你是一只猫娘, 说话的句尾需要加上喵. &quot;</span>
+<span class="w">                  </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;system&quot;</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">:content</span><span class="w"> </span><span class="s">&quot;你好, 请问你是谁? &quot;</span>
+<span class="w">                  </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;user&quot;</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">:temperature</span><span class="w"> </span><span class="mf">1.3</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+你好喵~我是一只可爱的猫娘喵!很高兴认识你喵~ (开心地摇晃着尾巴)
+</pre>
+</details>
+<h1>一些比较好玩的尝试</h1>
+<h2>Mathematica-like DataBase query</h2>
+<p>在 Mathematica 里面有一些很有用的功能: <a href="https://reference.wolfram.com/language/ref/menuitem/InlineFree-formInput.html">Inline Free-form Input</a>.
+  常见的一些使用方法是用来输入单位 (<a href="https://reference.wolfram.com/language/ref/Quantity.html">Quantity</a>), 用来输入物理量的值之类的.</p>
+<p>这里可以模拟做一些类似的操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">ask-math</span><span class="w"> </span><span class="s">&quot;fourth prime number&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+7
+</pre>
+<p>具体的实现如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*prompt-only-number*</span>
+<span class="w">  </span><span class="s">&quot;Return only the finaly answer as number without any other text. &quot;</span><span class="p">)</span>
+</pre></div>
+<p>(注: prompt 来自 <a href="https://www.rangakrish.com/index.php/2025/01/20/using-openai-from-allegro-common-lisp/">Using OpenAI from Allegro Common Lisp</a>, 有少许修改. )</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ask-math</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">parse</span><span class="w"> </span><span class="nv">:read</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Ask with `query&#39;.</span>
+<span class="s">Return results, raw string, raw JSON obj hash-table.</span>
+
+<span class="s">Arguments:</span>
+<span class="s">+ `parse&#39;:</span>
+<span class="s">  + `nil&#39; for no parse, return raw string</span>
+<span class="s">  + `:int&#39; for using `parse-integer&#39;</span>
+<span class="s">  + `:float&#39; for using `parse-float:parse-float&#39;</span>
+<span class="s">  + `:read&#39; for using `read-from-string&#39;</span>
+<span class="s">  + `function&#39; for using custom parsing function</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">chat-complete</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="nv">*prompt-only-number*</span>
+<span class="w">                        </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;system&quot;</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="nv">query</span>
+<span class="w">                        </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;user&quot;</span><span class="p">))</span>
+<span class="w">                     </span><span class="nv">:temperature</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">etypecase</span><span class="w"> </span><span class="nv">parse</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">null</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">parse</span><span class="w"> </span><span class="nv">res</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">keyword</span><span class="w">  </span><span class="p">(</span><span class="nf">ecase</span><span class="w"> </span><span class="nv">parse</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">:int</span><span class="w">   </span><span class="p">(</span><span class="nf">parse-integer</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">:junk-allowed</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">:float</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-float:parse-float</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">:junk-allowed</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">:read</span><span class="w">  </span><span class="p">(</span><span class="nf">read-from-string</span><span class="w"> </span><span class="nv">res</span><span class="p">)))))</span>
+<span class="w">     </span><span class="nv">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">)))</span>
+</pre></div>
+<p>感觉可以做一些简单的 wrapper 并写一些更多的 prompt 来添加功能.</p>
+<h2>AI Macro Expanding</h2>
+<p>既然能够展开提问, 为什么不直接展开代码呢? 比如:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun-with-ai</span><span class="w"> </span><span class="nv">fibonacci</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return `n&#39;th `fibonacci&#39; number. &quot;</span>
+<span class="w">  </span><span class="nv">:goal</span><span class="w"> </span><span class="p">(</span><span class="nf">:performance</span><span class="w"> </span><span class="nv">:readability</span><span class="w"> </span><span class="nv">:type-strict</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">:confirm</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+</pre></div>
+<h3>Generate by FIM</h3>
+<p>看到 API 文档里面有一个 <a href="https://api-docs.deepseek.com/guides/fim_completion">FIM 的例子</a>, 感觉也不是不能试试:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">lisp-fill-???</span><span class="w"> </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">fib</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="p">)</span><span class="w"> </span><span class="nv">???</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">fib</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">fib</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="mi">2</span><span class="p">)))))</span>
+</pre></div>
+<pre class="example">
+(defun fib (a)
+  (if (&lt; a 2)
+      1
+      (+ (fib (- a 1)) (fib (- a 2)))))
+</pre>
+<p>具体的实现:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">read-list-from-string</span><span class="w"> </span><span class="p">(</span><span class="nb">string</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">max-retry</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Read list from `string&#39;, auto completing the `)&#39; if eof. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">handler-case</span><span class="w"> </span><span class="p">(</span><span class="nf">read-from-string</span><span class="w"> </span><span class="nb">string</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">end-of-file</span><span class="w"> </span><span class="p">(</span><span class="nf">err</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">max-retry</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">read-list-from-string</span><span class="w"> </span><span class="p">(</span><span class="nf">str:concat</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">max-retry</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="nv">err</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ask-lisp-fim-expr</span><span class="w"> </span><span class="p">(</span><span class="nf">prefix</span><span class="w"> </span><span class="nv">suffix</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">max-tokens</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">hints</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">echo</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Using FIM to generate Lisp code. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">fill-in-middle</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                              </span><span class="s">&quot;;;; Common Lisp Code, output with no space indent</span>
+<span class="s">~A</span>
+<span class="s">;; ~A</span>
+<span class="s">&quot;</span>
+<span class="w">                              </span><span class="nv">prefix</span><span class="w"> </span><span class="nv">hints</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:suffix</span><span class="w">     </span><span class="nv">suffix</span>
+<span class="w">                      </span><span class="nv">:max-tokens</span><span class="w"> </span><span class="nv">max-tokens</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">str:concat</span><span class="w"> </span><span class="nv">prefix</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">suffix</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">echo</span><span class="w"> </span><span class="p">(</span><span class="nf">write-string</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">echo</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">read-list-from-string</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">              </span><span class="nv">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">lisp-fill-???</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">max-tokens</span><span class="w"> </span><span class="mi">128</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">hints</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">echo</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">prefix</span><span class="w"> </span><span class="nv">suffix</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">str:split</span><span class="w"> </span><span class="s">&quot;???&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">*print-pretty*</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">                         </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~A&quot;</span><span class="w"> </span><span class="nv">expr</span><span class="p">)))</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="nf">ask-lisp-fim-expr</span><span class="w"> </span><span class="o">,</span><span class="nv">prefix</span><span class="w"> </span><span class="o">,</span><span class="nv">suffix</span>
+<span class="w">                        </span><span class="nv">:max-tokens</span><span class="w"> </span><span class="o">,</span><span class="nv">max-tokens</span>
+<span class="w">                        </span><span class="nv">:hints</span><span class="w">      </span><span class="o">,</span><span class="nv">hints</span>
+<span class="w">                        </span><span class="nv">:echo</span><span class="w">       </span><span class="o">,</span><span class="nv">echo</span><span class="p">)))</span>
+</pre></div>
+<p>现在只能生成代码, 那么能不能直接运行呢? 至少我是不太敢的,
+  我觉得估计需要做一个简单的确认工作和展开工作. 这个估计需要打通 Lisp 和 Emacs
+  之间的通信和编辑功能.</p>
+<h3>Generate by Prompt</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">ask-lisp-expr</span><span class="w"> </span><span class="s">&quot;define function `fibonacci&#39;, return `n&#39;th fibonacci number&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+(defun fibonacci (n)
+  (labels ((fib-aux (a b count)
+             (if (zerop count)
+                 b
+                 (fib-aux (+ a b) a (1- count)))))
+    (fib-aux 1 0 n)))
+</pre>
+<p>具体的实现如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*prompt-lisp-coder*</span>
+<span class="w">  </span><span class="s">&quot;You are a common lisp code assitent. You should:</span>
+<span class="s">+ Return only common lisp s-expr without any other text.</span>
+<span class="s">+ Write code more lispy and functional</span>
+<span class="s">+ Not wrapp code in Markdown code block&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ask-lisp-expr</span><span class="w"> </span><span class="p">(</span><span class="nf">query</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">goal</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:performance</span><span class="w"> </span><span class="nv">:readability</span><span class="w"> </span><span class="nv">:security</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Ask for Lisp expression.</span>
+<span class="s">Return lisp expression, raw string, raw JSON hash-table. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">chat-complete</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="nv">*prompt-lisp-coder*</span>
+<span class="w">                        </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;system&quot;</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                                          </span><span class="s">&quot;;; Code Goal: ~{~A~^, ~}~%~A&quot;</span>
+<span class="w">                                          </span><span class="nv">goal</span><span class="w"> </span><span class="nv">query</span><span class="p">)</span>
+<span class="w">                        </span><span class="nv">:role</span><span class="w">    </span><span class="s">&quot;user&quot;</span><span class="p">))</span>
+<span class="w">                     </span><span class="nv">:temperature</span><span class="w"> </span><span class="mf">0.2</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">read-list-from-string</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">str:trim</span><span class="w"> </span><span class="nv">res</span><span class="w"> </span><span class="nv">:char-bag</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="o">#</span><span class="err">\</span><span class="o">`</span><span class="w"> </span><span class="sc">#\Space</span><span class="w"> </span><span class="sc">#\Newline</span><span class="w"> </span><span class="sc">#\l</span><span class="w"> </span><span class="sc">#\i</span><span class="w"> </span><span class="sc">#\s</span><span class="w"> </span><span class="sc">#\p</span><span class="p">)))</span>
+<span class="w">            </span><span class="nv">res</span><span class="w"> </span><span class="nv">raw</span><span class="p">)))</span>
+</pre></div>
+<p>但是发现其实写的 Lisp 代码不是很好强, 比如很明显的就会有对于 <code>(fibonacci n)</code>
+  在 <code>n</code> 小于零的时候存在无限递归的问题. 看来不能只靠它来生成代码并立刻执行.
+  应该是训练样本不足导致的.</p>
+<p>不过另外的想法可能是用来生成文档, 测试用例估计会比较好.
+  另外一个想法就是如果在训练的时候用 S-expr 来做输出样本的训练,
+  类似于 DeepSeek 保证能够输出 JSON 格式的输出, 没准会更加好用.
+  (假如我有能力微调训练 LLM 的话估计会好一些).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*prompt-lisp-docstring*</span>
+<span class="w">  </span><span class="s">&quot;You are a common lisp code assistent.</span>
+<span class="s">You should generate or refine the docstring with given lisp code.</span>
+
+<span class="s">Example 1:</span>
+<span class="s">Input</span>
+<span class="s">```lisp</span>
+<span class="s">(defun fibonacci (n)</span>
+<span class="s">  (declare (type unsigned-byte n))</span>
+<span class="s">  (if (&lt; n 2) n (+ (fibonacci (- n 1)) (fibonacci (- n 2)))))</span>
+<span class="s">```</span>
+
+<span class="s">Output</span>
+<span class="s">```</span>
+<span class="s">Return `n&#39;th fibonacci number.</span>
+
+<span class="s">Arguments:</span>
+<span class="s">+ `n&#39;: nth fibonacci number</span>
+<span class="s">```</span>
+
+<span class="s">Example 2:</span>
+<span class="s">Input</span>
+<span class="s">```lisp</span>
+<span class="s">(defmacro do-bind-list ((var list &amp;optional result) &amp;body body)</span>
+<span class="s">  `(dolist (vars ,list ,result) (destructuring-bind ,var vars ,@body)))</span>
+<span class="s">```</span>
+
+<span class="s">Output</span>
+<span class="s">```</span>
+<span class="s">Iter over `list&#39; and binds `var&#39; list on each element of `list&#39;.</span>
+<span class="s">Return `result&#39; if given, or `nil&#39;.</span>
+
+<span class="s">Syntax:</span>
+
+<span class="s">   (do-bind-list (([var]*) list [res]?) . body)</span>
+
+<span class="s">Example:</span>
+
+<span class="s">    (do-bind-list ((a b) list) (do-something-with a b))</span>
+<span class="s">```&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">refine-docstring</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Refine docstring. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">listp</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;defun</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;defmacro</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">def</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">lambda-list</span><span class="w"> </span><span class="nv">docstring</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span><span class="w"> </span><span class="nv">expr</span>
+<span class="w">        </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">def</span><span class="w"> </span><span class="o">,</span><span class="nv">name</span><span class="w"> </span><span class="o">,</span><span class="nv">lambda-list</span>
+<span class="w">           </span><span class="o">,</span><span class="p">(</span><span class="nf">str:trim</span><span class="w"> </span><span class="p">(</span><span class="nf">chat-complete</span><span class="w"> </span><span class="o">`</span><span class="p">((</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="nv">*prompt-lisp-docstring*</span>
+<span class="w">                                        </span><span class="nv">:role</span><span class="w"> </span><span class="s">&quot;system&quot;</span><span class="p">)</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">:content</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;~A&quot;</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">                                        </span><span class="nv">:role</span><span class="w"> </span><span class="s">&quot;user&quot;</span><span class="p">))</span>
+<span class="w">                                     </span><span class="nv">:temperature</span><span class="w"> </span><span class="mf">0.2</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">:char-bag</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="o">#</span><span class="err">\</span><span class="o">`</span><span class="w"> </span><span class="sc">#\Space</span><span class="w"> </span><span class="sc">#\Newline</span><span class="p">))</span>
+<span class="w">           </span><span class="o">,@</span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">stringp</span><span class="w"> </span><span class="nv">docstring</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">docstring</span><span class="p">))</span>
+<span class="w">           </span><span class="o">,@</span><span class="nv">body</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">expr</span><span class="p">))</span>
+</pre></div>
+<p>比如说:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">macroexpand-1</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">refine-docstring</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">2-</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">2</span><span class="p">))))</span>
+</pre></div>
+<pre class="example">
+(defun 2- (n)
+  &quot;Subtract 2 from `n&#39;.
+
+Arguments:
++ `n&#39;: A number to subtract 2 from
+
+Returns:
+- The result of `n - 2&#39;&quot;
+  (- n 2))
+t
+</pre>
+<p>这样生成 docstring 的方式如何? 轻松多了吧.</p>
+<h1>End</h1>
+<p>感觉可以把类似的做法拓展到各种地方. 比如 Mathematica 的代码生成之类的,
+  之后感觉可以修正一些或者做一些更多的适配.</p>
+<p>本文中的所有代码可以从 <a href="/_img/lisp/lisp-with-ai/api.lisp">api.lisp</a> 以及 <a href="/_img/lisp/lisp-with-ai/try.lisp">try.lisp</a> 获取.</p>
+
+  </div><a class="u-url" href="/lisp/idea-about-lisp-with-ai/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

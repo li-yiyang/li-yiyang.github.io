@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Basic Software Tools: Machine-Independent Graphics Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Basic Software Tools: Machine-Independent Graphics Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 是的, 我需要一点点上古遗物. 本来打算从 CLIM 2 Spec 开始看, 然后写一个类似的东西 (或者写一个 backend), 但是看了几页之后就直到自己太菜了, (对 GUI 的 API 完全没有什么概念, 更不要说如何去实现了) 所以现在先建立在已有的 McCLIM 或者 clim-tos 的基础上, 快速的做一些简单的 GUI 先. 或者能不能用类似于 CLOG 的框架呢? 这里参考的是 Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory 一书, 你应该可以在网络上找到它的扫描版. 之后还想要读一点后面的部分. Interface (defpackage #:cl-module/plot (:use :clim :clim-lisp) (:export #:init-plot #:plot-fill-rect #:plot-size-rect #:clear-plot #:pen-width #:plot-frame-rect #:plot-line #:show-plot #:plot-string #:plot-string-bold #:plot-string-italic #:plot-mouse-down))" />
+<meta property="og:description" content="About 是的, 我需要一点点上古遗物. 本来打算从 CLIM 2 Spec 开始看, 然后写一个类似的东西 (或者写一个 backend), 但是看了几页之后就直到自己太菜了, (对 GUI 的 API 完全没有什么概念, 更不要说如何去实现了) 所以现在先建立在已有的 McCLIM 或者 clim-tos 的基础上, 快速的做一些简单的 GUI 先. 或者能不能用类似于 CLOG 的框架呢? 这里参考的是 Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory 一书, 你应该可以在网络上找到它的扫描版. 之后还想要读一点后面的部分. Interface (defpackage #:cl-module/plot (:use :clim :clim-lisp) (:export #:init-plot #:plot-fill-rect #:plot-size-rect #:clear-plot #:pen-width #:plot-frame-rect #:plot-line #:show-plot #:plot-string #:plot-string-bold #:plot-string-italic #:plot-mouse-down))" />
+<link rel="canonical" href="/lisp/machine-independent-graphics/" />
+<meta property="og:url" content="/lisp/machine-independent-graphics/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Basic Software Tools: Machine-Independent Graphics Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-03-13T00:00:00+00:00","datePublished":"2024-03-13T00:00:00+00:00","description":"About 是的, 我需要一点点上古遗物. 本来打算从 CLIM 2 Spec 开始看, 然后写一个类似的东西 (或者写一个 backend), 但是看了几页之后就直到自己太菜了, (对 GUI 的 API 完全没有什么概念, 更不要说如何去实现了) 所以现在先建立在已有的 McCLIM 或者 clim-tos 的基础上, 快速的做一些简单的 GUI 先. 或者能不能用类似于 CLOG 的框架呢? 这里参考的是 Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory 一书, 你应该可以在网络上找到它的扫描版. 之后还想要读一点后面的部分. Interface (defpackage #:cl-module/plot (:use :clim :clim-lisp) (:export #:init-plot #:plot-fill-rect #:plot-size-rect #:clear-plot #:pen-width #:plot-frame-rect #:plot-line #:show-plot #:plot-string #:plot-string-bold #:plot-string-italic #:plot-mouse-down))","headline":"Basic Software Tools: Machine-Independent Graphics Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/machine-independent-graphics/"},"url":"/lisp/machine-independent-graphics/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Basic Software Tools: Machine-Independent Graphics | Common Lisp Modules: Artificial Intelligence in the Era of Neural Network and Chaos Theory</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-13T00:00:00+00:00" itemprop="datePublished">Mar 13, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>是的, 我需要一点点上古遗物. 本来打算从 CLIM 2 Spec 开始看,
+  然后写一个类似的东西 (或者写一个 backend), 但是看了几页之后就直到自己太菜了,
+  (对 GUI 的 API 完全没有什么概念, 更不要说如何去实现了)
+  <del>所以现在先建立在已有的 <a href="https://mcclim.common-lisp.dev">McCLIM</a> 或者 <a href="https://github.com/dkochmanski/clim-tos">clim-tos</a> 的基础上</del>, 快速的做一些简单的 GUI 先.
+  <del>或者能不能用类似于 <a href="https://github.com/rabbibotton/clog">CLOG</a> 的框架呢?</del></p>
+<p>这里参考的是 Common Lisp Modules: Artificial Intelligence in the Era of
+  Neural Network and Chaos Theory 一书, 你应该可以在网络上找到它的扫描版.
+  之后还想要读一点后面的部分.</p>
+<h1>Interface</h1>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="kd">#:cl-module/plot</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:clim</span><span class="w"> </span><span class="nv">:clim-lisp</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:export</span><span class="w"> </span><span class="kd">#:init-plot</span>
+<span class="w">           </span><span class="kd">#:plot-fill-rect</span>
+<span class="w">           </span><span class="kd">#:plot-size-rect</span>
+<span class="w">           </span><span class="kd">#:clear-plot</span>
+<span class="w">           </span><span class="kd">#:pen-width</span>
+<span class="w">           </span><span class="kd">#:plot-frame-rect</span>
+<span class="w">           </span><span class="kd">#:plot-line</span>
+<span class="w">           </span><span class="kd">#:show-plot</span>
+<span class="w">           </span><span class="kd">#:plot-string</span>
+<span class="w">           </span><span class="kd">#:plot-string-bold</span>
+<span class="w">           </span><span class="kd">#:plot-string-italic</span>
+<span class="w">           </span><span class="kd">#:plot-mouse-down</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:cl-module/plot</span><span class="p">)</span>
+</pre></div>
+<p>原文中使用的是 Macintosh Common Lisp (现在我也没法搞到能运行的 MCL 了,
+  就连模拟器都跑不了&#8230; 这让我比较痛苦面具). 所以估计得要重新全部重写了.</p>
+<p>我现在使用的是 <a href="https://gitlab.common-lisp.net/mcclim/gramps-clim2">CLIM-TOS</a>, 理论上你可以用 <a href="https://mcclim.common-lisp.dev">McCLIM</a>, 但是我的电脑上有一个报错
+  (<code>Unknown &amp;KEY argument: :MAX-MEASURE-WS</code>). 虽然我的建议是用 McCLIM,
+  因为它仍在被更新, 并且有相对更加好看的界面, 并且 BUG 也会少一点.</p>
+<p>另一个需要注意的事情是: 由于原本的程序是面向于 MCL (大概是 PPC 甚至之前的
+  Macintosh 机器), 所以对色彩非常的保守 (用的是 5 阶灰度).
+  所以会做一些简单的修改.</p>
+<p>所以简单来说, 就是这个代码是建立在 CLIM 2 标准 (CLIM-TOS), 参考
+  Common Lisp Modules: Artificial Intelligence in the Era of Neural
+  Network and Chaos Theory 一书中的 Chapter 2 进行构建的.</p>
+<h1>Implementation</h1>
+<h2>Utils</h2>
+<h3>Plot Frame</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-application-frame</span><span class="w"> </span><span class="nv">plot</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:panes</span><span class="w"> </span>
+<span class="w">   </span><span class="p">(</span><span class="nb">display</span><span class="w"> </span><span class="nv">:application</span>
+<span class="w">            </span><span class="nv">:min-width</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="nv">:min-height</span><span class="w"> </span><span class="mi">100</span>
+<span class="w">            </span><span class="nv">:width</span><span class="w">     </span><span class="mi">400</span><span class="w"> </span><span class="nv">:height</span><span class="w">     </span><span class="mi">400</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:layouts</span><span class="w"> </span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:default</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">vertically</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="nb">display</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">define-plot-command</span><span class="w"> </span><span class="p">(</span><span class="nf">com-quit</span><span class="w"> </span><span class="nv">:menu</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">frame-exit</span><span class="w"> </span><span class="nv">*application-frame*</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-plot-command</span><span class="w"> </span><span class="p">(</span><span class="nf">com-clear</span><span class="w"> </span><span class="nv">:menu</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">window-clear</span><span class="w"> </span><span class="p">(</span><span class="nf">get-frame-pane</span><span class="w"> </span><span class="nv">*application-frame*</span><span class="w"> </span><span class="ss">&#39;display</span><span class="p">)))</span>
+</pre></div>
+<h3>Quick Wrapper Macro</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-in-plot-pane</span><span class="w"> </span><span class="p">((</span><span class="nf">pane</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">coordinate</span><span class="w"> </span><span class="nv">:origin</span><span class="p">))</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Bind var `pane&#39; with `*plot-frame*&#39; display pane.</span>
+<span class="s">  The `coordinate&#39; could be:</span>
+<span class="s">  + `:origin&#39; (default) for top-left corner positioned</span>
+<span class="s">  + `:local&#39; for centered positioned&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">coordinate</span><span class="w"> </span><span class="nv">:local</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">alexandria:with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">w</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">        </span><span class="o">`</span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">pane</span><span class="w"> </span><span class="p">(</span><span class="nf">get-frame-pane</span><span class="w"> </span><span class="nv">*plot-frame*</span><span class="w"> </span><span class="ss">&#39;display</span><span class="p">)))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">w</span><span class="w"> </span><span class="o">,</span><span class="nv">h</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">window-inside-size</span><span class="w"> </span><span class="o">,</span><span class="nv">pane</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">with-translation</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">pane</span><span class="w"> </span><span class="p">(</span><span class="nb">round</span><span class="w"> </span><span class="o">,</span><span class="nv">w</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">round</span><span class="w"> </span><span class="o">,</span><span class="nv">h</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">               </span><span class="o">,@</span><span class="nv">body</span><span class="p">))))</span>
+<span class="w">      </span><span class="o">`</span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">pane</span><span class="w"> </span><span class="p">(</span><span class="nf">get-frame-pane</span><span class="w"> </span><span class="nv">*plot-frame*</span><span class="w"> </span><span class="ss">&#39;display</span><span class="p">)))</span>
+<span class="w">         </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))</span>
+</pre></div>
+<h2>General Impelement</h2>
+<div class="highlight"><pre><span></span><span class="c1">;; The global plot window object</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*plot-frame*</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">  </span><span class="s">&quot;The graphic frame to plot.&quot;</span><span class="p">)</span>
+
+<span class="c1">;; Initialize a standard plot window</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">init-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">width</span><span class="w"> </span><span class="mi">400</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">height</span><span class="w"> </span><span class="mi">400</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Creates a graphics window, return a window stream.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*plot-frame*</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">make-application-frame</span><span class="w"> </span><span class="ss">&#39;plot</span><span class="w"> </span><span class="nv">:width</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="nv">height</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">show-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">background</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="s">&quot;PLOT&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Open the `*plot-frame*&#39; window.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="nv">*plot-frame*</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">warn</span><span class="w"> </span><span class="s">&quot;Plot not initilized yet, auto inited.&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">init-plot</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">run</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="nf">run-frame-top-level</span><span class="w"> </span><span class="nv">*plot-frame*</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">background</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">bt:make-thread</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;run</span>
+<span class="w">                        </span><span class="nv">:name</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">                        </span><span class="nv">:initial-bindings</span>
+<span class="w">                        </span><span class="o">`</span><span class="p">((</span><span class="nf">*default-server-path*</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="ss">&#39;,*default-server-path*</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">run</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">clear-plot</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;Clears the graphics window.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">window-clear</span><span class="w"> </span><span class="p">(</span><span class="nf">get-frame-pane</span><span class="w"> </span><span class="nv">*plot-frame*</span><span class="w"> </span><span class="ss">&#39;display</span><span class="p">)))</span>
+</pre></div>
+<h2>Graph Methods</h2>
+<div class="highlight"><pre><span></span><span class="c1">;; Colors: use CLIM color system</span>
+
+<span class="c1">;; Graphing Settings</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*default-pen-width*</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">  </span><span class="s">&quot;Default pen witdth (unit by px).&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pen-width</span><span class="w"> </span><span class="p">(</span><span class="nf">px</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Sets the pen drawing width.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*default-pen-width*</span><span class="w"> </span><span class="nv">px</span><span class="p">))</span>
+
+<span class="c1">;; Graphing Methods</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-fill-rect</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">xsize</span><span class="w"> </span><span class="nv">ysize</span><span class="w"> </span><span class="nv">color</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Fills a rectangle with `color&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-rectangle*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">xsize</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">ysize</span><span class="p">)</span>
+<span class="w">                     </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="w"> </span><span class="nv">:filled</span><span class="w"> </span><span class="nv">t</span>
+<span class="w">                     </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-size-rect</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">xsize</span><span class="w"> </span><span class="nv">ysize</span><span class="w"> </span><span class="nv">max-width</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">color</span><span class="w"> </span><span class="nv">+black+</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a rectangle with `max-width&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">width</span><span class="w"> </span><span class="p">(</span><span class="nb">min</span><span class="w"> </span><span class="nv">xsize</span><span class="w"> </span><span class="nv">max-width</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">scale</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">xsize</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">draw-rectangle*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">scale</span><span class="w"> </span><span class="nv">xsize</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">scale</span><span class="w"> </span><span class="nv">ysize</span><span class="p">))</span>
+<span class="w">                       </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-frame-rect</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">xsize</span><span class="w"> </span><span class="nv">ysize</span>
+<span class="w">                        </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">color</span><span class="w"> </span><span class="nv">+black+</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pen-width</span><span class="w"> </span><span class="nv">*default-pen-width*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a framed rectangle.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-rectangle*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">xsize</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">ysize</span><span class="p">)</span>
+<span class="w">                     </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="nv">pen-width</span>
+<span class="w">                     </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span>
+<span class="w">                     </span><span class="nv">:filled</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-line</span><span class="w"> </span><span class="p">(</span><span class="nf">x1</span><span class="w"> </span><span class="nv">y1</span><span class="w"> </span><span class="nv">x2</span><span class="w"> </span><span class="nv">y2</span>
+<span class="w">                  </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">color</span><span class="w"> </span><span class="nv">+black+</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pen-width</span><span class="w"> </span><span class="nv">*default-pen-width*</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a line between two points.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-line*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">x1</span><span class="w"> </span><span class="nv">y1</span><span class="w"> </span><span class="nv">x2</span><span class="w"> </span><span class="nv">y2</span>
+<span class="w">                </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="nv">pen-width</span>
+<span class="w">                </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-string</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a string at position (x y).&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-text*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">:text-size</span><span class="w"> </span><span class="nv">size</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-string-bold</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">color</span><span class="w"> </span><span class="nv">+black+</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a bold string at posistion (x y). &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-text*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span>
+<span class="w">                </span><span class="nv">:text-face</span><span class="w"> </span><span class="nv">:bold</span>
+<span class="w">                </span><span class="nv">:text-size</span><span class="w"> </span><span class="nv">size</span>
+<span class="w">                </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-string-italic</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">color</span><span class="w"> </span><span class="nv">+black+</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Plots a italic string at posistion (x y). &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw-text*</span><span class="w"> </span><span class="nv">pane</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span>
+<span class="w">                </span><span class="nv">:text-face</span><span class="w"> </span><span class="nv">:italic</span>
+<span class="w">                </span><span class="nv">:text-size</span><span class="w"> </span><span class="nv">size</span>
+<span class="w">                </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="p">)))</span>
+</pre></div>
+<h2>Inputs</h2>
+<div class="highlight"><pre><span></span><span class="c1">;; Inputs</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">plot-mouse-down</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="s">&quot;Returns position of mouse click.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-in-plot-pane</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">tracking-pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">pane</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">:pointer-button-press</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">event</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">return</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">pointer-event-x</span><span class="w"> </span><span class="nv">event</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">pointer-event-y</span><span class="w"> </span><span class="nv">event</span><span class="p">)))))))</span>
+</pre></div>
+<p>这里我感觉到 CLIM 的爽了, 实现一些功能随便糊糊就可以实现了,
+  并且还可以有比较细致的控制&#8230; 不过感觉 CLIM 的缺点就是实在是太大了,
+  没有一个很好的, 非常全面的入门文档来介绍. 明明能够处理的事情也很多,
+  从底层到高层都可以, 甚至整体的体验还很统一, 可惜没有一个好的推广啊.</p>
+<p>虽然有点怀疑我这么糊真的可以吗? 管他呢.</p>
+<h2>Test</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">test</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">init-plot</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">show-plot</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">clear-plot</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; The XQuartz on my macos need some delay time to boot?</span>
+<span class="w">  </span><span class="o">#</span><span class="nv">+darwin</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="mf">0.1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">gray6</span><span class="w"> </span><span class="p">(</span><span class="nf">level</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">make-gray-color</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">level</span><span class="w"> </span><span class="mi">6</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">6</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">plot-fill-rect</span><span class="w">  </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="p">(</span><span class="nf">gray6</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">plot-frame-rect</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">9</span><span class="p">)</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="mi">8</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">plot-size-rect</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">160</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">200</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">10</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mi">5</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">plot-string</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">150</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">22</span><span class="p">))</span>
+<span class="w">                   </span><span class="s">&quot;Mark&#39;s plot utilities...&quot;</span>
+<span class="w">                   </span><span class="nv">:size</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="mi">5</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">plot-string-bold</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">260</span><span class="w"> </span><span class="s">&quot;This is a test... of BOLD&quot;</span><span class="w"> </span><span class="nv">:size</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">plot-string-bold</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="s">&quot;This is a test... of ITALIC&quot;</span><span class="w"> </span><span class="nv">:size</span><span class="w"> </span><span class="mi">30</span><span class="p">)))</span>
+</pre></div>
+<p><img src="/_img/lisp/cl-module/plot-test.png" alt="/_img/lisp/cl-module/plot-test.png" /></p>
+<p>啊&#8230; 不知道是不是字体缺失导致斜体和粗体没法正常显示,
+  但是做到目前这样大概就好了吗?</p>
+<h1>结束</h1>
+<p>大概就是这样, 你应该可以在 <a href="/_img/lisp/cl-module/plot.lisp">plot.lisp</a> 这里下载全部的代码. 至于 clim-tos,
+  可以通过 <code>git clone https://gitlab.common-lisp.net/mcclim/gramps-clim2.git</code>,
+  放在 <code>~/quicklisp/local-project/</code> 下, 然后通过 quicklisp 载入.</p>
+<p>那么让我们看看之后会有什么样的操作吧.</p>
+<h1>更新</h1>
+<p>看到第二章就觉得可能会有点不太够用了, 并且因为平时也需要用,
+  所以写了一个简单的绘图库 <a href="https://github.com/li-yiyang/gurafu">GURAFU</a>.</p>
+
+  </div><a class="u-url" href="/lisp/machine-independent-graphics/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

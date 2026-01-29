@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Learning Note] COMSOL | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[Learning Note] COMSOL" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="某不知名的很硬的双非学校的物理系学生的无聊博客" />
+<meta property="og:description" content="某不知名的很硬的双非学校的物理系学生的无聊博客" />
+<link rel="canonical" href="/learning/finite-element-method/" />
+<meta property="og:url" content="/learning/finite-element-method/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-10-14T03:36:36+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Learning Note] COMSOL" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-10-14T03:36:36+00:00","datePublished":"2022-10-14T03:36:36+00:00","description":"某不知名的很硬的双非学校的物理系学生的无聊博客","headline":"[Learning Note] COMSOL","mainEntityOfPage":{"@type":"WebPage","@id":"/learning/finite-element-method/"},"url":"/learning/finite-element-method/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[Learning Note] COMSOL</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-10-14T03:36:36+00:00" itemprop="datePublished">Oct 14, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <!-- this is a style bar, i will later consider adding the style to all the page, 
+but not now. later. -->
+<style>iframe {border: none; width: 100%; height: 50vh;}</style>
+
+<h1 id="comsol-and-fem">COMSOL and FEM</h1>
+<p>尽管之前在 <a href="/physics/dot-dot-dot-and/">Dot, Dot, Dot and …</a>里面也有一点点简单的介绍. 
+但是毕竟还是一个类似于科普的简单东西, 具体的细节也不是很清楚, 
+没有太多的实际使用价值.</p>
+
+<p>最近又要用到, 所以开始学一点点. 参考的是 COMSOL for Engineer
+中的第 2 章. (书好不好我不知道, 随便选的… 嗯, 看了之后觉得这个书挺好的, 
+讲得比较实用. 几乎只有操作, 并且操作写得非常详细. 巨无比详细. 
+强力推荐. )</p>
+
+<p>因为干活需要, 所以主要还是 COMSOL 的学习, FEM 等以后再专业地学. 
+关于软件, 这个我不知道是哪里来的. 莫名其妙就出现了, 
+所以别问我怎么搞. 大概是学生版吧.</p>
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+<p><strong>Table of Contents</strong></p>
+
+<ul>
+  <li><a href="#comsol-and-fem">COMSOL and FEM</a>
+    <ul>
+      <li><a href="#basic-concepts">Basic Concepts</a>
+        <ul>
+          <li><a href="#matrix-approach">Matrix Approach</a></li>
+          <li><a href="#shape-functions">Shape Functions</a></li>
+        </ul>
+      </li>
+      <li><a href="#comsol">COMSOL</a>
+        <ul>
+          <li><a href="#create-a-project">Create A Project</a>
+            <ul>
+              <li><a href="#space-dimension">Space Dimension</a></li>
+              <li><a href="#physics">Physics</a></li>
+              <li><a href="#study-type">Study Type</a></li>
+            </ul>
+          </li>
+          <li><a href="#basic-of-a-project">Basic of A Project</a>
+            <ul>
+              <li><a href="#model-builder">Model Builder</a></li>
+              <li><a href="#geometry">Geometry</a>
+                <ul>
+                  <li><a href="#geometry-modeling-in-comsol">Geometry Modeling in Comsol</a></li>
+                  <li><a href="#modeling-via-cad">Modeling via CAD</a></li>
+                </ul>
+              </li>
+              <li><a href="#materials">Materials</a></li>
+              <li><a href="#physics-1">Physics</a>
+                <ul>
+                  <li><a href="#magnetic-field">Magnetic Field</a></li>
+                  <li><a href="#plate">Plate</a></li>
+                </ul>
+              </li>
+              <li><a href="#meshs">Meshs</a></li>
+              <li><a href="#study">Study</a></li>
+              <li><a href="#results">Results</a></li>
+              <li><a href="#graphics">Graphics</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><a href="#comsol-examples">COMSOL Examples</a>
+        <ul>
+          <li><a href="#static-and-dynamic-analysis-of-structures">Static and Dynamic Analysis of Structures</a>
+            <ul>
+              <li><a href="#thin-plate">Thin Plate</a></li>
+              <li><a href="#dynamic-plate-eigenfrequency">Dynamic Plate (Eigenfrequency)</a></li>
+              <li><a href="#3d-stress---import-cad-file-and-complex-load">3D Stress - Import CAD File and Complex Load</a></li>
+            </ul>
+          </li>
+          <li><a href="#internal-flows">Internal Flows</a></li>
+          <li><a href="#unsteady-heat-transfer">Unsteady Heat Transfer</a></li>
+          <li><a href="#electrical-circuits">Electrical Circuits</a></li>
+          <li><a href="#multiphysics">Multiphysics</a></li>
+          <li><a href="#others">Others</a>
+            <ul>
+              <li><a href="#solenoid">Solenoid</a></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li><a href="#others-1">Others</a>
+        <ul>
+          <li><a href="#autocad">AutoCAD</a>
+            <ul>
+              <li><a href="#basic-commands">Basic Commands</a></li>
+              <li><a href="#basic-concepts-1">Basic Concepts</a></li>
+              <li><a href="#3d-modeling-in-autocad">3D Modeling in AutoCAD</a></li>
+            </ul>
+          </li>
+          <li><a href="#fusion-360">Fusion 360</a></li>
+        </ul>
+      </li>
+      <li><a href="#final-words">Final Words</a></li>
+    </ul>
+  </li>
+</ul>
+
+<!-- markdown-toc end -->
+
+<h2 id="basic-concepts">Basic Concepts</h2>
+<p>一个麻烦的物理问题, 往往往往只需要简单的方程 (PDE/ODE) 就能描述. 
+当然, 除了一些特别的问题以外, 往往都是一些没有解析解的答案. 
+并且求解也往往极其 “机械而繁琐”.</p>
+
+<p>(虽然不一定全部都是这样, 比如对于一些问题, 比如平面电势场, 
+在费曼讲义里面就有一种特别的用弹性膜去近似模拟的方法. )</p>
+
+<p>众所周知, 想要解一个微分方程, 需要有边界条件 (boundary conditions). 
+并且在知道了边界条件的时候, 相当于也规定了一个求解的区域 (geometry), 
+即想要了解这个区域内的物理量的信息.</p>
+
+<p>FEM 计算的过程先是将 geometry 划分为许多的小块 (meshing). 
+取其中的顶点 (node) 标记物理信息. 在划分完了之后, 
+就会对这个顶点集进行一个计算操作. 具体有如下两种过程:</p>
+
+<ol>
+  <li>Minimization of a functional using variational principle approach<br />
+常见的 Euler-Lagrange 方程和最小作用量原理对应, 后者是一个积分: 
+$S = \int_a^b L \mathrm{d}t$, 一般对这个积分进行一个求最小值的努力.</li>
+  <li>Weighted residual approach<br />
+一些没法列出作用量积分的情况, 或者说这样的积分计算太麻烦了, 
+比如 Navier-Stokes 方程, 流动问题, 热传导方程和非线性的偏微分方程.</li>
+</ol>
+
+<p>(也就是一个是积分, 一个是微分观点咯? 在积分观点下, 就是要求出最小作用量,
+在微分观点下, 就是要得到局域的 residue 的最小 – 这个我的理解是这样的: 
+考虑 $\boldsymbol{F} = -k \boldsymbol{x}$ 的问题, 可以迭代计算
+得到 $\boldsymbol{x}$ 的收敛的值, 使得每次迭代的 
+$\boldsymbol{F} + k\boldsymbol{x}_i \rightarrow 0$. )</p>
+
+<h3 id="matrix-approach">Matrix Approach</h3>
+<p><img src="/_img/simulate-physics/fem-2-3.png" alt="example-2-1" title="尽管这个东西用简单的牛顿力学应该算是容易算的... 但是还就是那个你已经学会 1+1 了, 现在来计算一下... 的问题. " /></p>
+
+<p>将每个点都标号 (assign node numbers), 于是两根杆之间的力:</p>
+
+\[\overbrace{\frac{A E}{L}\left(\begin{array}{llll}c^2 &amp; c s &amp; -c^2 &amp; -c s\\ c s &amp; s^2 &amp; - c s &amp; - s^2\\ - c^2 &amp; - c s &amp; c^2 &amp; c s\\ - c s &amp; - s^2 &amp; c s &amp; s^2\end{array}\right)}^{k_y} \left\{\begin{array}{l} u_i \\ v_i \\ u_j \\ v_j\end{array}\right\} = \left\{\begin{array}{l} F_{ix} \\ F_{iy} \\ F_{jx} \\ F_{jy}\end{array}\right\}\]
+
+<p>其中, $u,v$ 代表的是相对位移量. 而 $c = \cos \alpha = \frac{x_j - x_i}{L}, s = \sin \alpha = \frac{y_j - y_i}{L}, L = \sqrt{(x_j - x_i)^2 + (y_j - y_i)^2}$.</p>
+
+<p>上面的式子得到的类似于 $k_y u = F$. 可以发现, 每个方程中的未知数 $u$
+不是每个都不同的, 而是有重复的, 所以通过适当的组合就能够得到一个
+用来描述整个系统中所有质点的矩阵方程.</p>
+
+<p><img src="/_img/simulate-physics/fem-2-6.png" alt="fig-2-6" title="这个图片里面用到的好像是一个被叫做平移矩阵的方法. 不过具体还是不用管了. " /></p>
+
+<h3 id="shape-functions">Shape Functions</h3>
+<p>其实感觉就像是理论力学中的约束方程. 用线性方程 (或者说线性约束) 的方式来描述. 
+比如说有一个线性约束: (有那么点像贝塞尔曲线)</p>
+
+\[u = u_1 (1 - \frac{x}{L}) + u_2 \frac{x}{L}\]
+
+<p>于是就能够用矩阵的形式来描述运动.</p>
+
+<h2 id="comsol">COMSOL</h2>
+<p>嗯, 为了快速上手, 所以得快点上手软件. (为了和教材一致, 所以用的是英文版). 
+用的版本应该是 COMSOL 6.0. (害, 书里面的版本是 4.3, 希望不会有太多差别. )</p>
+
+<p>(注: 感觉还是英文版好用… 网上某些教程的中文版翻译实在是过于生草. )</p>
+
+<p>确实没有太大的差别, 就启动界面稍微有点不同而已. 在做了一个例子之后, 
+我觉得 COMSOL 的一个操作逻辑有点像是图形化的编程, 并且, 
+还有点那种没有循环的一步步编程.</p>
+
+<h3 id="create-a-project">Create A Project</h3>
+<p>一般的操作就是使用带有引导的 Model Wizard.</p>
+
+<h4 id="space-dimension">Space Dimension</h4>
+<p>然后就是指定要研究的物体的维数. 我发现里面有一个叫做 2D Axisymmetric, 
+看起来估计可以用来简化计算的样子? (目前[2022-10]没试过).</p>
+
+<h4 id="physics">Physics</h4>
+<p>就是加入要用来考虑的物理场. 有点像是导入特定的软件包. 一般按需选择, 
+貌似如果选了的话就要把参数条件都满足了, 否则最后运行的时候会报错. 
+(好像很合理, 没有需求的话加什么包… )</p>
+
+<p>(Note: 在 Mac 下, COMSOL 的安装位置附近有一个叫做 <code class="language-plaintext highlighter-rouge">COMSOL Setup.app</code> 的程序, 
+可以通过这个程序来添加和更改 COMSOL 的包. 在 Windows 下好像是在卸载和更改程序处. 
+如果一开始安装的时候有些问题的话, 可以通过这个来修改. )</p>
+
+<h4 id="study-type">Study Type</h4>
+<p>这个时候就发现了英文和中文版的语言差异了:</p>
+
+<ul>
+  <li>Stationary - 稳态, 嗯, 还算好理解. 用来求解稳定解.</li>
+  <li>Time Dependent - 瞬态, 这个就不太好理解了, 更加坑爹的是, 我的
+中文翻译和网上的还不一样. 这, 过度离谱了. 用来求解随时间演化的问题.</li>
+  <li>其他的暂时没用过, 之后用过之后再说.</li>
+</ul>
+
+<h3 id="basic-of-a-project">Basic of A Project</h3>
+<p><img src="/_img/simulate-physics/comsol-overview.png" alt="comsol-overview" title="不过每个人的界面应该稍微有点不一样, 这个是我随便截的一个图. " /></p>
+
+<p>嘛, 只看界面的话和一般的软件差不多, 一堆窗口内的小窗口, 还有一个菜单栏, 
+编辑栏之类的东西. 就是不知道该怎么操作.</p>
+
+<p>主要的逻辑应该是从左到右看的: Model Builder - Settings - … (Others), 
+就是在 Model Builder 里面, 有点像是一个写代码的地方, 然后在 Settings 
+里面, 有点像是给每一个代码都加上参数.</p>
+
+<h4 id="model-builder">Model Builder</h4>
+<p>在 Model Builder 里面, 用的应该是一种类似于树状, 线性的逻辑结构. 
+具体的话有点像是 C 语言里面嵌套的花括号. 在花括号里面的逻辑是从上到下的.</p>
+
+<p>一个文件主要有四个部分 (目前来看是的):</p>
+
+<ol>
+  <li>Global Definations: 可以用来定义全局变量 (Parameters), 
+以及材料 (Matrials). 关于全局变量的话, 我觉得还是写上单位比较妙,
+单位的写法类似下面这样: <code class="language-plaintext highlighter-rouge">1[mm]</code>, 因为后来发现只有数值可能会有点问题.</li>
+  <li>Compotent: 主要的东西在这一层. <br />
+里面主要会有 Definations (目前不太清楚是啥), Geometry (几何关系),
+Materials (材料), 对应的物理的包 (比如 Megnetic 之类的), 最后是
+Mesh (网格, 见前面的 FEM 部分).</li>
+  <li>Study: 仿真模拟的步骤设置, 里面会有一堆的 Step</li>
+  <li>Results: 结果, 貌似除了一个好的建模和模拟以外, 还需要很好的结果处理, 
+(貌似有一个高级的名词叫做 “后处理”)</li>
+</ol>
+
+<p>不过其实如果哪一个步骤 (在 COMSOL 里面叫做 Node, 节点) 有问题, 
+在图标上面就会有显示一个小叉, 并且在运行的时候会停止并报错. 
+然后就可以像是填表格一样把这些信息给填写清楚. 还算是比较轻松.</p>
+
+<h4 id="geometry">Geometry</h4>
+<p>简单的几何建模可以在 COMSOL 里面完成, 但是, 它还能够直接从其他的 CAD
+软件里面导入. (可以参考 <a href="https://www.comsol.com/cad-import-module">CAD Import Module</a>)</p>
+
+<h5 id="geometry-modeling-in-comsol">Geometry Modeling in Comsol</h5>
+<p>因为我觉得这里的建模的难度还挺麻烦的, 所以之后如果有复杂的建模我觉得还是用
+CAD 软件来干这样的专业的活. 这里就记录一点点我觉得可能有用的东西:</p>
+
+<p>不知道是不是我的问题, 在建立完模型之后, 要点一下 Build All 才能看到之前建的模型. 
+有点不像是所见即所得的感觉. 不过无所谓, 之后在 COMSOL 里面的建模思路大概就是这样:</p>
+
+<p>点击 Geometry 在 Settings 里面设置单位 (Length Unit).</p>
+
+<p><img src="/_img/simulate-physics/comsol-geo-set.png" alt="comsol-geo-set" title="本来我懒得放图的, 但是, 想到自己之前因为没有图, 在网上看别人的文字描述一脸懵逼. 哎, 还是放图吧. " /></p>
+
+<p>比如要建一个圆柱壳, 那么就先建立两个圆柱体 Cylinder (可以在 Model Builder 
+栏右键点击 Geometry, 然后在弹出菜单里面选择; 或者直接在编辑的菜单栏里面选. ), 
+建立了的圆柱在 Model Builder 栏选中后可以在 Settings 里面编辑信息.</p>
+
+<p>接着再使用逻辑布尔运算来得到两圆柱向减的圆柱壳:</p>
+
+<p><img src="/_img/simulate-physics/comsol-geo-bool.png" alt="comsol-geo-bool" title="其实也可以在菜单栏上面找到对应图标的操作的, 并且就算你不认识图标, 将鼠标在上面悬停, 就像你看到这段文字一样, 应该就会弹出光标显示图标对应的操作名称了. " /></p>
+
+<p>在 Settings 里面点选那个像开关一样的东西, 可以在 Graphics 里面选择对象, 
+然后添加到选择框中. (或者可以自己输入). 但是其中有一个小小的坑爹的地方, 
+在 COMSOL 中, Graphics 里面看到的东西是不能随意改视角的, (大概, 
+如果真的可以, 当我在瞎说). 那么选择的时候就比较麻烦了, 
+可以通过把鼠标放在图上, 滚动滚轮来切换选择的对象.</p>
+
+<p><img src="/_img/simulate-physics/comsol-select.png" alt="comsol-select" title="虽然我觉得这个选择方式十分的难受, 并且也不是很直观. 不过也不是不能直接像写程序一样写名称, 就在那个像剪贴板一样的图标那里输入就好... 虽然更加别扭. " /></p>
+
+<p>整成代码的话估计就像是:</p>
+
+<div class="language-scheme highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="k">define</span> <span class="nv">outside-cylinder</span> <span class="p">(</span><span class="nf">make-cylinder</span> <span class="o">...</span><span class="p">))</span>
+<span class="p">(</span><span class="k">define</span> <span class="nv">inside-cylinder</span> <span class="p">(</span><span class="nf">make-cylinder</span> <span class="o">...</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">boolean-difference</span> <span class="nv">outside-cylinder</span> <span class="nv">inside-cylinder</span><span class="p">)</span>
+<span class="c1">;; =&gt; 得到圆柱壳</span>
+</code></pre></div></div>
+
+<h5 id="modeling-via-cad">Modeling via CAD</h5>
+<p>可以通过右键 Geometry - Import 来导入 CAD 文件. 或者使用 LiveLink 来操作.</p>
+
+<p>可惜的是, 在我的电脑上, 只能导入 <code class="language-plaintext highlighter-rouge">.step</code> 文件, 并且 LiveLink 貌似也没法工作. 
+(详细的操作可以看 <a href="#3d-stress---import-cad-file-and-complex-load">3D Stress</a> 中的一些操作. )</p>
+
+<p>对于导入的文件, 一个需要注意的点就是要让导入的模型尽可能和坐标原点贴近. 
+不然的话, 导入了之后再想要在 COMSOL 里面添加新的元素和物体的话就会有些麻烦. 
+因为不知道坐标. (或者干脆全部在 CAD 软件里面建模也不是不行. )</p>
+
+<h4 id="materials">Materials</h4>
+<p>右键 Materials, 在弹出的菜单里面选择 Add Materials from Library, 就会打开面板, 
+从中选择材料就能够添加到对应的物体对象上.</p>
+
+<p><img src="/_img/simulate-physics/comsol-material-co.png" alt="comsol-material-co" title="比如这里就给中间的圆柱壳加了一个铜的材料, 作为线圈. (别问我为什么 Copper 是铜, 因为派生于拉丁文 cuprum. )" /></p>
+
+<p>当然, 材料还会有各种各样的属性, 一般需要查. (或者测量? )</p>
+
+<h4 id="physics-1">Physics</h4>
+<p>对于物理场, 原则上来说应该需要对每个仿真模块都要了解一下, 
+毕竟它们之间有着微妙的区别. 但是我比较急, 所以用到再学吧.</p>
+
+<p>这里就只是记录一下用到的: (以后可能会更新)</p>
+
+<h5 id="magnetic-field">Magnetic Field</h5>
+<p>右键菜单 Coil 添加线圈, 线圈的 Conductor model 选择 Homogenized 
+multiturn, 即对应多匝线圈. 为了让线圈绕铁芯, 还要制定线圈类型
+coil type 为 circular, 并且在 coil geometry 中制定绕线方向.</p>
+
+<h5 id="plate">Plate</h5>
+<p>平面静力学模块. 通过 Fixed Constraint 来设置固定的边; 通过
+Edge Load 来添加负载.</p>
+
+<h4 id="solid-mechanics">Solid Mechanics</h4>
+<p>实体的力学模块. 和 Plate 十分类似, 都是一个 Constraint, 
+Load 的这样的方式来添加约束和负载.</p>
+
+<h4 id="meshs">Meshs</h4>
+<p>网格划分, 在前面的 FEM 部分就有介绍. 对于简单的模型, 貌似, 
+系统自带的网格划分就挺好用的. 至于高级的操作, 之后再试.</p>
+
+<h4 id="study">Study</h4>
+<p>使用 <code class="language-plaintext highlighter-rouge">F7</code> 可以运行特定的一步. 
+使用 <code class="language-plaintext highlighter-rouge">F8</code> 可以运行整个 Study. 
+或者可以直接通过右键对应步骤节点, 然后选择 Compute.</p>
+
+<p>这里记录一些用过的:</p>
+
+<ul>
+  <li><strong>Stationary</strong>: (稳定解? )<br />
+貌似没什么特别需要注意的</li>
+  <li><strong>Eigenfrequency</strong>: (找特征频率? )<br />
+有一个在某某频率附近搜索的参数. 在 Study - Eigenfrequency - 
+Study Settings - Search for eigenfrequency around 里面设置. 
+默认是 1Hz.</li>
+</ul>
+
+<p>并且这些研究都需要指定对那些物体生效, 默认是全部选择, 
+如果取消选择的话, 类似于就对这个物体删除了.</p>
+
+<p>在 Study 中可以设置对不同的参数进行模拟和计算: 在对应的 Study 节点 Settings 里, 
+通过 Study Extension 的 Auxiliary Sweep 的部分添加变量的变化 
+<code class="language-plaintext highlighter-rouge">range(start, step, stop)</code>, 来计算不同的结果.</p>
+
+<h4 id="results">Results</h4>
+<p>在 Results 里面, 有一些简单的操作. 比如改变结果的展示方式, 
+输入模拟仿真的报告等.</p>
+
+<ul>
+  <li>
+    <p><strong>增加不同的视图</strong>:<br />
+在 Results 节点右键可以添加新的显示视图 (这样的视图会在报告中分别显示), 
+可以选择显示的类型为 3D, 2D, 1D Plot Group. 
+在其中一个节点 - 比如说 Stress 节点 
+(在力学模块中的结果), 然后添加 Volume, Arrow Space 等显示形式, 
+通过这些显示形式可以得到不同的表现形式.</p>
+
+    <p>(有点像是 CAD 中通过不同的图层来表现不同的线形. 
+这些添加的显示形式彼此之间的关系就像是同一个图片上的不同图层. )</p>
+  </li>
+  <li>
+    <p><strong>改变结果的展示方式</strong>:<br />
+在 Results 的节点下面, 有很多的子节点, 这些节点可以有很多的显示设置. 
+比如改变结果的单位, 图像的标题.</p>
+
+    <p><img src="/_img/simulate-physics/comsol-plot-edit.png" alt="comsol-plot-edit" title="这张图里面可以看到, 可以手动设置显示的单位 (Expression - Unit), 以及显示的标题 (Title - Title type, Manual), 或者是现实不同的物理量, 比如上面的一系列的设置, 选择了一个位移来显示. " /></p>
+  </li>
+  <li><strong>导出简单的报告</strong>:<br />
+在 Report 节点下面, 通过右键菜单可以加入 Brief Report 等一堆的报告类型. 
+并且在里面还能够进行一系列的设置.</li>
+  <li><strong>将模拟的不同结果依次生成关键帧形成动画</strong>:<br />
+我觉得这个功能对 Time Dependent 比较好用. 在 Export 节点右键, 
+选择添加一个 Animation 节点即可.</li>
+  <li><strong>对结果进行运算处理</strong>:<br />
+在 Result 的节点下面的 Derived Values 右键添加计算. 可以选择积分等等的操作. 
+生成的结果是一个表格, 通过 Results 节点下添加 1D Plot Group 可以为这个画图.</li>
+</ul>
+
+<h4 id="graphics">Graphics</h4>
+<p>应该主要的就是视图切换和显示方式了吧…</p>
+
+<h2 id="comsol-examples">COMSOL Examples</h2>
+<p>其实还是用例子来试试就好了.</p>
+
+<h3 id="static-and-dynamic-analysis-of-structures">Static and Dynamic Analysis of Structures</h3>
+<h4 id="thin-plate">Thin Plate</h4>
+<p>研究的是 2 维平面的静力学问题, 所以在建立的时候设立的条件为: 
+<strong>2D - Plate (Structural Mechanics) - Stationary</strong>.</p>
+
+<p><img src="/_img/simulate-physics/comsol-plate-modeling.png" alt="comsol-plate-modeling" title="首先肯定是建模了, 因为这个模型很简单, 所以用 COMSOL 来建模是不太复杂的. 基本就是考虑使用 Boolean 的减法 Different 就能够把东西做出来了. " /></p>
+
+<p>然后确定材料, 这里我直接使用了 Built-in 的材料库里面的 Iron. 
+如果想要修改的话, 可以在对应材料的 Settings 界面里面修改相应的参数,
+也能够在 Plate 的 Linear Elastic Material 节点来修改. 
+(不过其实差不多, 因为后者可以通过 from material 的方式来通过材料来制定. 
+调成 user defined 的话就能够自己指定. )</p>
+
+<p>通过在 Plate 的右键菜单中选择 Fixed Constraint 来设置固定的边. 
+(不要选错了就好, 选成 Face Constraint 里面的话就会懵逼了, 不过毕竟是选边).</p>
+
+<p><img src="/_img/simulate-physics/comsol-constraint.png" alt="comsol-constraint" title="截了这么多的图, 管理起来就好麻烦... 哎, 但是不截图又不方便来解释. " /></p>
+
+<p>通过 Plate 的右键菜单中的 Edge Load 来添加负载边.</p>
+
+<p><img src="/_img/simulate-physics/comsol-edge-load.png" alt="comsol-edge-load" title="嗯, 大概就是这样. " /></p>
+
+<p>然后在 Mesh 中, (因为不太会, 所以保留的是默认的选项): 
+Physics-controlled mesh, Normal. 选择 Build All 可以看到网格的划分.</p>
+
+<p>最后在 Study 中运行对应的步骤即可得到结果.</p>
+
+<p>在 Report 的右键菜单中选择 Brief Report 可以快速生成报告. 
+(虽然有一个坑爹的地方就是, Generate 只是生成, 还要 Write 才会写入. )</p>
+
+<details>
+<summary>最终生成的报告</summary>
+<iframe src="/_img/simulate-physics/static-plate/report.html" title="static report"></iframe>
+</details>
+
+<p>(下载文件: <a href="/_img/simulate-physics/static-plate/static-plate.mph" title="不好说我是否完成了书里面的所有操作就是了. ">static-plate</a>)</p>
+
+<h4 id="dynamic-plate-eigenfrequency">Dynamic Plate (Eigenfrequency)</h4>
+<p>还是上一个问题的模型. 不过为了研究运动的情况, 加入新的 Study. 
+(如何将一个静态问题拓展到动态问题么… 哦, 错了, 不是严格的 “动态”,
+而更像是找到本振频率? 或者是考虑在不同频率下的受力情况. 即振动环境. )</p>
+
+<p><img src="/_img/simulate-physics/comsol-dynamic-plate-new-study.png" alt="comsol-dynamic-plate-new-study" title="在 Study 节点下面右键菜单中添加新的 Study Step: Eigenfrequency. " /></p>
+
+<p>并且, 还需要取消前一个问题中的静态求解.</p>
+
+<p><img src="/_img/simulate-physics/comsol-dynamic-uncheck-study.png" alt="comsol-dynamic-uncheck-study" title="在我的电脑上的图标 (一个勾选框) 和书中的图标 (一个叉) 有点不一样, 不过在逻辑上来说, 就是要取消对原来的平面的一个静力学分析, 所以应该是差不多的. " /></p>
+
+<p>因为一般的动态分析中, 原则上应该是类似这样的方程: 
+$\boldsymbol{F} = m \boldsymbol{a}$, 所以除了静力学上的考虑, 
+还需要提供材料质量的信息. (不过我已经用了 Built In 库, 所以忽略了. )</p>
+
+<p>于是运行 Study (<code class="language-plaintext highlighter-rouge">F8</code>) 即可得到结果. 但是比较重要的是对结果的分析. 
+(不然感觉和前一步没什么区别… )</p>
+
+<p>可以看到, 程序给出了六个可能的振动频率.</p>
+
+<p><img src="/_img/simulate-physics/comsol-dynamic-plate-eigenfrequency.png" alt="comsol-dynamic-plate-eigenfrequency" title="一个可能的例子就是用来检测结构是否会在特定频率附近发生共振, 以减少损失吧. " /></p>
+
+<details>
+<summary>生成的报告</summary>
+<iframe src="/_img/simulate-physics/dynamic-plate/report.html" title="dynamic plate"></iframe>
+</details>
+
+<p>(下载文件: <a href="/_img/simulate-physics/dynamic-plate/dynamic-plate.mph" title="感觉还行吧, 做完了之后就是这么觉得的. ">static-plate</a>)</p>
+
+<h4 id="3d-stress---import-cad-file-and-complex-load">3D Stress - Import CAD File and Complex Load</h4>
+<p>COMSOL - Model Wizard - 3D - Structural Mechanics - Solid Mechanics.</p>
+
+<p>这次模拟的是一个类似于夹持件的东西. 有点像是通过 8 个通孔 (bolt, 螺栓)
+把一个棍子限制在沿杆方向. 如果只考虑垂直杆方向上的受力的话, 
+需要了解这个组件的受力情况.</p>
+
+<p>我这里打算干一些高级一些的操作. (其实是因为学生版的书里面并没有模型文件, 
+并且之后的模拟也需要 CAD 软件的建模. 所以我要尝试一下如何用 AutoCAD 来导入模型, 
+然后在 COMSOL 里面仿真. )</p>
+
+<p>虽然两个都是我不太熟的软件 (甚至 Blender 可能还更容易些… ), 但是, 
+作为鸟人的一个坚持就是: 啥最作死, 就用啥. 关于 AutoCAD 的使用笔记, 
+记录在下面的 <a href="#autocad">Others</a> 里面.</p>
+
+<p>(花了一段时间重新回顾了一下高中机械制图的知识… 发现了一个坑爹的问题. 
+我好像画的是 2 维的图. 那要怎么变成 3D 的玩意导入到 COMSOL 里面啊… )</p>
+
+<p><a href="/_img/simulate-physics/3d-stress/model.dwg" title="虽然这么简单的几何体的图应该还算是比较好画的... 但是我还是画了挺久. 并且在我画完了之后才发现了问题的不对劲: 我不是应该画一个 3D 的东西么. 于是经过了一系列的复杂操作之后, 我才画了这么一个非常简单的一个图... 真是有些让人唏嘘. 不过可以点击图片来下载 .dwg 文件. 不过还请不要嘲笑我软件用得稀巴烂就好了. "><img src="/_img/simulate-physics/comsol-modeling.bmp" alt="comsol-modeling" /></a></p>
+
+<p>淦, 在我建完模之后, 在 COMSOL 里面导入的时候, 弹出了一个很坑爹的窗口:</p>
+
+<p><img src="/_img/simulate-physics/comsol-import-error-windows.png" alt="comsol-import-error-windows" title="再来几次这种坑爹的事情的话我就要考虑一下搞一台 Windows 的电脑了. " /></p>
+
+<p>行吧, <code class="language-plaintext highlighter-rouge">.dwg</code> 你吃不消, 我换总行了吧… 于是通过 Fusion 360 转换成 <code class="language-plaintext highlighter-rouge">.step</code>,
+(关于 <a href="#fusion-360">Fusion 360</a>), 然后导入 (在 Geometry 节点, 右键菜单, 
+选择 Import, 然后选择文件, 然后导入, 不过建议导入的时候选择保留 CAD 的尺寸: 
+Import - Length Unit - from CAD document):</p>
+
+<p><a href="/_img/simulate-physics/3d-stress/model.step" title="点击图片可以下载我的那个 STEP 文件. "><img src="/_img/simulate-physics/comsol-import-step.png" alt="comsol-import-step" /></a></p>
+
+<p>对于导入的模型, 右键 From Union - Build Selected 来将导入的对象形成最终的模型.</p>
+
+<p>(注: 虽然 COMSOL 有一个叫做 LiveLink 的功能, 但是, 对不起, 
+坑爹的 mac 让我再一次被背刺. )</p>
+
+<p>虽然和案例的模型有点不一样, 但是差不多吧. 快快开始模拟的过程吧.</p>
+
+<p>并且这个案例还需要使用到一些复杂的受力 (Complex Load). 
+所以参数化受力十分有必要. 首先设置全局变量:</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-stress-global-para.png" alt="comsol-3d-stress-global-para" title="虽然我目前觉得比较难以将全局变量和之后定义的 Component 里面的 Definition 中的变量区分. 但是我觉得可以这样理解: 全局变量就像是简单的变量替换, 类似于一个写死的静态变量. 是一个确定的值. 但是在 Definition 中的 Variable 就像是每次计算时都会重新计算生成的一个新的值. 有点像是函数. " /></p>
+
+<p>然后是 Definition 右键 Variables 设置一个相对局部的一个变量:</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-stress-definition-var.png" alt="comsol-3d-stress-definition-var" title="不过也不能说是一个相对局部的一个变量, 我个人觉得这个东西应该更像是一个函数一样的东西, 因为这个东西的作用域 Geometric entity level 比较难以理解. " /></p>
+
+<blockquote>
+  <p>Note: Variables used should be exactly the same as those defined
+in the Parameters table.<br />
+(书中的一个注记, 但是我有点不太能解释, 所以留在这里. )</p>
+</blockquote>
+
+<p>比如说施加的力有这样的特征: 大小相等, 但是方向不一定, 
+那么一个普通的想法就是用一个圆 ($SU(1)$) 来表示. 
+通过在 Definition 节点下右键 - Coordinate Systems - Rotated System. 
+可以设置一个旋转坐标系来表示施加在孔上的负载.</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-rotate-sys.png" alt="comsol-3d-rotate-sys" title="建议自己去打开看看, 下面有一个比较好看的欧拉转动角的示意图. 虽然感觉多次一举, 因为这里感觉好像用不到这么复杂的转动矩阵. 但是这样作为教学实例来说挺好的. " /></p>
+
+<p>(注: 上图中的坐标设置相当于绕着 $x$ 轴旋转了 <code class="language-plaintext highlighter-rouge">theta0</code> 的角度. 
+这就有点像是 CAD 里面的局部坐标系. 因为想要描绘一个旋转后的力不方便, 
+所以用一个相对与旋转过的坐标系的东西就比较好理解了. 哦… 
+原来这就是理论力学课上老师说的在地面系描述转动系的困难么. )</p>
+
+<p>然后添加材料 Structural Steel (<a href="https://en.wikipedia.org/wiki/Structural_steel">结构钢</a>).</p>
+
+<p>将通孔设置为固定:</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-stress-fix.png" alt="comsol-3d-stress-fix" title="右键 Solid Mechanics - Fixed Constraint, 然后在 Graphics 视图选择通孔. " /></p>
+
+<p>接着添加受力:</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-stress-load.png" alt="comsol-3d-stress-load" title="右键 Solid Mechanics - Boundary Load. 选择圆孔的内边缘, 即和杆相接触的面. 并且使用之前设置的 Rotated System 2 作为 Load 的坐标系, 而不是全局的坐标系. " /></p>
+
+<p>(注: 如果你看不到像图中的力的图标一样的东西的话, 可以在 Solid Mechanics 节点下, 
+选择 Physics Symbols 然后再勾选 Enable Physics Symbols. 关于<a href="https://doc.comsol.com/5.5/doc/com.comsol.help.comsol/comsol_ref_modeling.10.18.html">图例和注记</a>. )</p>
+
+<p>最后建立网格 (Mesh - Build All), 进行运算 (Study - Compute), 得到结果.</p>
+
+<p><img src="/_img/simulate-physics/comsol-3d-stress-result.png" alt="comsol-3d-stress-result" title="虽然这个结果让我有些意外... " /></p>
+
+<p>接下来开始进行后处理:</p>
+
+<ul>
+  <li>
+    <p>比如说想要得到施加的力的直观显示:<br />
+在 Results - Stress 节点下右键添加一个 Arrow Surface, 
+将其展示方式修改成受力得到箭头平面:</p>
+
+    <p><img src="/_img/simulate-physics/comsol-3d-stress-arrow-surface.png" alt="comsol-3d-stress-arrow-surface" title="如果觉得箭头的显示效果不是很好看的话, 可以通过 Number of arrows, Coloring and Style 里面的参数进行修改. " /></p>
+  </li>
+  <li>得到多个不同的模拟结果的直观显示</li>
+  <li>
+    <p>比如说想要得到不同角度施加的力对结果的影响:<br />
+尽管不同角度可以通过直接一个个修改 Global Definition 中的 <code class="language-plaintext highlighter-rouge">theta0</code> 来计算, 
+但是这种反人类的操作实在不应该是人来干的. 一个自动化的操作就是让程序来计算:<br />
+在 Study 中的 Stationary 节点下面, 通过 Study Extansion 
+设置选项来为变化参数添加一个变化范围.</p>
+
+    <p><img src="/_img/simulate-physics/comsol-3d-stress-study-ext.png" alt="comsol-3d-stress-study-ext" title="这里的输入方式是这样的 range(start, step, stop). 这样运行之后得到的结果可以在 Resutls 中看见. " /></p>
+  </li>
+  <li>用图表的形式输出统计结果对不同角度的依赖.</li>
+</ul>
+
+<h3 id="internal-flows">Internal Flows</h3>
+<h3 id="unsteady-heat-transfer">Unsteady Heat Transfer</h3>
+<h3 id="electrical-circuits">Electrical Circuits</h3>
+<h3 id="multiphysics">Multiphysics</h3>
+<h3 id="others">Others</h3>
+<h4 id="solenoid">Solenoid</h4>
+<p>带电螺线管的磁场. 参考了网上的一个<a href="https://www.zhihu.com/question/275800609/answer/1665704227">教程</a>.</p>
+
+<p>先试试一个静态的:</p>
+
+<p>Model Wizard - 3D - Magnetic Fields (mf) - Stationary</p>
+
+<p>建模过程: 通过两圆柱减得到圆柱壳 - 用于表示线圈; 用圆柱表示铁芯; 
+用一个大的立方体来表示空气.</p>
+
+<p><img src="/_img/simulate-physics/comsol-solenoid-modeling.png" alt="comsol-solenoid-modeling" title="嗯, 就是这样, 我觉得还行吧. 觉得这个建模实际上有点过于简陋了. " /></p>
+
+<p>然后为物体添加材料, 材料属性全靠瞎猜. (这里就不放了, 
+之后应该需要测量一些参数. )</p>
+
+<p>然后在磁场中添加一个线圈 (右键 mf 菜单 - Coil)</p>
+
+<p><img src="/_img/simulate-physics/comsol-solenoid-coil.png" alt="comsol-solenoid-coil" title="感觉这张图截不截都无所谓的... 啊, 为什么要截呢? " /></p>
+
+<p>在 Coil 中选择圆柱壳作为线圈, 并确定线圈的类型以及线圈的一些属性. 
+在 Coil 节点下的 Coil Geometry 节点添加方向.</p>
+
+<p><img src="/_img/simulate-physics/comsol-solenoid-coil-set.png" alt="comsol-solenoid-coil-set" title="不过具体应该有什么属性就也是自己瞎掰了. " /></p>
+
+<p>(注: 环绕线圈 - Homogenized multiturn)</p>
+
+<p><img src="/_img/simulate-physics/comsol-solenoid-coil-geo.png" alt="comsol-solenoid-coil-set" title="注意方向不要选错了就好. " /></p>
+
+<p>最后运行 Study 即可.</p>
+
+<details>
+<summary>结果报告</summary>
+<iframe src="/_img/simulate-physics/solenoid/solenoid.html" title="solenoid"></iframe>
+</details>
+
+<h2 id="others-1">Others</h2>
+<h3 id="autocad">AutoCAD</h3>
+<p>感谢 Autodesk, 给了我 Educational License. (估计这种感激之情, 
+只能够持续到我教育优惠结束的那一刻. 在官网上注册账号, 用学信网提供的证明, 
+就能够得到教育优惠了. 并且还是全家桶. 唯一稍微坑爹一点的就是只能使用最新版本? )</p>
+
+<p>(其实选择 AutoCAD 的另外一个原因是因为 SolidWork 没法在 macOS 上用. 
+我在思考是不是应该换一台好一点的电脑… )</p>
+
+<h4 id="basic-commands">Basic Commands</h4>
+<p>AutoCAD 的操作逻辑可以说就是一个命令式操作方式, 我觉得很舒服. 
+毕竟这样比较清晰. 不会有那种拉着看看大概是这样就可以了的操作. 
+(虽然也同时意味着它不直观. 以及操作及其困难. )</p>
+
+<p>主要可能用到的命令有:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">L</code> 直线, 可以通过打开 Object Snap 来让选点的时候自动吸附. 
+确定起点之后, 输入 <code class="language-plaintext highlighter-rouge">TAN</code> 来吸附圆的切线.</li>
+  <li><code class="language-plaintext highlighter-rouge">C</code> 圆</li>
+  <li><code class="language-plaintext highlighter-rouge">REC</code> 长方形</li>
+  <li><code class="language-plaintext highlighter-rouge">SPL</code> 曲线</li>
+  <li><code class="language-plaintext highlighter-rouge">REG</code> 生成面域 (region)</li>
+  <li><code class="language-plaintext highlighter-rouge">EXT</code> 拉伸 (extansion)</li>
+  <li><code class="language-plaintext highlighter-rouge">SU</code> 差集 (substract), <code class="language-plaintext highlighter-rouge">UNI</code> 并集 (union), <code class="language-plaintext highlighter-rouge">IN</code> 交集 (intersect)</li>
+  <li><code class="language-plaintext highlighter-rouge">UCS</code> 定义坐标系</li>
+  <li><code class="language-plaintext highlighter-rouge">SW</code> 扫掠</li>
+  <li><code class="language-plaintext highlighter-rouge">LOFT</code> 放样</li>
+  <li><code class="language-plaintext highlighter-rouge">WE</code> 楔体</li>
+  <li><code class="language-plaintext highlighter-rouge">QDIM</code> 快速尺寸标注, <code class="language-plaintext highlighter-rouge">DIM</code> 标注, <code class="language-plaintext highlighter-rouge">DIMA</code> 角度标注, <code class="language-plaintext highlighter-rouge">DO</code> 直径标注</li>
+  <li><code class="language-plaintext highlighter-rouge">M</code> 移动, <code class="language-plaintext highlighter-rouge">RO</code> 平面旋转, <code class="language-plaintext highlighter-rouge">3DROTATE</code> 三维旋转</li>
+  <li><code class="language-plaintext highlighter-rouge">REV</code> 旋转生成三维物体</li>
+  <li><code class="language-plaintext highlighter-rouge">F</code> 倒角</li>
+  <li><code class="language-plaintext highlighter-rouge">TR</code> 删除选中的线, <code class="language-plaintext highlighter-rouge">E</code> 删除选中的对象<br />
+两个的区别就是 <code class="language-plaintext highlighter-rouge">TR</code> 命令会自动识别相交的部分然后删除, 
+而 <code class="language-plaintext highlighter-rouge">E</code> 命令只能删除已经画好的整体. 用的场合有点不太一样.</li>
+</ul>
+
+<p>主要的操作就是输入命令, 然后输入对应的参数 (用逗号可以分隔参数), 
+空格或回车用来确认, <code class="language-plaintext highlighter-rouge">ESC</code> 用来撤销.</p>
+
+<h4 id="basic-concepts-1">Basic Concepts</h4>
+<p>在 AutoCAD 里面的操作, 实际上非常的朴实无华. (至少我目前会的就这么些). 
+和纸上的那种机械制图差不多. 通过各种辅助线来确定位置和绘制形状.</p>
+
+<p>通过建立不同的图层来设置线形和逻辑关系. (对我来说) 一般是建立一个实线, 
+一个辅助线, 一个中心线, 一个虚线, 一个注记线图层. 这样的操作逻辑, 
+在 KiCAD 的里面的 PCB 布线也比较类似.</p>
+
+<h4 id="3d-modeling-in-autocad">3D Modeling in AutoCAD</h4>
+<p>虽然网上都说 AutoCAD 的 3D 建模效果并不如其他的软件好用, 
+但是手上有的, 总比装不了的 SolidWork 好. 因为目前还是简单的模型, 
+所以建模的想法比较简单: <strong>就是通过三视图然后加减得到结果</strong>.</p>
+
+<p>具体的操作大概是这样:</p>
+
+<ul>
+  <li>选择一个面, 利用 <code class="language-plaintext highlighter-rouge">REG</code> 来生成面域 (如果是圆之类的可以不用)<br />
+然后在这个面的基础上面, 利用 <code class="language-plaintext highlighter-rouge">EXT</code> 来拉伸出一个立体. 
+通过 <code class="language-plaintext highlighter-rouge">SU</code> 来减去孔洞.</li>
+  <li>另外的面同理, 也能够得到立体.</li>
+  <li>将得到的立体通过 <code class="language-plaintext highlighter-rouge">M</code> 和 <code class="language-plaintext highlighter-rouge">3DRORATE</code> 来和另外的面生成的立体对齐.</li>
+  <li>通过 <code class="language-plaintext highlighter-rouge">IN</code> 等命令得到最终的形体.</li>
+</ul>
+
+<p>(虽然思路是这样, 但是具体操作可能还需要一些熟练度… )</p>
+
+<p>至于高级的操作, 我会再去学一些…</p>
+
+<h3 id="fusion-360">Fusion 360</h3>
+<p>也是 Autodesk 的软件, 虽然这个据说比较简单, 但是我有点没法理解这个的操作逻辑. 
+并且也有一个叫做 Inventor 的一个软件, 据说和 Autocad 的操作逻辑类似, 
+唯一的问题就是, 在 mac 上用不了. 所以也只能使用 Fusion 360 了.</p>
+
+<p>不过不能因为自己的奇怪 xp 就不去学这样的好玩的东西啊. 
+所以我还是留下了它. (其实是因为没有其他的靠谱的东西可以用了. 
+毕竟不能够真的用 Blender 来建模吧. Blender 里面还是有一些离谱的地方的. )</p>
+
+<p>(注: 使用的时候如果网络不是很好的话, 可能会比较难受… )</p>
+
+<h2 id="final-words">Final Words</h2>
+
+  </div><a class="u-url" href="/learning/finite-element-method/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

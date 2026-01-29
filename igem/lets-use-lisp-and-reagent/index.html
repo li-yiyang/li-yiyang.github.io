@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>关于啥也不会的新手尝试使用不知名框架的折腾故事 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="关于啥也不会的新手尝试使用不知名框架的折腾故事" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Let&#39;s use Lisp and Reagent to Build An Electron App Why? Why Lisp? And Why Not JS? 请听我狡辩 其实我也说不好为什么要用 ClojureScript 这样的 Lisp 系列的语言, 明明 JavaScript 和 TypeScript 已经足够好了, 并且 ClojureScript 是一个超级小众的语言&#8230; 最重要的是, 我并不是很会用 ClojureScript, 这简直就是找死. 实际上, 使用 JS 对我来说, 已经是去年此时的事情了 (指计科导的写网页的事情 How to Make a Website). 经过一年的孜孜不倦的忘记, 已经达到了完全看不懂原来代码的程度了. 而最近我又非常好奇 Lisp 系列的一个编程思想. (怎么说我的梦想都还是能够将我的 りlang 变成一个真正的合理的, 并且是一个能够进行辅助物理学进行科学计算的一个平台. ) 所以哪怕是在吃屎, 毕竟是我自己选择的道路, 既然决定了追求刺激, 那么就贯彻到底呗. (虽然对同组的人可能并不是很友好, 但是在我的最终设计中, 这个节点编辑器应该可以接受任意语言作为后台&#8230; 希望如此) Why Node Editor? And Why Not Use Existence Lib? 别说你甚至听都没有听过节点编辑器 节点编辑器实际上已经有非常多的现成的框架了, 自己写基本很难超过现成的框架. 并且考虑用节点编程, 听上去就像是 LabView 这样的多此一举的坑爹玩意. 节点编辑器的关键在于抽象, 至少我是这么认为的. 至少当前我用过的大部分的节点编辑器, 都有这样的一个问题: 不够直观, 或者说, 虽然能够直观的将代码使用网状的类似于流程图的形式来表示, 但是当规模变大之后, 就会像是一滩烂泥一样向外摊开. 然后这种非线性的代码组织逻辑的优点就变成了缺点. (比如 LabVIEW, Blender 的节点图等), 对于小工程来说, 这样的节点图很妙, 但是大工程来说, 还是线性的代码好一点&#8230; 或者类似于 Modelica 这样的提供了抽象节点的编辑器: 能够将多个节点组合在一起作为一个新的元件复用, 这我觉得是非常棒的. 尽管 Modelica 并不能说是一个编程语言吧&#8230; 但是它的节点用图形和记号来表示含义而不是用填表的形式, 实际上就是我想要的一个状态. 现有的很多的 JS 的库, 貌似大多数都是前一种的思路: 一个填表节点, 一堆连线. (react-diagram, rete, lightgraph.js, 虽然 lightgraph.js 还有 subgraph 的概念); 并且貌似都不太能够自定义节点 (react-diagram 貌似可以). 所以我的思路是这样的: 学习 Modelica 的图标直观表示 同时通过点击节点弹出编辑菜单 Why Not Ask AI? 嘿嘿, 子非鱼, 安知鱼之乐? 实际上一开始我并没有使用 AI, 所以在经历了约两周的一个边学边改, 最后得到的是一个不能添加, 一堆报错的一个垃圾玩意: 不过现在浅浅地尝试了一下 AI 之后, 只能说真香. (在最后也许我会考虑将我和 AI 聊天的记录放上来, 或者部分放上来 (如果太大了的话)) 使用 AI 的一个好处就是可以让你从对于一个东西半生不熟的状态, 很快地就能够进入到一个能用的中等水平吧&#8230; 虽然不能说完美, 但是能用就行了, 我将会考虑在之后用 AI 来辅助我学习和干活. So, what&#39;s this about? 一个节点编辑器, 使用 ClojureScript, Reagent 和 Re-frame 来制作. 以下是具体的技术栈介绍以及相关的链接: ClojureScript (实际上是将 Clojure 编译成 JavaScript 的实现) 如果想要非常快速地掌握 ClojureScript 这里是我学习 ClojureScript 做的一些简单的笔记, 如果相信我的话, 可以试试看看这个来学习. (不过不如用 AI 辅助学习&#8230; ) 不过至于为什么是洋文, 这个就任君想象了. 一个比较靠谱的故事是这样的: 当时刚刚接触 ClojureScript 的时候, 我还很年轻, 不知道天高地厚; 更不知道未来的学习压力将会把我拖垮. 我只是普通地好奇 Lisp, 普通地摆大烂. 但是摆大烂怎么说也是不太名正言顺, 所以我认为, 不妨乘机学习一下英文表达能力呢? 嘿嘿嘿, 反正是摆大烂, 不如贯彻到底. (嘿嘿嘿&#8230; ) About This is a quick note form Clojure Unrevaled. Aimed to quick ref of Clojure (personal use mainly). A more faster Cheatsheet from ClojureScript official site. Basic about Clojure Data Data Expression TypesEBNFDescription Numbers(+¦-)? [\d]+ (.[\d])? (e-?[\d]+)? Keywords:[\w]+ or (keyword &lt;string&gt;) Namespaced keywoards::[\w]+, :&lt;namespace&gt;/[\w]+ or (keyword &lt;namespace&gt; &lt;string&gt;)namespace/keyword Symbols[\w\*\+\!-_&#39;\?] Strings~&#8221;.*&#8221;~ Characters\&lt;charname&gt;charname for example: \newline List(list &lt;items&gt;) or ~&#39;(&lt;items&gt;)~for backquote: `(~(+ 1 2) 3) $&rarr;$ (3 3) Vectors[&lt;items&gt;], (vector &lt;items&gt;) or (vec &lt;list&gt;) Maps{(&lt;key&gt; &lt;val&gt; ,?)+}, or (hash-map (&lt;key&gt; &lt;val&gt;)+)Like hash table Sets#{&lt;items&gt;} or (set [&lt;items&gt;])Union Note: (&lt;set&gt; &lt;item&gt;) test whether &lt;item&gt; in &lt;set&gt;. Note that literal specific don&#39;t allow duplicate item. Queues#queue []Persistent and immutable queue. Atom (ClojureScript)(atom &lt;val&gt;)Mutable value within. Volatile (ClojureScript)(volatile! &lt;val&gt;)Like Atom but not observation and validation ability. Data Manipulate FunctionsRuleDescription type(type [x])Type of x, named symbol. &lt;type&gt;?Like list?, vector?, test value type. List FunctionExampleDescriptions cons(cons 0 (cons 1 ()))Linked List conj(conj &#39;(1 2) 0) ;; =&gt; (0 1 2), (conj [1 2] 0) ;; =&gt; [1 2 0]Note the different between list and vector. pop(pop stack)Return like (rest stack), won&#39;t modify stack, similar function: rest, peek (pop last one). Vector FunctionExampleDescription nth(nth [1 2 3] 0) ;; =&gt; 1Start from 0. Likely (&lt;vector&gt; &lt;index&gt;). assoc(assoc &lt;vector&gt; &lt;pos&gt; &lt;val&gt;)Insert val at pos in vector. Raise error when out of bounds. mapv(mapv &lt;func&gt; &lt;seq&gt;)Like map, but return Vector. Map FunctionExampleDescription conj(conj &lt;map&gt; ([&lt;key&gt; &lt;val&gt;])+)Append to map. assoc and dissoc(assoc &lt;map&gt; &lt;key&gt; &lt;val&gt;)assoc append by key; dissoc delete by key. (&lt;map&gt; &lt;key&gt;)Read by key. keys(keys &lt;map&gt;)List of keys. Sets FunctionExampleDescription clojure.set/difference(clojure.set/difference &lt;set&gt; &lt;set&gt;)Difference of two sets. clojure.set/unionUnion of two sets. clojure.set/intersectionIntersection of two sets. contains? or (&lt;set&gt; &lt;item&gt;)Test if contains. Queue (like a changeable list) Atom and Volatile (ClojureScript) FunctionsRuleDescription deref(deref &lt;atom&gt;) or @&lt;atom&gt;Read the value of Atom. swap!(swap! &lt;atom&gt; update &lt;key&gt; &lt;func&gt;)See if atom is (atom {:key val}), and (swap! atom update :key inc) will increase val. reset!(reset! &lt;atom&gt; &lt;val&gt;)Replace atom value with new val. add-watch, remove-watch(add-watch &lt;atom&gt; &lt;key&gt; &lt;func&gt;), (remove-watch &lt;atom&gt; &lt;key&gt;)Call func if key of atom is changed. FunctionsRuleDescription volatile?(volatile? &lt;obj&gt;)Test if volatile. vswapSame as atom. vreset!Same as atom. Destructing (let [[x _ y] [0 1 2]] [y x]) ;; =&gt; [2 0], like multiple-value-bind in common lisp. it works like function parameter assignment: (let [[x y &amp; more] [0 1 2 3 4]] ...). Note: the total could be passed in as (let [[_ &amp; para :as total] [1 2 3]] ...). Also, it could be named assignment: (let [{x :xvar} {:xvar ...}] ...). And unbound will fall back to nil unless specified with :or: (let [{name :name :or {name ...}} {...}] ...). Note: the total map could be assigned by: (let [{name :name :as total} {...}] ...). For more, please refer Clojure Destructuring Tutorial and Cheat Sheet Assignment Basic Assignment Variable assignment: (def &lt;var&gt; &lt;val&gt;) Local bound: (let [(&lt;var&gt; &lt;val&gt;)+] body), like other Lisp but less (). Function assignment: (defn &lt;fname&gt; &lt;docstring&gt;? body ...) Single form: (defn 1+ &quot;Return 1 + given number.&quot; [x] (+ 1 x)) Multi form: (defn n+ &quot;Return 1 + given number `(n+ x)&#39; or n + given number `(n+ x 1)&#39;.&quot; ([x] (+ 1 x)) ([x n] (+ n x))) Note: Kinda like functions in Mathematica. Multimethods (defmulti multi-func &quot;docstring&quot; (fn [param] (:key param)) :default :key)" />
+<meta property="og:description" content="Let&#39;s use Lisp and Reagent to Build An Electron App Why? Why Lisp? And Why Not JS? 请听我狡辩 其实我也说不好为什么要用 ClojureScript 这样的 Lisp 系列的语言, 明明 JavaScript 和 TypeScript 已经足够好了, 并且 ClojureScript 是一个超级小众的语言&#8230; 最重要的是, 我并不是很会用 ClojureScript, 这简直就是找死. 实际上, 使用 JS 对我来说, 已经是去年此时的事情了 (指计科导的写网页的事情 How to Make a Website). 经过一年的孜孜不倦的忘记, 已经达到了完全看不懂原来代码的程度了. 而最近我又非常好奇 Lisp 系列的一个编程思想. (怎么说我的梦想都还是能够将我的 りlang 变成一个真正的合理的, 并且是一个能够进行辅助物理学进行科学计算的一个平台. ) 所以哪怕是在吃屎, 毕竟是我自己选择的道路, 既然决定了追求刺激, 那么就贯彻到底呗. (虽然对同组的人可能并不是很友好, 但是在我的最终设计中, 这个节点编辑器应该可以接受任意语言作为后台&#8230; 希望如此) Why Node Editor? And Why Not Use Existence Lib? 别说你甚至听都没有听过节点编辑器 节点编辑器实际上已经有非常多的现成的框架了, 自己写基本很难超过现成的框架. 并且考虑用节点编程, 听上去就像是 LabView 这样的多此一举的坑爹玩意. 节点编辑器的关键在于抽象, 至少我是这么认为的. 至少当前我用过的大部分的节点编辑器, 都有这样的一个问题: 不够直观, 或者说, 虽然能够直观的将代码使用网状的类似于流程图的形式来表示, 但是当规模变大之后, 就会像是一滩烂泥一样向外摊开. 然后这种非线性的代码组织逻辑的优点就变成了缺点. (比如 LabVIEW, Blender 的节点图等), 对于小工程来说, 这样的节点图很妙, 但是大工程来说, 还是线性的代码好一点&#8230; 或者类似于 Modelica 这样的提供了抽象节点的编辑器: 能够将多个节点组合在一起作为一个新的元件复用, 这我觉得是非常棒的. 尽管 Modelica 并不能说是一个编程语言吧&#8230; 但是它的节点用图形和记号来表示含义而不是用填表的形式, 实际上就是我想要的一个状态. 现有的很多的 JS 的库, 貌似大多数都是前一种的思路: 一个填表节点, 一堆连线. (react-diagram, rete, lightgraph.js, 虽然 lightgraph.js 还有 subgraph 的概念); 并且貌似都不太能够自定义节点 (react-diagram 貌似可以). 所以我的思路是这样的: 学习 Modelica 的图标直观表示 同时通过点击节点弹出编辑菜单 Why Not Ask AI? 嘿嘿, 子非鱼, 安知鱼之乐? 实际上一开始我并没有使用 AI, 所以在经历了约两周的一个边学边改, 最后得到的是一个不能添加, 一堆报错的一个垃圾玩意: 不过现在浅浅地尝试了一下 AI 之后, 只能说真香. (在最后也许我会考虑将我和 AI 聊天的记录放上来, 或者部分放上来 (如果太大了的话)) 使用 AI 的一个好处就是可以让你从对于一个东西半生不熟的状态, 很快地就能够进入到一个能用的中等水平吧&#8230; 虽然不能说完美, 但是能用就行了, 我将会考虑在之后用 AI 来辅助我学习和干活. So, what&#39;s this about? 一个节点编辑器, 使用 ClojureScript, Reagent 和 Re-frame 来制作. 以下是具体的技术栈介绍以及相关的链接: ClojureScript (实际上是将 Clojure 编译成 JavaScript 的实现) 如果想要非常快速地掌握 ClojureScript 这里是我学习 ClojureScript 做的一些简单的笔记, 如果相信我的话, 可以试试看看这个来学习. (不过不如用 AI 辅助学习&#8230; ) 不过至于为什么是洋文, 这个就任君想象了. 一个比较靠谱的故事是这样的: 当时刚刚接触 ClojureScript 的时候, 我还很年轻, 不知道天高地厚; 更不知道未来的学习压力将会把我拖垮. 我只是普通地好奇 Lisp, 普通地摆大烂. 但是摆大烂怎么说也是不太名正言顺, 所以我认为, 不妨乘机学习一下英文表达能力呢? 嘿嘿嘿, 反正是摆大烂, 不如贯彻到底. (嘿嘿嘿&#8230; ) About This is a quick note form Clojure Unrevaled. Aimed to quick ref of Clojure (personal use mainly). A more faster Cheatsheet from ClojureScript official site. Basic about Clojure Data Data Expression TypesEBNFDescription Numbers(+¦-)? [\d]+ (.[\d])? (e-?[\d]+)? Keywords:[\w]+ or (keyword &lt;string&gt;) Namespaced keywoards::[\w]+, :&lt;namespace&gt;/[\w]+ or (keyword &lt;namespace&gt; &lt;string&gt;)namespace/keyword Symbols[\w\*\+\!-_&#39;\?] Strings~&#8221;.*&#8221;~ Characters\&lt;charname&gt;charname for example: \newline List(list &lt;items&gt;) or ~&#39;(&lt;items&gt;)~for backquote: `(~(+ 1 2) 3) $&rarr;$ (3 3) Vectors[&lt;items&gt;], (vector &lt;items&gt;) or (vec &lt;list&gt;) Maps{(&lt;key&gt; &lt;val&gt; ,?)+}, or (hash-map (&lt;key&gt; &lt;val&gt;)+)Like hash table Sets#{&lt;items&gt;} or (set [&lt;items&gt;])Union Note: (&lt;set&gt; &lt;item&gt;) test whether &lt;item&gt; in &lt;set&gt;. Note that literal specific don&#39;t allow duplicate item. Queues#queue []Persistent and immutable queue. Atom (ClojureScript)(atom &lt;val&gt;)Mutable value within. Volatile (ClojureScript)(volatile! &lt;val&gt;)Like Atom but not observation and validation ability. Data Manipulate FunctionsRuleDescription type(type [x])Type of x, named symbol. &lt;type&gt;?Like list?, vector?, test value type. List FunctionExampleDescriptions cons(cons 0 (cons 1 ()))Linked List conj(conj &#39;(1 2) 0) ;; =&gt; (0 1 2), (conj [1 2] 0) ;; =&gt; [1 2 0]Note the different between list and vector. pop(pop stack)Return like (rest stack), won&#39;t modify stack, similar function: rest, peek (pop last one). Vector FunctionExampleDescription nth(nth [1 2 3] 0) ;; =&gt; 1Start from 0. Likely (&lt;vector&gt; &lt;index&gt;). assoc(assoc &lt;vector&gt; &lt;pos&gt; &lt;val&gt;)Insert val at pos in vector. Raise error when out of bounds. mapv(mapv &lt;func&gt; &lt;seq&gt;)Like map, but return Vector. Map FunctionExampleDescription conj(conj &lt;map&gt; ([&lt;key&gt; &lt;val&gt;])+)Append to map. assoc and dissoc(assoc &lt;map&gt; &lt;key&gt; &lt;val&gt;)assoc append by key; dissoc delete by key. (&lt;map&gt; &lt;key&gt;)Read by key. keys(keys &lt;map&gt;)List of keys. Sets FunctionExampleDescription clojure.set/difference(clojure.set/difference &lt;set&gt; &lt;set&gt;)Difference of two sets. clojure.set/unionUnion of two sets. clojure.set/intersectionIntersection of two sets. contains? or (&lt;set&gt; &lt;item&gt;)Test if contains. Queue (like a changeable list) Atom and Volatile (ClojureScript) FunctionsRuleDescription deref(deref &lt;atom&gt;) or @&lt;atom&gt;Read the value of Atom. swap!(swap! &lt;atom&gt; update &lt;key&gt; &lt;func&gt;)See if atom is (atom {:key val}), and (swap! atom update :key inc) will increase val. reset!(reset! &lt;atom&gt; &lt;val&gt;)Replace atom value with new val. add-watch, remove-watch(add-watch &lt;atom&gt; &lt;key&gt; &lt;func&gt;), (remove-watch &lt;atom&gt; &lt;key&gt;)Call func if key of atom is changed. FunctionsRuleDescription volatile?(volatile? &lt;obj&gt;)Test if volatile. vswapSame as atom. vreset!Same as atom. Destructing (let [[x _ y] [0 1 2]] [y x]) ;; =&gt; [2 0], like multiple-value-bind in common lisp. it works like function parameter assignment: (let [[x y &amp; more] [0 1 2 3 4]] ...). Note: the total could be passed in as (let [[_ &amp; para :as total] [1 2 3]] ...). Also, it could be named assignment: (let [{x :xvar} {:xvar ...}] ...). And unbound will fall back to nil unless specified with :or: (let [{name :name :or {name ...}} {...}] ...). Note: the total map could be assigned by: (let [{name :name :as total} {...}] ...). For more, please refer Clojure Destructuring Tutorial and Cheat Sheet Assignment Basic Assignment Variable assignment: (def &lt;var&gt; &lt;val&gt;) Local bound: (let [(&lt;var&gt; &lt;val&gt;)+] body), like other Lisp but less (). Function assignment: (defn &lt;fname&gt; &lt;docstring&gt;? body ...) Single form: (defn 1+ &quot;Return 1 + given number.&quot; [x] (+ 1 x)) Multi form: (defn n+ &quot;Return 1 + given number `(n+ x)&#39; or n + given number `(n+ x 1)&#39;.&quot; ([x] (+ 1 x)) ([x n] (+ n x))) Note: Kinda like functions in Mathematica. Multimethods (defmulti multi-func &quot;docstring&quot; (fn [param] (:key param)) :default :key)" />
+<link rel="canonical" href="/igem/lets-use-lisp-and-reagent/" />
+<meta property="og:url" content="/igem/lets-use-lisp-and-reagent/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-16T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="关于啥也不会的新手尝试使用不知名框架的折腾故事" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-04-16T00:00:00+00:00","datePublished":"2023-04-16T00:00:00+00:00","description":"Let&#39;s use Lisp and Reagent to Build An Electron App Why? Why Lisp? And Why Not JS? 请听我狡辩 其实我也说不好为什么要用 ClojureScript 这样的 Lisp 系列的语言, 明明 JavaScript 和 TypeScript 已经足够好了, 并且 ClojureScript 是一个超级小众的语言&#8230; 最重要的是, 我并不是很会用 ClojureScript, 这简直就是找死. 实际上, 使用 JS 对我来说, 已经是去年此时的事情了 (指计科导的写网页的事情 How to Make a Website). 经过一年的孜孜不倦的忘记, 已经达到了完全看不懂原来代码的程度了. 而最近我又非常好奇 Lisp 系列的一个编程思想. (怎么说我的梦想都还是能够将我的 りlang 变成一个真正的合理的, 并且是一个能够进行辅助物理学进行科学计算的一个平台. ) 所以哪怕是在吃屎, 毕竟是我自己选择的道路, 既然决定了追求刺激, 那么就贯彻到底呗. (虽然对同组的人可能并不是很友好, 但是在我的最终设计中, 这个节点编辑器应该可以接受任意语言作为后台&#8230; 希望如此) Why Node Editor? And Why Not Use Existence Lib? 别说你甚至听都没有听过节点编辑器 节点编辑器实际上已经有非常多的现成的框架了, 自己写基本很难超过现成的框架. 并且考虑用节点编程, 听上去就像是 LabView 这样的多此一举的坑爹玩意. 节点编辑器的关键在于抽象, 至少我是这么认为的. 至少当前我用过的大部分的节点编辑器, 都有这样的一个问题: 不够直观, 或者说, 虽然能够直观的将代码使用网状的类似于流程图的形式来表示, 但是当规模变大之后, 就会像是一滩烂泥一样向外摊开. 然后这种非线性的代码组织逻辑的优点就变成了缺点. (比如 LabVIEW, Blender 的节点图等), 对于小工程来说, 这样的节点图很妙, 但是大工程来说, 还是线性的代码好一点&#8230; 或者类似于 Modelica 这样的提供了抽象节点的编辑器: 能够将多个节点组合在一起作为一个新的元件复用, 这我觉得是非常棒的. 尽管 Modelica 并不能说是一个编程语言吧&#8230; 但是它的节点用图形和记号来表示含义而不是用填表的形式, 实际上就是我想要的一个状态. 现有的很多的 JS 的库, 貌似大多数都是前一种的思路: 一个填表节点, 一堆连线. (react-diagram, rete, lightgraph.js, 虽然 lightgraph.js 还有 subgraph 的概念); 并且貌似都不太能够自定义节点 (react-diagram 貌似可以). 所以我的思路是这样的: 学习 Modelica 的图标直观表示 同时通过点击节点弹出编辑菜单 Why Not Ask AI? 嘿嘿, 子非鱼, 安知鱼之乐? 实际上一开始我并没有使用 AI, 所以在经历了约两周的一个边学边改, 最后得到的是一个不能添加, 一堆报错的一个垃圾玩意: 不过现在浅浅地尝试了一下 AI 之后, 只能说真香. (在最后也许我会考虑将我和 AI 聊天的记录放上来, 或者部分放上来 (如果太大了的话)) 使用 AI 的一个好处就是可以让你从对于一个东西半生不熟的状态, 很快地就能够进入到一个能用的中等水平吧&#8230; 虽然不能说完美, 但是能用就行了, 我将会考虑在之后用 AI 来辅助我学习和干活. So, what&#39;s this about? 一个节点编辑器, 使用 ClojureScript, Reagent 和 Re-frame 来制作. 以下是具体的技术栈介绍以及相关的链接: ClojureScript (实际上是将 Clojure 编译成 JavaScript 的实现) 如果想要非常快速地掌握 ClojureScript 这里是我学习 ClojureScript 做的一些简单的笔记, 如果相信我的话, 可以试试看看这个来学习. (不过不如用 AI 辅助学习&#8230; ) 不过至于为什么是洋文, 这个就任君想象了. 一个比较靠谱的故事是这样的: 当时刚刚接触 ClojureScript 的时候, 我还很年轻, 不知道天高地厚; 更不知道未来的学习压力将会把我拖垮. 我只是普通地好奇 Lisp, 普通地摆大烂. 但是摆大烂怎么说也是不太名正言顺, 所以我认为, 不妨乘机学习一下英文表达能力呢? 嘿嘿嘿, 反正是摆大烂, 不如贯彻到底. (嘿嘿嘿&#8230; ) About This is a quick note form Clojure Unrevaled. Aimed to quick ref of Clojure (personal use mainly). A more faster Cheatsheet from ClojureScript official site. Basic about Clojure Data Data Expression TypesEBNFDescription Numbers(+¦-)? [\\d]+ (.[\\d])? (e-?[\\d]+)? Keywords:[\\w]+ or (keyword &lt;string&gt;) Namespaced keywoards::[\\w]+, :&lt;namespace&gt;/[\\w]+ or (keyword &lt;namespace&gt; &lt;string&gt;)namespace/keyword Symbols[\\w\\*\\+\\!-_&#39;\\?] Strings~&#8221;.*&#8221;~ Characters\\&lt;charname&gt;charname for example: \\newline List(list &lt;items&gt;) or ~&#39;(&lt;items&gt;)~for backquote: `(~(+ 1 2) 3) $&rarr;$ (3 3) Vectors[&lt;items&gt;], (vector &lt;items&gt;) or (vec &lt;list&gt;) Maps{(&lt;key&gt; &lt;val&gt; ,?)+}, or (hash-map (&lt;key&gt; &lt;val&gt;)+)Like hash table Sets#{&lt;items&gt;} or (set [&lt;items&gt;])Union Note: (&lt;set&gt; &lt;item&gt;) test whether &lt;item&gt; in &lt;set&gt;. Note that literal specific don&#39;t allow duplicate item. Queues#queue []Persistent and immutable queue. Atom (ClojureScript)(atom &lt;val&gt;)Mutable value within. Volatile (ClojureScript)(volatile! &lt;val&gt;)Like Atom but not observation and validation ability. Data Manipulate FunctionsRuleDescription type(type [x])Type of x, named symbol. &lt;type&gt;?Like list?, vector?, test value type. List FunctionExampleDescriptions cons(cons 0 (cons 1 ()))Linked List conj(conj &#39;(1 2) 0) ;; =&gt; (0 1 2), (conj [1 2] 0) ;; =&gt; [1 2 0]Note the different between list and vector. pop(pop stack)Return like (rest stack), won&#39;t modify stack, similar function: rest, peek (pop last one). Vector FunctionExampleDescription nth(nth [1 2 3] 0) ;; =&gt; 1Start from 0. Likely (&lt;vector&gt; &lt;index&gt;). assoc(assoc &lt;vector&gt; &lt;pos&gt; &lt;val&gt;)Insert val at pos in vector. Raise error when out of bounds. mapv(mapv &lt;func&gt; &lt;seq&gt;)Like map, but return Vector. Map FunctionExampleDescription conj(conj &lt;map&gt; ([&lt;key&gt; &lt;val&gt;])+)Append to map. assoc and dissoc(assoc &lt;map&gt; &lt;key&gt; &lt;val&gt;)assoc append by key; dissoc delete by key. (&lt;map&gt; &lt;key&gt;)Read by key. keys(keys &lt;map&gt;)List of keys. Sets FunctionExampleDescription clojure.set/difference(clojure.set/difference &lt;set&gt; &lt;set&gt;)Difference of two sets. clojure.set/unionUnion of two sets. clojure.set/intersectionIntersection of two sets. contains? or (&lt;set&gt; &lt;item&gt;)Test if contains. Queue (like a changeable list) Atom and Volatile (ClojureScript) FunctionsRuleDescription deref(deref &lt;atom&gt;) or @&lt;atom&gt;Read the value of Atom. swap!(swap! &lt;atom&gt; update &lt;key&gt; &lt;func&gt;)See if atom is (atom {:key val}), and (swap! atom update :key inc) will increase val. reset!(reset! &lt;atom&gt; &lt;val&gt;)Replace atom value with new val. add-watch, remove-watch(add-watch &lt;atom&gt; &lt;key&gt; &lt;func&gt;), (remove-watch &lt;atom&gt; &lt;key&gt;)Call func if key of atom is changed. FunctionsRuleDescription volatile?(volatile? &lt;obj&gt;)Test if volatile. vswapSame as atom. vreset!Same as atom. Destructing (let [[x _ y] [0 1 2]] [y x]) ;; =&gt; [2 0], like multiple-value-bind in common lisp. it works like function parameter assignment: (let [[x y &amp; more] [0 1 2 3 4]] ...). Note: the total could be passed in as (let [[_ &amp; para :as total] [1 2 3]] ...). Also, it could be named assignment: (let [{x :xvar} {:xvar ...}] ...). And unbound will fall back to nil unless specified with :or: (let [{name :name :or {name ...}} {...}] ...). Note: the total map could be assigned by: (let [{name :name :as total} {...}] ...). For more, please refer Clojure Destructuring Tutorial and Cheat Sheet Assignment Basic Assignment Variable assignment: (def &lt;var&gt; &lt;val&gt;) Local bound: (let [(&lt;var&gt; &lt;val&gt;)+] body), like other Lisp but less (). Function assignment: (defn &lt;fname&gt; &lt;docstring&gt;? body ...) Single form: (defn 1+ &quot;Return 1 + given number.&quot; [x] (+ 1 x)) Multi form: (defn n+ &quot;Return 1 + given number `(n+ x)&#39; or n + given number `(n+ x 1)&#39;.&quot; ([x] (+ 1 x)) ([x n] (+ n x))) Note: Kinda like functions in Mathematica. Multimethods (defmulti multi-func &quot;docstring&quot; (fn [param] (:key param)) :default :key)","headline":"关于啥也不会的新手尝试使用不知名框架的折腾故事","mainEntityOfPage":{"@type":"WebPage","@id":"/igem/lets-use-lisp-and-reagent/"},"url":"/igem/lets-use-lisp-and-reagent/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">关于啥也不会的新手尝试使用不知名框架的折腾故事</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-04-16T00:00:00+00:00" itemprop="datePublished">Apr 16, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>Let's use Lisp and Reagent to Build An Electron App</h1>
+<h2>Why?</h2>
+<ul>
+  <li>Why Lisp? And Why Not JS?
+  <details><summary>请听我狡辩</summary>
+    <p>其实我也说不好为什么要用 ClojureScript 这样的 Lisp 系列的语言,
+      明明 JavaScript 和 TypeScript 已经足够好了,
+      并且 ClojureScript 是一个超级小众的语言&#8230;
+      最重要的是, 我并不是很会用 ClojureScript,
+      这简直就是找死.</p>
+    <p>实际上, 使用 JS 对我来说, 已经是去年此时的事情了
+      (指计科导的写网页的事情 <a href="/jekyll/how-to-make-a-static-web/">How to Make a Website</a>).
+      经过一年的孜孜不倦的忘记, 已经达到了完全看不懂原来代码的程度了.
+      而最近我又非常好奇 Lisp 系列的一个编程思想.
+      (怎么说我的梦想都还是能够将我的 <a href="/ruby/ri-lang/">りlang</a> 变成一个真正的合理的,
+      并且是一个能够进行辅助物理学进行科学计算的一个平台. )</p>
+    <p>所以哪怕是在吃屎, 毕竟是我自己选择的道路,
+      既然决定了追求刺激, 那么就贯彻到底呗.
+      (虽然对同组的人可能并不是很友好,
+      但是在我的最终设计中, 这个节点编辑器应该可以接受任意语言作为后台&#8230;
+      希望如此)</p>
+  </details>
+  </li>
+  <li>Why Node Editor? And Why Not Use Existence Lib?
+  <details><summary>别说你甚至听都没有听过节点编辑器</summary>
+    <p>节点编辑器实际上已经有非常多的现成的框架了,
+      自己写基本很难超过现成的框架. 并且考虑用节点编程,
+      听上去就像是 LabView 这样的多此一举的坑爹玩意.</p>
+    <p>节点编辑器的关键在于抽象, 至少我是这么认为的.
+      至少当前我用过的大部分的节点编辑器, 都有这样的一个问题:
+      不够直观, 或者说, 虽然能够直观的将代码使用网状的类似于流程图的形式来表示,
+      但是当规模变大之后, 就会像是一滩烂泥一样向外摊开.
+      然后这种非线性的代码组织逻辑的优点就变成了缺点.
+      (比如 LabVIEW, Blender 的节点图等), 对于小工程来说,
+      这样的节点图很妙, 但是大工程来说, 还是线性的代码好一点&#8230;</p>
+    <p>或者类似于 Modelica 这样的提供了抽象节点的编辑器:
+      能够将多个节点组合在一起作为一个新的元件复用,
+      这我觉得是非常棒的. 尽管 Modelica 并不能说是一个编程语言吧&#8230;
+      但是它的节点用图形和记号来表示含义而不是用填表的形式,
+      实际上就是我想要的一个状态.</p>
+    <p>现有的很多的 JS 的库, 貌似大多数都是前一种的思路: 一个填表节点,
+      一堆连线. (react-diagram, rete, lightgraph.js,
+      虽然 lightgraph.js 还有 subgraph 的概念); 并且貌似都不太能够自定义节点
+      (react-diagram 貌似可以). 所以我的思路是这样的:</p>
+    <ul>
+      <li>学习 Modelica 的图标直观表示</li>
+      <li>同时通过点击节点弹出编辑菜单</li>
+    </ul>
+  </details>
+  </li>
+  <li>Why Not Ask AI?
+  <details><summary> 嘿嘿, 子非鱼, 安知鱼之乐? </summary>
+    <p>实际上一开始我并没有使用 AI, 所以在经历了约两周的一个边学边改,
+      最后得到的是一个不能添加, 一堆报错的一个垃圾玩意:</p>
+    <p><img src="/_img/iGEM/gene-ui/demo-4-14.gif" alt="/_img/iGEM/gene-ui/demo-4-14.gif" /></p>
+    <p>不过现在浅浅地尝试了一下 AI 之后, 只能说真香.
+      (在最后也许我会考虑将我和 AI 聊天的记录放上来,
+      或者部分放上来 (如果太大了的话))</p>
+    <p>使用 AI 的一个好处就是可以让你从对于一个东西半生不熟的状态,
+      很快地就能够进入到一个能用的中等水平吧&#8230; 虽然不能说完美,
+      但是能用就行了, 我将会考虑在之后用 AI 来辅助我学习和干活.</p>
+  </details>
+  </li>
+</ul>
+<h2>So, what's this about?</h2>
+<p>一个节点编辑器, 使用 ClojureScript, Reagent 和 Re-frame 来制作.
+  以下是具体的技术栈介绍以及相关的链接:</p>
+<ul>
+  <li><a href="https://clojurescript.org">ClojureScript</a> (实际上是将 <a href="https://clojure.org">Clojure</a> 编译成 JavaScript 的实现)
+  <details><summary> 如果想要非常快速地掌握 ClojureScript </summary>
+    <p>这里是我学习 ClojureScript 做的一些简单的笔记,
+      如果相信我的话, 可以试试看看这个来学习.
+      (不过不如用 AI 辅助学习&#8230; )</p>
+  <details><summary>不过至于为什么是洋文, 这个就任君想象了. 一个比较靠谱的故事是这样的: </summary> 
+    <p>当时刚刚接触 ClojureScript 的时候, 我还很年轻, 不知道天高地厚;
+      更不知道未来的学习压力将会把我拖垮. 我只是普通地好奇 Lisp,
+      普通地摆大烂. 但是摆大烂怎么说也是不太名正言顺,
+      所以我认为, 不妨乘机学习一下英文表达能力呢? 嘿嘿嘿,
+      反正是摆大烂, 不如贯彻到底.</p>
+    <p><img src="/_img/meme/korewa-unmei.jpg" alt="/_img/meme/korewa-unmei.jpg" /></p>
+    <p>(嘿嘿嘿&#8230; )</p>
+  </details>
+    <ul>
+      <li>About
+        <p>This is a quick note form <a href="https://funcool.github.io/clojurescript-unraveled/">Clojure Unrevaled</a>.
+          Aimed to quick ref of Clojure (personal use mainly).</p>
+        <p>A more faster <a href="https://cljs.info/cheatsheet/">Cheatsheet</a> from ClojureScript official site.</p>
+      </li>
+      <li>Basic about Clojure
+    <details><summary>Data</summary>
+        <ul>
+          <li>Data Expression
+            <table>
+              <tr><th>Types</th><th>EBNF</th><th>Description</th></tr>
+              <tr><td>Numbers</td><td><code>(+¦-)? [\d]+ (.[\d])? (e-?[\d]+)?</code></td><td></td></tr>
+              <tr><td>Keywords</td><td><code>:[\w]+</code> or <code>(keyword &lt;string&gt;)</code></td><td></td></tr>
+              <tr><td>Namespaced keywoards</td><td><code>::[\w]+</code>, <code>:&lt;namespace&gt;/[\w]+</code> or <code>(keyword &lt;namespace&gt; &lt;string&gt;)</code></td><td>namespace/keyword</td></tr>
+              <tr><td>Symbols</td><td><code>[\w\*\+\!-_&#39;\?]</code></td><td></td></tr>
+              <tr><td>Strings</td><td>~&#8221;.*&#8221;~</td><td></td></tr>
+              <tr><td>Characters</td><td><code>\&lt;charname&gt;</code></td><td>charname for example: <code>\newline</code></td></tr>
+              <tr><td><a href="List">List</a></td><td><code>(list &lt;items&gt;)</code> or ~'(&lt;items&gt;)~</td><td>for backquote: <code>`(~(+ 1 2) 3)</code> $&rarr;$ <code>(3 3)</code></td></tr>
+              <tr><td>Vectors</td><td><code>[&lt;items&gt;]</code>, <code>(vector &lt;items&gt;)</code> or <code>(vec &lt;list&gt;)</code></td><td></td></tr>
+              <tr><td>Maps</td><td><code>{(&lt;key&gt; &lt;val&gt; ,?)+}</code>, or <code>(hash-map (&lt;key&gt; &lt;val&gt;)+)</code></td><td>Like hash table</td></tr>
+              <tr><td>Sets</td><td><code>#{&lt;items&gt;}</code> or <code>(set [&lt;items&gt;])</code></td><td>Union Note: <code>(&lt;set&gt; &lt;item&gt;)</code> test whether <code>&lt;item&gt;</code> in <code>&lt;set&gt;</code>. Note that literal specific don't allow duplicate item.</td></tr>
+              <tr><td>Queues</td><td><code>#queue []</code></td><td>Persistent and immutable queue.</td></tr>
+              <tr><td>Atom (ClojureScript)</td><td><code>(atom &lt;val&gt;)</code></td><td>Mutable value within.</td></tr>
+              <tr><td>Volatile (ClojureScript)</td><td><code>(volatile! &lt;val&gt;)</code></td><td>Like Atom but not observation and validation ability.</td></tr>
+            </table>
+          </li>
+          <li>Data Manipulate
+            <table>
+              <tr><th>Functions</th><th>Rule</th><th>Description</th></tr>
+              <tr><td><code>type</code></td><td><code>(type [x])</code></td><td>Type of <code>x</code>, named symbol.</td></tr>
+              <tr><td><code>&lt;type&gt;?</code></td><td></td><td>Like <code>list?</code>, <code>vector?</code>, test value type.</td></tr>
+            </table>
+            <ul>
+              <li>List
+                <table>
+                  <tr><th>Function</th><th>Example</th><th>Descriptions</th></tr>
+                  <tr><td><code>cons</code></td><td><code>(cons 0 (cons 1 ()))</code></td><td><a href="https://en.wikipedia.org/wiki/Linked_list">Linked List</a></td></tr>
+                  <tr><td><code>conj</code></td><td><code>(conj &#39;(1 2) 0) ;; =&gt; (0 1 2)</code>, <code>(conj [1 2] 0) ;; =&gt; [1 2 0]</code></td><td>Note the different between list and vector.</td></tr>
+                  <tr><td><code>pop</code></td><td><code>(pop stack)</code></td><td>Return like <code>(rest stack)</code>, won't modify <code>stack</code>, similar function: <code>rest</code>, <code>peek</code> (pop last one).</td></tr>
+                </table>
+              </li>
+              <li>Vector
+                <table>
+                  <tr><th>Function</th><th>Example</th><th>Description</th></tr>
+                  <tr><td><code>nth</code></td><td><code>(nth [1 2 3] 0) ;; =&gt; 1</code></td><td>Start from <code>0</code>. Likely <code>(&lt;vector&gt; &lt;index&gt;)</code>.</td></tr>
+                  <tr><td><code>assoc</code></td><td><code>(assoc &lt;vector&gt; &lt;pos&gt; &lt;val&gt;)</code></td><td>Insert <code>val</code> at <code>pos</code> in <code>vector</code>. Raise error when out of bounds.</td></tr>
+                  <tr><td><code>mapv</code></td><td><code>(mapv &lt;func&gt; &lt;seq&gt;)</code></td><td>Like <code>map</code>, but return Vector.</td></tr>
+                </table>
+              </li>
+              <li>Map
+                <table>
+                  <tr><th>Function</th><th>Example</th><th>Description</th></tr>
+                  <tr><td><code>conj</code></td><td><code>(conj &lt;map&gt; ([&lt;key&gt; &lt;val&gt;])+)</code></td><td>Append to map.</td></tr>
+                  <tr><td><code>assoc</code> and <code>dissoc</code></td><td><code>(assoc &lt;map&gt; &lt;key&gt; &lt;val&gt;)</code></td><td><code>assoc</code> append by key; <code>dissoc</code> delete by key.</td></tr>
+                  <tr><td><code>(&lt;map&gt; &lt;key&gt;)</code></td><td></td><td>Read by key.</td></tr>
+                  <tr><td><code>keys</code></td><td><code>(keys &lt;map&gt;)</code></td><td>List of keys.</td></tr>
+                </table>
+              </li>
+              <li>Sets
+                <table>
+                  <tr><th>Function</th><th>Example</th><th>Description</th></tr>
+                  <tr><td><code>clojure.set/difference</code></td><td><code>(clojure.set/difference &lt;set&gt; &lt;set&gt;)</code></td><td>Difference of two sets.</td></tr>
+                  <tr><td><code>clojure.set/union</code></td><td></td><td>Union of two sets.</td></tr>
+                  <tr><td><code>clojure.set/intersection</code></td><td></td><td>Intersection of two sets.</td></tr>
+                  <tr><td><code>contains?</code> or <code>(&lt;set&gt; &lt;item&gt;)</code></td><td></td><td>Test if contains.</td></tr>
+                </table>
+              </li>
+              <li>Queue (like a changeable list)</li>
+              <li>Atom and Volatile (ClojureScript)
+                <table>
+                  <tr><th>Functions</th><th>Rule</th><th>Description</th></tr>
+                  <tr><td><code>deref</code></td><td><code>(deref &lt;atom&gt;)</code> or  <code>@&lt;atom&gt;</code></td><td>Read the value of Atom.</td></tr>
+                  <tr><td><code>swap!</code></td><td><code>(swap! &lt;atom&gt; update &lt;key&gt; &lt;func&gt;)</code></td><td>See if <code>atom</code> is <code>(atom {:key val})</code>, and <code>(swap! atom update :key inc)</code> will increase <code>val</code>.</td></tr>
+                  <tr><td><code>reset!</code></td><td><code>(reset! &lt;atom&gt; &lt;val&gt;)</code></td><td>Replace <code>atom</code> value with new <code>val</code>.</td></tr>
+                  <tr><td><code>add-watch</code>, <code>remove-watch</code></td><td><code>(add-watch &lt;atom&gt; &lt;key&gt; &lt;func&gt;)</code>, <code>(remove-watch &lt;atom&gt; &lt;key&gt;)</code></td><td>Call <code>func</code> if <code>key</code> of <code>atom</code> is changed.</td></tr>
+                </table>
+                <table>
+                  <tr><th>Functions</th><th>Rule</th><th>Description</th></tr>
+                  <tr><td><code>volatile?</code></td><td><code>(volatile? &lt;obj&gt;)</code></td><td>Test if volatile.</td></tr>
+                  <tr><td><code>vswap</code></td><td></td><td>Same as atom.</td></tr>
+                  <tr><td><code>vreset!</code></td><td></td><td>Same as atom.</td></tr>
+                </table>
+              </li>
+              <li>Destructing
+                <ul>
+                  <li><code>(let [[x _ y] [0 1 2]] [y x]) ;; =&gt; [2 0]</code>,
+                    like <code>multiple-value-bind</code> in common lisp.</li>
+                  <li>it works like function parameter assignment:
+                    <code>(let [[x y &amp; more] [0 1 2 3 4]] ...)</code>.
+                    <p>Note: the total could be passed in as
+                      <code>(let [[_ &amp; para :as total] [1 2 3]] ...)</code>.</p>
+                  </li>
+                  <li>Also, it could be named assignment:
+                    <code>(let [{x :xvar} {:xvar ...}] ...)</code>.
+                    <p>And unbound will fall back to <code>nil</code>
+                      unless specified with <code>:or</code>:
+                      <code>(let [{name :name :or {name ...}} {...}] ...)</code>.</p>
+                    <p>Note: the total map could be assigned by:
+                      <code>(let [{name :name :as total} {...}] ...)</code>.</p>
+                  </li>
+                  <li>For more, please refer <a href="https://gist.github.com/john2x/e1dca953548bfdfb9844">Clojure Destructuring Tutorial and Cheat Sheet</a></li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+    </details>
+    <details><summary>Assignment</summary>
+        <ul>
+          <li>Basic Assignment
+            <ul>
+              <li>Variable assignment: <code>(def &lt;var&gt; &lt;val&gt;)</code></li>
+              <li>Local bound: <code>(let [(&lt;var&gt; &lt;val&gt;)+] body)</code>, like other Lisp but less <code>()</code>.</li>
+              <li>Function assignment: <code>(defn &lt;fname&gt; &lt;docstring&gt;? body ...)</code></li>
+              <li>Single form:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defn </span><span class="mi">1</span><span class="nv">+</span>
+<span class="w">  </span><span class="s">&quot;Return 1 + given number.&quot;</span>
+<span class="w">  </span><span class="p">[</span><span class="nv">x</span><span class="p">]</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+</pre></div>
+              </li>
+              <li>Multi form:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defn </span><span class="nv">n+</span>
+<span class="w">  </span><span class="s">&quot;Return 1 + given number `(n+ x)&#39; or n + given number `(n+ x 1)&#39;.&quot;</span>
+<span class="w">  </span><span class="p">([</span><span class="nv">x</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="mi">1</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">  </span><span class="p">([</span><span class="nv">x</span><span class="w"> </span><span class="nv">n</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nb">+ </span><span class="nv">n</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span>
+</pre></div>
+                <p>Note: Kinda like functions in Mathematica.</p>
+              </li>
+              <li>Multimethods
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defmulti </span><span class="nv">multi-func</span>
+<span class="w">  </span><span class="s">&quot;docstring&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">param</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="ss">:key</span><span class="w"> </span><span class="nv">param</span><span class="p">))</span>
+<span class="w">  </span><span class="ss">:default</span><span class="w"> </span><span class="ss">:key</span><span class="p">)</span>
+
+<span class="p">(</span><span class="kd">defmethod </span><span class="nv">multi-func</span><span class="w"> </span><span class="ss">:key-1</span><span class="w"> </span><span class="p">[</span><span class="nv">param</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">...</span><span class="p">))</span>
+<span class="p">(</span><span class="kd">defmethod </span><span class="nv">multi-func</span><span class="w"> </span><span class="ss">:key-2</span><span class="w"> </span><span class="p">[</span><span class="nv">param</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">...</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">multi-func</span><span class="w"> </span><span class="p">{</span><span class="ss">:key</span><span class="w"> </span><span class="ss">:key-1</span><span class="p">})</span>
+<span class="p">(</span><span class="nf">multi-func</span><span class="w"> </span><span class="p">{</span><span class="ss">:key</span><span class="w"> </span><span class="ss">:key-2</span><span class="p">})</span>
+</pre></div>
+                <p>Add <code>:hierarchy</code> keyword can describe hierarchy relation for multimethods.
+                  If not provided, it will use global hierarchy instead.</p>
+                <ul>
+                  <li>Multi param: <code>[&amp; params]</code> treat params as a list.</li>
+                  <li><a href="Protocol">Protocol</a> like Java's interface.</li>
+                </ul>
+              </li>
+              <li>Anonymous Functions
+                <ul>
+                  <li><code>(fn [params] body ...)</code></li>
+                  <li><code>#(body)</code> and use <code>%N</code> for Nth param.
+                    Note: <code>%</code> is equal to <code>%</code>, <code>%&amp;</code> is likely to <code>[&amp; param]</code>.
+                    Looks like <code>#&amp;</code> in Mathematica.</li>
+                  <li><code>(def var #(func))</code> Like Scheme, could assign variable with function.</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li>Namespace
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">ns </span><span class="nv">namespace</span>
+<span class="w">  </span><span class="p">(</span><span class="ss">:require</span><span class="w"> </span><span class="nv">other-package</span>
+<span class="w">            </span><span class="p">[</span><span class="nv">other-package</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">alias-other-package</span><span class="p">]</span>
+<span class="w">            </span><span class="p">[</span><span class="nv">other-package</span><span class="w"> </span><span class="ss">:refer</span><span class="w"> </span><span class="p">[</span><span class="nv">symbols-in-others-package</span><span class="p">]]</span>
+<span class="w">            </span><span class="p">[</span><span class="nv">other-package</span><span class="w"> </span><span class="ss">:exclude</span><span class="w"> </span><span class="p">[</span><span class="nv">excluded-symbols</span><span class="p">]])</span>
+<span class="w">  </span><span class="p">(</span><span class="ss">:refer-clojure</span><span class="w"> </span><span class="ss">:exclude</span><span class="w"> </span><span class="p">[</span><span class="nv">func</span><span class="p">]))</span>
+</pre></div>
+            <ul>
+              <li><code>ns</code> to self-define namespace</li>
+              <li><code>(require pkg)</code> or <code>(:require ...)</code> in <code>ns</code> load other packages
+                with alias name.
+                <p><code>(:refer ...)</code> in <code>ns</code> load symbols in other packages for easy use.</p>
+                <p>use <code>(:refer-clojure ...)</code> dealing with <code>cljs.core</code> namespace.</p>
+              </li>
+              <li>load symbols by <code>namespace/symbols</code>.</li>
+              <li>The file should be orgnized like below:
+                <pre class="example">
+app
+└── src
+    └── namespace
+        ├── core.cljs
+        └── main.cljs
+                </pre>
+                <p>with namespace of <code>namespace.core</code> and <code>namespace.main</code>.</p>
+              </li>
+            </ul>
+          </li>
+          <li>Protocol
+            Note: to understand, referring to <a href="https://boxofpapers.hatenablog.com/entry/2014/02/02/054500">「標準実装」という概念はない</a> and
+            Java Interface would help.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defprotocol </span><span class="nv">protocol-name</span>
+<span class="w">  </span><span class="s">&quot;docstring about the protocol&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span><span class="w"> </span><span class="s">&quot;docstring&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">extend-type</span><span class="w"> </span><span class="nv">type-name</span>
+<span class="w">  </span><span class="nv">protocol-name</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">function-from-protocol</span><span class="w"> </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span><span class="w"> </span><span class="nv">...</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">another-protocol-name</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">function-from-another-protocol</span><span class="w"> </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span><span class="w"> </span><span class="nv">...</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">extend-protocol</span><span class="w"> </span><span class="nv">protocol-name</span>
+<span class="w">  </span><span class="nv">type-name</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">function-from-protocol</span><span class="w"> </span><span class="p">[</span><span class="nv">this</span><span class="p">]</span><span class="w"> </span><span class="nv">...</span><span class="p">))</span>
+</pre></div>
+            <ul>
+              <li>Protocol works like giving different objects likely interface.
+                Kinda like Duck-type in Ruby. And <code>extend-type</code> and <code>extend-protocol</code>
+                works like Ruby's <code>mix-in</code> and Python's <code>__int__</code> like definition.
+                <p><del>Although I think I'd prefer Ruby's flavor more.</del></p>
+              </li>
+              <li>To test if an object having specific protocol:
+                <code>(statisfies? protocol object)</code>.</li>
+            </ul>
+          </li>
+          <li>Hierarchy and Type System
+            <ul>
+              <li><b>Hierarchy</b> <code>(derive [children parent])</code>
+                <p>Like <code>class Children &lt; Parent</code> in Ruby.</p>
+                <p>Provide a local hierachy <code>(derive [h children parent])</code> where <code>h</code>
+                  is a hierarchy space create by <code>(make-hierarchy)</code>.</p>
+                <ul>
+                  <li><code>(ancestors [tag])</code> or <code>(ancestors [h tag])</code> for local hierarchy.</li>
+                  <li><code>(descendants [tag])</code> or <code>(descendants [h tag])</code> for local hierarchy.</li>
+                  <li><code>(isa? [child parent])</code> or <code>(isa? [h child parent])</code> for local hierarchy.</li>
+                </ul>
+              </li>
+              <li><b>Type</b> <code>(deftype [name [&amp; fields] &amp; opts+specs])</code>
+                <p>Like <code>struct name { fields }</code> in C.
+                  Or more likely of <a href="http://www.lispworks.com/documentation/lw70/CLHS/Body/m_defstr.htm">defstruct</a> in Common Lisp.
+                  Provides reader and constructor.</p>
+                <ul>
+                  <li><b>Constructor</b> <code>(name. &lt;fields&gt;)</code> append a <code>.</code> after the type name
+                    will be a constructor function name. Or use <code>-&gt;name</code> or <code>(new name ...)</code>.</li>
+                  <li><b>Reader</b> <code>(.-fieldname &lt;object-of-type&gt;)</code> prefix <code>.-</code> of a field name
+                    will read field value of <code>&lt;object-of-type&gt;</code>.</li>
+                  <li><b>Reify</b> <code>(reify [&amp; opt-spec])</code> for quick create objector without
+                    pre-defining a type.</li>
+                </ul>
+              </li>
+              <li><b>Record</b> <code>(defrecord [name [&amp; fields] &amp; opts+specs])</code>
+                <p>Like type but a little different.</p>
+                <ul>
+                  <li><b>Constructor</b> <code>(name. ...)</code>, <code>(-&gt;name ...)</code>, <code>(new name ...)</code>.
+                    An additional <code>map-&gt;name</code> constructor function.</li>
+                  <li><b>Reader</b> <code>(&lt;record-object&gt; :key)</code>.</li>
+                  <li><b>Hierarchy</b> <code>(defrecord name [field] h (...))</code>.</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+        </ul>
+    </details>
+    <details><summary>Flow Control</summary>
+        <ul>
+          <li>Condition
+            <table>
+              <tr><th>Command</th><th>EBNF</th><th>Description</th></tr>
+              <tr><td><code>if</code></td><td><code>(if &lt;cond&gt; &lt;true&gt; &lt;false&gt;?)</code></td><td></td></tr>
+              <tr><td><code>cond</code></td><td><code>(cond (&lt;cond&gt; &lt;exp&gt;)+ (:else &lt;exp&gt;)?)</code></td><td>Like <code>(cond ((= x 1) x))</code>, but less <code>()</code>.</td></tr>
+              <tr><td><code>case</code></td><td><code>(case &lt;exp&gt; (&lt;val&gt; &lt;exp&gt;)+ &lt;fallback&gt;?)</code></td><td></td></tr>
+              <tr><td><code>condp</code></td><td><code>(condp = &lt;exp&gt; (&lt;val&gt; &lt;exp&gt;)+ &lt;fallback&gt;?)</code></td><td>Maps each <code>&lt;val&gt;</code> with <code>(= &lt;exp&gt; &lt;val&gt;)</code>. Return <code>&lt;fallback&gt;</code> if fails. Like <code>case</code>.</td></tr>
+              <tr><td><code>filter</code></td><td><code>(filter &lt;func&gt; &lt;list&gt;)</code></td><td>Select <code>&lt;list&gt;</code> if <code>&lt;func&gt;</code> true.</td></tr>
+            </table>
+          </li>
+          <li>Iteration
+            <table>
+              <tr><th>Command</th><th>EBNF</th><th>Description</th></tr>
+              <tr><td><code>do</code></td><td><code>(do &lt;exp&gt;+)</code></td><td>Block of code, return value of last <code>exp</code>.</td></tr>
+              <tr><td><code>for</code></td><td><code>(for [(&lt;var&gt; &lt;range&gt;)+ (:(while¦when) &lt;cond&gt;)? (:let [&lt;var&gt; &lt;val&gt;])?] &lt;body&gt;)</code></td><td><code>(for [x [1 2 3] y [4 5]] [x y])</code></td></tr>
+              <tr><td><code>doseq</code></td><td></td><td>Like <code>for</code> but return <code>nil</code>.</td></tr>
+              <tr><td><code>loop</code></td><td><code>(loop [&lt;init-key-val&gt;] body)</code></td><td>Assign initial variable and loop</td></tr>
+              <tr><td><code>recur</code></td><td><code>#(if (= % 1) 1 (+ (recur (inc %)) %))</code></td><td>Like Y-combinder in &lambda; calcus</td></tr>
+              <tr><td><code>map</code></td><td><code>(map &lt;func&gt; &lt;data&gt;)</code></td><td><code>&lt;data&gt;</code> can be vector or list</td></tr>
+              <tr><td><code>run!</code></td><td></td><td>Like <code>map</code> but return <code>nil</code>.</td></tr>
+              <tr><td><code>reduce</code></td><td><code>(reduce &lt;func&gt; &lt;init&gt; &lt;data&gt;)</code></td><td><code>#(if data (recur %1 (%1 init (car data)) (cdr data)) init)</code></td></tr>
+            </table>
+          </li>
+          <li>Threading Macro
+            Used to quickly build nested function calls.
+            <table>
+              <tr><th>Marcos</th><th>Name</th><th>Examples</th><th>Descriptions</th></tr>
+              <tr><td><code>-&gt;</code></td><td>thread-first macro</td><td><code>(-&gt; x f1 f2 f3)</code></td><td>equal to <code>(f3 (f2 (f1 x)))</code></td></tr>
+              <tr><td><code>-&gt;&gt;</code></td><td>thread-last macro</td><td><code>(-&gt;&gt; x f1 f2 f3)</code></td><td>equal to <code>(f3 (f2 (f1 x)))</code></td></tr>
+              <tr><td><code>as-&gt;</code></td><td>thread-as macro</td><td><code>(as-&gt; x $ (map inc $) (...))</code></td><td>assign a temp name for <code>x</code></td></tr>
+              <tr><td><code>some-&gt;</code>, <code>some-&gt;&gt;</code></td><td>thread-some macro</td><td>same as <code>-&gt;</code></td><td>could be used to avoid null</td></tr>
+              <tr><td><code>cond-&gt;</code>, <code>cond-&gt;&gt;</code></td><td>thread-cond macro</td><td><code>(cond-&gt; x (&lt;cond&gt; &lt;exp&gt;)+)</code></td><td>apply <code>exp</code> if <code>cond</code></td></tr>
+            </table>
+          </li>
+        </ul>
+    </details>
+    <details><summary>ClojureScript and JavaScript</summary>
+        <ul>
+          <li>Conversion between JavaScript
+            JavaScript methods are stored in <code>js</code> namespace,
+            and can be accessed like <code>(js/parseInt &quot;...&quot;)</code>.
+            <p>Some shorthand of writing function call:</p>
+            <table>
+              <tr><th>Shorthand</th><th>Equal to</th><th>JavaScript</th><th>Description and Notes</th></tr>
+              <tr><td><code>(.log js/console ...)</code></td><td><code>(js/console.log ...)</code></td><td><code>console.log(...)</code></td><td>Function call</td></tr>
+              <tr><td><code>(.-PI js/Math)</code></td><td><code>js/Math.PI</code></td><td><code>Math.PI</code></td><td>Read attribute, see <a href="Hierarchy and Type System">Hierarchy and Type System</a> for more</td></tr>
+              <tr><td><code>#js {:key val}</code></td><td><code>(js-obj key val)</code></td><td><code>{key: val}</code></td><td>Like record, use <code>clj-&gt;js</code>, <code>js-&gt;clj</code> for convert.</td></tr>
+            </table>
+          </li>
+          <li>Google Closure Library
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">ns </span><span class="nv">app.core</span>
+<span class="w">  </span><span class="p">(</span><span class="ss">:require</span><span class="w"> </span><span class="p">[</span><span class="nv">goog.dom</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">dom</span><span class="p">]))</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">element</span><span class="w"> </span><span class="p">(</span><span class="nf">dom/getElement</span><span class="w"> </span><span class="s">&quot;body&quot;</span><span class="p">))</span>
+</pre></div>
+            <p>for more information, see <a href="https://google.github.io/closure-library/api/">Closure Generated API Docs</a></p>
+            <ul>
+              <li>Load JavaScript via Google Closure Library:
+                In js file, provide module like:
+<div class="highlight"><pre><span></span><span class="nx">goog</span><span class="p">.</span><span class="nx">provide</span><span class="p">(</span><span class="s2">&quot;javascript.util&quot;</span><span class="p">);</span>
+
+<span class="nx">goog</span><span class="p">.</span><span class="nx">scope</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">javascript</span><span class="p">.</span><span class="nx">util</span><span class="p">;</span>
+<span class="w">    </span><span class="nx">module</span><span class="p">.</span><span class="nx">func</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">para</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* ... */</span><span class="w"> </span><span class="p">};</span>
+<span class="p">});</span>
+</pre></div>
+                <p>Then could call in ClojureScript:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">require</span><span class="w"> </span><span class="o">&#39;</span><span class="p">[</span><span class="nv">javascript.util</span><span class="w"> </span><span class="ss">:as</span><span class="w"> </span><span class="nv">util</span><span class="p">])</span>
+<span class="p">(</span><span class="nf">util/func</span><span class="w"> </span><span class="nv">...</span><span class="p">)</span>
+</pre></div>
+              </li>
+            </ul>
+          </li>
+          <li>Hot Load</li>
+          <li>Electron</li>
+        </ul>
+    </details>
+      </li>
+    </ul>
+  </details>
+  </li>
+  <li><a href="https://reagent-project.github.io">Reagent</a>, 是 <a href="https://react.dev">React</a> 的 ClojureScript 的绑定</li>
+  <li><a href="https://github.com/day8/re-frame">Re-frame</a>, 一个类似于简化 Reagent 设计的一个框架.</li>
+  <li><a href="https://github.com/thheller/shadow-cljs">shadow-cljs</a>, 用于配置和与 npm 进行沟通</li>
+  <li><a href="https://www.electronjs.org">Electron</a>, 一个类似于将网页作为本地软件的一个框架
+    (如果说难听点, 就是 chromium 内核. )</li>
+</ul>
+<h1>Overview of the Structure</h1>
+<h2>File and shadow-cljs</h2>
+<p>一个使用 shadow-cljs 以及 npm 共同管理的 ClojureScript 应有类似如下的文件结构:</p>
+<p>(注: 不一定所有的都是这样的结构, 所以折叠了吧. )</p>
+<details><summary> 文件结构 (展开) </summary>
+<pre class="example">
+.
+├── package-lock.json
+├── package.json
+├── rescources
+│   ├── main.js
+│   └── public
+│       ├── css
+│       │   └── main.css
+│       ├── index.html
+│       └── js
+├── shadow-cljs.edn
+└── src
+    └── app
+        ├── main
+        │   └── core.cljs
+        └── renderer
+            └── core.cljs
+</pre>
+<p>一点简单的解释:</p>
+<ul>
+  <li>依赖文件
+    <ul>
+      <li><code>package.json</code> 可以通过 <code>npm init</code> 来新建,
+        通过 <code>npm install</code> 会生成 <code>package-lock.json</code>.
+    <details><summary> package.json 的一些设置 </summary>
+        <p>略去了一些无关的东西&#8230;</p>
+<div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">     </span><span class="err">...</span>
+<span class="w">    </span><span class="nt">&quot;main&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;rescources/main.js&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;build&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;shadow-cljs compile main renderer&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;test&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;devDependencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;electron&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^24.0.0&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;electron-devtools-installer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^3.2.0&quot;</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">&quot;dependencies&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;react&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^18.2.0&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;react-dom&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^18.2.0&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;shadow-cljs&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;^2.22.9&quot;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+    </details>
+      </li>
+      <li><code>shadow-cljs.edn</code> 里面包含了 shadow-cljs 的依赖,
+        一些动作的设定之类的东西.
+    <details><summary> shadow-cljs.edn </summary>
+<div class="highlight"><pre><span></span><span class="c1">;; shadow-cljs configuration</span>
+<span class="p">{</span><span class="ss">:source-paths</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;src&quot;</span><span class="p">]</span><span class="w">                  </span><span class="c1">; where clojurescript file stores</span>
+
+<span class="w"> </span><span class="ss">:dev-http</span><span class="w"> </span><span class="p">{</span><span class="mi">4000</span><span class="w"> </span><span class="s">&quot;rescources/public&quot;</span><span class="p">}</span><span class="w">   </span><span class="c1">; run shadow-cljs watch ...</span>
+<span class="w">                                        </span><span class="c1">; open localhost:4000 to preview</span>
+
+<span class="w"> </span><span class="ss">:dependencies</span><span class="w">                          </span><span class="c1">; package dependencies</span>
+<span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="p">[</span><span class="nv">cider/cider-nrepl</span><span class="w"> </span><span class="s">&quot;0.30.0&quot;</span><span class="p">]</span><span class="w">          </span><span class="c1">; for Cider in Emacs to use</span>
+<span class="w">  </span><span class="p">[</span><span class="nv">reagent</span><span class="w"> </span><span class="s">&quot;1.2.0&quot;</span><span class="p">]</span><span class="w">                     </span><span class="c1">; Reagent</span>
+<span class="w">  </span><span class="p">[</span><span class="nv">re-frame</span><span class="w"> </span><span class="s">&quot;1.3.0&quot;</span><span class="p">]</span><span class="nv">z</span><span class="w">                   </span><span class="c1">; re-frame</span>
+<span class="w">  </span><span class="p">[</span><span class="nv">binaryage/devtools</span><span class="w"> </span><span class="s">&quot;1.0.7&quot;</span><span class="p">]</span><span class="w">          </span><span class="c1">; devtools</span>
+<span class="w">  </span><span class="p">]</span>
+
+<span class="w"> </span><span class="ss">:builds</span><span class="w">                                </span><span class="c1">; run shadow-cljs compile ... to build</span>
+<span class="w"> </span><span class="p">{</span><span class="ss">:main</span><span class="w">                                 </span><span class="c1">; shadow-cljs compile main</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">   </span><span class="ss">:target</span><span class="w"> </span><span class="ss">:node-script</span><span class="w">                 </span><span class="c1">; for electron usage</span>
+<span class="w">   </span><span class="ss">:output-to</span><span class="w"> </span><span class="s">&quot;rescources/main.js&quot;</span><span class="w">      </span><span class="c1">; output dir</span>
+<span class="w">   </span><span class="ss">:main</span><span class="w"> </span><span class="nv">app.main.core/main</span><span class="w">             </span><span class="c1">; main function entry</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">  </span><span class="ss">:renderer</span><span class="w">                             </span><span class="c1">; shadow-cljs compile renderer</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">   </span><span class="ss">:target</span><span class="w"> </span><span class="ss">:browser</span><span class="w">                     </span><span class="c1">; for browser</span>
+<span class="w">                                        </span><span class="c1">; NOTE: The render process in Electron</span>
+<span class="w">                                        </span><span class="c1">; runs under the browser enviroment.  </span>
+<span class="w">   </span><span class="ss">:output-dir</span><span class="w"> </span><span class="s">&quot;rescources/public/js&quot;</span><span class="w">   </span><span class="c1">; output path</span>
+<span class="w">   </span><span class="ss">:asset-path</span><span class="w"> </span><span class="s">&quot;js&quot;</span>
+<span class="w">   </span><span class="ss">:modules</span><span class="w"> </span><span class="p">{</span>
+<span class="w">             </span><span class="ss">:renderer</span><span class="w">                  </span><span class="c1">; compile to renderer.js</span>
+<span class="w">             </span><span class="p">{</span><span class="ss">:init-fn</span><span class="w"> </span><span class="nv">app.renderer.core/start!</span><span class="p">}}}}}</span>
+</pre></div>
+    </details>
+      </li>
+    </ul>
+  </li>
+  <li>代码
+    <ul>
+      <li><code>src</code> 下面包含着 ClojureScript 的代码文件,
+        通过文件夹来设置 namespace, 如:
+        <code>src/app/main/core.cljs</code> 来表示 <code>(ns app.main.core)</code>.</li>
+      <li><code>app/main</code> 作为 Electron 的入口
+    <details><summary> app/main/core.js </summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">ns </span><span class="nv">app.main.core</span>
+<span class="w">  </span><span class="p">(</span><span class="ss">:require</span><span class="w"> </span><span class="p">[</span><span class="s">&quot;electron&quot;</span><span class="w"> </span><span class="ss">:refer</span><span class="w"> </span><span class="p">[</span><span class="nv">app</span><span class="w"> </span><span class="nv">BrowserWindow</span><span class="p">]]))</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">main-window</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span><span class="w">            </span><span class="c1">; main window</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">init-browser</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">reset!</span><span class="w"> </span><span class="nv">main-window</span><span class="w">                   </span><span class="c1">; set the window with size 800x600</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">BrowserWindow.</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">clj-&gt;js</span><span class="w"> </span><span class="p">{</span><span class="ss">:width</span><span class="w"> </span><span class="mi">800</span>
+<span class="w">                     </span><span class="ss">:height</span><span class="w"> </span><span class="mi">600</span><span class="p">})))</span>
+
+<span class="w">  </span><span class="c1">;; it should be resource/public/index.html,</span>
+<span class="w">  </span><span class="c1">;; __dirname in javascript tells Electron where to find file</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">.loadURL</span><span class="w"> </span><span class="o">^</span><span class="nv">js/electron.BrowserWindow</span><span class="w"> </span><span class="o">@</span><span class="nv">main-window</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">str </span><span class="s">&quot;file://&quot;</span><span class="w"> </span><span class="nv">js/__dirname</span><span class="w"> </span><span class="s">&quot;/public/index.html&quot;</span><span class="p">))</span>
+
+<span class="w">  </span><span class="c1">;; Deal with situation when closing window</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">.on</span><span class="w"> </span><span class="o">^</span><span class="nv">js/electron.BrowserWindow</span><span class="w"> </span><span class="o">@</span><span class="nv">main-window</span><span class="w"> </span><span class="s">&quot;closed&quot;</span>
+<span class="w">       </span><span class="o">#</span><span class="p">(</span><span class="nf">reset!</span><span class="w"> </span><span class="nv">main-window</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">main</span>
+<span class="w">  </span><span class="s">&quot;Main function for Electron app.&quot;</span>
+<span class="w">  </span><span class="p">[]</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">.on</span><span class="w"> </span><span class="nv">app</span><span class="w"> </span><span class="s">&quot;window-all-closed&quot;</span><span class="w"> </span><span class="o">#</span><span class="p">(</span><span class="nf">.quit</span><span class="w"> </span><span class="nv">app</span><span class="p">))</span><span class="w"> </span><span class="c1">; quit app</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">.on</span><span class="w"> </span><span class="nv">app</span><span class="w"> </span><span class="s">&quot;ready&quot;</span><span class="w"> </span><span class="nv">init-browser</span><span class="p">))</span>
+</pre></div>
+    </details>
+      </li>
+      <li><code>app/renderer</code> 作为 Electron 的界面渲染部分,
+        以下主要关注这部分的代码.</li>
+    </ul>
+  </li>
+</ul>
+</details>
+<h2>re-frame</h2>
+<p>(注: 这里仅仅只是说是作为前端界面的一个结构, 不是网页结构. )</p>
+<p>这里使用如下的一个事件结构 (re-frame 的一个结构) 来进行软件基本框架的搭建:</p>
+<p><img src="/_img/iGEM/gene-ui/re-frame-gene-ui.svg" alt="/_img/iGEM/gene-ui/re-frame-gene-ui.svg" /></p>
+<details><summary> 对上面的结构的一个说明 </summary>
+<p>这个结构在我看来十分类似 Rails 里面的 MVC 结构.</p>
+<details><summary> About MVC&#8230;</summary>
+<p>注: 并非 re-frame 使用的就是 MVC 模型来进行软件工程建构.
+  只是我觉得它使用的方式和 Rails 里面的 MVC 模型很像&#8230;
+  不妨类比一下.</p>
+<p>以下是 Claude 对 re-frame 中 MVC 模型的的介绍 (注: 括号内是我的注记)</p>
+<ol>
+  <li>用户与 Components 交互
+    (对应 <code>view.cljs</code> 中的代码, 通过使用 Reagent 的 Hiccup 构建)</li>
+  <li>Components 触发事件, 事件被 Event dispatcher 接收并交给对应的 Event Handler 处理.
+    (对应 <code>event.cljs</code> 中的代码,
+    通过 <code>reg-event-db</code> 和 <code>reg-event-fx</code> 来处理事件并更新数据库)</li>
+  <li>Event Handler 会更新应用状态 Subscription, 并产生 Side Effect.</li>
+  <li>Components 监听到 Subscription 的改变, 更新 View.
+    (对应 <code>sub.cljs</code> 中的代码)</li>
+  <li>Side Effect 被执行, 进行必要的副作用操作 (更新数据库之类的).</li>
+</ol>
+</details>
+<p>简单来说就是, 在设计的时候, 考虑将视图 (View), 数据逻辑 (Model),
+  和控制 (Controller) 进行分离来进行构建, 通过标准的接口调用,
+  实现模块化.</p>
+<ul>
+  <li>在 <code>view.cljs</code> 中, 我将要绘制控制界面 (Art-board), 节点 (Nodes),
+    连线 (Arcs) 以及接口 (Ports). (应该一些最基本的事件是在其中处理)</li>
+  <li>在 <code>events.cljs</code> 中, 我将要处理事件逻辑.</li>
+  <li>在 <code>sub.cljs</code> 中,
+    将会声明并使得在 <code>db.cljs</code> 中定义的数据库通过接口暴露给其他部分调用.</li>
+  <li><b>View and Hiccup</b>: 在 Reagent 中通过使用 Hiccup 来进行描述 HTML 的形式:
+  <details><summary> 详细介绍和例子 </summary>
+    <ul>
+      <li>Hiccup 的形式
+<div class="highlight"><pre><span></span><span class="p">[</span><span class="ss">:div.class-name</span><span class="w">                        </span><span class="c1">; &lt;div&gt;</span>
+<span class="w"> </span><span class="p">[</span><span class="ss">:h1#id-name</span><span class="w">                           </span><span class="c1">;   &lt;h1 id=&quot;id-name&quot;&gt;</span>
+<span class="w">  </span><span class="s">&quot;Lucky Me&quot;</span><span class="p">]</span><span class="w">                           </span><span class="c1">;     Lucky Me</span>
+<span class="w">                                        </span><span class="c1">;   &lt;/h1&gt; </span>
+<span class="w"> </span><span class="p">[</span><span class="ss">:p</span><span class="w"> </span><span class="p">{</span><span class="ss">:style</span><span class="w"> </span><span class="p">{</span><span class="ss">:color</span><span class="w"> </span><span class="ss">:yellow</span><span class="p">}}</span><span class="w">          </span><span class="c1">;   &lt;p style=&quot;color: yellow;&quot;&gt;</span>
+<span class="w">  </span><span class="s">&quot;Haha&quot;</span><span class="p">]</span><span class="w">                               </span><span class="c1">;     Haha</span>
+<span class="w">                                        </span><span class="c1">;   &lt;/p&gt; </span>
+<span class="w"> </span><span class="p">[</span><span class="ss">:span</span><span class="w">                                 </span><span class="c1">;   &lt;span&gt; &lt;!-- with click event --&gt;</span>
+<span class="w">  </span><span class="p">{</span><span class="ss">:on-click</span><span class="w"> </span><span class="o">#</span><span class="p">(</span><span class="nb">println </span><span class="s">&quot;Clicked&quot;</span><span class="p">)}]]</span><span class="w">    </span><span class="c1">;   &lt;/span&gt;</span>
+<span class="w">                                        </span><span class="c1">; &lt;/div&gt;</span>
+</pre></div>
+      </li>
+      <li>最简单的形式:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defn </span><span class="nv">view</span><span class="w"> </span><span class="p">[]</span><span class="w"> </span><span class="p">[</span><span class="ss">:h1</span><span class="w"> </span><span class="s">&quot;Hello&quot;</span><span class="p">])</span>
+
+<span class="p">(</span><span class="nf">reagent.dom/render</span><span class="w">                     </span><span class="c1">; Render into `app-container&#39;. </span>
+<span class="w"> </span><span class="p">[</span><span class="nv">view</span><span class="p">]</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">js/document.getElementById</span><span class="w"> </span><span class="s">&quot;app-container&quot;</span><span class="p">))</span>
+</pre></div>
+      </li>
+      <li>稍微复杂一点但是会比较高效的做法:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="kd">defn </span><span class="nv">view</span><span class="w"> </span><span class="p">[]</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let </span><span class="p">[</span><span class="nv">nodes</span><span class="w"> </span><span class="p">(</span><span class="nf">subscribe</span><span class="w"> </span><span class="p">[</span><span class="ss">:nodes</span><span class="p">])]</span>
+<span class="w">    </span><span class="p">(</span><span class="k">fn </span><span class="p">[]</span><span class="w"> </span><span class="nv">...</span><span class="p">)))</span>
+</pre></div>
+        <p>使用这样的方式的好处在于一开始会计算得到 <code>(fn [])</code> 的结果,
+          然后之后就不会再计算, 而是一直沿用.</p>
+      </li>
+      <li>关于 <code>key</code>
+        <p>通过给元素设立一个 <code>key</code> 的 metadata 可以让 Reagent 在更新的时候,
+          只渲染对应的 <code>key</code> 而不是全部渲染:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nb">for </span><span class="p">[</span><span class="nb">node </span><span class="nv">nodes</span><span class="p">]</span>
+<span class="w">  </span><span class="o">^</span><span class="p">{</span><span class="ss">:key</span><span class="w"> </span><span class="nv">node-id</span><span class="p">}</span><span class="w"> </span><span class="p">[</span><span class="nv">draw-node</span><span class="w"> </span><span class="nv">node</span><span class="p">])</span>
+</pre></div>
+      </li>
+    </ul>
+  </details>
+  </li>
+  <li><b>Subscribe Data</b>: 在 <code>re-frame</code> 框架中,
+    有 <code>subscribe</code> 和 <code>cursor</code> 的两个关于数据的方法.
+  <details><summary> 详细介绍和例子 </summary>
+    <ul>
+      <li><code>subscribe</code> 的例子:
+        <ul>
+          <li>比如在 <code>sub.cljs</code> 中如下注册数据接口:
+<div class="highlight"><pre><span></span><span class="c1">;;; db, for example: `{:nodes [1 2 3]}&#39;.</span>
+<span class="p">(</span><span class="nf">reg-sub</span><span class="w"> </span><span class="ss">:nodes</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">db</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nf">db</span><span class="w"> </span><span class="ss">:nodes</span><span class="p">)))</span>
+</pre></div>
+            <p>那么在 <code>view.cljs</code> 中通过 <code>subscribe</code> 来进行注册信息:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">subscribe</span><span class="w"> </span><span class="p">[</span><span class="ss">:node</span><span class="p">])</span>
+</pre></div>
+          </li>
+          <li>或者如果想要传入参数, 可以使用下面的形式:
+<div class="highlight"><pre><span></span><span class="c1">;;; db, for example: `{:nodes {:key1 1 :key2 2}}&#39;.</span>
+<span class="p">(</span><span class="nf">reg-sub</span><span class="w"> </span><span class="ss">:node</span><span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">db</span><span class="w"> </span><span class="p">[</span><span class="nv">_</span><span class="w"> </span><span class="nv">key</span><span class="p">]]</span><span class="w"> </span><span class="p">((</span><span class="nf">db</span><span class="w"> </span><span class="ss">:nodes</span><span class="p">)</span><span class="w"> </span><span class="nv">key</span><span class="p">)))</span>
+</pre></div>
+            <p>在 <code>view.cljs</code> 中:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">subscribe</span><span class="w"> </span><span class="p">[</span><span class="ss">:node</span><span class="w"> </span><span class="ss">:key1</span><span class="p">])</span>
+</pre></div>
+            <p>然而这样的做法不如使用 <code>cursor</code> 更加高明.
+              可以精确更新某一路径而不是整个结构.</p>
+          </li>
+          <li><code>subscribe</code> 实际上得到的是一个 <code>atom</code> 容器,
+            通过 <code>@(subscribe ...)</code> 的形式可以得到值.</li>
+        </ul>
+      </li>
+      <li><code>cursor</code> 的例子:
+        <ul>
+          <li>通过 <code>(cursor :state)</code> 的形式新建,
+            使用 <code>(get-in cursor [:nested ...])</code> 进入深层的路径</li>
+          <li>通过 <code>(assoc-in cursor [:key] value)</code> 进行修改状态</li>
+          <li><code>cursor</code> 的感觉更像是 C 语言里面的指针, 但是并不完全一样.</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+  </li>
+  <li><b>Dispatch Events and Update Database</b>:
+    通过 <code>reg-event-db</code> 和 <code>reg-event-fx</code> 来定义如何处理事件,
+    并且通过 <code>dispatch</code> 来进行调用.
+  <details><summary> 详细介绍和例子 </summary>
+    <ul>
+      <li><code>reg-event-db</code> 和 <code>reg-event-fx</code> 的使用例子
+        <p>如下注册一个事件:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">reg-event-db</span><span class="w">                           </span><span class="c1">; regist event using database</span>
+<span class="w"> </span><span class="ss">:update-mouse-position</span><span class="w">                 </span><span class="c1">; event name</span>
+<span class="w"> </span><span class="p">(</span><span class="k">fn </span><span class="p">[</span><span class="nv">db</span><span class="w"> </span><span class="p">[</span><span class="nv">_</span><span class="w"> </span><span class="nv">mouse</span><span class="p">]]</span><span class="w">                     </span><span class="c1">; event arguments</span>
+<span class="w">   </span><span class="p">(</span><span class="nb">-&gt; </span><span class="nv">db</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">assoc </span><span class="ss">:mx</span><span class="w"> </span><span class="p">(</span><span class="nf">.-clientX</span><span class="w"> </span><span class="nv">mouse</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">assoc </span><span class="ss">:my</span><span class="w"> </span><span class="p">(</span><span class="nf">.-clientY</span><span class="w"> </span><span class="nv">mouse</span><span class="p">)))))</span>
+</pre></div>
+        <p>然后在 <code>view.cljs</code> 中使用 <code>(dispatch [:update-mouse-position mouse])</code>
+          这样的形式来进行调用事件.</p>
+        <p>相比 <code>reg-event-db</code> 其仅仅只修改 <code>database</code> 状态,
+          <code>reg-event-fx</code> 除了修改 <code>database</code>, 还可以进行其他带有 Side Effect 的事情.</p>
+      </li>
+    </ul>
+  </details>
+  </li>
+</ul>
+</details>
+<h1>The Project</h1>
+<p>该部分暂时还请移步 <a href="https://github.com/li-yiyang/write-myself-a-node-editor">仓库</a> 吧&#8230;</p>
+<p>(写完之后再同步进来&#8230; )</p>
+
+  </div><a class="u-url" href="/igem/lets-use-lisp-and-reagent/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

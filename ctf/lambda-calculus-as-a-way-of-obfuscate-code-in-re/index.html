@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[RE] Lambda Calculus as a way to obfuscate code | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[RE] Lambda Calculus as a way to obfuscate code" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 给学校 CTF 出题, 方向是逆向 + 虚拟机, 正好最近在看 Peter Kogge, The Architecture of Symbolic Computers, 那么就不妨换掉之前的那套 &#8220;汇编风格&#8221; 的虚拟机, 而是使用 Lambda 算子来实现一套自洽的 &#8220;纯函数式虚拟机&#8221;? 本篇可以看作是: [[/reading/calculi-of-lambda-conversion/][[Reading] The Calculi of Lambda Conversion]] 这篇阅读笔记的更加实际的一个实现以及具体应用的一个思考. 为了方便大家阅读源码进行一个逆向, 所以我选择使用 Python 来进行书写. Python, 那么体验如何? 感觉一般&#8230; 虽然有类型提示, 但是可能是我的 LSP (ruff) 不够智能? 也有可能是我的数据结构并没有用类的形式 (用的 list, 可能还得手动加类型标记? 不是很清楚), 总之在多次之后就没法正确识别类型并进行补全提示了. (所以不如不带任何类型提示地瞎写? 虽然这么想到, 但是还是写了类型提示, 可能到了后面有点懒得写了, 有一些会缺少类型标记. ) 然后就是代码风格, 不是说游标卡尺的缩进, 其实实际上除了乱写的那部分代码, 感觉很少有非常长的游标卡尺, 并且就算有, 你也不是不能在编辑器里面加美化. 而是感觉不太建议使用递归? 例: def dotimes(n : int, block : callable) -&gt; None: if n &gt; 0: block(n) dotimes(n - 1, block)" />
+<meta property="og:description" content="About 给学校 CTF 出题, 方向是逆向 + 虚拟机, 正好最近在看 Peter Kogge, The Architecture of Symbolic Computers, 那么就不妨换掉之前的那套 &#8220;汇编风格&#8221; 的虚拟机, 而是使用 Lambda 算子来实现一套自洽的 &#8220;纯函数式虚拟机&#8221;? 本篇可以看作是: [[/reading/calculi-of-lambda-conversion/][[Reading] The Calculi of Lambda Conversion]] 这篇阅读笔记的更加实际的一个实现以及具体应用的一个思考. 为了方便大家阅读源码进行一个逆向, 所以我选择使用 Python 来进行书写. Python, 那么体验如何? 感觉一般&#8230; 虽然有类型提示, 但是可能是我的 LSP (ruff) 不够智能? 也有可能是我的数据结构并没有用类的形式 (用的 list, 可能还得手动加类型标记? 不是很清楚), 总之在多次之后就没法正确识别类型并进行补全提示了. (所以不如不带任何类型提示地瞎写? 虽然这么想到, 但是还是写了类型提示, 可能到了后面有点懒得写了, 有一些会缺少类型标记. ) 然后就是代码风格, 不是说游标卡尺的缩进, 其实实际上除了乱写的那部分代码, 感觉很少有非常长的游标卡尺, 并且就算有, 你也不是不能在编辑器里面加美化. 而是感觉不太建议使用递归? 例: def dotimes(n : int, block : callable) -&gt; None: if n &gt; 0: block(n) dotimes(n - 1, block)" />
+<link rel="canonical" href="/ctf/lambda-calculus-as-a-way-of-obfuscate-code-in-re/" />
+<meta property="og:url" content="/ctf/lambda-calculus-as-a-way-of-obfuscate-code-in-re/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-10-12T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[RE] Lambda Calculus as a way to obfuscate code" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-10-12T00:00:00+00:00","datePublished":"2024-10-12T00:00:00+00:00","description":"About 给学校 CTF 出题, 方向是逆向 + 虚拟机, 正好最近在看 Peter Kogge, The Architecture of Symbolic Computers, 那么就不妨换掉之前的那套 &#8220;汇编风格&#8221; 的虚拟机, 而是使用 Lambda 算子来实现一套自洽的 &#8220;纯函数式虚拟机&#8221;? 本篇可以看作是: [[/reading/calculi-of-lambda-conversion/][[Reading] The Calculi of Lambda Conversion]] 这篇阅读笔记的更加实际的一个实现以及具体应用的一个思考. 为了方便大家阅读源码进行一个逆向, 所以我选择使用 Python 来进行书写. Python, 那么体验如何? 感觉一般&#8230; 虽然有类型提示, 但是可能是我的 LSP (ruff) 不够智能? 也有可能是我的数据结构并没有用类的形式 (用的 list, 可能还得手动加类型标记? 不是很清楚), 总之在多次之后就没法正确识别类型并进行补全提示了. (所以不如不带任何类型提示地瞎写? 虽然这么想到, 但是还是写了类型提示, 可能到了后面有点懒得写了, 有一些会缺少类型标记. ) 然后就是代码风格, 不是说游标卡尺的缩进, 其实实际上除了乱写的那部分代码, 感觉很少有非常长的游标卡尺, 并且就算有, 你也不是不能在编辑器里面加美化. 而是感觉不太建议使用递归? 例: def dotimes(n : int, block : callable) -&gt; None: if n &gt; 0: block(n) dotimes(n - 1, block)","headline":"[RE] Lambda Calculus as a way to obfuscate code","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/lambda-calculus-as-a-way-of-obfuscate-code-in-re/"},"url":"/ctf/lambda-calculus-as-a-way-of-obfuscate-code-in-re/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[RE] Lambda Calculus as a way to obfuscate code</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-10-12T00:00:00+00:00" itemprop="datePublished">Oct 12, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>给学校 CTF 出题, 方向是逆向 + 虚拟机, 正好最近在看
+  Peter Kogge, The Architecture of Symbolic Computers,
+  那么就不妨换掉之前的那套 &#8220;汇编风格&#8221; 的虚拟机,
+  而是使用 Lambda 算子来实现一套自洽的 &#8220;纯函数式虚拟机&#8221;?</p>
+<p>本篇可以看作是: [[/reading/calculi-of-lambda-conversion/][[Reading] The Calculi of Lambda Conversion]]
+  这篇阅读笔记的更加实际的一个实现以及具体应用的一个思考.</p>
+<p>为了方便大家阅读源码进行一个逆向, 所以我选择使用 Python
+  来进行书写.</p>
+<details><summary>Python, 那么体验如何? </summary>
+<p>感觉一般&#8230; 虽然有类型提示, 但是可能是我的 LSP (ruff) 不够智能?
+  也有可能是我的数据结构并没有用类的形式 (用的 <code>list</code>, 可能还得手动加类型标记?
+  不是很清楚), 总之在多次之后就没法正确识别类型并进行补全提示了.</p>
+<p>(所以不如不带任何类型提示地瞎写? 虽然这么想到, 但是还是写了类型提示,
+  可能到了后面有点懒得写了, 有一些会缺少类型标记. )</p>
+<p>然后就是代码风格, 不是说游标卡尺的缩进, 其实实际上除了乱写的那部分代码,
+  感觉很少有非常长的游标卡尺, 并且就算有, 你也不是不能在编辑器里面加美化.</p>
+<p>而是感觉不太建议使用递归? 例:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dotimes</span><span class="p">(</span><span class="n">n</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">block</span> <span class="p">:</span> <span class="nb">callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">block</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">dotimes</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+
+<span class="n">dotimes</span><span class="p">(</span><span class="mi">23333</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="n">x</span><span class="p">)</span> <span class="c1"># =&gt; RecursionError: maximum recursion depth exceeded</span>
+</pre></div>
+<p>emm&#8230; 虽然这个代码写得很明显是有问题的 (因为完全可以变成循环),
+  但是对于更加复杂的代码, 这种递归优化感觉还是很需要诶&#8230;</p>
+<p>什么? 你说能不能调包来实现? 我觉得是可以的吧? 比如 <a href="https://github.com/orsinium-labs/python-lambda-calculus/">python-lambda-calculus</a>
+  (随便网上找的). 但是这样感觉就不好玩了. (还是自己作死导致的)</p>
+<p>感觉 Python 的真谛还得是调包, 自己写复杂代码还是有点痛苦的.</p>
+</details>
+<p>详细的代码我会放到仓库里面, 这篇博客里面就不展开写了
+  (当然, 也不会吃饱了撑的用 Lisp 重写, 虽然如果有时间的话,
+  我觉得可以用来作为教学用途来用 Lisp 重写一遍. )</p>
+<details><summary>如果真的用 Lisp 来重写, 或者你喜欢的语言, 你应该做什么? </summary>
+<p>最偷懒的方式: 如果你用的编程语言里面支持 Lambda 匿名函数,
+  直接用它来实现.</p>
+<p>稍微不那么偷懒的方式: 调用一个 parser 库,
+  解析 lambda 算子表达式到 ast, 然后从 ast 按照规则进行约化.</p>
+<p>更加不偷懒的方式: 实现一个 parser 库 (我想的方式)</p>
+<p>首先实现 BNF 语法的解析, 这个部分可以先写一个非常简单的固定语法,
+  然后实现 BNF 到 BNF AST 的过程. 提取所有的终结符 (terminator),
+  (假设终结符以正则表达式的形式进行). 那么词法转换器 (tokenrizer)
+  应当为这些正则表达式的或. 大概的一个伪代码如下:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">bnf-ast</span><span class="w"> </span><span class="p">(</span><span class="nf">parse-bnf</span><span class="w"> </span><span class="nv">*bnf-definition-for-some-language*</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">regexp</span><span class="w">  </span><span class="p">(</span><span class="nf">regexp:or-by-list</span><span class="w"> </span><span class="p">(</span><span class="nf">terminators</span><span class="w"> </span><span class="nv">bnf-ast</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">regexp:scan</span><span class="w"> </span><span class="nv">regexp</span><span class="w"> </span><span class="nv">input-code</span><span class="p">))</span><span class="w"> </span><span class="c1">;; =&gt; tokens</span>
+</pre></div>
+<p>这里的 REGEXP 可以参考 <a href="/misc/simple-regexp-for-parser/">A Simple Regexp for Parser</a> 一文.
+  不过会不会出现简单的 <code>or</code> 使得正则匹配出现问题? (懒得管了, 到时候再说).</p>
+<p>然后在得到 <code>token-list</code> 之后, 就可以自动根据规则构造递归解析的函数.</p>
+<p>以上, 相当于实现了一个 CC (compiler compiler) 的工作,
+  任务量并不复杂, 并且可以实现自举, 适合作为编译原理前端入门.
+  在这之后可以考虑剪枝优化, 前端检查之类的工作?
+  或者可以到后端考虑实现除了递归之外的解析方法.</p>
+<p>然后实现了这个小编译器的工作, 就可以去实现 lambda calculus
+  的计算规则 (正则序和应用序), 很适合作为宏和一般函数调用的入门,
+  并且从中也可以进一步展开正则序, 来介绍一些计算图的编译期优化,
+  从而实现计算程序的自动并行化.</p>
+<p>最后, 在 lambda calculus 讲解完后, 开始构造一个小 DSL,
+  从这个 DSL 到 lambda calclus 表达式, 然后可以去尝试自举.
+  或者可以考虑在各种平台上的编译都行, 感觉到了这步可以布置那种大作业,
+  让学生自己整活了. 比如让大家用 lambda calculus 写点小程序,
+  或者给自己的 DSL 增加一些其他的功能 (比如 IO 之类的).</p>
+<p>如果还有时间, 没准可以考虑针对 lambda calculus 进行硬件上的设计.
+  (虽然这一块我还没怎么仔细折腾).</p>
+</details>
+<p>仓库见 <a href="https://github.com/li-yiyang/lambda-calculus-vm">li-yiyang/lambda-calculus-vm</a>.</p>
+<h1>为什么考虑 Lambda Calculus 作为虚拟机?</h1>
+<p>当我们在考虑对代码进行混淆的时候, 理论上的目标是尽可能提高逆向的难度,
+  同时尽量保证原本程序的运行效率.</p>
+<h2>逆向的难度</h2>
+<p>前者用下面的一个例子估计就非常容易理解了:</p>
+<details><summary>代码太长了, 折叠掉</summary>
+<div class="highlight"><pre><span></span>(λA|(λB|(λC|(λD|(λE|(λF|(λG|(λH|(λI|(λJ|(λK|(λL|((((λw|((w(λ\
+x|(λy|y)))(λx|(λy|x))))(((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))\
+))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|\
+(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|\
+z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|\
+y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x\
+(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(\
+λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))\
+b)(λs|(λz|(sz)))))(λs|(λz|(s(s(sz)))))))(λs|(λz|(s(s(s(s(sz)\
+))))))))K))(λx|(λy|y)))((((λw|((w(λx|(λy|y)))(λx|(λy|x))))((\
+(λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λ\
+w|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx\
+|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))(\
+(λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy\
+|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))\
+(λu|u))))))x)))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)\
+z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz)))))(λs|(λz\
+|(s(s(s(sz))))))))(λs|(λz|(s(s(s(s(s(s(s(s(sz)))))))))))))C)\
+)(λx|(λy|y)))((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb|((\
+(λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(\
+λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(\
+((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λ\
+x|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λ\
+x|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u)))))\
+)x)))b)a)))))((λb|(λs|(λz|(s(s(s(s(s(s(sz))))))))))(λs|(λz|(\
+s(s(s(s(s(s(s(s(sz)))))))))))))J))(λx|(λy|y)))(((((λa|(λb|((\
+(λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(\
+λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(\
+((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λ\
+x|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λ\
+x|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u)))))\
+)x)))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x))\
+)(λs|(λz|(s(s(sz))))))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz)\
+)))))(λs|(λz|(s(s(s(s(s(sz))))))))))I)(((((λa|(λb|(((λw|(λz|\
+((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)\
+))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((\
+y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a\
+)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(\
+λy|(λs|(x(ys)))))b)(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)\
+))(λs|(λz|(sz))))(((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(sz))))))\
+)(λs|(λz|(s(sz))))))(λs|(λz|(s(s(sz)))))))H)(((((λa|(λb|(((λ\
+w|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy\
+|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((\
+x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|\
+(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|\
+(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x\
+)))b)a)))))((λb|(λs|(λz|(s(s(s(sz)))))))(λs|(λz|(s(s(s(s(s(s\
+(sz)))))))))))E)((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb\
+|(((λw|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λ\
+x|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λ\
+z|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((\
+x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(\
+((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))\
+))))x)))b)a)))))((λb|(λs|(λz|(sz))))(λs|(λz|(s(s(s(sz)))))))\
+)B))(λx|(λy|y)))(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λ\
+x|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y\
+))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λ\
+u|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(λy|((\
+y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(λs\
+|(λz|(s(s(sz)))))))(λs|(λz|(s(sz))))))(λs|(λz|(s(s(s(s(s(sz)\
+)))))))))L)((((λw|((w(λx|(λy|y)))(λx|(λy|x))))(((λa|(λb|(((λ\
+w|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy\
+|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((\
+x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|\
+(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|\
+(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x\
+)))b)a)))))((λb|(((λx|(λy|((y(λx|(λy|(λz|(y((xy)z))))))x)))(\
+((λx|(λy|(λs|(x(ys)))))b)(λs|(λz|(s(sz))))))(λs|(λz|z))))(λs\
+|(λz|(s(s(s(s(s(sz))))))))))A))(λx|(λy|y)))(((((λa|(λb|(((λw\
+|(λz|((wz)(λx|(λy|y)))))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|\
+y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x\
+(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))a)b)))((λx|(((x(λx|(\
+λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y))))(((λx|(\
+λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λu|u))))))x)\
+))b)a)))))((λb|(λs|(λz|(s(sz)))))(λs|(λz|(s(s(s(s(s(s(s(s(s(\
+sz))))))))))))))D)(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))(\
+(λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy\
+|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))\
+(λu|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y))\
+)(λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg\
+|(λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(((λx|(λy|\
+((y(λx|(λy|(λz|(y((xy)z))))))x)))(((λx|(λy|(λs|(x(ys)))))b)(\
+λs|(λz|(sz)))))(λs|(λz|(sz)))))(λs|(λz|(s(s(s(s(s(s(s(s(s(sz\
+))))))))))))))G)(((((λa|(λb|(((λw|(λz|((wz)(λx|(λy|y)))))((λ\
+x|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(λx|(λy|x)))))(λx|(λy|y\
+))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(λh|(h(gs)))))(λu|z))(λ\
+u|u))))))x)))a)b)))((λx|(((x(λx|(λy|y)))(λw|((w(λx|(λy|y)))(\
+λx|(λy|x)))))(λx|(λy|y))))(((λx|(λy|((y(λx|(λs|(λz|(((x(λg|(\
+λh|(h(gs)))))(λu|z))(λu|u))))))x)))b)a)))))((λb|(λs|(λz|(sz)\
+)))(λs|(λz|(s(s(s(sz))))))))F)(λx|(λy|x)))(λx|(λy|y))))(λx|(\
+λy|y))))(λx|(λy|y)))))(λx|(λy|y)))))(λx|(λy|y))))(λx|(λy|y))\
+))(λx|(λy|y))))))))))))))))))
+</pre></div>
+</details>
+<p>对应的逻辑大概如下所示:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="w"> </span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">flag-b</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">flag-b</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">nil</span>
+<span class="w">          </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="o">...</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">nil</span><span class="p">))</span>
+</pre></div>
+<p>原本的逻辑非常简单吧? 但是却可以被展开混淆为 Lambda 算子表示.</p>
+<details><summary>当然不是牢不可破的</summary>
+<p>因为这个逻辑是一个一一匹配 (虽然不是正序),
+  所以完全是可能逐位爆破的. 并且为了防止这个计算过程中爆了 Python
+  的递归限制, 输入的 flag 只有 <code>a-z</code> 这 26 个字母,
+  可以说爆破难度很小了.</p>
+<p>(不过我在 task 的 tip 里面应该留了足够详细的提示了)</p>
+<p>不过这种应该怪混淆器吗? 这很明显是代码逻辑层的问题吧 (笑)</p>
+</details>
+<h2>程序运行效率</h2>
+<p>虽然看起来程序是解释运行的, 这样的运行效率是非常低下的. 诚然,
+  效率上如果没有专门设计的硬件的话, 应该是会有一定的损耗的.</p>
+<h1>Lambda Calculus 的表示</h1>
+<p>理论上来说, 我们可以用 Lambda Calculus 等效任意的程序,
+  但这是如何实现的? (详细请参考 manual 从 <code>.m(5)</code> 到 <code>.m(7)</code> 的内容)</p>
+<p>如果你不想仔细阅读, 或者想要直接用自己熟悉的编程语言来进行测试,
+  这里有一个非常快速的介绍: <code>.m(10)</code>.</p>
+<details><summary>折叠了</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="kd">#:lambda-machine</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:cl</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:lambda-machine</span><span class="p">)</span>
+
+<span class="c1">;; Macro helper</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">&lt;-</span><span class="w"> </span><span class="p">(</span><span class="nf">fn</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Function application. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">functionp</span><span class="w"> </span><span class="nv">fn</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">fn</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span>
+<span class="w">      </span><span class="o">`</span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="o">,</span><span class="nv">fn</span><span class="w"> </span><span class="o">,</span><span class="nv">arg</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">&lt;-*</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">exprs</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nv">exprs</span><span class="p">)</span><span class="w"> </span><span class="nv">expr</span>
+<span class="w">      </span><span class="o">`</span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="o">,</span><span class="nv">expr</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">exprs</span><span class="p">))</span><span class="w"> </span><span class="o">,@</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">exprs</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">lambda-list</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Quick wrapper for the lambda calculus. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">endp</span><span class="w"> </span><span class="nv">lambda-list</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">body</span>
+<span class="w">      </span><span class="o">`</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">lambda-list</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignorable</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">lambda-list</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">lambda-list</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">body</span><span class="p">))))</span>
+
+<span class="c1">;; Basic Components</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+zero+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Church number zero. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+successor+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;Inc lambda church number. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+addition+</span><span class="w">  </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">j</span><span class="w"> </span><span class="nv">k</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">k</span><span class="w"> </span><span class="nv">+successor+</span><span class="w"> </span><span class="nv">j</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Add number j and k. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+multiplication+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">s</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;Multiply number x and y. &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+predecessor+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">s</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">g</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">s</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">u</span><span class="p">)</span><span class="w"> </span><span class="nv">z</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">u</span><span class="p">)</span><span class="w"> </span><span class="nv">u</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;Dec number x&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+subtraction+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">+predecessor+</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;x - y&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+true+</span><span class="w">  </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+false+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span><span class="w"> </span><span class="nv">y</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+not+</span><span class="w">   </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">w</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="nv">+false+</span><span class="w"> </span><span class="nv">+true+</span><span class="p">)))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+zerop+</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">+false+</span><span class="w"> </span><span class="nv">+not+</span><span class="w"> </span><span class="nv">+false+</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+y-combinator+</span>
+<span class="w">  </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">y</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">x</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+cons+</span><span class="w">  </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+car+</span><span class="w">   </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">a</span><span class="p">))))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+cdr+</span><span class="w">   </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">b</span><span class="p">))))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+nil+</span><span class="w">   </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">a</span><span class="p">))</span>
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">+nilp+</span><span class="w">  </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="p">(</span><span class="k">λ</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="nv">+false+</span><span class="p">))))</span>
+
+<span class="c1">;; DSL on Lambda Calculus</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">-&gt;church-number</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;=</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">+zero+</span><span class="w"> </span><span class="p">(</span><span class="nf">&lt;-</span><span class="w"> </span><span class="nv">+successor+</span><span class="w"> </span><span class="p">(</span><span class="nf">-&gt;church-number</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">num</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">church-number-&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">church-number</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">church-number</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;1+</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">true-false-&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">bool</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">&lt;-*</span><span class="w"> </span><span class="nv">bool</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">-&gt;true-false</span><span class="w"> </span><span class="p">(</span><span class="nf">bool</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">bool</span><span class="w"> </span><span class="nv">+true+</span><span class="w"> </span><span class="nv">+false+</span><span class="p">))</span>
+</pre></div>
+</details>
+<p>从这几个基本的元素, 理论上就可以实现任意的函数与程序了.</p>
+<h1>Lambda Calculus 的性能与优化</h1>
+<p>虽然现在还是可以接受的慢, 但是如果程序更加复杂和庞大,
+  那么这慢一点估计就不是那么能够接受了.</p>
+<p>那么该如何提高性能? 一个做法就是进行并行化的计算,
+  因为可以发现, 在分支的化简上, 如果一次只化简一部分,
+  但是另外一部分仍然还是可以单独化简而不需要等到下次再化简
+  (因为完全没有影响, 所有的函数作用域都是有限的. )</p>
+<p>另一个做法就是按照 The Architecture of Symbolic Computers
+  中提到的那样用专用设计的芯片来进行加速 (这部分还没有读),
+  感觉会很有意思.</p>
+<h1>后记</h1>
+<p>虽然但是, 我觉得 LVM REPL 是一个比较失败的代码练习,
+  因为我把里面的代码基本上写死了, 没啥拓展性也不是很灵活.
+  并且主要是没有一个比较实际的目标, 导致写的时候很坐牢.</p>
+
+  </div><a class="u-url" href="/ctf/lambda-calculus-as-a-way-of-obfuscate-code-in-re/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

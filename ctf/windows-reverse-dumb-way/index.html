@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Windows Reverse (A Dumb Way) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Windows Reverse (A Dumb Way)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Finally, Parallels Desktop 注: 虽然我不提倡, 但是毕竟难以耐住它贵啊. 一个可能可以的 链接. 我是学生, 请给我学生版 (bushi). 如果不考虑效果的话, 实际上使用 UTM 虚拟机的话我感觉还是很好用的. 能够模拟 PD 无法模拟的一些架构的系统, PD 目前只能模拟和 M1 一样的 arm 架构的一类系统. 坏, 太久没做逆向了, 完全都忘光了. 估计还要复习一下 Linux 系统的逆向. About Windows About Windows 对于 Windows 程序, 其中有一个比较要命的东西就是 Windows API. 相比 Linux 逆向遇到的那些用 C 写的简单直白的暴力实现的程序, 感觉在 Windows 程序里面遇到的更多的是一些意义不明的奇怪函数 (API) 调用. 下面的来源于《加密与解密》第 4 版: 通过动态链接库 DLL 来实现调用 API, 主要的 API 有: API (DLL)Usage Kernel (KERNEL32.DLL)操作系统核心功能服务, 包含进程和线程控制, 内存管理, 文件访问 User (USER32.DLL)用户接口, 键盘鼠标, 窗口和菜单管理 GDI (GDI32.DLL)图形设备接口 关于函数的命名: 比如说遇到了两个函数 MessageBoxA 和 MessageBoxW (实际上都是 MessageBox), 那么有什么区别呢? 以 A 结尾的是 ANSI 类型 (单字节方式) 以 W 结尾的是 Widechars (Unicode) 宽字节方式 那么在调试的时候遇到的话, 就可以不用操心这些乱七八糟的东西 不过可能会有一个比较有意思的现象, 即在调用 MessageBoxA 的时候, 实际上做了一个变换, 最后将 ANSI 字串变成 Unicode 字串, 然后调用 MessageBoxW (什么皮套人). 一些系统的消息: Windows 通过消息驱动, 所以在调试程序的时候可以通过跟踪信息来 一些常用的信息函数: Message FunctionUsageReturn Value SendMessage调用一个窗口的窗口函数, 将消息发送给窗口根据具体消息是否投递成功来返回非零 (TRUE) 与否. WM_COMMAND用户从菜单或按钮中选择命令, 或者控件发送消息给父窗口, 或者快捷键发送时若程序处理消息则返回零 WM_DESTROY窗口被销毁时发送信息 02h如果程序处理消息则返回零 WM_GETTEXT文本复制消息 0dh返回被复制的字符数量 WM_QUIT在程序调用 PostQuitMessage 时生成没有返回值 WM_LBUTTONDOWN光标停在窗口的客户区且按下鼠标左键的时候, 若未被捕获, 则发送给光标下窗口; 否则发送已经捕获鼠标动作的窗口如果处理, 返回值为零 虚拟内存: 实现方法和过程: 应用程序启动, 创建进程并分配一个 (2G?) 虚拟地址. 虚拟内存管理器将应用程序的代码映射到虚拟地址的某个位置, 将当前需要的代码读入物理地址 使用的 DLL 被映射到进程的虚拟地址空间里面, 在需要的时候才读入物理内存 堆栈和数据从物理内存开始分配并映射到虚拟地址里 应用程序通过使用虚拟地址空间中的地址开始执行, 然后虚拟内存管理器将内存访问映射到物理位置 应用程序不会直接访问物理地址 虚拟内存管理器通过虚拟地址的访问请求来控制所有的物理地址的访问 注: 我感觉可能需要先编几个 Windows 程序之后才能够学会这些麻烦的东西. 之后如果有了真正理解的话再重新写一遍吧. 现在因为基本就是抄写参考书, 所以注释掉了. IDA Pro or Ghidra 关于 Ghidra 的话, 之前有一个 介绍. 尽管当时说应该尽量少用盗版, 但是读书人的事, 怎么能叫盗版呢&#8230; IDA Free 或者 Ghidra 实际上就可以满足大部分的功能了, 尽管不一定能够做到尽善尽美就是了. (但是我可以都要啊, 乐. 哪个更加好用就用哪个, 人没有必要如此专一 bushi. ) WinDbg x64dbg and ret-sync 在 Windows 上有各种的调试工具, 但是巨硬维护了一个叫 WinDbg 的调试工具. 界面花里胡哨的. 好用是好用, 但是有一个问题, 就是在本地调试的时候, 会有各种各样的限制. (甚至连断点也不能, 淦, 是我大意了) 注 好像也不是不行, 网上看到有一个做法是开 2 个 Parrel Desktop 来调试, 不过光开一个我的电脑估计就已经吃不消了. Oh! Mac Air! 你 TMD 可是快一万的电脑啊! 不过尽管不能够用 WinDbg 调试的话, 实际上它还能够用于查看一些符号之类的方便的操作. 用于辅助分析还是非常方便的. 于是我换成了 x64dbg, 其他还有的有 ollydbg 之类的. 各种各样的东西. 可以使用一个叫做 ret-sync 的工具来将这些工具都串联起来, 形成一个比较好用的工作流. 踩了太多坑了, 之后一定要记录一下. 在配置和安装 ret-sync 的过程里面, 还是有非常多的坑的: Ghidra 10.2.3: 需要按照 repo 里面的介绍, 先编译. 然后选择 File - Install Extensions&#8230; x64dbg, x32dbg: 实际上需要对 win32, x86 每个版本都编译一次 简单来说, 就是用 VS 打开 ext_x64dbg 文件夹中的 x64dbg_sync.sln 文件. 然后选择对应的平台版本, 然后选择 Build 后将生成的文件放到对应的文件夹下. 对于 x64dbg, 需要 x64 版本, 编译结果是 .dp64 后缀的文件, 放到 x64/plugins 文件夹内. 对于 x32dbg, 需要 Win32 版本, 编译结果是 .dp32 后缀的文件, 放到 x32/plugins 文件夹内. windbg: 编译的方法和 x64dbg 一样, 需要放到 repo 里面指定的位置后, 在程序中使用 !load sync 后使用. 因为 ret-sync 通过服务器来传递信息, 所以需要配置好服务器地址. 服务器地址需要在 ~/.sync 里面说明. 对于 Windows 系统, ~ 在 User/yourname 处. 一个小小的坑就是虚拟机和宿主机的 IP 是不一样的, 所以需要给虚拟机里面的程序指定一个宿主机的 IP: 比如我的电脑的 IP 是 233.333.333.3, 开放的端口是 9100, 于是 .sync 应该写成: [INTERFACE] host=233.333.333.3 port=9100 (注: 一个方便的查看 ip 的方法 ifconfig -a | grep inet. 尽管在校园网里面有时候挺麻烦的&#8230; ) 一个展示的例子: 之后会将这些东西作为一个工作流来使用, 方便以后跑路换环境. 这里还是和 GDB 以及 LLDB 来联系在一起来学会比较方便: MethodGhidra ret-syncx64dbgWinDbgGDBLLDB Documents and Helpret-syncx64dbg (EN), x64dbg (CN) 0.1标准调试方法, 或者是 ? 获得基础命令列表, .help &lt;cmd&gt; 列出帮助信息Debugging with GDBTutorial LLDB Command Grammar以快捷键操作为主GUI 为主, 命令: cmd arg1, arg2, ...不区分大小写, 元命令 (调试器自带), 以 . 开头, 拓展命令以 ! 开头&lt;noun&gt; &lt;verb&gt; [-options [option-value]] [argument [argument ...]] Load Programsync 同步 BreakPointF2 断点bp, SetBPX 设置; DeleteBPX, bpc 删除bp, bu, bm 可以用于设置断点; bl 列出断点break [name/addr] 下断点, info break 列出断点列表br s [-n name/-a addr] 下断点, br l 列出断点列表 Examining Variablesvar, varlist 显示变量x Module!Symbol 显示符号info [args/locals] 显示环境参数与局部变量 p varfr v [-a/v_name] 列出符号, ta v name List Functionslm 列出符号表info function 列出函数image lookup -r -s &lt;FUNC_REGEX&gt; RunF5 运行g 或者 F5 运行程序r 或者 run 运行程序process launch 或者 r 或者 run StepF10 单步步过st, StepOver 单步步过p 或者 F10 单步执行, 跳过 call 命令s 或者 steps 或者 thread step-in NextF11 单步跟踪sti, StepInto 单步步进t 或者 F8 或者 F11, 跟进 call 指令n 或者 nextn 或者 next, thread step-over StackGUI 可以直接看k 系列的命令, 给出 stack trace 就是一些非常简单的操作, 不过我觉得只看操作列表可能根本不知道是什么, 还是写点代码来试试看会比较好一点. 人难免烂俗 尽管我非常讨厌一口气就要吃掉我好多空间的 VS, 但是它毕竟是微软亲儿子 (bushi), 于是忍痛割爱, 删掉了 80G 的地铁. 感到十分惋惜 (bushi). 在 官网 下载 内存毁灭者, 选择安装 Desktop Development with C++. 新建工程选择空白工程&#8230; 然后在 Source Files 里面添加代码并编译. (注: 貌似最新的 Windows 有转译的功能, 可以让 Arm 架构的系统运行 x86 的程序. 唯一需要注意的是, 需要在 VS 的窗口选择 Release (模拟更加真实的环境), x86 (目标架构), 最后选择编译. ) Hello World Example Hello World Example (Too Easy Skipped) #include &lt;stdio.h&gt;" />
+<meta property="og:description" content="Finally, Parallels Desktop 注: 虽然我不提倡, 但是毕竟难以耐住它贵啊. 一个可能可以的 链接. 我是学生, 请给我学生版 (bushi). 如果不考虑效果的话, 实际上使用 UTM 虚拟机的话我感觉还是很好用的. 能够模拟 PD 无法模拟的一些架构的系统, PD 目前只能模拟和 M1 一样的 arm 架构的一类系统. 坏, 太久没做逆向了, 完全都忘光了. 估计还要复习一下 Linux 系统的逆向. About Windows About Windows 对于 Windows 程序, 其中有一个比较要命的东西就是 Windows API. 相比 Linux 逆向遇到的那些用 C 写的简单直白的暴力实现的程序, 感觉在 Windows 程序里面遇到的更多的是一些意义不明的奇怪函数 (API) 调用. 下面的来源于《加密与解密》第 4 版: 通过动态链接库 DLL 来实现调用 API, 主要的 API 有: API (DLL)Usage Kernel (KERNEL32.DLL)操作系统核心功能服务, 包含进程和线程控制, 内存管理, 文件访问 User (USER32.DLL)用户接口, 键盘鼠标, 窗口和菜单管理 GDI (GDI32.DLL)图形设备接口 关于函数的命名: 比如说遇到了两个函数 MessageBoxA 和 MessageBoxW (实际上都是 MessageBox), 那么有什么区别呢? 以 A 结尾的是 ANSI 类型 (单字节方式) 以 W 结尾的是 Widechars (Unicode) 宽字节方式 那么在调试的时候遇到的话, 就可以不用操心这些乱七八糟的东西 不过可能会有一个比较有意思的现象, 即在调用 MessageBoxA 的时候, 实际上做了一个变换, 最后将 ANSI 字串变成 Unicode 字串, 然后调用 MessageBoxW (什么皮套人). 一些系统的消息: Windows 通过消息驱动, 所以在调试程序的时候可以通过跟踪信息来 一些常用的信息函数: Message FunctionUsageReturn Value SendMessage调用一个窗口的窗口函数, 将消息发送给窗口根据具体消息是否投递成功来返回非零 (TRUE) 与否. WM_COMMAND用户从菜单或按钮中选择命令, 或者控件发送消息给父窗口, 或者快捷键发送时若程序处理消息则返回零 WM_DESTROY窗口被销毁时发送信息 02h如果程序处理消息则返回零 WM_GETTEXT文本复制消息 0dh返回被复制的字符数量 WM_QUIT在程序调用 PostQuitMessage 时生成没有返回值 WM_LBUTTONDOWN光标停在窗口的客户区且按下鼠标左键的时候, 若未被捕获, 则发送给光标下窗口; 否则发送已经捕获鼠标动作的窗口如果处理, 返回值为零 虚拟内存: 实现方法和过程: 应用程序启动, 创建进程并分配一个 (2G?) 虚拟地址. 虚拟内存管理器将应用程序的代码映射到虚拟地址的某个位置, 将当前需要的代码读入物理地址 使用的 DLL 被映射到进程的虚拟地址空间里面, 在需要的时候才读入物理内存 堆栈和数据从物理内存开始分配并映射到虚拟地址里 应用程序通过使用虚拟地址空间中的地址开始执行, 然后虚拟内存管理器将内存访问映射到物理位置 应用程序不会直接访问物理地址 虚拟内存管理器通过虚拟地址的访问请求来控制所有的物理地址的访问 注: 我感觉可能需要先编几个 Windows 程序之后才能够学会这些麻烦的东西. 之后如果有了真正理解的话再重新写一遍吧. 现在因为基本就是抄写参考书, 所以注释掉了. IDA Pro or Ghidra 关于 Ghidra 的话, 之前有一个 介绍. 尽管当时说应该尽量少用盗版, 但是读书人的事, 怎么能叫盗版呢&#8230; IDA Free 或者 Ghidra 实际上就可以满足大部分的功能了, 尽管不一定能够做到尽善尽美就是了. (但是我可以都要啊, 乐. 哪个更加好用就用哪个, 人没有必要如此专一 bushi. ) WinDbg x64dbg and ret-sync 在 Windows 上有各种的调试工具, 但是巨硬维护了一个叫 WinDbg 的调试工具. 界面花里胡哨的. 好用是好用, 但是有一个问题, 就是在本地调试的时候, 会有各种各样的限制. (甚至连断点也不能, 淦, 是我大意了) 注 好像也不是不行, 网上看到有一个做法是开 2 个 Parrel Desktop 来调试, 不过光开一个我的电脑估计就已经吃不消了. Oh! Mac Air! 你 TMD 可是快一万的电脑啊! 不过尽管不能够用 WinDbg 调试的话, 实际上它还能够用于查看一些符号之类的方便的操作. 用于辅助分析还是非常方便的. 于是我换成了 x64dbg, 其他还有的有 ollydbg 之类的. 各种各样的东西. 可以使用一个叫做 ret-sync 的工具来将这些工具都串联起来, 形成一个比较好用的工作流. 踩了太多坑了, 之后一定要记录一下. 在配置和安装 ret-sync 的过程里面, 还是有非常多的坑的: Ghidra 10.2.3: 需要按照 repo 里面的介绍, 先编译. 然后选择 File - Install Extensions&#8230; x64dbg, x32dbg: 实际上需要对 win32, x86 每个版本都编译一次 简单来说, 就是用 VS 打开 ext_x64dbg 文件夹中的 x64dbg_sync.sln 文件. 然后选择对应的平台版本, 然后选择 Build 后将生成的文件放到对应的文件夹下. 对于 x64dbg, 需要 x64 版本, 编译结果是 .dp64 后缀的文件, 放到 x64/plugins 文件夹内. 对于 x32dbg, 需要 Win32 版本, 编译结果是 .dp32 后缀的文件, 放到 x32/plugins 文件夹内. windbg: 编译的方法和 x64dbg 一样, 需要放到 repo 里面指定的位置后, 在程序中使用 !load sync 后使用. 因为 ret-sync 通过服务器来传递信息, 所以需要配置好服务器地址. 服务器地址需要在 ~/.sync 里面说明. 对于 Windows 系统, ~ 在 User/yourname 处. 一个小小的坑就是虚拟机和宿主机的 IP 是不一样的, 所以需要给虚拟机里面的程序指定一个宿主机的 IP: 比如我的电脑的 IP 是 233.333.333.3, 开放的端口是 9100, 于是 .sync 应该写成: [INTERFACE] host=233.333.333.3 port=9100 (注: 一个方便的查看 ip 的方法 ifconfig -a | grep inet. 尽管在校园网里面有时候挺麻烦的&#8230; ) 一个展示的例子: 之后会将这些东西作为一个工作流来使用, 方便以后跑路换环境. 这里还是和 GDB 以及 LLDB 来联系在一起来学会比较方便: MethodGhidra ret-syncx64dbgWinDbgGDBLLDB Documents and Helpret-syncx64dbg (EN), x64dbg (CN) 0.1标准调试方法, 或者是 ? 获得基础命令列表, .help &lt;cmd&gt; 列出帮助信息Debugging with GDBTutorial LLDB Command Grammar以快捷键操作为主GUI 为主, 命令: cmd arg1, arg2, ...不区分大小写, 元命令 (调试器自带), 以 . 开头, 拓展命令以 ! 开头&lt;noun&gt; &lt;verb&gt; [-options [option-value]] [argument [argument ...]] Load Programsync 同步 BreakPointF2 断点bp, SetBPX 设置; DeleteBPX, bpc 删除bp, bu, bm 可以用于设置断点; bl 列出断点break [name/addr] 下断点, info break 列出断点列表br s [-n name/-a addr] 下断点, br l 列出断点列表 Examining Variablesvar, varlist 显示变量x Module!Symbol 显示符号info [args/locals] 显示环境参数与局部变量 p varfr v [-a/v_name] 列出符号, ta v name List Functionslm 列出符号表info function 列出函数image lookup -r -s &lt;FUNC_REGEX&gt; RunF5 运行g 或者 F5 运行程序r 或者 run 运行程序process launch 或者 r 或者 run StepF10 单步步过st, StepOver 单步步过p 或者 F10 单步执行, 跳过 call 命令s 或者 steps 或者 thread step-in NextF11 单步跟踪sti, StepInto 单步步进t 或者 F8 或者 F11, 跟进 call 指令n 或者 nextn 或者 next, thread step-over StackGUI 可以直接看k 系列的命令, 给出 stack trace 就是一些非常简单的操作, 不过我觉得只看操作列表可能根本不知道是什么, 还是写点代码来试试看会比较好一点. 人难免烂俗 尽管我非常讨厌一口气就要吃掉我好多空间的 VS, 但是它毕竟是微软亲儿子 (bushi), 于是忍痛割爱, 删掉了 80G 的地铁. 感到十分惋惜 (bushi). 在 官网 下载 内存毁灭者, 选择安装 Desktop Development with C++. 新建工程选择空白工程&#8230; 然后在 Source Files 里面添加代码并编译. (注: 貌似最新的 Windows 有转译的功能, 可以让 Arm 架构的系统运行 x86 的程序. 唯一需要注意的是, 需要在 VS 的窗口选择 Release (模拟更加真实的环境), x86 (目标架构), 最后选择编译. ) Hello World Example Hello World Example (Too Easy Skipped) #include &lt;stdio.h&gt;" />
+<link rel="canonical" href="/ctf/windows-reverse-dumb-way/" />
+<meta property="og:url" content="/ctf/windows-reverse-dumb-way/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-03-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Windows Reverse (A Dumb Way)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-03-04T00:00:00+00:00","datePublished":"2023-03-04T00:00:00+00:00","description":"Finally, Parallels Desktop 注: 虽然我不提倡, 但是毕竟难以耐住它贵啊. 一个可能可以的 链接. 我是学生, 请给我学生版 (bushi). 如果不考虑效果的话, 实际上使用 UTM 虚拟机的话我感觉还是很好用的. 能够模拟 PD 无法模拟的一些架构的系统, PD 目前只能模拟和 M1 一样的 arm 架构的一类系统. 坏, 太久没做逆向了, 完全都忘光了. 估计还要复习一下 Linux 系统的逆向. About Windows About Windows 对于 Windows 程序, 其中有一个比较要命的东西就是 Windows API. 相比 Linux 逆向遇到的那些用 C 写的简单直白的暴力实现的程序, 感觉在 Windows 程序里面遇到的更多的是一些意义不明的奇怪函数 (API) 调用. 下面的来源于《加密与解密》第 4 版: 通过动态链接库 DLL 来实现调用 API, 主要的 API 有: API (DLL)Usage Kernel (KERNEL32.DLL)操作系统核心功能服务, 包含进程和线程控制, 内存管理, 文件访问 User (USER32.DLL)用户接口, 键盘鼠标, 窗口和菜单管理 GDI (GDI32.DLL)图形设备接口 关于函数的命名: 比如说遇到了两个函数 MessageBoxA 和 MessageBoxW (实际上都是 MessageBox), 那么有什么区别呢? 以 A 结尾的是 ANSI 类型 (单字节方式) 以 W 结尾的是 Widechars (Unicode) 宽字节方式 那么在调试的时候遇到的话, 就可以不用操心这些乱七八糟的东西 不过可能会有一个比较有意思的现象, 即在调用 MessageBoxA 的时候, 实际上做了一个变换, 最后将 ANSI 字串变成 Unicode 字串, 然后调用 MessageBoxW (什么皮套人). 一些系统的消息: Windows 通过消息驱动, 所以在调试程序的时候可以通过跟踪信息来 一些常用的信息函数: Message FunctionUsageReturn Value SendMessage调用一个窗口的窗口函数, 将消息发送给窗口根据具体消息是否投递成功来返回非零 (TRUE) 与否. WM_COMMAND用户从菜单或按钮中选择命令, 或者控件发送消息给父窗口, 或者快捷键发送时若程序处理消息则返回零 WM_DESTROY窗口被销毁时发送信息 02h如果程序处理消息则返回零 WM_GETTEXT文本复制消息 0dh返回被复制的字符数量 WM_QUIT在程序调用 PostQuitMessage 时生成没有返回值 WM_LBUTTONDOWN光标停在窗口的客户区且按下鼠标左键的时候, 若未被捕获, 则发送给光标下窗口; 否则发送已经捕获鼠标动作的窗口如果处理, 返回值为零 虚拟内存: 实现方法和过程: 应用程序启动, 创建进程并分配一个 (2G?) 虚拟地址. 虚拟内存管理器将应用程序的代码映射到虚拟地址的某个位置, 将当前需要的代码读入物理地址 使用的 DLL 被映射到进程的虚拟地址空间里面, 在需要的时候才读入物理内存 堆栈和数据从物理内存开始分配并映射到虚拟地址里 应用程序通过使用虚拟地址空间中的地址开始执行, 然后虚拟内存管理器将内存访问映射到物理位置 应用程序不会直接访问物理地址 虚拟内存管理器通过虚拟地址的访问请求来控制所有的物理地址的访问 注: 我感觉可能需要先编几个 Windows 程序之后才能够学会这些麻烦的东西. 之后如果有了真正理解的话再重新写一遍吧. 现在因为基本就是抄写参考书, 所以注释掉了. IDA Pro or Ghidra 关于 Ghidra 的话, 之前有一个 介绍. 尽管当时说应该尽量少用盗版, 但是读书人的事, 怎么能叫盗版呢&#8230; IDA Free 或者 Ghidra 实际上就可以满足大部分的功能了, 尽管不一定能够做到尽善尽美就是了. (但是我可以都要啊, 乐. 哪个更加好用就用哪个, 人没有必要如此专一 bushi. ) WinDbg x64dbg and ret-sync 在 Windows 上有各种的调试工具, 但是巨硬维护了一个叫 WinDbg 的调试工具. 界面花里胡哨的. 好用是好用, 但是有一个问题, 就是在本地调试的时候, 会有各种各样的限制. (甚至连断点也不能, 淦, 是我大意了) 注 好像也不是不行, 网上看到有一个做法是开 2 个 Parrel Desktop 来调试, 不过光开一个我的电脑估计就已经吃不消了. Oh! Mac Air! 你 TMD 可是快一万的电脑啊! 不过尽管不能够用 WinDbg 调试的话, 实际上它还能够用于查看一些符号之类的方便的操作. 用于辅助分析还是非常方便的. 于是我换成了 x64dbg, 其他还有的有 ollydbg 之类的. 各种各样的东西. 可以使用一个叫做 ret-sync 的工具来将这些工具都串联起来, 形成一个比较好用的工作流. 踩了太多坑了, 之后一定要记录一下. 在配置和安装 ret-sync 的过程里面, 还是有非常多的坑的: Ghidra 10.2.3: 需要按照 repo 里面的介绍, 先编译. 然后选择 File - Install Extensions&#8230; x64dbg, x32dbg: 实际上需要对 win32, x86 每个版本都编译一次 简单来说, 就是用 VS 打开 ext_x64dbg 文件夹中的 x64dbg_sync.sln 文件. 然后选择对应的平台版本, 然后选择 Build 后将生成的文件放到对应的文件夹下. 对于 x64dbg, 需要 x64 版本, 编译结果是 .dp64 后缀的文件, 放到 x64/plugins 文件夹内. 对于 x32dbg, 需要 Win32 版本, 编译结果是 .dp32 后缀的文件, 放到 x32/plugins 文件夹内. windbg: 编译的方法和 x64dbg 一样, 需要放到 repo 里面指定的位置后, 在程序中使用 !load sync 后使用. 因为 ret-sync 通过服务器来传递信息, 所以需要配置好服务器地址. 服务器地址需要在 ~/.sync 里面说明. 对于 Windows 系统, ~ 在 User/yourname 处. 一个小小的坑就是虚拟机和宿主机的 IP 是不一样的, 所以需要给虚拟机里面的程序指定一个宿主机的 IP: 比如我的电脑的 IP 是 233.333.333.3, 开放的端口是 9100, 于是 .sync 应该写成: [INTERFACE] host=233.333.333.3 port=9100 (注: 一个方便的查看 ip 的方法 ifconfig -a | grep inet. 尽管在校园网里面有时候挺麻烦的&#8230; ) 一个展示的例子: 之后会将这些东西作为一个工作流来使用, 方便以后跑路换环境. 这里还是和 GDB 以及 LLDB 来联系在一起来学会比较方便: MethodGhidra ret-syncx64dbgWinDbgGDBLLDB Documents and Helpret-syncx64dbg (EN), x64dbg (CN) 0.1标准调试方法, 或者是 ? 获得基础命令列表, .help &lt;cmd&gt; 列出帮助信息Debugging with GDBTutorial LLDB Command Grammar以快捷键操作为主GUI 为主, 命令: cmd arg1, arg2, ...不区分大小写, 元命令 (调试器自带), 以 . 开头, 拓展命令以 ! 开头&lt;noun&gt; &lt;verb&gt; [-options [option-value]] [argument [argument ...]] Load Programsync 同步 BreakPointF2 断点bp, SetBPX 设置; DeleteBPX, bpc 删除bp, bu, bm 可以用于设置断点; bl 列出断点break [name/addr] 下断点, info break 列出断点列表br s [-n name/-a addr] 下断点, br l 列出断点列表 Examining Variablesvar, varlist 显示变量x Module!Symbol 显示符号info [args/locals] 显示环境参数与局部变量 p varfr v [-a/v_name] 列出符号, ta v name List Functionslm 列出符号表info function 列出函数image lookup -r -s &lt;FUNC_REGEX&gt; RunF5 运行g 或者 F5 运行程序r 或者 run 运行程序process launch 或者 r 或者 run StepF10 单步步过st, StepOver 单步步过p 或者 F10 单步执行, 跳过 call 命令s 或者 steps 或者 thread step-in NextF11 单步跟踪sti, StepInto 单步步进t 或者 F8 或者 F11, 跟进 call 指令n 或者 nextn 或者 next, thread step-over StackGUI 可以直接看k 系列的命令, 给出 stack trace 就是一些非常简单的操作, 不过我觉得只看操作列表可能根本不知道是什么, 还是写点代码来试试看会比较好一点. 人难免烂俗 尽管我非常讨厌一口气就要吃掉我好多空间的 VS, 但是它毕竟是微软亲儿子 (bushi), 于是忍痛割爱, 删掉了 80G 的地铁. 感到十分惋惜 (bushi). 在 官网 下载 内存毁灭者, 选择安装 Desktop Development with C++. 新建工程选择空白工程&#8230; 然后在 Source Files 里面添加代码并编译. (注: 貌似最新的 Windows 有转译的功能, 可以让 Arm 架构的系统运行 x86 的程序. 唯一需要注意的是, 需要在 VS 的窗口选择 Release (模拟更加真实的环境), x86 (目标架构), 最后选择编译. ) Hello World Example Hello World Example (Too Easy Skipped) #include &lt;stdio.h&gt;","headline":"Windows Reverse (A Dumb Way)","mainEntityOfPage":{"@type":"WebPage","@id":"/ctf/windows-reverse-dumb-way/"},"url":"/ctf/windows-reverse-dumb-way/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Windows Reverse (A Dumb Way)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-03-04T00:00:00+00:00" itemprop="datePublished">Mar 4, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>Finally, Parallels Desktop</h1>
+<p>注: 虽然我不提倡, 但是毕竟难以耐住它贵啊. 一个可能可以的 <a href="https://luoxx.top/archives/pd-18-active">链接</a>.
+  我是学生, 请给我学生版 (bushi).</p>
+<p>如果不考虑效果的话, 实际上使用 <a href="https://mac.getutm.app">UTM</a> 虚拟机的话我感觉还是很好用的.
+  能够模拟 PD 无法模拟的一些架构的系统, PD 目前只能模拟和 M1 一样的 arm
+  架构的一类系统.</p>
+<p><del>坏, 太久没做逆向了, 完全都忘光了. 估计还要复习一下 Linux 系统的逆向.</del></p>
+<h1>About Windows</h1>
+<details><summary>About Windows</summary>
+<p>对于 Windows 程序, 其中有一个比较要命的东西就是 Windows API.
+  相比 Linux 逆向遇到的那些用 C 写的简单直白的暴力实现的程序,
+  感觉在 Windows 程序里面遇到的更多的是一些意义不明的奇怪函数 (API) 调用.</p>
+<p>下面的来源于《加密与解密》第 4 版:</p>
+<p>通过动态链接库 DLL 来实现调用 API, 主要的 API 有:</p>
+<table>
+  <tr><th>API (DLL)</th><th>Usage</th></tr>
+  <tr><td>Kernel (KERNEL32.DLL)</td><td>操作系统核心功能服务, 包含进程和线程控制, 内存管理, 文件访问</td></tr>
+  <tr><td>User (USER32.DLL)</td><td>用户接口, 键盘鼠标, 窗口和菜单管理</td></tr>
+  <tr><td>GDI (GDI32.DLL)</td><td>图形设备接口</td></tr>
+</table>
+<p>关于函数的命名:</p>
+<ul>
+  <li>比如说遇到了两个函数 <code>MessageBoxA</code> 和 <code>MessageBoxW</code> (实际上都是 <code>MessageBox</code>),
+    那么有什么区别呢?</li>
+  <li>以 <code>A</code> 结尾的是 ANSI 类型 (单字节方式)</li>
+  <li>以 <code>W</code> 结尾的是 Widechars (Unicode) 宽字节方式</li>
+  <li>那么在调试的时候遇到的话, 就可以不用操心这些乱七八糟的东西</li>
+  <li>不过可能会有一个比较有意思的现象, 即在调用 <code>MessageBoxA</code> 的时候,
+    实际上做了一个变换, 最后将 ANSI 字串变成 Unicode 字串,
+    然后调用 <code>MessageBoxW</code> (什么皮套人).</li>
+</ul>
+<p>一些系统的消息:</p>
+<ul>
+  <li>Windows 通过消息驱动, 所以在调试程序的时候可以通过跟踪信息来</li>
+  <li>一些常用的信息函数:
+    <table>
+      <tr><th>Message Function</th><th>Usage</th><th>Return Value</th></tr>
+      <tr><td><code>SendMessage</code></td><td>调用一个窗口的窗口函数, 将消息发送给窗口</td><td>根据具体消息是否投递成功来返回非零 (<code>TRUE</code>) 与否.</td></tr>
+      <tr><td><code>WM_COMMAND</code></td><td>用户从菜单或按钮中选择命令, 或者控件发送消息给父窗口, 或者快捷键发送时</td><td>若程序处理消息则返回零</td></tr>
+      <tr><td><code>WM_DESTROY</code></td><td>窗口被销毁时发送信息 <code>02h</code></td><td>如果程序处理消息则返回零</td></tr>
+      <tr><td><code>WM_GETTEXT</code></td><td>文本复制消息 <code>0dh</code></td><td>返回被复制的字符数量</td></tr>
+      <tr><td><code>WM_QUIT</code></td><td>在程序调用 <code>PostQuitMessage</code> 时生成</td><td>没有返回值</td></tr>
+      <tr><td><code>WM_LBUTTONDOWN</code></td><td>光标停在窗口的客户区且按下鼠标左键的时候, 若未被捕获, 则发送给光标下窗口; 否则发送已经捕获鼠标动作的窗口</td><td>如果处理, 返回值为零</td></tr>
+    </table>
+  </li>
+</ul>
+<p>虚拟内存:</p>
+<ul>
+  <li>实现方法和过程:
+    <ol>
+      <li>应用程序启动, 创建进程并分配一个 (2G?) 虚拟地址.</li>
+      <li>虚拟内存管理器将应用程序的代码映射到虚拟地址的某个位置, 将当前需要的代码读入物理地址</li>
+      <li>使用的 DLL 被映射到进程的虚拟地址空间里面, 在需要的时候才读入物理内存</li>
+      <li>堆栈和数据从物理内存开始分配并映射到虚拟地址里</li>
+      <li>应用程序通过使用虚拟地址空间中的地址开始执行, 然后虚拟内存管理器将内存访问映射到物理位置</li>
+    </ol>
+  </li>
+  <li>应用程序不会直接访问物理地址</li>
+  <li>虚拟内存管理器通过虚拟地址的访问请求来控制所有的物理地址的访问</li>
+</ul>
+<p>注: 我感觉可能需要先编几个 Windows 程序之后才能够学会这些麻烦的东西.
+  之后如果有了真正理解的话再重新写一遍吧. 现在因为基本就是抄写参考书, 所以注释掉了.</p>
+</details>
+<h1>IDA Pro or Ghidra</h1>
+<p>关于 Ghidra 的话, 之前有一个 <a href="/ctf/ghidra-basic/">介绍</a>.</p>
+<p><del>尽管当时说应该尽量少用盗版, 但是读书人的事, 怎么能叫盗版呢&#8230;</del></p>
+<p>IDA Free 或者 Ghidra 实际上就可以满足大部分的功能了, 尽管不一定能够做到尽善尽美就是了.</p>
+<p>(但是我可以都要啊, 乐. 哪个更加好用就用哪个, 人没有必要如此专一 bushi. )</p>
+<h1><del>WinDbg</del> x64dbg and ret-sync</h1>
+<p>在 Windows 上有各种的调试工具, 但是巨硬维护了一个叫 <a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/debugger-download-tools">WinDbg</a> 的调试工具.
+  <del>界面花里胡哨的</del>. 好用是好用, 但是有一个问题, 就是在本地调试的时候,
+  会有各种各样的限制. (甚至连断点也不能, 淦, 是我大意了)</p>
+<details><summary>注</summary>
+<p>好像也不是不行, 网上看到有一个做法是开 2 个 Parrel Desktop 来调试,
+  不过光开一个我的电脑估计就已经吃不消了. <del>Oh! Mac Air! 你 TMD 可是快一万的电脑啊!</del></p>
+<p>不过尽管不能够用 WinDbg 调试的话, 实际上它还能够用于查看一些符号之类的方便的操作.
+  用于辅助分析还是非常方便的.</p>
+</details>
+<p>于是我换成了 <a href="https://x64dbg.com">x64dbg</a>, 其他还有的有 <a href="https://www.ollydbg.de">ollydbg</a> 之类的. 各种各样的东西.
+  可以使用一个叫做 <a href="https://github.com/bootleg/ret-sync">ret-sync</a> 的工具来将这些工具都串联起来,
+  形成一个比较好用的工作流.</p>
+<details><summary>踩了太多坑了, 之后一定要记录一下.</summary>
+<p>在配置和安装 ret-sync 的过程里面, 还是有非常多的坑的:</p>
+<ul>
+  <li>Ghidra 10.2.3: 需要按照 <a href="https://github.com/bootleg/ret-sync#ghidra-extension">repo</a> 里面的介绍, 先编译.
+    然后选择 File - Install Extensions&#8230;</li>
+  <li>x64dbg, x32dbg: 实际上需要对 win32, x86 每个版本都编译一次
+    <ul>
+      <li>简单来说, 就是用 VS 打开 <code>ext_x64dbg</code> 文件夹中的 <code>x64dbg_sync.sln</code> 文件.
+        然后选择对应的平台版本, 然后选择 Build 后将生成的文件放到对应的文件夹下.</li>
+      <li>对于 x64dbg, 需要 x64 版本, 编译结果是 <code>.dp64</code> 后缀的文件, 放到 <code>x64/plugins</code> 文件夹内.</li>
+      <li>对于 x32dbg, 需要 Win32 版本, 编译结果是 <code>.dp32</code> 后缀的文件, 放到 <code>x32/plugins</code> 文件夹内.</li>
+    </ul>
+  </li>
+  <li>windbg: 编译的方法和 x64dbg 一样, 需要放到 <a href="https://github.com/bootleg/ret-sync#windbg-extension">repo</a> 里面指定的位置后,
+    在程序中使用 <code>!load sync</code> 后使用.</li>
+</ul>
+<p>因为 ret-sync 通过服务器来传递信息, 所以需要配置好服务器地址.
+  服务器地址需要在 <code>~/.sync</code> 里面说明. 对于 Windows 系统, <code>~</code> 在 <code>User/yourname</code> 处.
+  一个小小的坑就是虚拟机和宿主机的 IP 是不一样的,
+  所以需要给虚拟机里面的程序指定一个宿主机的 IP:
+  比如我的电脑的 IP 是 <code>233.333.333.3</code>, 开放的端口是 <code>9100</code>, 于是 <code>.sync</code> 应该写成:</p>
+<pre class="example">
+[INTERFACE]
+host=233.333.333.3
+port=9100
+</pre>
+<p>(注: 一个方便的查看 <code>ip</code> 的方法 <code>ifconfig -a | grep inet</code>.
+  尽管在校园网里面有时候挺麻烦的&#8230; )</p>
+<p>一个展示的例子:</p>
+<p><img src="/_img/windows-reverse/x32dbg-sync.png" alt="/_img/windows-reverse/x32dbg-sync.png" /></p>
+<p><img src="/_img/windows-reverse/ghidra-sync.png" alt="/_img/windows-reverse/ghidra-sync.png" /></p>
+<p>之后会将这些东西作为一个工作流来使用, 方便以后跑路换环境.</p>
+</details>
+<p>这里还是和 <a href="https://www.sourceware.org/gdb/">GDB</a> 以及 <a href="https://lldb.llvm.org">LLDB</a> 来联系在一起来学会比较方便:</p>
+<table>
+  <tr><th>Method</th><th>Ghidra ret-sync</th><th>x64dbg</th><th>WinDbg</th><th>GDB</th><th>LLDB</th></tr>
+  <tr><td>Documents and Help</td><td><a href="https://github.com/bootleg/ret-sync">ret-sync</a></td><td><a href="https://help.x64dbg.com/en/latest/">x64dbg (EN)</a>, <a href="https://www.leybc.com/Doc/x64dbghelp/introduction/Feature-set.html">x64dbg (CN) 0.1</a></td><td><a href="https://learn.microsoft.com/zh-cn/windows-hardware/drivers/debugger/standard-debugging-techniques">标准调试方法</a>, 或者是 <code>?</code> 获得基础命令列表, <code>.help &lt;cmd&gt;</code> 列出帮助信息</td><td><a href="https://sourceware.org/gdb/current/onlinedocs/gdb.html/">Debugging with GDB</a></td><td><a href="https://lldb.llvm.org/use/tutorial.html">Tutorial LLDB</a></td></tr>
+  <tr><td>Command Grammar</td><td>以快捷键操作为主</td><td>GUI 为主, 命令: <code>cmd arg1, arg2, ...</code></td><td>不区分大小写, 元命令 (调试器自带), 以 <code>.</code> 开头, 拓展命令以 <code>!</code> 开头</td><td></td><td><code>&lt;noun&gt; &lt;verb&gt; [-options [option-value]] [argument [argument ...]]</code></td></tr>
+  <tr><td>Load Program</td><td><code>sync</code> 同步</td><td></td><td></td><td></td><td></td></tr>
+  <tr><td>BreakPoint</td><td><code>F2</code> 断点</td><td><code>bp</code>, <code>SetBPX</code> 设置; <code>DeleteBPX</code>, <code>bpc</code> 删除</td><td><code>bp</code>, <code>bu</code>, <code>bm</code> 可以用于设置断点; <code>bl</code> 列出断点</td><td><code>break [name/addr]</code> 下断点, <code>info break</code> 列出断点列表</td><td><code>br s [-n name/-a addr]</code> 下断点, <code>br l</code> 列出断点列表</td></tr>
+  <tr><td>Examining Variables</td><td></td><td><code>var</code>, <code>varlist</code> 显示变量</td><td><code>x Module!Symbol</code> 显示符号</td><td><code>info [args/locals]</code> 显示环境参数与局部变量 <code>p var</code></td><td><code>fr v [-a/v_name]</code> 列出符号, <code>ta v name</code></td></tr>
+  <tr><td>List Functions</td><td></td><td></td><td><code>lm</code> 列出符号表</td><td><code>info function</code> 列出函数</td><td><code>image lookup -r -s &lt;FUNC_REGEX&gt;</code></td></tr>
+  <tr><td>Run</td><td><code>F5</code> 运行</td><td></td><td><code>g</code> 或者 <code>F5</code> 运行程序</td><td><code>r</code> 或者 <code>run</code> 运行程序</td><td><code>process launch</code> 或者 <code>r</code> 或者 <code>run</code></td></tr>
+  <tr><td>Step</td><td><code>F10</code> 单步步过</td><td><code>st</code>, <code>StepOver</code> 单步步过</td><td><code>p</code> 或者 <code>F10</code> 单步执行, 跳过 <code>call</code> 命令</td><td><code>s</code> 或者 <code>step</code></td><td><code>s</code> 或者 <code>thread step-in</code></td></tr>
+  <tr><td>Next</td><td><code>F11</code> 单步跟踪</td><td><code>sti</code>, <code>StepInto</code> 单步步进</td><td><code>t</code> 或者 <code>F8</code> 或者 <code>F11</code>, 跟进 call 指令</td><td><code>n</code> 或者 <code>next</code></td><td><code>n</code> 或者 <code>next</code>, <code>thread step-over</code></td></tr>
+  <tr><td>Stack</td><td></td><td>GUI 可以直接看</td><td><code>k</code> 系列的命令, 给出 stack trace</td><td></td><td></td></tr>
+</table>
+<p>就是一些非常简单的操作, 不过我觉得只看操作列表可能根本不知道是什么, 还是写点代码来试试看会比较好一点.</p>
+<h2>人难免烂俗</h2>
+<p>尽管我非常讨厌一口气就要吃掉我好多空间的 VS, 但是它毕竟是微软亲儿子 (bushi), 于是忍痛割爱,
+  删掉了 80G 的地铁. 感到十分惋惜 (bushi).</p>
+<p>在 <a href="https://visualstudio.microsoft.com/vs/features/cplusplus/">官网</a> 下载 <del>内存毁灭者</del>, 选择安装 Desktop Development with C++.
+  新建工程选择空白工程&#8230; 然后在 Source Files 里面添加代码并编译.</p>
+<p>(注: 貌似最新的 Windows 有转译的功能, 可以让 Arm 架构的系统运行 x86 的程序.
+  唯一需要注意的是, 需要在 VS 的窗口选择 <b>Release</b> (模拟更加真实的环境), <b>x86</b> (目标架构),
+  最后选择编译. )</p>
+<h3>Hello World Example</h3>
+<details><summary>Hello World Example (Too Easy Skipped)</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<details><summary>一个吐槽</summary>
+<p>关于工程这件事, 可能你会认为啊, 我 TMD 就写一个傻逼 <code>Hello World</code>,
+  为什么还要搞这么麻烦.</p>
+<p>但是还是很有必要的, 项目版本管理, 工程文件管理等等, 都是一个完整项目不应该缺少的东西.
+  <del>尤其是后期想要把项目做大做强的话 (bushi)</del>.</p>
+</details>
+<p>那么使用 Ghidra 来对 VS 编译生成的文件进行逆向:</p>
+<pre class="example">
+                     **************************************************************
+                     *                          FUNCTION                          *
+                     **************************************************************
+                     int __cdecl main(int _Argc, char * * _Argv, char * * _Env)
+                       assume FS_OFFSET = 0xffdff000
+     int               EAX:4          &lt;RETURN&gt;
+     int               Stack[0x4]:4   _Argc
+     char * *          Stack[0x8]:4   _Argv
+     char * *          Stack[0xc]:4   _Env
+                     _main                                           XREF[1]:     __scrt_common_main_seh:00401218(
+                     main
+00401040 68 00 21        PUSH       s_Hello_World_                                   = »Hello World «
+         40 00
+00401045 e8 c6 ff        CALL       printf                                           int printf(char * _Format, ...)
+         ff ff
+0040104a 83 c4 04        ADD        ESP,0x4
+0040104d 33 c0           XOR        EAX,EAX
+0040104f c3              RET
+</pre>
+<p>(注: 定位程序的方法还是原来那一套, 根据字符串来找函数的位置. )</p>
+<p>那么我们可在打印前和打印后下断点. (注: 这里有一个坑爹的地方,
+  需要让 x32dbg 进入管理员模式才能够和 Ghidra 进行沟通. )</p>
+</details>
+<h3>Simple Branch</h3>
+<details><summary>Simple Branch</summary>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">check</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">passwd</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">45</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">passwd</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">passwd</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">passwd</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">passwd</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">passwd</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Oh my load, plz give me your passwd:&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">passwd</span><span class="p">);</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">check</span><span class="p">(</span><span class="n">passwd</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">puts</span><span class="p">(</span><span class="s">&quot;Yes, you&#39;re my load.&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">puts</span><span class="p">(</span><span class="s">&quot;Oh wait, who are you?&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>这个程序的源代码非常的简单, 之后会试试用这种简单的东西来做一些有趣的事情.</p>
+<p>看看它的编译结果</p>
+<details><summary>实际上没什么好看的</summary>
+<p>说实话, 我又不会肉眼编译, 体系结构课程也根本没学,
+  跟我说什么看汇编代码来理解程序的话, 对现在的我可能有点太难了.</p>
+<pre class="example">
+                     **************************************************************
+                     *                          FUNCTION                          *
+                     **************************************************************
+                     int __cdecl main(int _Argc, char * * _Argv, char * * _Env)
+                       assume FS_OFFSET = 0xffdff000
+     int               EAX:4          &lt;RETURN&gt;
+     int               Stack[0x4]:4   _Argc
+     char * *          Stack[0x8]:4   _Argv
+     char * *          Stack[0xc]:4   _Env
+     undefined4        Stack[-0x8]:4  local_8                                 XREF[2]:     0040108d(W), 
+                                                                                           004010dd(R)  
+     undefined4        Stack[-0xc]:4  local_c                                 XREF[2]:     0040109a(*), 
+                                                                                           004010a8(R)  
+                     _main                                           XREF[1]:     __scrt_common_main_seh:004012b8(
+                     main
+00401080 55              PUSH       EBP
+00401081 8b ec           MOV        EBP,ESP
+00401083 83 ec 08        SUB        ESP,0x8
+00401086 a1 00 30        MOV        EAX,[__security_cookie]                          = BB40E64Eh
+         40 00
+0040108b 33 c5           XOR        EAX,EBP
+0040108d 89 45 fc        MOV        dword ptr [EBP + local_8],EAX
+00401090 68 08 21        PUSH       s_Oh_my_load,_plz_give_me_your_pa                = &quot;Oh my load, plz give me your 
+         40 00
+00401095 e8 86 ff        CALL       printf                                           int printf(char * _Format, ...)
+         ff ff
+0040109a 8d 45 f8        LEA        EAX=&gt;local_c,[EBP + -0x8]
+0040109d 50              PUSH       EAX
+0040109e 68 30 21        PUSH       s_%d                                             = &quot;%d&quot;
+         40 00
+004010a3 e8 a8 ff        CALL       scanf                                            int scanf(char * _Format, ...)
+         ff ff
+004010a8 8b 45 f8        MOV        EAX,dword ptr [EBP + local_c]
+004010ab 83 c4 0c        ADD        ESP,0xc
+004010ae b9 2d 00        MOV        ECX,0x2d
+         00 00
+004010b3 85 c0           TEST       EAX,EAX
+004010b5 78 1b           JS         LAB_004010d2
+004010b7 83 f8 0a        CMP        EAX,0xa
+004010ba 7f 16           JG         LAB_004010d2
+004010bc 85 c0           TEST       EAX,EAX
+004010be 74 12           JZ         LAB_004010d2
+                     LAB_004010c0                                    XREF[1]:     004010c5(j)  
+004010c0 48              DEC        EAX
+004010c1 2b c8           SUB        ECX,EAX
+004010c3 85 c0           TEST       EAX,EAX
+004010c5 75 f9           JNZ        LAB_004010c0
+004010c7 85 c9           TEST       ECX,ECX
+004010c9 75 07           JNZ        LAB_004010d2
+004010cb 68 34 21        PUSH       s_Yes,_you&#39;re_my_load.                           = &quot;Yes, you&#39;re my load.&quot;
+         40 00
+004010d0 eb 05           JMP        LAB_004010d7
+                     LAB_004010d2                                    XREF[4]:     004010b5(j), 004010ba(j), 
+                                                                                  004010be(j), 004010c9(j)  
+004010d2 68 4c 21        PUSH       s_Oh_wait,_who_are_you?                          = &quot;Oh wait, who are you?&quot;
+         40 00
+                     LAB_004010d7                                    XREF[1]:     004010d0(j)  
+004010d7 ff 15 b8        CALL       dword ptr [-&gt;API-MS-WIN-CRT-STDIO-L1-1-0.DLL::   = 00002834
+         20 40 00
+004010dd 8b 4d fc        MOV        ECX,dword ptr [EBP + local_8]
+004010e0 83 c4 04        ADD        ESP,0x4
+004010e3 33 cd           XOR        ECX,EBP
+004010e5 33 c0           XOR        EAX,EAX
+004010e7 e8 04 00        CALL       __security_check_cookie                          void __security_check_cookie(uin
+         00 00
+004010ec 8b e5           MOV        ESP,EBP
+004010ee 5d              POP        EBP
+004010ef c3              RET
+</pre>
+</details>
+<p>那么直接看反编译的结果吧:</p>
+<details><summary>main 函数</summary>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="kr">__cdecl</span><span class="w"> </span><span class="n">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">_Argc</span><span class="p">,</span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">_Argv</span><span class="p">,</span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">_Env</span><span class="p">)</span>
+
+<span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">iVar1</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">_Str</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">local_c</span><span class="p">;</span>
+<span class="w">  </span><span class="n">uint</span><span class="w"> </span><span class="n">local_8</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">local_8</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">__security_cookie</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">uint</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stack0xfffffffc</span><span class="p">;</span>
+<span class="w">  </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Oh my load, plz give me your passwd:&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="n">scanf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_c</span><span class="p">);</span>
+<span class="w">  </span><span class="n">iVar1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mh">0x2d</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(((</span><span class="mi">-1</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">local_c</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">local_c</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mh">0xb</span><span class="p">))</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">local_c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">do</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">local_c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">local_c</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">      </span><span class="n">iVar1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">iVar1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">local_c</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">local_c</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">iVar1</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="n">_Str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Yes, you</span><span class="se">\&#39;</span><span class="s">re my load.&quot;</span><span class="p">;</span>
+<span class="w">      </span><span class="k">goto</span><span class="w"> </span><span class="n">LAB_004010d7</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="n">_Str</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Oh wait, who are you?&quot;</span><span class="p">;</span>
+<span class="nl">LAB_004010d7</span><span class="p">:</span>
+<span class="w">  </span><span class="n">puts</span><span class="p">(</span><span class="n">_Str</span><span class="p">);</span>
+<span class="w">  </span><span class="n">iVar1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">__security_check_cookie</span><span class="p">(</span><span class="n">local_8</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="p">(</span><span class="n">uint</span><span class="p">)</span><span class="o">&amp;</span><span class="n">stack0xfffffffc</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">iVar1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+<p>实际上大部分时间并不会关心这个函数, 看代码的顺序基本上就是:</p>
+<ol>
+  <li><code>_Str = &quot;Yes, you\&#39;re my load.&quot;;</code> 哦, 原来成功分支在这里</li>
+  <li><code>iVar1</code> 实际上编译器直接做了优化, 把函数调用给优化掉了的样子.
+    关于 <code>iVar1</code> 的部分的代码实际上就是 <code>check</code> 函数里面的内容.
+    于是想要达成成功分支, 就需要让 <code>iVar1</code> 满足等于零的条件.
+    <p>尽管这个可能比较容易求解 (毕竟就只是一个等差数列求和,
+      也就是 <code>iVar1 == (local_c + 1) * local_c / 2 =&gt; local_c = 9</code>).
+      如果对于比较困难的问题的话, 可以考虑尝试巨硬的 <a href="https://microsoft.github.io/z3guide/">Z3</a> 或者别的方式来实现.
+      之后可以找一个比较困难的例子来试试.</p>
+  </li>
+</ol>
+</details>
+<h3>Simple Functions</h3>
+<details><summary></summary>
+<p>来点稍微复杂一点的程序:</p>
+<div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+</pre></div>
+</details>
+<h2>一些其他的例子</h2>
+<h1>Radare 2</h1>
+<p>虽然但是, <a href="https://www.radare.org/n/index.html">r2</a> 不是一个只面向 Windows 的一个逆向工具.
+  并且相比其他的几个工具, 它好像不是那么的好学&#8230;
+  <del>你说的对, 但是我希望一个能够不用切出编辑器就能够在终端里面用的工具, 方便我上课作笔记的同时摸鱼</del></p>
+<details><suammary>一些简单的介绍</summary>
+<div class="highlight"><pre><span></span><span class="k">digraph</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">rankdir</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">LR</span><span class="p">;</span>
+<span class="w">  </span><span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">rect</span><span class="p">];</span>
+<span class="w">  </span>
+<span class="p">}</span>
+</pre></div>
+<ul>
+  <li><code>?</code> 显示帮助命令, 之后的命令就用命令里面的文字来记录</li>
+  <li>静态分析部分
+    <ul>
+      <li><code>aaa</code> perform deeper analysis, most common use</li>
+      <li><code>afl</code> list functions, <code>ii</code> imports</li>
+      <li><code>s func/addr/sym</code> seek command</li>
+      <li><code>pdf</code> disassemble function.
+        如果安装了 <a href="https://github.com/radareorg/r2ghidra">r2ghidra</a> 的话,
+        使用 <code>pdg</code>: Decompile current function with the Ghidra decompiler.</li>
+      <li><code>VV</code> 程序框图</li>
+      <li><code>v</code> visual-mode 可视化模式 <a href="https://book.rada.re/visual_mode/intro.html">Visual-Mode</a></li>
+    </ul>
+  </li>
+  <li>动态调试部分
+    <ul>
+      <li><code>r2 -d progn</code> 来进行本地的调试</li>
+      <li><code>db</code> debug breakpoint, <code>dc</code> debug continue, <code>ood</code> restart debug</li>
+    </ul>
+  </li>
+</ul>
+<p>更加好用的一些较完整的 Cheatsheet:</p>
+<ul>
+  <li><a href="https://r2wiki.readthedocs.io/en/latest/home/misc/cheatsheet/">Cheatsheet r2wiki</a></li>
+  <li><a href="https://gist.github.com/williballenthin/6857590dab3e2a6559d7">Yet Another Radare2 Cheatsheet</a></li>
+  <li><a href="https://book.rada.re/first_steps/intro.html">R2Book First Step</a></li>
+  <li><a href="https://book.rada.re/refcard/intro.html">Reference Card</a></li>
+</ul>
+</details>
+<h1>一些训练</h1>
+<h3>Just in Time 康复训练</h3>
+<details><summary>关于我被被 Windows 程序薄纱, 选择去做一些简单的 Linux 程序来安慰自己. (Difficulty = 2.0)</summary>
+<p>例子来源于 <a href="https://crackmes.one">crackmes</a> 的 <a href="https://crackmes.one/crackme/63c4ee1a33c5d43ab4ecf49a">Just in Time</a>.</p>
+<p>因为是 <code>stripped</code> 的程序, 所以不太好找入口, 字符串查找大法可能不是那么好用了.
+  (因为里面做了一个小操作). 于是使用 <code>ltrace</code> 试图碰碰运气:</p>
+<pre class="example">
+...
+putchar(32, 0x55d19180c4c0, 0xc0c0ffffe1ff0000, 0) = 32
+strlen(&quot;\224\346\362\324\356J\352\314\360\360\370\350\356\322~J&quot;) = 16
+fgets(Enter password:
+...
+</pre>
+<p>于是确定应该是通过 <code>fgets</code> 之类的函数来作为入口的节点.
+  在 <code>gdb</code> 里面用 <code>b putchar</code> 来对 <code>putchar</code> 做断点, <code>r</code> 运行后,
+  使用 <code>fin</code> 跳出断点, 于是就来到了一些合理的函数里面,
+  就容易控制程序了.</p>
+<p>控制程序的一个抄写:</p>
+<div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">check_input</span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">input</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// time = localtime(time);</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">time</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0xf</span><span class="p">;</span><span class="w"> </span><span class="c1">// code is 0x1f</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;%&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* % */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">      </span><span class="cm">/* 0xc8 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xd4</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">     </span><span class="cm">/* 0xd4 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;k&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* k */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x50</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">     </span><span class="cm">/* 0x50 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;9&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* 9 */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;^&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* ^ */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0xf6</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">     </span><span class="cm">/* 0xf6 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;.&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* . */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;f&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">               </span><span class="cm">/* f */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x80</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">    </span><span class="cm">/* 0x80 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;1&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">              </span><span class="cm">/* 1 */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="sc">&#39;F&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">              </span><span class="cm">/* F */</span>
+<span class="w">      </span><span class="n">input</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">shift</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">0x68</span><span class="w">       </span><span class="cm">/* 0x68 &gt;&gt; shift */</span>
+<span class="w">      </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>那么差不多就好了吧&#8230; 大概吧.</p>
+</details>
+<h3>KataVM Level 1 还是康复训练</h3>
+<p>例子来源于 <a href="https://crackmes.one/crackme/605443e333c5d42c3d016f59">Crackmes KataVM1</a></p>
+<details><summary>还是 Linux 端的一个例子, 尽管嘲笑我吧, 只会挑简单的来做&#8230; </summary>
+<p>实际上感觉这个问题可能更加适合静态分析而不是动态调试.
+  不过实际上感觉题目名称已经给了很多的提示了: <b>VM</b>, 不就是虚拟机么.
+  对于虚拟机类型的问题, 实际上就只要搞清楚每个指令部分在做什么即可.
+  不过我觉得目前如果让我遇到一个没有提示的 VM 的话,
+  估计我没法从代码里面看出来.</p>
+<p>使用 radare2 列出信息并进入 <code>main</code> 函数部分, 然后用 <code>pdg</code> 查看反汇编:</p>
+<pre class="example">
+      ┌────────────────────────────────────────────────────┐
+      │ [0x1170]                                           │
+      │   ; DATA XREF from entry0 @ 0x11e1(r)              │
+      │ 74: int main (int argc, char **argv, char **envp); │
+      │ endbr64                                            │
+      │ sub rsp, 8                                         │
+      │ call fcn.000012d0;[oa]                             │
+      │ test al, al                                        │
+      │ jne 0x11ad                                         │
+      └────────────────────────────────────────────────────┘
+                 f t
+                 │ │
+                 │ └────────────────────┐
+        ┌────────┘                      │
+        │                               │
+┌──────────────────────────┐    ┌───────────────────────────────────┐
+│  0x1181 [od]             │    │  0x11ad [oi]                      │
+│ ; &quot;\n[+] Correct!&quot;       │    │ ; CODE XREF from main @ 0x117f(x) │
+│ lea rdi, [0x00006b22]    │    │ ; &quot;\n[!] Invalid. Try harder.&quot;    │
+│ call fcn.000010c0;[oc]   │    │ lea rdi, [0x00006b30]             │
+│ jmp 0x1195               │    │ call fcn.000010c0;[oc]            │
+└──────────────────────────┘    │ jmp 0x11a6                        │
+                                └───────────────────────────────────┘
+</pre>
+<p>注: 未完结, 下周先去做别的事情先.</p>
+</details>
+
+  </div><a class="u-url" href="/ctf/windows-reverse-dumb-way/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

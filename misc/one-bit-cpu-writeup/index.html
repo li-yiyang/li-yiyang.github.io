@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>1bit CPU writeUP | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="1bit CPU writeUP" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 其实也不是啥新的东西了&#8230; 好早之前就做好了, 只是一直没来得及写一些解释性的文字. 恰好最近稍微有点空, 来小小写个说明. 项目地址在: li-yiyang/one-bit-cpu (github) 上. 懒得看解析的, 可以直接看代码. 以及项目的最初来源为 nato64/1bit-CPU. 原始逻辑门电路的分析 还请直接看电路图 (原始图片在 nato64 repo 中) 这里把图片抽象一下, 大概如下图所示: 其中: Registers: 74HC74 芯片 为一个双 D 触发器的一个逻辑芯片, 在这里用作一个一位寄存器的功能. Memory: 通过两个 2 位编码开关来实现选择. 这里通过 74HC14 芯片 (6 个施密特反相触发器, 作用类似于二值化模拟电平并反相输出, 可以简单看作是非门) 以及二极管实现了选择哪一个编码开关的功能: 若 PC 为 HIGH, 则 SW1 相当于是悬空而 SW2 生效. ALU: 通过 74HC00 芯片 (与非门) 实现的 XOR (异或门). 多路选择器: 通过 74HC153 芯片 (4 输入选择器) 实现对结果的选择. 两个结果一个给了 Reg A (Y1) 另一个给了 PC (Y2). Display: 通过几个 LED 显示 Reg A, PC, Clock 的情况. 复刻的尝试 正如上面所分析的一样, 这里把整个 CPU 做一个分割: Clock: 时钟部分 Register: 寄存器, 通过时钟上升沿进行数据的写 ALU: 包含多路选择器的输出和逻辑计算部分 Program: 连接外部的编码器 Display: 连接显示的 LED // Clock wire clk; slower_clk #(.SLOW_RATE(20_000_000)) slower_clk (.clk(clock), .slow_clk(clk));" />
+<meta property="og:description" content="About 其实也不是啥新的东西了&#8230; 好早之前就做好了, 只是一直没来得及写一些解释性的文字. 恰好最近稍微有点空, 来小小写个说明. 项目地址在: li-yiyang/one-bit-cpu (github) 上. 懒得看解析的, 可以直接看代码. 以及项目的最初来源为 nato64/1bit-CPU. 原始逻辑门电路的分析 还请直接看电路图 (原始图片在 nato64 repo 中) 这里把图片抽象一下, 大概如下图所示: 其中: Registers: 74HC74 芯片 为一个双 D 触发器的一个逻辑芯片, 在这里用作一个一位寄存器的功能. Memory: 通过两个 2 位编码开关来实现选择. 这里通过 74HC14 芯片 (6 个施密特反相触发器, 作用类似于二值化模拟电平并反相输出, 可以简单看作是非门) 以及二极管实现了选择哪一个编码开关的功能: 若 PC 为 HIGH, 则 SW1 相当于是悬空而 SW2 生效. ALU: 通过 74HC00 芯片 (与非门) 实现的 XOR (异或门). 多路选择器: 通过 74HC153 芯片 (4 输入选择器) 实现对结果的选择. 两个结果一个给了 Reg A (Y1) 另一个给了 PC (Y2). Display: 通过几个 LED 显示 Reg A, PC, Clock 的情况. 复刻的尝试 正如上面所分析的一样, 这里把整个 CPU 做一个分割: Clock: 时钟部分 Register: 寄存器, 通过时钟上升沿进行数据的写 ALU: 包含多路选择器的输出和逻辑计算部分 Program: 连接外部的编码器 Display: 连接显示的 LED // Clock wire clk; slower_clk #(.SLOW_RATE(20_000_000)) slower_clk (.clk(clock), .slow_clk(clk));" />
+<link rel="canonical" href="/misc/one-bit-cpu-writeup/" />
+<meta property="og:url" content="/misc/one-bit-cpu-writeup/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-02-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="1bit CPU writeUP" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-02-24T00:00:00+00:00","datePublished":"2024-02-24T00:00:00+00:00","description":"About 其实也不是啥新的东西了&#8230; 好早之前就做好了, 只是一直没来得及写一些解释性的文字. 恰好最近稍微有点空, 来小小写个说明. 项目地址在: li-yiyang/one-bit-cpu (github) 上. 懒得看解析的, 可以直接看代码. 以及项目的最初来源为 nato64/1bit-CPU. 原始逻辑门电路的分析 还请直接看电路图 (原始图片在 nato64 repo 中) 这里把图片抽象一下, 大概如下图所示: 其中: Registers: 74HC74 芯片 为一个双 D 触发器的一个逻辑芯片, 在这里用作一个一位寄存器的功能. Memory: 通过两个 2 位编码开关来实现选择. 这里通过 74HC14 芯片 (6 个施密特反相触发器, 作用类似于二值化模拟电平并反相输出, 可以简单看作是非门) 以及二极管实现了选择哪一个编码开关的功能: 若 PC 为 HIGH, 则 SW1 相当于是悬空而 SW2 生效. ALU: 通过 74HC00 芯片 (与非门) 实现的 XOR (异或门). 多路选择器: 通过 74HC153 芯片 (4 输入选择器) 实现对结果的选择. 两个结果一个给了 Reg A (Y1) 另一个给了 PC (Y2). Display: 通过几个 LED 显示 Reg A, PC, Clock 的情况. 复刻的尝试 正如上面所分析的一样, 这里把整个 CPU 做一个分割: Clock: 时钟部分 Register: 寄存器, 通过时钟上升沿进行数据的写 ALU: 包含多路选择器的输出和逻辑计算部分 Program: 连接外部的编码器 Display: 连接显示的 LED // Clock wire clk; slower_clk #(.SLOW_RATE(20_000_000)) slower_clk (.clk(clock), .slow_clk(clk));","headline":"1bit CPU writeUP","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/one-bit-cpu-writeup/"},"url":"/misc/one-bit-cpu-writeup/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">1bit CPU writeUP</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-02-24T00:00:00+00:00" itemprop="datePublished">Feb 24, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>其实也不是啥新的东西了&#8230; 好早之前就做好了,
+  只是一直没来得及写一些解释性的文字. 恰好最近稍微有点空,
+  来小小写个说明.</p>
+<p>项目地址在: <a href="https://github.com/li-yiyang/one-bit-CPU">li-yiyang/one-bit-cpu (github)</a> 上. 懒得看解析的,
+  可以直接看代码. 以及项目的最初来源为 <a href="https://github.com/naoto64/1bit-CPU">nato64/1bit-CPU</a>.</p>
+<h1>原始逻辑门电路的分析</h1>
+<h2>还请直接看电路图</h2>
+<p><img src="https://raw.githubusercontent.com/naoto64/1bit-CPU/main/docs/img/schematic.jpg" alt="https://raw.githubusercontent.com/naoto64/1bit-CPU/main/docs/img/schematic.jpg" /></p>
+<p>(原始图片在 <a href="https://github.com/naoto64/1bit-CPU/blob/main/docs/img/schematic.jpg">nato64 repo</a> 中)</p>
+<p>这里把图片抽象一下, 大概如下图所示:</p>
+<p><img src="/_img/pieces/1bit-cpu-structure.svg" alt="/_img/pieces/1bit-cpu-structure.svg" /></p>
+<p>其中:</p>
+<ul>
+  <li>Registers: <a href="https://www.mouser.com/datasheet/2/308/74HC74-108792.pdf">74HC74 芯片</a> 为一个双 D 触发器的一个逻辑芯片,
+    在这里用作一个一位寄存器的功能.</li>
+  <li>Memory: 通过两个 2 位编码开关来实现选择.
+    <p>这里通过 <a href="https://www.mouser.com/datasheet/2/308/74HC14.REV1-34947.pdf">74HC14 芯片</a> (6 个施密特反相触发器,
+      作用类似于二值化模拟电平并反相输出, 可以简单看作是非门)
+      以及二极管实现了选择哪一个编码开关的功能:
+      若 PC 为 HIGH, 则 SW1 相当于是悬空而 SW2 生效.</p>
+  </li>
+  <li>ALU: 通过 <a href="https://www.diodes.com/assets/Datasheets/74HC00.pdf">74HC00 芯片</a> (与非门) 实现的 XOR (异或门).</li>
+  <li>多路选择器: 通过 <a href="https://www.mouser.com/datasheet/2/302/74HC_HCT153-353677.pdf">74HC153 芯片</a> (4 输入选择器) 实现对结果的选择.
+    <p>两个结果一个给了 Reg A (Y1) 另一个给了 PC (Y2).</p>
+  </li>
+  <li>Display: 通过几个 LED 显示 Reg A, PC, Clock 的情况.</li>
+</ul>
+<h2>复刻的尝试</h2>
+<p>正如上面所分析的一样, 这里把整个 CPU 做一个分割:</p>
+<ul>
+  <li>Clock: 时钟部分</li>
+  <li>Register: 寄存器, 通过时钟上升沿进行数据的写</li>
+  <li>ALU: 包含多路选择器的输出和逻辑计算部分</li>
+  <li>Program: 连接外部的编码器</li>
+  <li>Display: 连接显示的 LED</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="c1">// Clock</span>
+<span class="kt">wire</span><span class="w"> </span><span class="n">clk</span><span class="p">;</span>
+<span class="n">slower_clk</span><span class="w"> </span><span class="p">#(.</span><span class="n">SLOW_RATE</span><span class="p">(</span><span class="mh">20</span><span class="n">_000_000</span><span class="p">))</span><span class="w"> </span><span class="n">slower_clk</span><span class="w"> </span><span class="p">(.</span><span class="n">clk</span><span class="p">(</span><span class="n">clock</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">slow_clk</span><span class="p">(</span><span class="n">clk</span><span class="p">));</span><span class="w">   </span>
+
+<span class="c1">// Register</span>
+<span class="kt">wire</span><span class="w"> </span><span class="n">reg_out</span><span class="p">,</span><span class="w"> </span><span class="n">pc_out</span><span class="p">,</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+<span class="n">register</span><span class="w"> </span><span class="n">reg_a</span><span class="w"> </span><span class="p">(.</span><span class="n">clk</span><span class="p">(</span><span class="n">clk</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">set_p</span><span class="p">(</span><span class="mh">1</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="n">reg_out</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="n">reset</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">data_reg</span><span class="p">(</span><span class="n">a</span><span class="p">));</span>
+<span class="n">register</span><span class="w"> </span><span class="n">pc</span><span class="w">    </span><span class="p">(.</span><span class="n">clk</span><span class="p">(</span><span class="n">clk</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">set_p</span><span class="p">(</span><span class="mh">1</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="n">pc_out</span><span class="p">),</span><span class="w">  </span><span class="p">.</span><span class="n">reset</span><span class="p">(</span><span class="n">reset</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">data_reg</span><span class="p">(</span><span class="n">p</span><span class="p">));</span>
+
+<span class="c1">// ALU</span>
+<span class="kt">wire</span><span class="w"> </span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="n">code</span><span class="p">;</span>
+<span class="n">alu</span><span class="w"> </span><span class="n">alu</span><span class="w"> </span><span class="p">(.</span><span class="n">reg_in</span><span class="p">(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">pc_in</span><span class="p">(</span><span class="n">p</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">code</span><span class="p">(</span><span class="n">code</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">reg_out</span><span class="p">(</span><span class="n">reg_out</span><span class="p">),</span><span class="w"> </span><span class="p">.</span><span class="n">pc_out</span><span class="p">(</span><span class="n">pc_out</span><span class="p">));</span>
+
+<span class="c1">// Program</span>
+<span class="k">assign</span><span class="w"> </span><span class="n">code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">?</span>
+<span class="w">              </span><span class="n">memory</span><span class="p">[</span><span class="mh">3</span><span class="o">:</span><span class="mh">2</span><span class="p">]</span><span class="w"> </span><span class="o">:</span>
+<span class="w">              </span><span class="n">memory</span><span class="p">[</span><span class="mh">1</span><span class="o">:</span><span class="mh">0</span><span class="p">];</span>
+
+<span class="c1">// Display</span>
+<span class="k">assign</span><span class="w"> </span><span class="n">clk_led</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clk</span><span class="p">;</span>
+<span class="k">assign</span><span class="w"> </span><span class="n">reg_led</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">a</span><span class="p">;</span>
+<span class="k">assign</span><span class="w"> </span><span class="n">pc_led</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+</pre></div>
+<p>(具体请参考: <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/cpu.v">one-bit-CPU/cpu.v</a> 中的代码)</p>
+<p>不难发现每一部分的功能都非常容易实现,
+  (所以我觉得作为一个 FPGA 的练手项目简直非常适合).</p>
+<h3>Clock</h3>
+<p>这里用计数器实现将板子 (<a href="https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html">Nano Tang 9K</a>) 自身的时钟 (27MHz) 变成一个慢时钟.</p>
+<details><summary>
+方法就是计数, 若达到一定值, 则翻转输出
+</summary>
+<div class="highlight"><pre><span></span><span class="k">always</span><span class="w"> </span><span class="p">@(</span><span class="k">posedge</span><span class="w"> </span><span class="n">clk</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">SLOW_RATE</span><span class="p">)</span><span class="w"> </span><span class="k">begin</span>
+<span class="w">     </span><span class="n">counter</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">0</span><span class="p">;</span>
+<span class="w">     </span><span class="n">slow_clk</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="o">~</span><span class="n">slow_clk</span><span class="p">;</span><span class="w">        </span>
+<span class="w">  </span><span class="k">end</span><span class="w"> </span><span class="k">else</span>
+<span class="w">    </span><span class="n">counter</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">counter</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mh">1</span><span class="p">;</span><span class="w"> </span>
+</pre></div>
+</details>
+<p>(具体请参考: <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/slower_clk.v">one-bit-CPU/slower-clock.v</a> 中的代码)</p>
+<h3>ALU</h3>
+<p>在 Verilog 里面写这种就感觉轻松好多了呢&#8230;
+  基本上只需要规定好控制部分和参数部分即可,
+  比如:</p>
+<div class="highlight"><pre><span></span><span class="c1">// code[1] is the cmd, code[0] is the arg</span>
+<span class="k">assign</span><span class="w"> </span><span class="n">reg_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">code</span><span class="p">[</span><span class="mh">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="w"> </span><span class="o">?</span>
+<span class="w">                 </span><span class="n">reg_in</span><span class="w"> </span><span class="o">^</span><span class="w"> </span><span class="n">code</span><span class="p">[</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="c1">// xor</span>
+<span class="w">                 </span><span class="n">reg_in</span><span class="p">;</span><span class="w">            </span><span class="c1">// reg</span>
+
+<span class="k">assign</span><span class="w"> </span><span class="n">pc_out</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">code</span><span class="p">[</span><span class="mh">1</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="w"> </span><span class="o">?</span>
+<span class="w">                 </span><span class="n">code</span><span class="p">[</span><span class="mh">1</span><span class="p">]</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">code</span><span class="p">[</span><span class="mh">0</span><span class="p">]</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="c1">// jmp</span>
+<span class="w">                 </span><span class="o">~</span><span class="n">pc_in</span><span class="p">;</span><span class="w">             </span><span class="c1">// pc++</span>
+</pre></div>
+<p>(具体请参考: <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/alu.v">one-bit-CPU/alu.v</a> 中的代码)</p>
+<p><del>注: 这里我就想要吐槽一下我之前的代码定义了&#8230;</del>
+  <del>不是一般会把命令放在前面, 但是为什么会反过来呢.</del></p>
+<p>啊, 这里思考了一下, 发现自己以前还是很聪明的 (并没有).
+  这里应该是 Big-Endian 和 Little-Endian 的区别.
+  在这里, <code>1&#39;b10</code> 的 <code>[1]</code> 指向的是 <code>1</code> (即从右往左).</p>
+<p>注: 这里还要吐槽一下&#8230; 诶, 写代码最好不要太过依赖复制了&#8230;
+  因为我发现旧的代码因为复制的原因导致了一个命令的错误 (<a href="https://github.com/li-yiyang/one-bit-CPU/commit/02b73ce82e6c9f3d211f8ff76d9c7cc6dac31a2c">one-bit-CPU@02b73ce</a>).</p>
+<h3>Register</h3>
+<p>寄存器大概长这样:</p>
+<div class="highlight"><pre><span></span><span class="c1">// At every clock, if set_p, set data_out as data</span>
+<span class="k">always</span><span class="w"> </span><span class="p">@(</span><span class="k">posedge</span><span class="w"> </span><span class="n">clk</span><span class="p">)</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">reset</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">)</span>
+<span class="w">    </span><span class="n">data_reg</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b0</span><span class="p">;</span><span class="w">        </span><span class="c1">// reset data_reg</span>
+<span class="w">  </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">set_p</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mh">1</span><span class="mb">&#39;b1</span><span class="p">)</span>
+<span class="w">    </span><span class="n">data_reg</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">data</span><span class="p">;</span><span class="w">        </span><span class="c1">// set data_reg</span>
+</pre></div>
+<p>(具体请参考: <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/register.v">one-bit-CPU/register.v</a> 中的代码)</p>
+<p>这里有一个小小的坑, 因为我用的开发板上的按钮的电平是按下为低 (?),
+  所以一开始仿真测试的时候搞反了&#8230;</p>
+<h2>Coding for 1bit CPU</h2>
+<p>虽然可以支持的程序大小只有 2 条指令, 但是又不是不能用.
+  你甚至可以通过历遍程序的方式来实现对程序的所有的编程.</p>
+<h3>Assembler 和 Disassembler</h3>
+<p>直接看 <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/alu.v">one-bit-CPU/alu.v</a> 中的代码, 可以发现命令就两种:</p>
+<ul>
+  <li><code>XOR &lt;a&gt;</code>: 为 <code>0*</code> 的形式</li>
+  <li><code>JMP &lt;l&gt;</code>: 为 <code>1*</code> 的形式</li>
+</ul>
+<p>于是很容易就可以对代码 <code>(* * * *)</code> 的形式写一个简单的 disassembler:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">disassembler</span><span class="w"> </span><span class="p">(</span><span class="nf">code</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;1 bit cpu disassmbler&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">code</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">cmd</span><span class="w"> </span><span class="nv">arg</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="nv">code</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">ecase</span><span class="w"> </span><span class="nv">cmd</span>
+<span class="w">              </span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:xor</span><span class="w"> </span><span class="nv">arg</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:jmp</span><span class="w"> </span><span class="nv">arg</span><span class="p">)))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">disassembler</span><span class="w"> </span><span class="nv">rest</span><span class="p">)))))</span>
+</pre></div>
+<p>同理也有 assembler:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">assembler</span><span class="w"> </span><span class="p">(</span><span class="nf">code1</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">code2</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:jmp</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+<span class="w">  </span><span class="s">&quot;1 bit cpu assembler&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">:&gt;</span><span class="w"> </span><span class="p">(</span><span class="nf">code</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">cmd</span><span class="w"> </span><span class="nv">arg</span><span class="p">)</span><span class="w"> </span><span class="nv">code</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">ecase</span><span class="w"> </span><span class="nv">cmd</span><span class="w"> </span><span class="p">(</span><span class="nf">:xor</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:jmp</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span><span class="w"> </span><span class="nv">arg</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="p">(</span><span class="nf">:&gt;</span><span class="w"> </span><span class="nv">code1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">:&gt;</span><span class="w"> </span><span class="nv">code2</span><span class="p">))))</span>
+</pre></div>
+<h3>代码上的分析&#8230;</h3>
+<p>嗯, 虽然我觉着手动分析有点麻烦, 但是毕竟代码还是简单嘛&#8230;</p>
+<h4><code>(:jmp 0) xxx</code> 和 <code>xxx (:jmp 1)</code> 原地 TP</h4>
+<p>比如说代码类似于: <code>(:jmp 0) xxx</code> 这样的程序. 相当于是一直原地 TP,
+  此时 <code>PC</code> 保持 <code>0</code> 不变, <code>REG A</code> 保持不变.</p>
+<p>而 <code>xxx (:jmp 1)</code> 相当于是做了一条指令后进行原地 TP.</p>
+<h4><code>(:jmp 1) xxx</code> 和 <code>xxx (:jmp 0)</code> 单指令有效</h4>
+<p>类似于 <code>(:jmp 1) xxx</code> 和 <code>xxx (:jmp 0)</code> 这样的程序,
+  相当于直接浪费了一个代码槽, 只有一个 XOR 的功能.</p>
+<h4>剩下的?</h4>
+<p>大概就是 XOR 吧, 剩下的直接看仿真吧&#8230;</p>
+<h2>仿真测试</h2>
+<p>诶, 仿真&#8230;</p>
+<p>真是让人伤心和头秃, 一开始以为自己以前的代码写错了,
+  结果最后发现是自己仿真的测试条件搞错了&#8230;</p>
+<p>诶.</p>
+<p>(具体代码请看: <a href="https://github.com/li-yiyang/one-bit-CPU/blob/master/cpu_test.v">one-bit-CPU/cpu_test.v</a>)</p>
+<p>仿真的结果如下 (大家就图一乐吧, 还没有写比较用的检测代码,
+  但是太晚了先去准备睡觉了. )</p>
+<p><img src="/_img/pieces/1bit-cpu-test-simulation.png" alt="/_img/pieces/1bit-cpu-test-simulation.png" /></p>
+<p>(仿真时的参数: <code>STEP = 10, LENGTH = 16</code>)</p>
+<h1>后记</h1>
+<p>大概, 就酱, 去吃饭了.</p>
+<p>又, 加一张在板子上跑的结果:</p>
+<p><img src="/_img/pieces/1bit-cpu-on-board.gif" alt="/_img/pieces/1bit-cpu-on-board.gif" /></p>
+<p>如您所见, GIF 里面显示的是一个代码对应为 <code>(1 1 0 1)</code>,
+  即 <code>((:jmp 1) (:xor 1))</code> 的程序, 等价于 <code>((:xor 1))</code>,
+  图中可见 PC (三盏灯中最下方的一个) 常亮, REG A (中间) 不亮.</p>
+
+  </div><a class="u-url" href="/misc/one-bit-cpu-writeup/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

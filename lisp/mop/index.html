@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>MOP: again! | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="MOP: again!" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 虽然之前写的/之前的 MOP 阅读和学习尝试都有点中道崩猝. 要说这次可能有什么不同的话, 那就是至少我现在是带着项目进行的学习了. 嗯, 应该可以这么说吧&#8230; (coca 和 mlx-cl). 注: 假如有兴趣的话, 不妨来试试 MOPDoc, 为 MOP 添加 documentation string. 这样就可以用 SLIME/SLY 来 inspect. 这里参考的是 AMOP (Art of MetaObject Protocol). The Design and Implementation of Metaobject Protocols How CLOS is Implemented A Subset of CLOS 书中是用了一个 CLOS 的子集来做教学例子. 这里就用真实对应的 CLOS 和 closer-mop 进行联系. 以下的代码在 CLOSER-COMMON-LISP-USER 下运行. 注: 这部分建议读什么 感觉这部分属于是作者小小炫技了: 在 CLOS 上实现一个 CLOS 的子集. 但是我并不是很关心具体是怎么实现的, 所以读这一部分的时候基本是跳着读的. 其实这部分可以主要用来关注在 CLOS 的 interface 下面的具体发生了什么过程. 比如创建实例 make-instance 的时候, 发生了什么过程: allocate-instance initialize-instance The Basic Backstage Structures Representing Classes 在 standard-class 这个 Metaclass 类中, 有以下的 slots: (mapcar #&#39;slot-definition-name (class-slots (find-class &#39;standard-class))) sb-pcl::%typesb-pcl::sourcesb-pcl::plistsb-pcl::namesb-pcl::class-eq-specializersb-pcl::direct-superclassessb-pcl::direct-subclassessb-pcl::direct-methodssb-pcl::%documentationsb-pcl::safe-psb-pcl::finalized-psb-pcl::%class-precedence-listsb-pcl::cpl-available-psb-pcl::can-precede-listsb-pcl::incompatible-superclass-listsb-pcl::wrappersb-pcl::prototypesb-pcl::direct-slotssb-pcl::slots The defclass Macro 可以把 defclass 的过程看作是: (defmacro defclass (name direct-superclasses direct-slots &amp;rest options) `(ensure-class &#39;,name :direct-superclasses ,(canonicalize-direct-superclasses direct-superclasses) :direct-slots ,(canonicalize-direct-slots direct-slots) ,@(canonicalize-defclass-options options))) 其中 canonicalize- 的这些部分可以暂时当作是一个正则化的过程, 忽略. 注: 实际上可能并不是这样实现的 defclass. Direct Superclasses 是一组 superclasses 的列表. (defun canonicalize-direct-superclasses (direct-superclasses) (mapcar #&#39;find-class direct-superclasses)) Direct Slots name \(&rarr;\) :name name initform \(&rarr;\) :initform initform :initfunction (lambda () initform) 其中 :initfunction: 是一个无参数的 lambda 函数, 用于在 lexical 环境被调用生成初始化的值 :initform: 仅是被保留用于可读性 initarg \(&rarr;\) :initargs (initarg initarg...) accessor \(&rarr;\) :reader accessor :writer (setf accessor) reader \(&rarr;\) :readers (reader reader...) writer \(&rarr;\) :writers (writer writer...) 例: (ensure-class &#39;class :direct-superclasses (...) :direct-slots (list (list :name &#39;name ; slot-definition-name :initform &#39;val ; slot-definition-initform :initfunction #&#39;(lambda () val) ; slot-definition-initfunction :initargs &#39;(:name) ; slot-definition-initargs :readers &#39;(name) ; slot-definition-readers :writers &#39;((setf name))))) ; slot-definition-writers Class Options 被转换为 plist 作为更多的参数如下被 ensure-class 类似如下调用: (make-instance &#39;standard-class ,@class-options-plist) ensure-class 相当于是做了如下的事情: make-instance: 从 Metaclass 创建了一个 class 类 (setf find-class): 在 class lookup table 中注册对应的类 Intializing Class Metaobjects 生成 direct-superclasses 向 superclass 的 direct-subclasses 添加自己 定义 reader 和 accessor 函数 以及处理其他的继承关系 Inheritance 计算类的继承关系 计算 slot: 从父类中继承, 并最终生成 effective-slot-definition Printing Objects 调用 print-object. Representing the Structure of Instances Object identity make-instance: 类似于如下的过程 (let ((instance (allocate-instance class))) (apply #&#39;initialize-instance instance initargs) instance) initialize-instance, reinitialize-instance 都共同地使用了 shared-initialize Slot storage: (alocate-instance class &amp;rest args): 为类实例及其 slots 划分空间 (slot-value instance slot-name): 获取实例的 slot 的值 (slot-boundp instance slot-name): 判断是否绑定了值 (slot-makunbound instance slot-name): unbind slot (slot-exists-p instance slot-name): 判断是否存在 Classification: class-of: 获得实例的类 Reclassification: change-class update-instance-for-different-class Representing Generic Functions The defgeneric Macro 相当于是把 defgeneric 变成 ensure-generic-function 类似于: (defun ensure-generic-function (function-name &amp;rest keys) (if (fboundp function-name) ... (let ((gf (apply #&#39;make-instance &#39;standard-generic-function :name function-name keys))) (setf (fdefinition function-name) gf) gf))) Representing Methods 同上, ensure-method. Invoking Generic Functions A Word About Preformance Introspection and Analysis 这一部分读什么 这部分主要给了一堆的接口可以用来在拓展 CLOS 的时候编程地实现属性的读取和写入. 但是我没啥精力去抄书, 所以这部分不如直接看 API&#8230; Extending the Language Specialized Class Metaobjects 通过定义 Metaclass, 可以实现修改默认类实例的生成规则. 例: (defclass counted-class (standard-class) ((counter :initform 0)))" />
+<meta property="og:description" content="About 虽然之前写的/之前的 MOP 阅读和学习尝试都有点中道崩猝. 要说这次可能有什么不同的话, 那就是至少我现在是带着项目进行的学习了. 嗯, 应该可以这么说吧&#8230; (coca 和 mlx-cl). 注: 假如有兴趣的话, 不妨来试试 MOPDoc, 为 MOP 添加 documentation string. 这样就可以用 SLIME/SLY 来 inspect. 这里参考的是 AMOP (Art of MetaObject Protocol). The Design and Implementation of Metaobject Protocols How CLOS is Implemented A Subset of CLOS 书中是用了一个 CLOS 的子集来做教学例子. 这里就用真实对应的 CLOS 和 closer-mop 进行联系. 以下的代码在 CLOSER-COMMON-LISP-USER 下运行. 注: 这部分建议读什么 感觉这部分属于是作者小小炫技了: 在 CLOS 上实现一个 CLOS 的子集. 但是我并不是很关心具体是怎么实现的, 所以读这一部分的时候基本是跳着读的. 其实这部分可以主要用来关注在 CLOS 的 interface 下面的具体发生了什么过程. 比如创建实例 make-instance 的时候, 发生了什么过程: allocate-instance initialize-instance The Basic Backstage Structures Representing Classes 在 standard-class 这个 Metaclass 类中, 有以下的 slots: (mapcar #&#39;slot-definition-name (class-slots (find-class &#39;standard-class))) sb-pcl::%typesb-pcl::sourcesb-pcl::plistsb-pcl::namesb-pcl::class-eq-specializersb-pcl::direct-superclassessb-pcl::direct-subclassessb-pcl::direct-methodssb-pcl::%documentationsb-pcl::safe-psb-pcl::finalized-psb-pcl::%class-precedence-listsb-pcl::cpl-available-psb-pcl::can-precede-listsb-pcl::incompatible-superclass-listsb-pcl::wrappersb-pcl::prototypesb-pcl::direct-slotssb-pcl::slots The defclass Macro 可以把 defclass 的过程看作是: (defmacro defclass (name direct-superclasses direct-slots &amp;rest options) `(ensure-class &#39;,name :direct-superclasses ,(canonicalize-direct-superclasses direct-superclasses) :direct-slots ,(canonicalize-direct-slots direct-slots) ,@(canonicalize-defclass-options options))) 其中 canonicalize- 的这些部分可以暂时当作是一个正则化的过程, 忽略. 注: 实际上可能并不是这样实现的 defclass. Direct Superclasses 是一组 superclasses 的列表. (defun canonicalize-direct-superclasses (direct-superclasses) (mapcar #&#39;find-class direct-superclasses)) Direct Slots name \(&rarr;\) :name name initform \(&rarr;\) :initform initform :initfunction (lambda () initform) 其中 :initfunction: 是一个无参数的 lambda 函数, 用于在 lexical 环境被调用生成初始化的值 :initform: 仅是被保留用于可读性 initarg \(&rarr;\) :initargs (initarg initarg...) accessor \(&rarr;\) :reader accessor :writer (setf accessor) reader \(&rarr;\) :readers (reader reader...) writer \(&rarr;\) :writers (writer writer...) 例: (ensure-class &#39;class :direct-superclasses (...) :direct-slots (list (list :name &#39;name ; slot-definition-name :initform &#39;val ; slot-definition-initform :initfunction #&#39;(lambda () val) ; slot-definition-initfunction :initargs &#39;(:name) ; slot-definition-initargs :readers &#39;(name) ; slot-definition-readers :writers &#39;((setf name))))) ; slot-definition-writers Class Options 被转换为 plist 作为更多的参数如下被 ensure-class 类似如下调用: (make-instance &#39;standard-class ,@class-options-plist) ensure-class 相当于是做了如下的事情: make-instance: 从 Metaclass 创建了一个 class 类 (setf find-class): 在 class lookup table 中注册对应的类 Intializing Class Metaobjects 生成 direct-superclasses 向 superclass 的 direct-subclasses 添加自己 定义 reader 和 accessor 函数 以及处理其他的继承关系 Inheritance 计算类的继承关系 计算 slot: 从父类中继承, 并最终生成 effective-slot-definition Printing Objects 调用 print-object. Representing the Structure of Instances Object identity make-instance: 类似于如下的过程 (let ((instance (allocate-instance class))) (apply #&#39;initialize-instance instance initargs) instance) initialize-instance, reinitialize-instance 都共同地使用了 shared-initialize Slot storage: (alocate-instance class &amp;rest args): 为类实例及其 slots 划分空间 (slot-value instance slot-name): 获取实例的 slot 的值 (slot-boundp instance slot-name): 判断是否绑定了值 (slot-makunbound instance slot-name): unbind slot (slot-exists-p instance slot-name): 判断是否存在 Classification: class-of: 获得实例的类 Reclassification: change-class update-instance-for-different-class Representing Generic Functions The defgeneric Macro 相当于是把 defgeneric 变成 ensure-generic-function 类似于: (defun ensure-generic-function (function-name &amp;rest keys) (if (fboundp function-name) ... (let ((gf (apply #&#39;make-instance &#39;standard-generic-function :name function-name keys))) (setf (fdefinition function-name) gf) gf))) Representing Methods 同上, ensure-method. Invoking Generic Functions A Word About Preformance Introspection and Analysis 这一部分读什么 这部分主要给了一堆的接口可以用来在拓展 CLOS 的时候编程地实现属性的读取和写入. 但是我没啥精力去抄书, 所以这部分不如直接看 API&#8230; Extending the Language Specialized Class Metaobjects 通过定义 Metaclass, 可以实现修改默认类实例的生成规则. 例: (defclass counted-class (standard-class) ((counter :initform 0)))" />
+<link rel="canonical" href="/lisp/mop/" />
+<meta property="og:url" content="/lisp/mop/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-12-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="MOP: again!" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-12-24T00:00:00+00:00","datePublished":"2025-12-24T00:00:00+00:00","description":"About 虽然之前写的/之前的 MOP 阅读和学习尝试都有点中道崩猝. 要说这次可能有什么不同的话, 那就是至少我现在是带着项目进行的学习了. 嗯, 应该可以这么说吧&#8230; (coca 和 mlx-cl). 注: 假如有兴趣的话, 不妨来试试 MOPDoc, 为 MOP 添加 documentation string. 这样就可以用 SLIME/SLY 来 inspect. 这里参考的是 AMOP (Art of MetaObject Protocol). The Design and Implementation of Metaobject Protocols How CLOS is Implemented A Subset of CLOS 书中是用了一个 CLOS 的子集来做教学例子. 这里就用真实对应的 CLOS 和 closer-mop 进行联系. 以下的代码在 CLOSER-COMMON-LISP-USER 下运行. 注: 这部分建议读什么 感觉这部分属于是作者小小炫技了: 在 CLOS 上实现一个 CLOS 的子集. 但是我并不是很关心具体是怎么实现的, 所以读这一部分的时候基本是跳着读的. 其实这部分可以主要用来关注在 CLOS 的 interface 下面的具体发生了什么过程. 比如创建实例 make-instance 的时候, 发生了什么过程: allocate-instance initialize-instance The Basic Backstage Structures Representing Classes 在 standard-class 这个 Metaclass 类中, 有以下的 slots: (mapcar #&#39;slot-definition-name (class-slots (find-class &#39;standard-class))) sb-pcl::%typesb-pcl::sourcesb-pcl::plistsb-pcl::namesb-pcl::class-eq-specializersb-pcl::direct-superclassessb-pcl::direct-subclassessb-pcl::direct-methodssb-pcl::%documentationsb-pcl::safe-psb-pcl::finalized-psb-pcl::%class-precedence-listsb-pcl::cpl-available-psb-pcl::can-precede-listsb-pcl::incompatible-superclass-listsb-pcl::wrappersb-pcl::prototypesb-pcl::direct-slotssb-pcl::slots The defclass Macro 可以把 defclass 的过程看作是: (defmacro defclass (name direct-superclasses direct-slots &amp;rest options) `(ensure-class &#39;,name :direct-superclasses ,(canonicalize-direct-superclasses direct-superclasses) :direct-slots ,(canonicalize-direct-slots direct-slots) ,@(canonicalize-defclass-options options))) 其中 canonicalize- 的这些部分可以暂时当作是一个正则化的过程, 忽略. 注: 实际上可能并不是这样实现的 defclass. Direct Superclasses 是一组 superclasses 的列表. (defun canonicalize-direct-superclasses (direct-superclasses) (mapcar #&#39;find-class direct-superclasses)) Direct Slots name \\(&rarr;\\) :name name initform \\(&rarr;\\) :initform initform :initfunction (lambda () initform) 其中 :initfunction: 是一个无参数的 lambda 函数, 用于在 lexical 环境被调用生成初始化的值 :initform: 仅是被保留用于可读性 initarg \\(&rarr;\\) :initargs (initarg initarg...) accessor \\(&rarr;\\) :reader accessor :writer (setf accessor) reader \\(&rarr;\\) :readers (reader reader...) writer \\(&rarr;\\) :writers (writer writer...) 例: (ensure-class &#39;class :direct-superclasses (...) :direct-slots (list (list :name &#39;name ; slot-definition-name :initform &#39;val ; slot-definition-initform :initfunction #&#39;(lambda () val) ; slot-definition-initfunction :initargs &#39;(:name) ; slot-definition-initargs :readers &#39;(name) ; slot-definition-readers :writers &#39;((setf name))))) ; slot-definition-writers Class Options 被转换为 plist 作为更多的参数如下被 ensure-class 类似如下调用: (make-instance &#39;standard-class ,@class-options-plist) ensure-class 相当于是做了如下的事情: make-instance: 从 Metaclass 创建了一个 class 类 (setf find-class): 在 class lookup table 中注册对应的类 Intializing Class Metaobjects 生成 direct-superclasses 向 superclass 的 direct-subclasses 添加自己 定义 reader 和 accessor 函数 以及处理其他的继承关系 Inheritance 计算类的继承关系 计算 slot: 从父类中继承, 并最终生成 effective-slot-definition Printing Objects 调用 print-object. Representing the Structure of Instances Object identity make-instance: 类似于如下的过程 (let ((instance (allocate-instance class))) (apply #&#39;initialize-instance instance initargs) instance) initialize-instance, reinitialize-instance 都共同地使用了 shared-initialize Slot storage: (alocate-instance class &amp;rest args): 为类实例及其 slots 划分空间 (slot-value instance slot-name): 获取实例的 slot 的值 (slot-boundp instance slot-name): 判断是否绑定了值 (slot-makunbound instance slot-name): unbind slot (slot-exists-p instance slot-name): 判断是否存在 Classification: class-of: 获得实例的类 Reclassification: change-class update-instance-for-different-class Representing Generic Functions The defgeneric Macro 相当于是把 defgeneric 变成 ensure-generic-function 类似于: (defun ensure-generic-function (function-name &amp;rest keys) (if (fboundp function-name) ... (let ((gf (apply #&#39;make-instance &#39;standard-generic-function :name function-name keys))) (setf (fdefinition function-name) gf) gf))) Representing Methods 同上, ensure-method. Invoking Generic Functions A Word About Preformance Introspection and Analysis 这一部分读什么 这部分主要给了一堆的接口可以用来在拓展 CLOS 的时候编程地实现属性的读取和写入. 但是我没啥精力去抄书, 所以这部分不如直接看 API&#8230; Extending the Language Specialized Class Metaobjects 通过定义 Metaclass, 可以实现修改默认类实例的生成规则. 例: (defclass counted-class (standard-class) ((counter :initform 0)))","headline":"MOP: again!","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/mop/"},"url":"/lisp/mop/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">MOP: again!</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-12-24T00:00:00+00:00" itemprop="datePublished">Dec 24, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>虽然之前写的/之前的 <a href="https://www.lispworks.com/documentation/lw70/MOP/mop/concepts.html">MOP</a> 阅读和学习尝试都有点中道崩猝.
+  要说这次可能有什么不同的话, 那就是至少我现在是带着项目进行的学习了.
+  嗯, 应该可以这么说吧&#8230; (<a href="https://github.com/li-yiyang/coca">coca</a> 和 <a href="https://github.com/li-yiyang/mlx-cl">mlx-cl</a>).</p>
+<p>注: 假如有兴趣的话, 不妨来试试 <a href="https://github.com/li-yiyang/mopdoc">MOPDoc</a>, 为 MOP 添加 documentation string.
+  这样就可以用 SLIME/SLY 来 inspect.</p>
+<p>这里参考的是 AMOP (Art of MetaObject Protocol).</p>
+<h1>The Design and Implementation of Metaobject Protocols</h1>
+<h2>How CLOS is Implemented</h2>
+<h3>A Subset of CLOS</h3>
+<p>书中是用了一个 CLOS 的子集来做教学例子.
+  这里就用真实对应的 CLOS 和 <a href="https://github.com/pcostanza/closer-mop/tree/master">closer-mop</a> 进行联系.</p>
+<p>以下的代码在 <code>CLOSER-COMMON-LISP-USER</code> 下运行.</p>
+<details><summary>注: 这部分建议读什么</summary>
+<p>感觉这部分属于是作者小小炫技了: 在 CLOS 上实现一个 CLOS 的子集.
+  但是我并不是很关心具体是怎么实现的, 所以读这一部分的时候基本是跳着读的.</p>
+<p>其实这部分可以主要用来关注在 CLOS 的 interface 下面的具体发生了什么过程.
+  比如创建实例 <code>make-instance</code> 的时候, 发生了什么过程:</p>
+<ul>
+  <li><code>allocate-instance</code></li>
+  <li><code>initialize-instance</code></li>
+</ul>
+</details>
+<h3>The Basic Backstage Structures</h3>
+<h3>Representing Classes</h3>
+<p>在 <code>standard-class</code> 这个 Metaclass 类中, 有以下的 <code>slots</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;slot-definition-name</span><span class="w"> </span><span class="p">(</span><span class="nf">class-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">find-class</span><span class="w"> </span><span class="ss">&#39;standard-class</span><span class="p">)))</span>
+</pre></div>
+<table>
+  <tr><td>sb-pcl::%type</td><td>sb-pcl::source</td><td>sb-pcl::plist</td><td>sb-pcl::name</td><td>sb-pcl::class-eq-specializer</td><td>sb-pcl::direct-superclasses</td><td>sb-pcl::direct-subclasses</td><td>sb-pcl::direct-methods</td><td>sb-pcl::%documentation</td><td>sb-pcl::safe-p</td><td>sb-pcl::finalized-p</td><td>sb-pcl::%class-precedence-list</td><td>sb-pcl::cpl-available-p</td><td>sb-pcl::can-precede-list</td><td>sb-pcl::incompatible-superclass-list</td><td>sb-pcl::wrapper</td><td>sb-pcl::prototype</td><td>sb-pcl::direct-slots</td><td>sb-pcl::slots</td></tr>
+</table>
+<h4>The <code>defclass</code> Macro</h4>
+<p>可以把 <code>defclass</code> 的过程看作是:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">defclass</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">direct-superclasses</span><span class="w"> </span><span class="nv">direct-slots</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">options</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">ensure-class</span>
+<span class="w">    </span><span class="ss">&#39;,name</span>
+<span class="w">    </span><span class="nv">:direct-superclasses</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nf">canonicalize-direct-superclasses</span>
+<span class="w">                           </span><span class="nv">direct-superclasses</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">:direct-slots</span><span class="w">        </span><span class="o">,</span><span class="p">(</span><span class="nf">canonicalize-direct-slots</span>
+<span class="w">                           </span><span class="nv">direct-slots</span><span class="p">)</span>
+<span class="w">    </span><span class="o">,@</span><span class="p">(</span><span class="nf">canonicalize-defclass-options</span><span class="w"> </span><span class="nv">options</span><span class="p">)))</span>
+</pre></div>
+<p>其中 <code>canonicalize-</code> 的这些部分可以暂时当作是一个正则化的过程, 忽略.</p>
+<p>注: 实际上可能并不是这样实现的 <code>defclass</code>.</p>
+<h4>Direct Superclasses</h4>
+<p>是一组 superclasses 的列表.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">canonicalize-direct-superclasses</span><span class="w"> </span><span class="p">(</span><span class="nf">direct-superclasses</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;find-class</span><span class="w"> </span><span class="nv">direct-superclasses</span><span class="p">))</span>
+</pre></div>
+<h4>Direct Slots</h4>
+<ul>
+  <li><code>name</code> \(&rarr;\) <code>:name name</code></li>
+  <li><code>initform</code> \(&rarr;\) <code>:initform initform :initfunction (lambda () initform)</code>
+    <p>其中</p>
+    <ul>
+      <li><code>:initfunction</code>: 是一个无参数的 <code>lambda</code> 函数, 用于在 lexical 环境被调用生成初始化的值</li>
+      <li><code>:initform</code>: 仅是被保留用于可读性</li>
+    </ul>
+  </li>
+  <li><code>initarg</code> \(&rarr;\) <code>:initargs (initarg initarg...)</code></li>
+  <li><code>accessor</code> \(&rarr;\) <code>:reader accessor :writer (setf accessor)</code></li>
+  <li><code>reader</code> \(&rarr;\) <code>:readers (reader reader...)</code></li>
+  <li><code>writer</code> \(&rarr;\) <code>:writers (writer writer...)</code></li>
+</ul>
+<p>例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">ensure-class</span>
+<span class="w"> </span><span class="ss">&#39;class</span>
+<span class="w"> </span><span class="nv">:direct-superclasses</span><span class="w"> </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w"> </span><span class="nv">:direct-slots</span><span class="w">  </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span>
+<span class="w">                       </span><span class="nv">:name</span><span class="w">            </span><span class="ss">&#39;name</span><span class="w">             </span><span class="c1">; slot-definition-name</span>
+<span class="w">                       </span><span class="nv">:initform</span><span class="w">        </span><span class="ss">&#39;val</span><span class="w">              </span><span class="c1">; slot-definition-initform</span>
+<span class="w">                       </span><span class="nv">:initfunction</span><span class="w">   </span><span class="o">#&#39;</span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w">  </span><span class="c1">; slot-definition-initfunction</span>
+<span class="w">                       </span><span class="nv">:initargs</span><span class="w">        </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:name</span><span class="p">)</span><span class="w">          </span><span class="c1">; slot-definition-initargs</span>
+<span class="w">                       </span><span class="nv">:readers</span><span class="w">         </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">name</span><span class="p">)</span><span class="w">           </span><span class="c1">; slot-definition-readers</span>
+<span class="w">                       </span><span class="nv">:writers</span><span class="w">         </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">setf</span><span class="w"> </span><span class="nv">name</span><span class="p">)))))</span><span class="w"> </span><span class="c1">; slot-definition-writers</span>
+</pre></div>
+<h4>Class Options</h4>
+<p>被转换为 <code>plist</code> 作为更多的参数如下被 <code>ensure-class</code> 类似如下调用:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;standard-class</span><span class="w"> </span><span class="o">,@</span><span class="nv">class-options-plist</span><span class="p">)</span>
+</pre></div>
+<h4><code>ensure-class</code></h4>
+<p>相当于是做了如下的事情:</p>
+<ul>
+  <li><code>make-instance</code>: 从 Metaclass 创建了一个 class 类</li>
+  <li><code>(setf find-class)</code>: 在 class lookup table 中注册对应的类</li>
+</ul>
+<h4>Intializing Class Metaobjects</h4>
+<ul>
+  <li>生成 <code>direct-superclasses</code></li>
+  <li>向 superclass 的 <code>direct-subclasses</code> 添加自己</li>
+  <li>定义 <code>reader</code> 和 <code>accessor</code> 函数</li>
+  <li>以及处理其他的继承关系</li>
+</ul>
+<h4>Inheritance</h4>
+<ul>
+  <li>计算类的继承关系</li>
+  <li>计算 slot: 从父类中继承, 并最终生成 <code>effective-slot-definition</code></li>
+</ul>
+<h3>Printing Objects</h3>
+<p>调用 <code>print-object</code>.</p>
+<h3>Representing the Structure of Instances</h3>
+<ul>
+  <li>Object identity
+    <ul>
+      <li><code>make-instance</code>: 类似于如下的过程
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">instance</span><span class="w"> </span><span class="p">(</span><span class="nf">allocate-instance</span><span class="w"> </span><span class="nv">class</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;initialize-instance</span><span class="w"> </span><span class="nv">instance</span><span class="w"> </span><span class="nv">initargs</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">instance</span><span class="p">)</span>
+</pre></div>
+      </li>
+      <li><code>initialize-instance</code>, <code>reinitialize-instance</code> 都共同地使用了 <code>shared-initialize</code></li>
+    </ul>
+  </li>
+  <li>Slot storage:
+    <ul>
+      <li><code>(alocate-instance class &amp;rest args)</code>: 为类实例及其 slots 划分空间</li>
+      <li><code>(slot-value instance slot-name)</code>: 获取实例的 slot 的值</li>
+      <li><code>(slot-boundp instance slot-name)</code>: 判断是否绑定了值</li>
+      <li><code>(slot-makunbound instance slot-name)</code>: unbind slot</li>
+      <li><code>(slot-exists-p instance slot-name)</code>: 判断是否存在</li>
+    </ul>
+  </li>
+  <li>Classification:
+    <ul>
+      <li><code>class-of</code>: 获得实例的类</li>
+    </ul>
+  </li>
+  <li>Reclassification:
+    <ul>
+      <li><code>change-class</code></li>
+      <li><code>update-instance-for-different-class</code></li>
+    </ul>
+  </li>
+</ul>
+<h3>Representing Generic Functions</h3>
+<h4>The <code>defgeneric</code> Macro</h4>
+<p>相当于是把 <code>defgeneric</code> 变成 <code>ensure-generic-function</code></p>
+<p>类似于:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ensure-generic-function</span><span class="w"> </span><span class="p">(</span><span class="nf">function-name</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">fboundp</span><span class="w"> </span><span class="nv">function-name</span><span class="p">)</span>
+<span class="w">      </span><span class="o">...</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">gf</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;make-instance</span><span class="w"> </span><span class="ss">&#39;standard-generic-function</span><span class="w"> </span><span class="nv">:name</span><span class="w"> </span><span class="nv">function-name</span><span class="w"> </span><span class="nv">keys</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">fdefinition</span><span class="w"> </span><span class="nv">function-name</span><span class="p">)</span><span class="w"> </span><span class="nv">gf</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">gf</span><span class="p">)))</span>
+</pre></div>
+<h3>Representing Methods</h3>
+<p>同上, <code>ensure-method</code>.</p>
+<h3>Invoking Generic Functions</h3>
+<h3>A Word About Preformance</h3>
+<h2>Introspection and Analysis</h2>
+<details><summary>这一部分读什么</summary>
+<p>这部分主要给了一堆的接口可以用来在拓展 CLOS 的时候编程地实现属性的读取和写入.
+  但是我没啥精力去抄书, 所以这部分不如直接看 API&#8230;</p>
+</details>
+<h2>Extending the Language</h2>
+<h3>Specialized Class Metaobjects</h3>
+<p>通过定义 Metaclass, 可以实现修改默认类实例的生成规则.</p>
+<p>例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">counted-class</span><span class="w"> </span><span class="p">(</span><span class="nf">standard-class</span><span class="p">)</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">counter</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">make-instance</span><span class="w"> </span><span class="nv">:after</span><span class="w"> </span><span class="p">((</span><span class="nf">class</span><span class="w"> </span><span class="nv">counted-class</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;key</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="nv">class</span><span class="w"> </span><span class="ss">&#39;counter</span><span class="p">)))</span>
+</pre></div>
+<p>一般的做法:</p>
+<ol>
+  <li>定义一个 metaobject class <code>(defclass CLASS (standard-class) (...) ...)</code></li>
+  <li>在 CLOS 上修改对应的过程</li>
+  <li>创建对应 metaobject class 的实例 &#8211; 即受 metaclass 行为控制的类</li>
+</ol>
+<h3>Terminology</h3>
+<table>
+  <tr><th>Terminology</th><th>Examples, Values</th></tr>
+  <tr><td>standard metaobject classes</td><td><code>standrad-class</code>, <code>standard-generic-function</code>, <code>standard-method</code></td></tr>
+  <tr><td>specialized metaobject classes</td><td>user defined subclasses of standard metaobject classes</td></tr>
+  <tr><td>standard methods</td><td>methods</td></tr>
+  <tr><td>metaobjects</td><td>instance of metaobject class</td></tr>
+  <tr><td></td><td>specialized class metaobjects,</td></tr>
+  <tr><td>metaobject class</td><td></td></tr>
+</table>
+<h3>Using Specialized Class Metaobject Classes</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">class</span><span class="w"> </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:metaclass</span><span class="w"> </span><span class="nv">metaclass</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:metaclass-init-arg</span><span class="w"> </span><span class="nv">init-val</span><span class="p">))</span>
+</pre></div>
+<h3>Class Precedence Lists</h3>
+<p>使用 <code>compute-class-precedence-list</code> 来得到一个类的所有的依赖列表.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">compute-class-precedence-list</span><span class="w"> </span><span class="p">(</span><span class="nf">find-class</span><span class="w"> </span><span class="ss">&#39;coca:ns-window</span><span class="p">))</span>
+</pre></div>
+<pre class="example">
+(#&lt;coca.appkit:ns-window NSWindow 20BF3C908&gt;
+ #&lt;coca.appkit::ns-responder NSResponder 20BF3D600&gt;
+ #&lt;coca.foundation:ns-object NSObject 20BEDDD58&gt;
+ #&lt;standard-class coca.objc:standard-objc-object&gt;
+ #&lt;standard-class coca.objc::objc-pointer&gt;
+ #&lt;standard-class common-lisp:standard-object&gt;
+ #&lt;sb-pcl::slot-class sb-pcl::slot-object&gt; #&lt;sb-pcl:system-class common-lisp:t&gt;)
+</pre>
+<h3>Slot Inheritance</h3>
+<h4>Slot Inheritance Protocol</h4>
+<ul>
+  <li><code>(compute-slots class)</code> 返回元素为 <code>effective-slot-definition</code> 的列表
+    <p>在调用 <code>compute-slots</code> 时, <code>class-precedence-list</code> 应当已经被初始化;</p>
+  </li>
+  <li><code>(compute-effective-slot-definition class slots)</code> 用于合并 <code>slots</code>
+    <ul>
+      <li><code>slots</code>: 元素为 <code>direct-slot-definition</code> 的列表</li>
+    </ul>
+  </li>
+</ul>
+<h4>User Code for the Slot Extension</h4>
+<p>AMOP 里面用了一个 <code>attributes-class</code> 来作为例子.
+  这里直接抛开例子, 大概介绍一下过程:</p>
+<ul>
+  <li>需要一个 metaclass
+    <ul>
+      <li>通过 <code>compute-effective-slot-definition</code> 更改合并的逻辑或者参与合并的过程</li>
+      <li>通过参与 <code>compute-slots</code> 过程来改变或者更新元数据</li>
+    </ul>
+  </li>
+</ul>
+<h3>Other Inheritance Protocols</h3>
+<h4>Precomputing Default Initialization Arguments</h4>
+<h3>Slot Access</h3>
+<p>以下的接口可以重写默认的 slot 规则:</p>
+<ul>
+  <li><code>(slot-value-using-class class instance slot-name)</code></li>
+  <li><code>(slot-boundp-using-class class instance slot-name)</code></li>
+  <li><code>(slot-makunbound-using-class class instance slot-name)</code></li>
+</ul>
+<h3>Instance Allocation</h3>
+<p>以下的接口可以重写默认的 slot 初始化规则:</p>
+<ul>
+  <li><code>(allocate-instance class)</code></li>
+  <li><code>(slot-definition-allocation slot-definition)</code></li>
+</ul>
+<h2>Protocol Design</h2>
+<p>因为并不关心这一部分, 所以就略过了.</p>
+<h3>A Simple Generic Function Invocation Protocol</h3>
+<h4>Generic Function Invocation</h4>
+<h3>Functional and Procedural Protocols</h3>
+<h4>Documenting Generic Functions vs Methods</h4>
+<h4>Overriding the Standard Method</h4>
+<h3>Layered Protocols</h3>
+<h3>Improving Performance</h3>
+<h4>Effective Method Functions</h4>
+<h4>Method Functions</h4>
+<h4>Discriminating Functions</h4>
+<h4>Streamlined Generic Function Invocation</h4>
+<h3>Protocol Design Summary</h3>
+<h1>So, in Coca</h1>
+<h2>About</h2>
+<p>在 coca 这个项目里面, 因为我希望能够实现一个比较优雅的 Class property 的读取.
+  于是希望能够实现这样的操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="nv">objc-object</span><span class="w"> </span><span class="ss">&#39;objc-property</span><span class="p">)</span>
+</pre></div>
+<p>来代替 <code>(invoke objc-object objc-property)</code>:</p>
+<p>核心的思路如下 (以下的内容建议配合代码 <a href="https://github.com/li-yiyang/coca/blob/1c0790af7d6855b6d8b4866d2dec19820f9409c7/objc/objc-class.lisp">objc-class.lisp</a> 进行阅读):</p>
+<ul>
+  <li>通过注册一个 <a href="https://github.com/li-yiyang/coca/blob/1c0790af7d6855b6d8b4866d2dec19820f9409c7/objc/objc-class.lisp#L56C11-L56C29">objc-property-slot</a> 来作为 <code>standard-slot-definition</code> 功能的 mixin,
+    即对于 ObjC instance property, 其所有的逻辑性功能都在该类中实现</li>
+  <li>在 MOP 中, 需要区分 <code>direct-slot-definition</code> 和 <code>effective-slot-definition</code>,
+    前者类似于在 <code>defclass</code> 的时候定义的 <code>slot</code>,
+    在确认 Class 初始化的时候 (<code>ensure-finalized</code>),
+    会被转换/合并为 <code>effective-slot-definition</code>,
+    即实际所持有的 <code>slot-definition</code></li>
+</ul>
+<p>于是就可以实现一个在 <code>coerce-to-objc-class</code> 的时候,
+  自动化注册 <code>slot-definition</code> 的操作.</p>
+<h1>后记</h1>
+<p>AMOP 属于是那种, 从一个非常简单的小例子开始, 慢慢不知不觉就实现了一个庞大系统的书.
+  不过由于这个庞大系统的耦合性实在是太强了, 只实现一个简单的小组件/或者说,
+  只实现 <code>defclass</code> 好像没啥用 &#8211; 因为确实 OOP 的知识不是这本书应该讲的内容.</p>
+<p>我现在想要的教科书应该也是类似这样的教科书, 从一些最简单的部分开始,
+  然后慢慢地构建一个庞大的系统 &#8211; 听起来好像和现在的教学没啥区别,
+  大家不都是从一个简单的, 几乎类似于公理一样的一些前提假设出发,
+  不断地添加新的知识点/记忆点吗? 好像确实, 但是这个构建的过程应当是可以复用的,
+  是可以重新定义的. 比如说实现了计算素数的函数, 那么之后就可以重复应用这个函数,
+  来实现更加复杂的功能, 然后在性能或者表达能力受限的时候,
+  重新返回过来去修正&#8230; 好像确实就应当是正常的教学设计本来应该的方式.</p>
+<p>那么还应该添加一个可以预见的目标 &#8211; 应当是携带着目标来去实现最终的结果,
+  这样会有一个全局的视野 &#8211; 这样利用 REPL 编程的好处就可以显现出来了:
+  一开始可以构建一些不存在的辅助函数, 比如说先实现了一个类似于伪代码一样的主函数,
+  其中的各种功能分支像是占位符一样得先放在这里 &#8211; 也许是已经存在的,
+  也许是需要调优的, 也许是还没有实现的. 总之这样在之后的更细的小任务里面,
+  应该就不会迷失具体最终要做什么.</p>
+
+  </div><a class="u-url" href="/lisp/mop/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Data Structure Quick | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Data Structure Quick" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="序论 程序 = 数据结构 + 算法 数学基础 取整函数: (floor &lt;num&gt;), (ceiling &lt;num&gt;) L&#39;Hopital Rule \(\frac{0}{0}, \frac{&infin;}{&infin;} &rarr; \frac{f&#39;}{g&#39;}\) 级数和近似 \(&sum; x^k &asymp; \frac{1}{k + 1} x^{k + 1}\) 递归方程 算法分析 观察点: (和输入对象大小的一个关系) Time Complexity 执行时间 Space Complexity 执行空间 当然, 小孩子才会做选择, 数据结构的梦想就是时间和空间的共同优化. 所以并不一定要时间复杂度最小就意味着空间复杂度已经就不能保证了. 只是一般会是一个 tradeoff 的过程. 如何计算算法的速度: 通过基础算子进行计算 通过比较大小: \(O(f)\) 表示上极限, Worst Case 的感觉, 如 \(c O(f) &gt; f\) \(&Omega;(f)\) 表示下极限, Best Case 的感觉, 如 \(c &Omega;(f) &lt; f\) \(&Theta;(f)\) 有点像是区间的感觉, 如 \(c&#39; &Theta;(f) &lt; f &lt; c&#8221; &Theta;(f)\) 算法关心的内容 一般来说, 有下面的算法内容: 访问: Access to the object 删除: Erasing an object 插入: Insertion of a new object 替换: Replacement of the object 连接: Concatenate the two lists 判断: Determine if one is a sub-list of the other 计算机中的信息 信息储存方式 (物理) 物理储存 Cache 汇编和编译器可见, 但是对软件不可见 Note: 理论上不可见啦, 可以通过熔断的方式来访问一些不该访问的 Cache, 实现系统安全的破坏. 虚拟储存 Visual Memory, Registers, Program Counter 对程序员可见. 程序员访问数据的粒度 (最小的 W, B, D 这样的单元), 硬件决定了数据的长度 (如 LW, LB, LD 这样的在汇编中的东西). 一些高性能计算的机器可以一次读取数个 8 位的 bit, 可以快速填充数据. 计算机的储存的实现 Registers 使用电容和晶体管实现, 因为电容会漏电, 所以只能用在高速刷新的情况 Main Memory: 因为内存的读写是破坏性的, 所以在读完之后需要重新写回去, 导致了内存墙的读写速度问题. 于是通过构建存储的层次结构来加速存储. Disk SSD: 5 年一大关, 会随着使用而逐渐坏掉, 因为读写速度很慢, 但是可以以 block 的形式返回大量数据, 所以后面会需要 B 树这样的数据结构. 访问的局限性: 程序本身的特性, 即在计算机储存系统设计中: 硬件依赖局部性来提高内存访问速度, 具体有: 时间局部性: 被访问的单元不久之后就会被访问 空间局部性: 被访问的单元边上接近的单元不久之后就会被访问 数据的内存分配方式 连续 Contiguous 类似于数组的实现方式 连接 (Linked) 包含本身和下一个储存对象地址的引用 索引 (Indexed) 一般给操作系统使用 (大规模的文件管理), 将文件以索引的形式来串联, 每一个元素都指引到一个大的储存文件的地址. 基本上在这样的一个基础上就可以构建出各种各样的数据结构. 用来表示各种各样的数据. 关于内存分配的管理 sizeof, malloc 和 free sizeof 在 compile time 进行解析, 是一个运算符不是函数 malloc 和 free 的管理系统类似于一个环状链表, 链表中的指针指向堆中的元素的地址. 分配的时候有一种贪心算法的感觉 其他的一些东西 (有时间补充) 下面的参考一篇文章 What every programmer should know about memory, Part 1 一个计算机的简化结构如下: 线性数据结构 链表 Linked List 一个常见的链表的例子: typedef struct LinkedList { int val; LinkedList * next; /* Two-Directed LinkedList: LinkedList * previous; */ } LinkedList; 注记: 通常还会在链表中加入指向头尾的指针和总长度的计数. 显然, 将尾指针指向头指针你就得到了一个环形数据结构 线性表的操作: 查找, 插入, 替换, 删除, 下一个, 前一个的复杂度都是 \(O(n)\). 在找到节点 node 的前提下, 如何用 \(O(1)\) 的方法来插入和删除 (链表) (在之前) 插入 node-&gt;prev-&gt;next = new_node; new_node-&gt;next = node; 删除 node-&gt;prev-&gt;next = node-&gt;next; 栈 Stack (FILO) 简单的栈可以通过一个指向栈尾的指针 stack 来实现: 入栈: *(++stack) = elem; 出栈: val = *(stack--); 当然, 要考虑边界条件的处理. 队列 Queue (FIFO) 在 Linked List 中, 双指针维护一个头 head 和尾 tail 入队 *(++tail) = elem; 出队 val = *(head++); 当然, 这样在数组中比较不太现实, 所以可以使用环形数组来实现队列 通过双向链表可以实现一个双端队列 (Deque), 类似于同时拥有队列和栈的性质的玩意儿 Note: 在 Client-Server 模型中便有队列的概念, 一个可视化的服务器队列 (负载平衡) 演示模型可以看一篇博文: Load Balancing. 表 Hash 插入, 查找, 删除都是 \(O(1)\) 的复杂度 (通过空间换时间) 简单原理介绍: \(\mathrm{val} \overset{f_{\mathrm{Hash}}}{&rarr;} \mathrm{idx} &rarr; \mathrm{Bucket}\) 将值通过 \(f_{\mathrm{Hash}}\) 哈希函数映射为 idx, 而 Bucket 则为用来处理同映射的桶. (defun hash-find (val) (let* ((idx (hash-f val)) (bucket (nth idx *buckets*))) (find val bucket)))" />
+<meta property="og:description" content="序论 程序 = 数据结构 + 算法 数学基础 取整函数: (floor &lt;num&gt;), (ceiling &lt;num&gt;) L&#39;Hopital Rule \(\frac{0}{0}, \frac{&infin;}{&infin;} &rarr; \frac{f&#39;}{g&#39;}\) 级数和近似 \(&sum; x^k &asymp; \frac{1}{k + 1} x^{k + 1}\) 递归方程 算法分析 观察点: (和输入对象大小的一个关系) Time Complexity 执行时间 Space Complexity 执行空间 当然, 小孩子才会做选择, 数据结构的梦想就是时间和空间的共同优化. 所以并不一定要时间复杂度最小就意味着空间复杂度已经就不能保证了. 只是一般会是一个 tradeoff 的过程. 如何计算算法的速度: 通过基础算子进行计算 通过比较大小: \(O(f)\) 表示上极限, Worst Case 的感觉, 如 \(c O(f) &gt; f\) \(&Omega;(f)\) 表示下极限, Best Case 的感觉, 如 \(c &Omega;(f) &lt; f\) \(&Theta;(f)\) 有点像是区间的感觉, 如 \(c&#39; &Theta;(f) &lt; f &lt; c&#8221; &Theta;(f)\) 算法关心的内容 一般来说, 有下面的算法内容: 访问: Access to the object 删除: Erasing an object 插入: Insertion of a new object 替换: Replacement of the object 连接: Concatenate the two lists 判断: Determine if one is a sub-list of the other 计算机中的信息 信息储存方式 (物理) 物理储存 Cache 汇编和编译器可见, 但是对软件不可见 Note: 理论上不可见啦, 可以通过熔断的方式来访问一些不该访问的 Cache, 实现系统安全的破坏. 虚拟储存 Visual Memory, Registers, Program Counter 对程序员可见. 程序员访问数据的粒度 (最小的 W, B, D 这样的单元), 硬件决定了数据的长度 (如 LW, LB, LD 这样的在汇编中的东西). 一些高性能计算的机器可以一次读取数个 8 位的 bit, 可以快速填充数据. 计算机的储存的实现 Registers 使用电容和晶体管实现, 因为电容会漏电, 所以只能用在高速刷新的情况 Main Memory: 因为内存的读写是破坏性的, 所以在读完之后需要重新写回去, 导致了内存墙的读写速度问题. 于是通过构建存储的层次结构来加速存储. Disk SSD: 5 年一大关, 会随着使用而逐渐坏掉, 因为读写速度很慢, 但是可以以 block 的形式返回大量数据, 所以后面会需要 B 树这样的数据结构. 访问的局限性: 程序本身的特性, 即在计算机储存系统设计中: 硬件依赖局部性来提高内存访问速度, 具体有: 时间局部性: 被访问的单元不久之后就会被访问 空间局部性: 被访问的单元边上接近的单元不久之后就会被访问 数据的内存分配方式 连续 Contiguous 类似于数组的实现方式 连接 (Linked) 包含本身和下一个储存对象地址的引用 索引 (Indexed) 一般给操作系统使用 (大规模的文件管理), 将文件以索引的形式来串联, 每一个元素都指引到一个大的储存文件的地址. 基本上在这样的一个基础上就可以构建出各种各样的数据结构. 用来表示各种各样的数据. 关于内存分配的管理 sizeof, malloc 和 free sizeof 在 compile time 进行解析, 是一个运算符不是函数 malloc 和 free 的管理系统类似于一个环状链表, 链表中的指针指向堆中的元素的地址. 分配的时候有一种贪心算法的感觉 其他的一些东西 (有时间补充) 下面的参考一篇文章 What every programmer should know about memory, Part 1 一个计算机的简化结构如下: 线性数据结构 链表 Linked List 一个常见的链表的例子: typedef struct LinkedList { int val; LinkedList * next; /* Two-Directed LinkedList: LinkedList * previous; */ } LinkedList; 注记: 通常还会在链表中加入指向头尾的指针和总长度的计数. 显然, 将尾指针指向头指针你就得到了一个环形数据结构 线性表的操作: 查找, 插入, 替换, 删除, 下一个, 前一个的复杂度都是 \(O(n)\). 在找到节点 node 的前提下, 如何用 \(O(1)\) 的方法来插入和删除 (链表) (在之前) 插入 node-&gt;prev-&gt;next = new_node; new_node-&gt;next = node; 删除 node-&gt;prev-&gt;next = node-&gt;next; 栈 Stack (FILO) 简单的栈可以通过一个指向栈尾的指针 stack 来实现: 入栈: *(++stack) = elem; 出栈: val = *(stack--); 当然, 要考虑边界条件的处理. 队列 Queue (FIFO) 在 Linked List 中, 双指针维护一个头 head 和尾 tail 入队 *(++tail) = elem; 出队 val = *(head++); 当然, 这样在数组中比较不太现实, 所以可以使用环形数组来实现队列 通过双向链表可以实现一个双端队列 (Deque), 类似于同时拥有队列和栈的性质的玩意儿 Note: 在 Client-Server 模型中便有队列的概念, 一个可视化的服务器队列 (负载平衡) 演示模型可以看一篇博文: Load Balancing. 表 Hash 插入, 查找, 删除都是 \(O(1)\) 的复杂度 (通过空间换时间) 简单原理介绍: \(\mathrm{val} \overset{f_{\mathrm{Hash}}}{&rarr;} \mathrm{idx} &rarr; \mathrm{Bucket}\) 将值通过 \(f_{\mathrm{Hash}}\) 哈希函数映射为 idx, 而 Bucket 则为用来处理同映射的桶. (defun hash-find (val) (let* ((idx (hash-f val)) (bucket (nth idx *buckets*))) (find val bucket)))" />
+<link rel="canonical" href="/notes/data-structure-mid/" />
+<meta property="og:url" content="/notes/data-structure-mid/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-28T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Data Structure Quick" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-04-28T00:00:00+00:00","datePublished":"2023-04-28T00:00:00+00:00","description":"序论 程序 = 数据结构 + 算法 数学基础 取整函数: (floor &lt;num&gt;), (ceiling &lt;num&gt;) L&#39;Hopital Rule \\(\\frac{0}{0}, \\frac{&infin;}{&infin;} &rarr; \\frac{f&#39;}{g&#39;}\\) 级数和近似 \\(&sum; x^k &asymp; \\frac{1}{k + 1} x^{k + 1}\\) 递归方程 算法分析 观察点: (和输入对象大小的一个关系) Time Complexity 执行时间 Space Complexity 执行空间 当然, 小孩子才会做选择, 数据结构的梦想就是时间和空间的共同优化. 所以并不一定要时间复杂度最小就意味着空间复杂度已经就不能保证了. 只是一般会是一个 tradeoff 的过程. 如何计算算法的速度: 通过基础算子进行计算 通过比较大小: \\(O(f)\\) 表示上极限, Worst Case 的感觉, 如 \\(c O(f) &gt; f\\) \\(&Omega;(f)\\) 表示下极限, Best Case 的感觉, 如 \\(c &Omega;(f) &lt; f\\) \\(&Theta;(f)\\) 有点像是区间的感觉, 如 \\(c&#39; &Theta;(f) &lt; f &lt; c&#8221; &Theta;(f)\\) 算法关心的内容 一般来说, 有下面的算法内容: 访问: Access to the object 删除: Erasing an object 插入: Insertion of a new object 替换: Replacement of the object 连接: Concatenate the two lists 判断: Determine if one is a sub-list of the other 计算机中的信息 信息储存方式 (物理) 物理储存 Cache 汇编和编译器可见, 但是对软件不可见 Note: 理论上不可见啦, 可以通过熔断的方式来访问一些不该访问的 Cache, 实现系统安全的破坏. 虚拟储存 Visual Memory, Registers, Program Counter 对程序员可见. 程序员访问数据的粒度 (最小的 W, B, D 这样的单元), 硬件决定了数据的长度 (如 LW, LB, LD 这样的在汇编中的东西). 一些高性能计算的机器可以一次读取数个 8 位的 bit, 可以快速填充数据. 计算机的储存的实现 Registers 使用电容和晶体管实现, 因为电容会漏电, 所以只能用在高速刷新的情况 Main Memory: 因为内存的读写是破坏性的, 所以在读完之后需要重新写回去, 导致了内存墙的读写速度问题. 于是通过构建存储的层次结构来加速存储. Disk SSD: 5 年一大关, 会随着使用而逐渐坏掉, 因为读写速度很慢, 但是可以以 block 的形式返回大量数据, 所以后面会需要 B 树这样的数据结构. 访问的局限性: 程序本身的特性, 即在计算机储存系统设计中: 硬件依赖局部性来提高内存访问速度, 具体有: 时间局部性: 被访问的单元不久之后就会被访问 空间局部性: 被访问的单元边上接近的单元不久之后就会被访问 数据的内存分配方式 连续 Contiguous 类似于数组的实现方式 连接 (Linked) 包含本身和下一个储存对象地址的引用 索引 (Indexed) 一般给操作系统使用 (大规模的文件管理), 将文件以索引的形式来串联, 每一个元素都指引到一个大的储存文件的地址. 基本上在这样的一个基础上就可以构建出各种各样的数据结构. 用来表示各种各样的数据. 关于内存分配的管理 sizeof, malloc 和 free sizeof 在 compile time 进行解析, 是一个运算符不是函数 malloc 和 free 的管理系统类似于一个环状链表, 链表中的指针指向堆中的元素的地址. 分配的时候有一种贪心算法的感觉 其他的一些东西 (有时间补充) 下面的参考一篇文章 What every programmer should know about memory, Part 1 一个计算机的简化结构如下: 线性数据结构 链表 Linked List 一个常见的链表的例子: typedef struct LinkedList { int val; LinkedList * next; /* Two-Directed LinkedList: LinkedList * previous; */ } LinkedList; 注记: 通常还会在链表中加入指向头尾的指针和总长度的计数. 显然, 将尾指针指向头指针你就得到了一个环形数据结构 线性表的操作: 查找, 插入, 替换, 删除, 下一个, 前一个的复杂度都是 \\(O(n)\\). 在找到节点 node 的前提下, 如何用 \\(O(1)\\) 的方法来插入和删除 (链表) (在之前) 插入 node-&gt;prev-&gt;next = new_node; new_node-&gt;next = node; 删除 node-&gt;prev-&gt;next = node-&gt;next; 栈 Stack (FILO) 简单的栈可以通过一个指向栈尾的指针 stack 来实现: 入栈: *(++stack) = elem; 出栈: val = *(stack--); 当然, 要考虑边界条件的处理. 队列 Queue (FIFO) 在 Linked List 中, 双指针维护一个头 head 和尾 tail 入队 *(++tail) = elem; 出队 val = *(head++); 当然, 这样在数组中比较不太现实, 所以可以使用环形数组来实现队列 通过双向链表可以实现一个双端队列 (Deque), 类似于同时拥有队列和栈的性质的玩意儿 Note: 在 Client-Server 模型中便有队列的概念, 一个可视化的服务器队列 (负载平衡) 演示模型可以看一篇博文: Load Balancing. 表 Hash 插入, 查找, 删除都是 \\(O(1)\\) 的复杂度 (通过空间换时间) 简单原理介绍: \\(\\mathrm{val} \\overset{f_{\\mathrm{Hash}}}{&rarr;} \\mathrm{idx} &rarr; \\mathrm{Bucket}\\) 将值通过 \\(f_{\\mathrm{Hash}}\\) 哈希函数映射为 idx, 而 Bucket 则为用来处理同映射的桶. (defun hash-find (val) (let* ((idx (hash-f val)) (bucket (nth idx *buckets*))) (find val bucket)))","headline":"Data Structure Quick","mainEntityOfPage":{"@type":"WebPage","@id":"/notes/data-structure-mid/"},"url":"/notes/data-structure-mid/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Data Structure Quick</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-04-28T00:00:00+00:00" itemprop="datePublished">Apr 28, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>序论</h1>
+<p>程序 = 数据结构 + 算法</p>
+<h2>数学基础</h2>
+<ul>
+  <li>取整函数: <code>(floor &lt;num&gt;)</code>, <code>(ceiling &lt;num&gt;)</code></li>
+  <li>L'Hopital Rule \(\frac{0}{0}, \frac{&infin;}{&infin;} &rarr; \frac{f'}{g'}\)</li>
+  <li>级数和近似 \(&sum; x^k &asymp; \frac{1}{k + 1} x^{k + 1}\)</li>
+  <li>递归方程</li>
+</ul>
+<h2>算法分析</h2>
+<p>观察点: (和输入对象大小的一个关系)</p>
+<ul>
+  <li>Time Complexity 执行时间</li>
+  <li>Space Complexity 执行空间</li>
+</ul>
+<p>当然, 小孩子才会做选择, 数据结构的梦想就是时间和空间的共同优化.
+  所以并不一定要时间复杂度最小就意味着空间复杂度已经就不能保证了.
+  只是一般会是一个 tradeoff 的过程.</p>
+<p>如何计算算法的速度:</p>
+<ul>
+  <li>通过基础算子进行计算</li>
+  <li>通过比较大小:
+    <ul>
+      <li>\(O(f)\) 表示上极限, Worst Case 的感觉, 如 \(c O(f) &gt; f\)</li>
+      <li>\(&Omega;(f)\) 表示下极限, Best Case 的感觉, 如 \(c &Omega;(f) &lt; f\)</li>
+      <li>\(&Theta;(f)\) 有点像是区间的感觉, 如 \(c' &Theta;(f) &lt; f &lt; c&#8221; &Theta;(f)\)</li>
+    </ul>
+  </li>
+</ul>
+<h2>算法关心的内容</h2>
+<p>一般来说, 有下面的算法内容:</p>
+<ul>
+  <li>访问: <b>Access</b> to the object</li>
+  <li>删除: <b>Erasing</b> an object</li>
+  <li>插入: <b>Insertion</b> of a new object</li>
+  <li>替换: <b>Replacement</b> of the object</li>
+  <li>连接: <b>Concatenate</b> the two lists</li>
+  <li>判断: <b>Determine</b> if one is a sub-list of the other</li>
+</ul>
+<h1>计算机中的信息</h1>
+<h2>信息储存方式 (物理)</h2>
+<ul>
+  <li>物理储存 Cache 汇编和编译器可见, 但是对软件不可见
+    <p>Note: 理论上不可见啦, 可以通过熔断的方式来访问一些不该访问的 Cache,
+      实现系统安全的破坏.</p>
+  </li>
+  <li>虚拟储存 Visual Memory, Registers, Program Counter
+    对程序员可见.
+    <ul>
+      <li>程序员访问数据的粒度 (最小的 <code>W</code>, <code>B</code>, <code>D</code> 这样的单元),
+        <p>硬件决定了数据的长度 (如 <code>LW</code>, <code>LB</code>, <code>LD</code> 这样的在汇编中的东西).</p>
+        <p>一些高性能计算的机器可以一次读取数个 8 位的 bit, 可以快速填充数据.</p>
+      </li>
+    </ul>
+  </li>
+  <li>计算机的储存的实现
+    <ul>
+      <li>Registers 使用电容和晶体管实现, 因为电容会漏电, 所以只能用在高速刷新的情况</li>
+      <li>Main Memory: 因为内存的读写是破坏性的, 所以在读完之后需要重新写回去,
+        导致了内存墙的读写速度问题. 于是通过构建存储的层次结构来加速存储.</li>
+      <li>Disk SSD: 5 年一大关, 会随着使用而逐渐坏掉, 因为读写速度很慢,
+        但是可以以 block 的形式返回大量数据, 所以后面会需要 B 树这样的数据结构.</li>
+    </ul>
+  </li>
+  <li>访问的局限性: 程序本身的特性, 即在计算机储存系统设计中:
+    硬件依赖局部性来提高内存访问速度, 具体有:
+    <ul>
+      <li>时间局部性: 被访问的单元不久之后就会被访问</li>
+      <li>空间局部性: 被访问的单元边上接近的单元不久之后就会被访问</li>
+    </ul>
+  </li>
+</ul>
+<h2>数据的内存分配方式</h2>
+<ul>
+  <li>连续 Contiguous
+    <p><img src="/_img/pieces/data-struct/contiguous-data.svg" alt="/_img/pieces/data-struct/contiguous-data.svg" /></p>
+    <p>类似于数组的实现方式</p>
+  </li>
+  <li>连接 (Linked)
+    <p><img src="/_img/pieces/data-struct/linked-data.svg" alt="/_img/pieces/data-struct/linked-data.svg" /></p>
+    <p>包含本身和下一个储存对象地址的引用</p>
+  </li>
+  <li>索引 (Indexed)
+    <p>一般给操作系统使用 (大规模的文件管理),
+      将文件以索引的形式来串联, 每一个元素都指引到一个大的储存文件的地址.</p>
+  </li>
+</ul>
+<p>基本上在这样的一个基础上就可以构建出各种各样的数据结构.
+  用来表示各种各样的数据.</p>
+<h2>关于内存分配的管理 <code>sizeof</code>, <code>malloc</code> 和 <code>free</code></h2>
+<ul>
+  <li><code>sizeof</code> 在 compile time 进行解析, 是一个运算符不是函数</li>
+  <li><code>malloc</code> 和 <code>free</code> 的管理系统类似于一个环状链表,
+    链表中的指针指向堆中的元素的地址.
+    <ul>
+      <li>分配的时候有一种贪心算法的感觉</li>
+      <li></li>
+    </ul>
+  </li>
+</ul>
+<h2>其他的一些东西 (有时间补充)</h2>
+<p>下面的参考一篇文章 <a href="https://lwn.net/Articles/250967/">What every programmer should know about memory, Part 1</a></p>
+<p>一个计算机的简化结构如下:</p>
+<p><img src="/_img/pieces/data-struct/cpu-north-sourth-bridge.svg" alt="/_img/pieces/data-struct/cpu-north-sourth-bridge.svg" /></p>
+<h1>线性数据结构</h1>
+<h2>链表 Linked List</h2>
+<p>一个常见的链表的例子:</p>
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">LinkedList</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">  </span><span class="n">LinkedList</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">next</span><span class="p">;</span>
+<span class="w">  </span><span class="cm">/*</span>
+<span class="cm">    Two-Directed LinkedList:</span>
+<span class="cm">    LinkedList * previous;</span>
+<span class="cm">  */</span>
+<span class="p">}</span><span class="w"> </span><span class="n">LinkedList</span><span class="p">;</span>
+</pre></div>
+<p>注记:</p>
+<ul>
+  <li>通常还会在链表中加入指向头尾的指针和总长度的计数.
+    <p>显然, 将尾指针指向头指针你就得到了一个环形数据结构</p>
+  </li>
+  <li>线性表的操作: 查找, 插入, 替换, 删除, 下一个, 前一个的复杂度都是 \(O(n)\).</li>
+  <li>在找到节点 <code>node</code> 的前提下, 如何用 \(O(1)\) 的方法来插入和删除 (链表)
+    <ul>
+      <li>(在之前) 插入 <code>node-&gt;prev-&gt;next = new_node; new_node-&gt;next = node;</code></li>
+      <li>删除 <code>node-&gt;prev-&gt;next = node-&gt;next;</code></li>
+    </ul>
+  </li>
+</ul>
+<h2>栈 Stack (FILO)</h2>
+<p>简单的栈可以通过一个指向栈尾的指针 <code>stack</code> 来实现:</p>
+<ul>
+  <li>入栈: <code>*(++stack) = elem;</code></li>
+  <li>出栈: <code>val = *(stack--);</code></li>
+</ul>
+<p>当然, 要考虑边界条件的处理.</p>
+<h2>队列 Queue (FIFO)</h2>
+<ul>
+  <li>在 Linked List 中, 双指针维护一个头 <code>head</code> 和尾 <code>tail</code>
+    <ul>
+      <li>入队 <code>*(++tail) = elem;</code></li>
+      <li>出队 <code>val = *(head++);</code></li>
+      <li>当然, 这样在数组中比较不太现实, 所以可以使用环形数组来实现队列</li>
+    </ul>
+  </li>
+  <li>通过双向链表可以实现一个双端队列 (Deque), 类似于同时拥有队列和栈的性质的玩意儿</li>
+</ul>
+<p>Note: 在 Client-Server 模型中便有队列的概念,
+  一个可视化的服务器队列 (负载平衡) 演示模型可以看一篇博文: <a href="https://samwho.dev/load-balancing/">Load Balancing</a>.</p>
+<h2>表 Hash</h2>
+<ul>
+  <li>插入, 查找, 删除都是 \(O(1)\) 的复杂度
+    <p>(通过空间换时间)</p>
+  </li>
+  <li>简单原理介绍: \(\mathrm{val} \overset{f_{\mathrm{Hash}}}{&rarr;} \mathrm{idx} &rarr; \mathrm{Bucket}\)
+    <p>将值通过 \(f_{\mathrm{Hash}}\) 哈希函数映射为 <code>idx</code>,
+      而 <code>Bucket</code> 则为用来处理同映射的桶.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">hash-find</span><span class="w"> </span><span class="p">(</span><span class="nf">val</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">idx</span><span class="w">    </span><span class="p">(</span><span class="nf">hash-f</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">bucket</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">*buckets*</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">bucket</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">hash-insert</span><span class="w"> </span><span class="p">(</span><span class="nf">val</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">idx</span><span class="w">    </span><span class="p">(</span><span class="nf">hash-f</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">bucket</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">*buckets*</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">bucket</span><span class="p">)))</span>
+</pre></div>
+    <p>大概是这么个感觉.</p>
+  </li>
+  <li>Hash 函数的种类
+    <ul>
+      <li>取模函数</li>
+      <li>整数解释法
+        <ul>
+          <li>将 <code>val</code> 作为一个整数来进行处理, 比如限定为 32 位</li>
+          <li>高位可以选择溢出或者通过切片后相加</li>
+        </ul>
+      </li>
+      <li>哈希编码: 多项式相加</li>
+    </ul>
+  </li>
+</ul>
+<p>Note: 一个应用即是 IP &lt;-&gt; 域名之间的快速查找</p>
+<h1>树</h1>
+<h2>一般的树的理论</h2>
+<table>
+  <tr><th>术语</th><th>解释</th></tr>
+  <tr><td>Root</td><td>node without parent</td></tr>
+  <tr><td>Internal Node</td><td>at least one child</td></tr>
+  <tr><td>External Node (Leaf)</td><td>no children</td></tr>
+  <tr><td>Ancestors (Grandparent, Grand-grandparent)</td><td>parent or ancestor of the parent</td></tr>
+  <tr><td>Depth</td><td>the number of ancestors</td></tr>
+  <tr><td>Height</td><td>maximum depth of any node</td></tr>
+  <tr><td>Descendant</td><td></td></tr>
+  <tr><td>Siblings</td><td>of same parent</td></tr>
+</table>
+<h3>树的标示方式</h3>
+<ul>
+  <li>双亲标示法
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">ParentTree</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ParentTree</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">parent</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">ParentTree</span><span class="p">;</span>
+</pre></div>
+    <p>通过指向父元素来构建树</p>
+  </li>
+  <li>孩子链表表示法
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="n">ChildTree</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ChildTreeList</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">nodes</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">ChildTree</span><span class="p">;</span>
+</pre></div>
+    <p>通过指向子节点来标示树</p>
+  </li>
+  <li>孩子兄弟法
+<div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="n">SiblingTree</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">val</span><span class="p">;</span>
+<span class="w">  </span><span class="n">SiblingTree</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">firstChild</span><span class="p">;</span>
+<span class="w">  </span><span class="n">SiblingTree</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">nextSibling</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">SiblingTree</span><span class="p">;</span>
+</pre></div>
+    <p>左指孩子, 右指兄弟,
+      (实际上有点像是把孩子链表表示法中的 <code>ChildTreeList</code> 用头指针来代替了的感觉. )</p>
+  </li>
+</ul>
+<h3>历遍树的方式</h3>
+<ul>
+  <li>先序遍历 Pre-order Traversal
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pre-order-travel</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">cons</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nf">value</span><span class="w"> </span><span class="nv">tree</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">sub-tree</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pre-order-travel</span><span class="w"> </span><span class="nv">sub-tree</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">childs</span><span class="w"> </span><span class="nv">tree</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>后序遍历 Post-order Traversal
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">post-order-travel</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sub-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">sub-tree</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">post-order-travel</span><span class="w"> </span><span class="nv">sub-tree</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">childs</span><span class="w"> </span><span class="nv">tree</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nf">value</span><span class="w"> </span><span class="nv">tree</span><span class="p">))</span><span class="w"> </span><span class="nv">sub-tree</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+<h3>树和森林</h3>
+<ul>
+  <li>森林 -&gt; (二叉) 树
+    <ul>
+      <li>使用孩子兄弟法进行表示</li>
+      <li>对于树根 (Root) 的兄弟, 即其他的树</li>
+    </ul>
+  </li>
+  <li>树 -&gt; 森林 (还原)</li>
+</ul>
+<h2>二叉树</h2>
+<p>二叉树的节点是同构的, 所以算法好写</p>
+<h3>二叉树的分类</h3>
+<ul>
+  <li>完全二叉树 (Complete Binary Tree)</li>
+  <li>完美二叉树 (Perfect Binary Tree)</li>
+  <li>真二叉树 (Full Binary Tree)</li>
+</ul>
+<h3>历遍二叉树</h3>
+<p>参考 <a href="https://zh.wikipedia.org/wiki/树的遍历">Wikipedia</a> 上的配图解释感觉很好理解, 下面的代码仅供参考:</p>
+<ul>
+  <li>中序遍历
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">mid-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">left</span><span class="w">  </span><span class="p">(</span><span class="nf">mid-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">left</span><span class="w">  </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">mid</span><span class="w">   </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nf">value</span><span class="w"> </span><span class="nv">tree</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="p">(</span><span class="nf">mid-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">:root</span><span class="w">  </span><span class="nv">mid</span>
+<span class="w">          </span><span class="nv">:left</span><span class="w">  </span><span class="nv">left</span>
+<span class="w">          </span><span class="nv">:right</span><span class="w"> </span><span class="nv">right</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>先序遍历
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pre-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mid</span><span class="w">   </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nf">value</span><span class="w"> </span><span class="nv">tree</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">left</span><span class="w">  </span><span class="p">(</span><span class="nf">pre-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">left</span><span class="w">  </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="p">(</span><span class="nf">pre-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">:root</span><span class="w"> </span><span class="nv">mid</span>
+<span class="w">        </span><span class="nv">:left</span><span class="w"> </span><span class="nv">left</span>
+<span class="w">        </span><span class="nv">:right</span><span class="w"> </span><span class="nv">right</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>后序遍历
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">post-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">func</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">left</span><span class="w">  </span><span class="p">(</span><span class="nf">post-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">left</span><span class="w">  </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="p">(</span><span class="nf">post-order-binary-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span><span class="w"> </span><span class="nv">func</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">mid</span><span class="w">   </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="p">(</span><span class="nf">value</span><span class="w"> </span><span class="nv">tree</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">tree</span><span class="w"> </span><span class="nv">:root</span><span class="w"> </span><span class="nv">mid</span>
+<span class="w">          </span><span class="nv">:left</span><span class="w"> </span><span class="nv">left</span>
+<span class="w">          </span><span class="nv">:right</span><span class="w"> </span><span class="nv">right</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>层次遍历法: 每一层进行遍历, 但是会失去父子关系</li>
+</ul>
+<h3>查找二叉树</h3>
+<ul>
+  <li>二分查找</li>
+  <li>Fibonacci 数查找</li>
+  <li>二叉平衡树调平衡</li>
+</ul>
+<h2>B 树和 B+ 树</h2>
+<h3>多路树 Multi-way Tree</h3>
+<p>多路树, 顾名思义就是一个节点有多个出边的树.
+  并且通过添加一些虚空边的形式来让这个树的结构更加统一.</p>
+<p><img src="/_img/pieces/data-struct/multiway-tree.svg" alt="/_img/pieces/data-struct/multiway-tree.svg" /></p>
+<p>一些多路树的例子, 其中记号为 <code>(min, max)</code> 最小出边 <code>min</code> 条, 最大出边 <code>max</code> 条:</p>
+<ul>
+  <li><code>(1, 2)</code> 树, 有点像是一个二叉树</li>
+  <li><code>(2, 4)</code> 树, 最少 2 个, 最多 4 个出边</li>
+</ul>
+<h3>B 树和 B+ 树</h3>
+<p>为什么使用 B 树:</p>
+<ul>
+  <li>访存模型: CPU (1 cycle \(&asymp; 1ns\)) \(&larr;\) Memory (\(&gt;100\) cycles) \(&larr;\) Disk (\(&asymp; ms\))</li>
+  <li>因为 IO 到硬盘速度很慢, 一次循环要的时间比较长, 于是为了提高效率,
+    所以增加一次取数据的数量 (更大的 block), 使得效率提升.</li>
+</ul>
+<p>B+ 树和 B 树:</p>
+<ul>
+  <li>实际上区别在于 B+ 树更像是一个链表, 但是通过 B 树的组织形式来进行快速查找.</li>
+</ul>
+<h2>红黑树</h2>
+<h3>红黑树的平衡调节</h3>
+<ul>
+  <li>红黑树的平衡: 黑色平衡
+    <p>相当于是在计数的时候忽略红色节点. 对于黑色高度的计数的一个例子:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">count-black-height</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">count+1-if-black</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">black?</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">count-black-height</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nf">count-black-height</span><span class="w"> </span><span class="nv">n</span><span class="p">)))))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">leaf?</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span>
+<span class="w">              </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">black?</span><span class="w"> </span><span class="nv">node</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;This tree is not red-black-tree&quot;</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">max</span><span class="w"> </span><span class="p">(</span><span class="nf">count+1-if-black</span><span class="w"> </span><span class="p">(</span><span class="nf">left</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">count+1-if-black</span><span class="w"> </span><span class="p">(</span><span class="nf">right</span><span class="w"> </span><span class="nv">node</span><span class="p">))))))</span>
+</pre></div>
+    <p>并且还要求黑色节点的高度不会超过两倍.</p>
+  </li>
+  <li>调平衡的方式和 AVL 的调平衡类似, 但是根节点必须是黑色的</li>
+</ul>
+<h3>红黑树和 B 树的转换</h3>
+<h1>一些做过的题目的注记</h1>
+<ul>
+  <li>比较复杂度: 基本上就是 \((\frac{1}{c})^n, c, log n, n^k, n log n, n!, c^n, n^{log n}, n^n\)
+    这样的大小关系.</li>
+  <li>如何将递归用栈来表示 (实际上就是手动维护函数栈调用)</li>
+  <li>经典递归问题: 汉诺塔
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">move-tower</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">other</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">move</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span><span class="w">                    </span><span class="c1">; move only one</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">move-tower</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">other</span><span class="w"> </span><span class="nv">to</span><span class="p">)</span><span class="w"> </span><span class="c1">; move first `n - 1&#39; to OTHER place</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">move-tower</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">other</span><span class="p">)</span><span class="w">      </span><span class="c1">; move last one to TO place</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">move-tower</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">other</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="nv">from</span><span class="p">)</span><span class="w"> </span><span class="c1">; move first `n - 1&#39; from OTHER to TO place</span>
+<span class="w">        </span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>Hash 函数的平均查找长度</li>
+  <li><code>malloc</code> 和 <code>free</code>
+    <ul>
+      <li>伙伴二进制地址
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">addr-cal</span><span class="w"> </span><span class="p">(</span><span class="nf">addr</span><span class="w"> </span><span class="nv">base</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">low</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">base</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">addr</span><span class="w"> </span><span class="nv">base</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">low</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">base</span><span class="p">)))</span>
+<span class="w">        </span><span class="nv">low</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">low</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">base</span><span class="p">)))))</span>
+</pre></div>
+      </li>
+    </ul>
+  </li>
+  <li>二叉树
+    <ul>
+      <li>二叉树的还原</li>
+      <li>Huffman 编码:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">huffman-tree</span><span class="w"> </span><span class="p">(</span><span class="nf">sequence-with-frequence</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">sequence-with-frequence</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">item</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">sequence-with-frequence</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">seq</span><span class="w">    </span><span class="p">(</span><span class="nf">sort-by</span><span class="w"> </span><span class="nv">frequence</span><span class="w"> </span><span class="nv">sequence-with-frequence</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">first</span><span class="w">  </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">seq</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nb">second</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="nv">seq</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">huffman-tree</span>
+<span class="w">         </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">(</span><span class="nf">make-node</span><span class="w"> </span><span class="nv">:frequence</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">frequence</span><span class="w"> </span><span class="nb">first</span><span class="p">)</span>
+<span class="w">                                        </span><span class="p">(</span><span class="nf">frequence</span><span class="w"> </span><span class="nb">second</span><span class="p">))</span>
+<span class="w">                          </span><span class="nv">:left</span><span class="w">      </span><span class="p">(</span><span class="nf">item</span><span class="w"> </span><span class="nb">first</span><span class="p">)</span>
+<span class="w">                          </span><span class="nv">:right</span><span class="w">     </span><span class="p">(</span><span class="nf">item</span><span class="w"> </span><span class="nb">second</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">seq</span><span class="p">)))))</span>
+</pre></div>
+      </li>
+      <li>树的类型的判断
+        <ul>
+          <li>完全二叉树</li>
+          <li>堆, 堆的变化</li>
+          <li>二叉排序树</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><code>(m, M)</code> 树
+    <ul>
+      <li>插入, 删除, 查找</li>
+    </ul>
+  </li>
+  <li>B+ 树</li>
+</ul>
+<h1>注</h1>
+<p>因为是次修的网安, 所以感觉就随便一些吧. (虽然感觉之后可能要把这个次修给退了,
+  所以可能这课不太能摆烂&#8230; 感觉次修不如旁听. )</p>
+<p>关于标题, 确实是 Quick, 因为真的没有时间去复习了.</p>
+<p>又: 看题目啊&#8230; 悲.</p>
+
+  </div><a class="u-url" href="/notes/data-structure-mid/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

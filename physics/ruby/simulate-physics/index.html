@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Simulate Physics | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Simulate Physics" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="计算机模拟物理 - 农民的思路集和可能的学习路线 背景介绍 俺是个没文(头)化(脑)的人, 学习的时候没有一个非常直观的东西的话就总感觉理解起来非常心虚. 所以可能的话, 总希望能够有些什么清晰的东西东西来帮助我理解这些物理公式所代表的意义." />
+<meta property="og:description" content="计算机模拟物理 - 农民的思路集和可能的学习路线 背景介绍 俺是个没文(头)化(脑)的人, 学习的时候没有一个非常直观的东西的话就总感觉理解起来非常心虚. 所以可能的话, 总希望能够有些什么清晰的东西东西来帮助我理解这些物理公式所代表的意义." />
+<link rel="canonical" href="/physics/ruby/simulate-physics/" />
+<meta property="og:url" content="/physics/ruby/simulate-physics/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2022-06-03T16:08:06+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Simulate Physics" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2022-06-03T16:08:06+00:00","datePublished":"2022-06-03T16:08:06+00:00","description":"计算机模拟物理 - 农民的思路集和可能的学习路线 背景介绍 俺是个没文(头)化(脑)的人, 学习的时候没有一个非常直观的东西的话就总感觉理解起来非常心虚. 所以可能的话, 总希望能够有些什么清晰的东西东西来帮助我理解这些物理公式所代表的意义.","headline":"Simulate Physics","mainEntityOfPage":{"@type":"WebPage","@id":"/physics/ruby/simulate-physics/"},"url":"/physics/ruby/simulate-physics/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Simulate Physics</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2022-06-03T16:08:06+00:00" itemprop="datePublished">Jun 3, 2022
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="计算机模拟物理---农民的思路集和可能的学习路线">计算机模拟物理 - 农民的思路集和可能的学习路线</h1>
+<h2 id="背景介绍">背景介绍</h2>
+<p>俺是个没文(头)化(脑)的人, 学习的时候没有一个非常直观的东西的话就总感觉理解起来非常心虚. 所以可能的话, 总希望能够有些什么清晰的东西东西来帮助我理解这些物理公式所代表的意义.</p>
+
+<p>恰好同学问我了一些问题, 也激起了我的好奇心, 加上学长们的指导帮助, 接下去估计可以往这个方向来干一波鸟事.</p>
+
+<p>(先介绍一些我之前试过的一些农民方法, 然后介绍一些可能的方向, 以后慢慢学. )</p>
+
+<h2 id="静电场和mma">静电场和MMA</h2>
+<p><details><summary>What Hell is "MMA"?</summary>
+哈哈哈, MMA不是<a href="https://www.mmafighting.com">综合格斗</a>啦. 虽然不知道为什么, MMA是Mathematica的缩写. 一个介绍在<a href="https://mathematica.meta.stackexchange.com/questions/635/definition-of-mma">这里</a>. <br />
+
+在Mathematica里面有很多乱七八糟的函数和工具, 很多都非常牛. (就是并不是一个开源的软件, 可惜是可惜了一些. )
+</details></p>
+
+<blockquote>
+  <p>问题: 万磁王的瓜皮帽均匀带上电的话, 那么会有怎么样的电场. 即如何模拟一个均匀带点半球周围的静电场分布?</p>
+</blockquote>
+
+<p>一个朴素的想法就是:</p>
+
+\[\vec{E} = \frac{1}{4 \pi \varepsilon_0} \frac{1}{r^3} \vec{r}\]
+
+<p>积分就积分. 也不是不行. Mathematica里面的积分简单得很: <code class="language-plaintext highlighter-rouge">Integrate[exp, {x, x0, x1}]</code>, 那么要如何直观地表现出来呢? 在Mathematica里面, 通过<code class="language-plaintext highlighter-rouge">VectorPlot3D</code>的方式可以在空间中画出向量场.</p>
+
+<p>大意了. 提前说一下, 在Mathematica里面, 终止程序运行的快捷键是<code class="language-plaintext highlighter-rouge">command-.</code>, 在Mac里面强制退出程序的的方式是鼠标右键-“Force Quit”, 实在没救了的话, 可以使用重启大法. (好的, 大概这就是我为什么会说大意了的理由了. )</p>
+
+<h3 id="那么能不能稍微变一下">那么能不能稍微变一下?</h3>
+<p>还是一个简单的想法: 在没有电荷分布的空间中, 电势满足</p>
+
+\[\nabla^2 \varphi = 0\]
+
+<p>而由电场唯一性定理, 只要把电场的边界条件处理好就可以计算出全空间的电势分布了. (不过这个我没有实现, 因为啊, 偏微分方程不是很理解. 以后可以试试看. )</p>
+
+<h3 id="至少能动的水平">至少能动的水平</h3>
+<p>为了能够让程序至少给出一个令人满意的结果, 我尝试的思路就是将空间分隔为一个个的格点, 不再是计算连续的电场空间分布, 而是是离散地计算, 嗯. 没准能行:</p>
+
+<p><a href="/_img/simulate-physics/hemispheres-electronic-field.nb"><img src="/_img/simulate-physics/hemispheres-electronic-field.jpg" alt="hemisphere-electronic" title="怎么? 你想要代码吗? 可以直接抄哦... 好吧, 你可以猜猜看, 这段代码我会放到哪里? " /></a></p>
+
+<p>(嗯, 能动了, 至少有了一个输出结果, 可是这样总感觉有点, 怎么说吧, 有点不够酷. 不过这个例子我觉得有些单调了. )</p>
+
+<h2 id="力学模拟和随便编程">力学模拟和随便编程</h2>
+<p>前面的问题其实说是物理学模拟, 其实我觉得更像是一种我把物理公式交给计算机来帮我算的这样的想法. 那么下面来介绍一下让我更加想要了解用计算机模拟物理的一个例子吧.</p>
+
+<blockquote>
+  <p>问题: 我们考试选择题是A, B, C三选一, 所以我想要一个三面概率的骰子 – 一个圆柱形的骰子. 那么要怎么设计它呢?</p>
+</blockquote>
+
+<p>(我的同学竟然打算用这个写小论文, 啊啊啊, 为什么不找一些更有意思的好玩的东西呢? )</p>
+
+<details>
+<summary>这里是我对这个古怪问题的傻傻的做法</summary>
+<a href="/_img/../../../_img/simulate-physics/three-side-distribution-problem.nb">
+<img src="/_img/../../../_img/simulate-physics/three-side-distribution-problem.jpg" title="这个东西写了我好久... 查了好多的文档, 呜呜呜, 但是最后模拟的结果和我的理论并不是那么相等... 可恶, 原理简单单, 编程狗屎蛋! (又, 源文件同上. )" />
+</a>
+</details>
+
+<p>不过这个小论文最核心的部分是如何通过理论验证来证明… 在上面的”小作文”里面, 模拟的数据是通过<a href="https://pybullet.org">pybullet</a>来模拟运算的. 怎么说呢? 不太懂. (以后可以多看看. )</p>
+
+<p>于是打算用MMA来尝试一下, 结果模拟写到一半然后运行卡死了, 死了, 死… 完蛋. 心态炸了. 于是就换回了自己比较熟的Ruby. (关于Ruby的一些介绍, 啊, 啊, 呃, 好像我没有写过哦. 要不看看<a href="/ruby/i-am-boring/">这个</a>? 或者<a href="https://github.com/li-yiyang/magic_the_book">这个</a>? )</p>
+
+<h3 id="最简单的想法">最简单的想法</h3>
+<p><del>首先肯定不可能写运动方程的. 要能写出运动方程的话, 那还要模拟个啥啊, 哈哈哈.</del></p>
+
+<p>马上开始: 如果物体的坐标超过了边界(比如地面), 那么就将速度反向. 这就是最简单的碰撞的想法. 嗯, 再乘上一个恢复系数就更好了. 大概长这样呢?</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Partical</span>
+  <span class="k">def</span> <span class="nf">update</span>
+    <span class="vi">@x</span> <span class="o">+=</span> <span class="vi">@v</span> <span class="o">*</span> <span class="vi">@dt</span>
+    <span class="vi">@v</span> <span class="o">=</span> <span class="vi">@x</span> <span class="o">&gt;</span> <span class="no">BOUNDARY</span> <span class="p">?</span> <span class="o">-</span> <span class="vi">@e</span> <span class="o">*</span> <span class="vi">@v</span> <span class="p">:</span> <span class="vi">@v</span> <span class="o">+</span> <span class="n">force</span><span class="p">(</span><span class="vi">@x</span><span class="p">)</span> <span class="o">*</span> <span class="vi">@dt</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>(总觉得言语难以说清, 也没有一个很好的方式来表现. 之后会想一个方法来演示的. )</p>
+
+<p>但是我要扔的是圆柱啊, 上面不是只模拟了一个粒子吗? 这差得很多的吧? 对于一个圆柱, 这应该是个刚体问题吧?</p>
+
+<p>于是装模作样地写出碰撞方程, 然后解出关系, 最后就完事啦. 欧吼!</p>
+
+<p><img src="/_img/simulate-physics/cylinder-hit.jpeg" alt="cylinder-hit" title="看我的乱七八糟的绘画, 哈哈. 大概有点灵魂吧. " /></p>
+
+<p>于是就可以计算出:</p>
+
+<p><img src="/_img/simulate-physics/cylinder-hit-eqs.png" alt="cylinder-hit-eqs" title="大概是这样的运动方程, 然后代入条件判断里面.... " /></p>
+
+<details>
+<summary>于是代码就变成了... </summary>
+因为这个方法最终被我抛弃了, (做到一半出现了尴尬的结果, 所以我就放弃了, 话说这段代码还是我从Trash里面找出来的尸体呢. )
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">update</span>
+ <span class="k">if</span> <span class="vi">@p</span> <span class="o">+</span> <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">-</span> <span class="vi">@theta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">600</span> <span class="o">||</span>
+    <span class="vi">@p</span> <span class="o">-</span> <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">-</span> <span class="vi">@theta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">600</span> <span class="o">||</span>
+    <span class="vi">@p</span> <span class="o">+</span> <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="vi">@theta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">600</span> <span class="o">||</span>
+    <span class="vi">@p</span> <span class="o">-</span> <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="vi">@theta</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">600</span>
+  <span class="vi">@p</span> <span class="o">-=</span> <span class="vi">@v</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="vi">@theta</span> <span class="o">-=</span> <span class="vi">@w</span>
+
+  <span class="n">tringle</span> <span class="o">=</span> <span class="no">Math</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="vi">@theta</span> <span class="o">-</span> <span class="no">Math</span><span class="o">::</span><span class="no">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+  <span class="n">deminator</span> <span class="o">=</span> <span class="vi">@i</span> <span class="o">-</span> <span class="vi">@m</span> <span class="o">*</span> <span class="p">(</span><span class="vi">@r</span> <span class="o">*</span> <span class="n">tringle</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+  <span class="vi">@v</span><span class="p">,</span> <span class="vi">@w</span> <span class="o">=</span> 
+    <span class="o">-</span><span class="p">(</span><span class="vi">@e</span> <span class="o">*</span> <span class="vi">@i</span> <span class="o">*</span> <span class="vi">@v</span> <span class="o">+</span> 
+      <span class="p">(</span><span class="vi">@e</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="vi">@i</span> <span class="o">*</span> <span class="vi">@r</span> <span class="o">*</span> <span class="vi">@w</span> <span class="o">*</span> <span class="n">tringle</span> <span class="o">+</span>
+      <span class="vi">@m</span> <span class="o">*</span> <span class="vi">@v</span> <span class="o">*</span> <span class="p">(</span><span class="n">tringle</span> <span class="o">*</span> <span class="vi">@r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">deminator</span><span class="p">,</span> 
+    <span class="p">(</span><span class="vi">@i</span> <span class="o">*</span> <span class="vi">@w</span> <span class="o">-</span> 
+     <span class="p">(</span><span class="vi">@e</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="vi">@m</span> <span class="o">*</span> <span class="vi">@r</span> <span class="o">*</span> <span class="vi">@v</span> <span class="o">*</span> <span class="n">tringle</span> <span class="o">-</span>
+     <span class="vi">@e</span> <span class="o">*</span> <span class="vi">@m</span> <span class="o">*</span> <span class="vi">@w</span> <span class="o">*</span> <span class="p">(</span><span class="vi">@r</span> <span class="o">*</span> <span class="n">tringle</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">deminator</span>
+    <span class="c1"># puts @v, @w</span>
+  <span class="k">else</span>
+    <span class="vi">@p</span> <span class="o">+=</span> <span class="vi">@v</span>
+    <span class="vi">@v</span> <span class="o">+=</span> <span class="no">G</span>
+    <span class="vi">@theta</span> <span class="o">+=</span> <span class="vi">@w</span>
+  <span class="k">end</span>
+<span class="k">end</span></code></pre></figure>
+
+</details>
+
+<p>那么实际上呢? 故事并没有这么简单, 问题出在一个很坑爹的地方, 即在模拟的时候, 在<code class="language-plaintext highlighter-rouge">@dt</code>和<code class="language-plaintext highlighter-rouge">@v</code>的配合得足够好的情况下, 会出现下面这样的尴尬情况: 在<code class="language-plaintext highlighter-rouge">@x</code>为<code class="language-plaintext highlighter-rouge">BOUNDARY - 1</code>, <code class="language-plaintext highlighter-rouge">@v</code>为<code class="language-plaintext highlighter-rouge">10</code>, <code class="language-plaintext highlighter-rouge">@e</code>为<code class="language-plaintext highlighter-rouge">0.5</code>的时候, 就会发生虽然反向了, 但是却因为恢复系数导致其并不能离开边界, 最终的结果就是卡碟或者瞬移之类的尴尬问题… (啊哈哈)</p>
+
+<p>并且还有一个问题是因为表达式输入太复杂了, 一开始输入错了, 于是就尴尬, 超级尴尬的说.</p>
+
+<h3 id="问题总比办法多办法总比问题多"><del>问题总比办法多</del>办法总比问题多</h3>
+<p>那么有没有一种方法, 可以简单而又美丽地解决这个问题呢? 有! 那就是使用能量的观点, 通过广义坐标和广义力的方式来处理问题.</p>
+
+<p>那么首当其冲的, 就需要对能量进行偏导数. 一个比较简单的数值上的近似方式就是$f’(x) = (f(x + \delta x) - f(x)) / \delta x$. (而一个比较高级的方法就是通过一定的规则来进行符号处理, 关于这个, 在<a href="https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html">SICP</a>里面有介绍, 这也是我最开始了解到符号计算的魅力的书, 之前读的时候也确实依葫芦画瓢实现了一个简单的. )</p>
+
+<p>那么采用最朴素的数值近似方法, 就能够这样构造一个粒子对他粒子的作用: (以Lennard-Jones势为例. )</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">Particle</span>
+  <span class="n">atter_reader</span> <span class="ss">:x</span><span class="p">,</span> <span class="ss">:y</span><span class="p">,</span> <span class="ss">:vx</span><span class="p">,</span> <span class="ss">:vy</span><span class="p">,</span> <span class="ss">:energy</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="n">energy</span> <span class="o">=</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1"># 加入一个对距离的考虑, 以防实在太近导致的DividedByZero错误</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="vi">@x</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="no">DELTA</span> <span class="o">||</span> <span class="n">x</span> <span class="o">-</span> <span class="vi">@x</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="no">DELTA</span><span class="p">)</span> <span class="o">&amp;&amp;</span> 
+       <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="vi">@y</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="no">DELTA</span> <span class="o">||</span> <span class="n">y</span> <span class="o">-</span> <span class="vi">@y</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="o">*</span> <span class="no">DELTA</span><span class="p">)</span>
+      <span class="mi">0</span>
+    <span class="k">else</span>
+      <span class="n">r</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">*</span> <span class="vi">@size</span> <span class="o">/</span> <span class="no">Math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="vi">@x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="vi">@y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">);</span>
+      <span class="n">r</span> <span class="o">**</span> <span class="mi">12</span> <span class="o">-</span> <span class="n">r</span> <span class="o">**</span> <span class="mi">6</span> <span class="c1"># Lennard-Jones potential</span>
+    <span class="k">end</span><span class="p">})</span>
+    <span class="vi">@energy</span> <span class="o">=</span> <span class="n">energy</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">accelerate</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.000_000_000_1</span><span class="p">)</span>
+    <span class="o">-</span><span class="p">(</span><span class="n">obj</span><span class="p">.</span><span class="nf">energy</span><span class="p">[</span><span class="vi">@x</span> <span class="o">+</span> <span class="n">dx</span><span class="p">,</span> <span class="vi">@y</span><span class="p">]</span> <span class="o">-</span> <span class="n">obj</span><span class="p">.</span><span class="nf">energy</span><span class="p">[</span><span class="vi">@x</span> <span class="o">+</span> <span class="n">dx</span><span class="p">,</span> <span class="vi">@y</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">dx</span> <span class="o">*</span> <span class="vi">@m</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>顺带一提, 这样的做法对于边界的处理也非常的方便, 只要将边界做一个近似, 看作是弹性的边界就能够处理碰撞问题了. (虽然在我写这个模拟圆柱的程序的时候还并没有考虑这件事情, 不过在之后我会介绍的. 这种巧妙的方式)</p>
+
+<details>
+<summary>附上代码, 虽然可以下载的说. 虽然也估计没人想看的吧? </summary>
+
+(观前提示: 因为这个代码没有重构, 所以里面写得非常的乱七八糟, 不过我也懒得改了就是. 原因看下面的失败分析. )
+
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="nb">require</span> <span class="s2">"gosu"</span>
+
+<span class="no">G</span> <span class="o">=</span> <span class="mf">0.05</span>
+<span class="no">E</span> <span class="o">=</span> <span class="mf">0.000_000_000_1</span>
+
+<span class="no">INI_POS</span> <span class="o">=</span> <span class="mi">300</span>
+<span class="no">INI_PHI</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="no">INI_D</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="no">INI_H</span> <span class="o">=</span> <span class="mi">90</span>
+<span class="no">MASS</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="no">BOARDER</span> <span class="o">=</span> <span class="mi">450</span>
+
+<span class="no">K</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+<span class="k">class</span> <span class="nc">Cylinder</span>
+  <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="n">x</span> <span class="o">=</span> <span class="mi">300</span><span class="p">,</span> <span class="n">phi</span> <span class="o">=</span> <span class="no">INI_PHI</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="no">INI_D</span><span class="p">,</span> <span class="n">h</span> <span class="o">=</span> <span class="no">INI_H</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="no">MASS</span><span class="p">)</span>
+    <span class="vi">@x</span> <span class="o">=</span> <span class="n">x</span>
+    <span class="vi">@pos</span><span class="p">,</span> <span class="vi">@phi</span> <span class="o">=</span> <span class="no">INI_POS</span><span class="p">,</span> <span class="n">phi</span>
+    <span class="vi">@d</span><span class="p">,</span> <span class="vi">@h</span><span class="p">,</span> <span class="vi">@m</span><span class="p">,</span> <span class="vi">@i</span> <span class="o">=</span> <span class="n">d</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">m</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="n">d</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">4</span> <span class="o">*</span> <span class="n">h</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">24</span>
+    <span class="vi">@r</span><span class="p">,</span> <span class="vi">@alpha</span> <span class="o">=</span> <span class="no">Math</span><span class="p">.</span><span class="nf">sqrt</span><span class="p">(</span><span class="vi">@h</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="vi">@d</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="no">Math</span><span class="p">.</span><span class="nf">atan</span><span class="p">(</span><span class="vi">@h</span> <span class="o">/</span> <span class="vi">@d</span><span class="p">)</span>
+    <span class="vi">@v</span><span class="p">,</span> <span class="vi">@w</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">energy</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">phi</span><span class="p">)</span>
+    <span class="n">dy1</span><span class="p">,</span> <span class="n">dy2</span> <span class="o">=</span> 
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="n">phi</span><span class="p">),</span>
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span>
+
+    <span class="n">e</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="p">[</span><span class="n">pos</span> <span class="o">+</span> <span class="n">dy1</span><span class="p">,</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">dy1</span><span class="p">,</span> <span class="n">pos</span> <span class="o">+</span> <span class="n">dy2</span><span class="p">,</span> <span class="n">pos</span> <span class="o">-</span> <span class="n">dy2</span><span class="p">].</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">y</span><span class="o">|</span>
+      <span class="n">e</span> <span class="o">+=</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="no">BOARDER</span> <span class="p">?</span> <span class="p">(</span><span class="no">Math</span><span class="p">.</span><span class="nf">exp</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="no">BOARDER</span><span class="p">)</span> <span class="o">-</span> <span class="no">E</span> <span class="o">*</span> <span class="n">y</span> <span class="o">*</span> <span class="no">G</span> <span class="o">*</span> <span class="vi">@m</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span> <span class="p">:</span> <span class="o">-</span> <span class="n">y</span> <span class="o">*</span> <span class="no">G</span> <span class="o">*</span> <span class="vi">@m</span> <span class="o">/</span> <span class="mi">4</span>
+    <span class="k">end</span>
+
+    <span class="k">return</span> <span class="n">e</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">update</span>
+    <span class="vi">@pos</span> <span class="o">+=</span> <span class="vi">@v</span>
+    <span class="vi">@phi</span> <span class="o">+=</span> <span class="vi">@w</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="mf">0.000_000_000_000_1</span>
+    <span class="vi">@v</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="n">energy</span><span class="p">(</span><span class="vi">@pos</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span> <span class="vi">@phi</span><span class="p">)</span> <span class="o">-</span> <span class="n">energy</span><span class="p">(</span><span class="vi">@pos</span><span class="p">,</span> <span class="vi">@phi</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">d</span> <span class="o">*</span> <span class="vi">@m</span><span class="p">)</span> <span class="o">-</span> <span class="no">K</span> <span class="o">*</span> <span class="vi">@v</span>
+    <span class="vi">@w</span> <span class="o">+=</span> <span class="o">-</span><span class="p">(</span><span class="n">energy</span><span class="p">(</span><span class="vi">@pos</span><span class="p">,</span> <span class="vi">@phi</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span> <span class="o">-</span> <span class="n">energy</span><span class="p">(</span><span class="vi">@pos</span><span class="p">,</span> <span class="vi">@phi</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="n">d</span> <span class="o">*</span> <span class="vi">@i</span><span class="p">)</span> <span class="o">-</span> <span class="no">K</span> <span class="o">*</span> <span class="vi">@w</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">color</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="p">[</span><span class="no">Gosu</span><span class="o">::</span><span class="no">Color</span><span class="o">::</span><span class="no">RED</span><span class="p">,</span> <span class="no">Gosu</span><span class="o">::</span><span class="no">Color</span><span class="o">::</span><span class="no">YELLOW</span><span class="p">][</span><span class="nb">id</span><span class="p">]</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">draw</span>
+    <span class="n">dx1</span><span class="p">,</span> <span class="n">dx2</span><span class="p">,</span> <span class="n">dy1</span><span class="p">,</span> <span class="n">dy2</span> <span class="o">=</span> 
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="vi">@phi</span><span class="p">),</span>
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">sin</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">-</span> <span class="vi">@phi</span><span class="p">),</span>
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">+</span> <span class="vi">@phi</span><span class="p">),</span>
+      <span class="vi">@r</span> <span class="o">*</span> <span class="no">Math</span><span class="p">.</span><span class="nf">cos</span><span class="p">(</span><span class="vi">@alpha</span> <span class="o">-</span> <span class="vi">@phi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="vi">@x</span> <span class="o">+</span> <span class="n">dx1</span><span class="p">,</span> <span class="vi">@pos</span> <span class="o">-</span> <span class="n">dy1</span><span class="p">,</span> <span class="n">color</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+           <span class="vi">@x</span> <span class="o">+</span> <span class="n">dx2</span><span class="p">,</span> <span class="vi">@pos</span> <span class="o">+</span> <span class="n">dy2</span><span class="p">,</span> <span class="n">color</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+           <span class="vi">@x</span> <span class="o">-</span> <span class="n">dx1</span><span class="p">,</span> <span class="vi">@pos</span> <span class="o">+</span> <span class="n">dy1</span><span class="p">,</span> <span class="n">color</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+           <span class="vi">@x</span> <span class="o">-</span> <span class="n">dx2</span><span class="p">,</span> <span class="vi">@pos</span> <span class="o">-</span> <span class="n">dy2</span><span class="p">,</span> <span class="n">color</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="k">class</span> <span class="nc">Simulator</span> <span class="o">&lt;</span> <span class="no">Gosu</span><span class="o">::</span><span class="no">Window</span>
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="k">super</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">800</span>
+
+    <span class="vi">@cylinders</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="no">Cylinder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="nb">rand</span> <span class="o">*</span> <span class="p">(</span><span class="no">Math</span><span class="o">::</span><span class="no">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="p">]</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">button_down</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+    <span class="vi">@cylinders</span> <span class="o">&lt;&lt;</span> <span class="no">Cylinder</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span><span class="nb">self</span><span class="p">.</span><span class="nf">mouse_x</span><span class="p">,</span> <span class="nb">rand</span> <span class="o">*</span> <span class="p">(</span><span class="no">Math</span><span class="o">::</span><span class="no">PI</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="k">if</span> <span class="nb">id</span> <span class="o">==</span> <span class="no">Gosu</span><span class="o">::</span><span class="no">MS_LEFT</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">update</span>
+    <span class="vi">@cylinders</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">cylinder</span><span class="o">|</span> <span class="n">cylinder</span><span class="p">.</span><span class="nf">update</span> <span class="p">}</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">draw</span>
+    <span class="vi">@cylinders</span><span class="p">.</span><span class="nf">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">cylinder</span><span class="o">|</span> <span class="n">draw_quad</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">cylinder</span><span class="p">.</span><span class="nf">draw</span><span class="p">))</span> <span class="p">}</span>
+  <span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">Simulator</span><span class="p">.</span><span class="nf">new</span><span class="p">.</span><span class="nf">show</span></code></pre></figure>
+
+</details>
+
+<p><a href="/_img/simulate-physics/cylinder.rb"><img src="/_img/simulate-physics/cylinder.png" alt="cylinder" title="运行的大概结果就是这样, 有一种画风很简陋的垃圾程序的即视感, 将通过鼠标的点击来实现一个能够随机生成一个新的圆柱的交互方式. 虽然运行这个程序需要gosu库来绘图, 不过核心的所有模拟代码都是我写的, 至少计科导老师没有画来反驳我了. 又, 以防你不知道, 一般Ruby代码的后缀名是.rb" /></a></p>
+
+<p>不过这里要指出一点, 在我写完代码之后, 过了一个晚上, 睡前看番的时候, 突然想到了一个致命的问题: 那就是里面的转动项搞错了. 也就是说, 虽然最终看起来还真挺像那么回事, 但是并不是十分物理.</p>
+
+<details>
+<summary>为什么错了的答案揭晓. </summary>
+<p>如果仔细看代码的话, 就会发现我计算能量的方式是通过边角的四个点来做的, 这样的思路是从之前的通过四个点来检验碰撞的想法继承过来的. 虽然这样做并没有任何的错误, 但是这就是问题的来源, 即因为只有四个点, 所以我的模拟会更像是一个立方体的转动表现而非一个圆柱体的转动表现. 这就是我的失败的地方. 也就是说, 为了弥补这样的错误, 我需要将这个问题变换为对一组点的能量计算. </p>
+</details>
+
+<p>因为意识到了上面的错误, 所以我开始了新的想法: 那就是对一堆粒子的处理, 然后对于刚体的话, 就看作是粒子的集合就好了.</p>
+
+<h2 id="一堆粒子和统计的模拟">一堆粒子和统计的模拟</h2>
+<blockquote>
+  <p>问题: 其实这个问题挺无聊的, 有点像是为了考试特地去出的那种垃圾问题. 真的挺无聊的, 如何模拟一堆粒子限制在重力场中的运动. (其实就是为了写一个能够实现我上面的粒子集合的目标的通用的库的尝试. )</p>
+</blockquote>
+
+<p><img src="/_img/simulate-physics/particles.png" alt="particles" title="一个简单的演示是这样的. " /></p>
+
+<p>总而言之, 就是对上面的问题解决思路写一个更加规范的框架, 然后将它们应用起来不就完事了? so easy. 嗯, 一开始我确实是这么想的.</p>
+
+<p>但是很快, 愚蠢的计算机就给了我大大的耳光子: 一些在边界上本该被弹回来的粒子, 因为运动速度太快, 一下子过于深入边界, 结果收到了过于强大的弹力, 竟然以更快的速度弹回去了! 这样的事情绝对很奇怪啊!</p>
+
+<p>所以我的面前产生了这样的一个问题, 如何让一个物体运动得很快但是又不是很快呢? 而我交上去的答卷就是: 芝诺时. 一开始我是依赖计算机(<a href="https://www.libgosu.org">gosu</a>库中的<code class="language-plaintext highlighter-rouge">update</code>的刷新<code class="language-plaintext highlighter-rouge">fps</code>来控制模拟的时间的, 用人话说就是在每次模拟的循环中<code class="language-plaintext highlighter-rouge">@dt</code>是相等的. ) 但是为什么不换一个思路, 设置一个<code class="language-plaintext highlighter-rouge">@dx</code>的模拟位移上限, 来保证不会出现因为速度太快而产生的误差呢? (说得花里胡哨一点就是, 将时间)</p>
+
+<p>于是我加入了类似于这样的操作:</p>
+
+<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="vi">@v</span> <span class="o">*</span> <span class="vi">@dt</span> <span class="o">&gt;</span> <span class="vi">@max_dx</span>
+  <span class="vi">@dt</span> <span class="o">=</span> <span class="vi">@max_dx</span> <span class="o">/</span> <span class="vi">@v</span>
+  <span class="vi">@x</span> <span class="o">+=</span> <span class="vi">@max_dx</span>
+<span class="k">else</span>
+  <span class="vi">@x</span> <span class="o">+=</span> <span class="vi">@v</span> <span class="o">*</span> <span class="vi">@dt</span>
+<span class="k">end</span>
+</code></pre></div></div>
+
+<p>于是最终的效果类似于这样:</p>
+
+<p><a href="/_img/simulate-physics/particles-2.rb"><img src="/_img/simulate-physics/particles-2.png" alt="particles-2" title="大概就是这样, 虽然我也不好说这个模拟够不够真实. 下一步任务应该是让这个模拟程序更加的通用, 并且验证模拟的真实性. " /></a></p>
+
+<p>(又是自爆时刻: 这个程序运行得很慢, 在200个粒子的模拟的时候就出现了问题, 所以一个想法就是如何将程序优化, 另一个想法就是如何多线程计算. 虽然感觉这个不应该由一个臭搞物理的人来操心, 总该是有什么计算机的或者数学的牛人想过的事情. )</p>
+
+<h2 id="那么接下去该干什么">那么接下去该干什么?</h2>
+<h3 id="对自己的程序的想法">对自己的程序的想法</h3>
+<p>事不宜过三, 目前我想要:</p>
+<ol>
+  <li><strong>把程序写得更加通用一些</strong>. 毕竟现在里面的所有参数都是我瞎掰的, 如果参数调的不是那么合理的话, 模拟起来就会出bug, 这样一点也不酷. 所以我打算把程序的接口做得精巧一些, 最好能够像这样定义一个物体:
+    <div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">gravity</span> <span class="o">=</span> <span class="no">Field</span><span class="p">.</span><span class="nf">new</span>
+<span class="n">particle</span> <span class="o">=</span> <span class="no">Particle</span><span class="p">.</span><span class="nf">new</span><span class="p">(</span>
+  <span class="ss">x: </span><span class="nb">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="ss">y: </span><span class="nb">rand</span><span class="p">(</span><span class="mi">100</span><span class="p">),</span> <span class="ss">z: </span><span class="mi">0</span><span class="p">,</span>
+  <span class="ss">vx: </span><span class="mi">0</span><span class="p">,</span>        <span class="ss">vy: </span><span class="mi">0</span><span class="p">,</span>        <span class="ss">vz: </span><span class="mi">5</span><span class="p">,</span>
+  <span class="ss">mass: </span><span class="mi">10</span><span class="p">,</span>     <span class="ss">mass_unit: :g</span>
+<span class="p">)</span>
+</code></pre></div>    </div>
+    <p>并且我也想要把这样的功能融合进我在学的计算机代数里面. 嗯, 先画一个饼. 至于能不能实现, 就走一步算一步.</p>
+  </li>
+  <li><strong>刚体或者说是粒子集合体</strong>. 虽然感觉这个应该比较好实现, 但是具体实现的时候可能还是有点困难. 嘛, 慢慢来.</li>
+  <li><strong>更加的直观简单的模拟</strong>. 毕竟怎么说吧, 写代码对人来说并不是很友好, 也看起来不像是在做实验. 如果能够将物理模拟变成一个像是真正做实验一样的事情就好了.</li>
+</ol>
+
+<p>(感觉这三个愿望好像许得有点大了… 我靠, 真的诶. 又不是奇趣蛋. )</p>
+
+<h3 id="确实有点闭门造车了">确实有点闭门造车了</h3>
+<p>上面的做法感觉十分的不妙啊, 因为感觉实现的方法太过朴素了. 不能体现数理专科学校的特长. 并且实现的方式太过特殊. 所以我需要学习!</p>
+
+<p>于是在好心的学长的介绍下, 接下去就应该要多了解一些关于计算机模拟的事情, 并且还要多看别人的代码. 了解前人是怎么想的.</p>
+
+<h2 id="废话集">废话集</h2>
+<p>其实不光是物理, 感觉数学里面的东西实现了一遍之后总感觉有一种, 啊, 我比原来多懂了一些的感觉. 然后就能够理解为什么需要像这样形式化地定义, 这样形式化的定义有什么好处的一些感觉. (比如还在搞的<a href="/learning/computer-algebra-pickup/">计算机代数</a>, 虽然现在理解得并不是太多. )</p>
+
+<p>比如很早之前在一本书上读到理论力学容易失去直观的物理图像之类的话, 一开始在我只是看书上那些”漂亮”公式的时候, 我确实觉得它们真是一点也不直观. 但是后来慢慢觉得, 这些不就是换了一种形式的$F = m a$吗. (不过可能并不是只有这样的意义, 以后还要慢慢理解… )</p>
+
+<p>哦, 不过好像费曼说过这样的一句话: 假如你要用计算机模拟物理的话, 最好是量子的. (力学课上的依稀印象, 为了证实这段话, 我去网上搜索了一下, 结果, 发现了一篇很厉害的演讲/论文. 那么接下去一段时间就先看看<a href="https://link.springer.com/article/10.1007/BF02650179">这篇论文</a>吧. 不过<a href="https://physics.whu.edu.cn/dfiles/wenjian/1_00_QIC_Feynman.pdf">这里</a>好像有一个费曼关于计算物理的论文合集? 不清楚, 总之之后会把阅读笔记给写出来的. )</p>
+
+<p>最后.</p>
+
+<p>计算机真的是蠢蛋!</p>
+
+  </div><a class="u-url" href="/physics/ruby/simulate-physics/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

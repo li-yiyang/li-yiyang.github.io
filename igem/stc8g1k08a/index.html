@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>STC8G1K08A | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="STC8G1K08A" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 之前学单片机的时候用的是 STC89C52RC, 并且还是那种非常完善的开发板套件. 手里一堆奇奇怪怪的教程, 所以用起来还算是无脑过, 并且因为写得少, 没有啥大坑. 现在做项目为了省钱和小型化要换一块芯片: STC8G1K08A, 在这里记录一下使用中遇到的一些小问题和解决方案. 技术参考手册 选型 本来应该为了好测试, 应该买 DIP 直插的, 但是卖完了(?) 并且贵一半, 所以最后选择用转接板和 SOP8 型号的. 简单的准备工作 第一次尝试 最小电路 按照手册上的说明确实可以这样做. 其中电容用于稳定电压输入, 理论上换成任意一个稳压结构应该都可以吧. TX 和 RX 为下载器上对应的引脚 (即芯片的 TX 对应下载器的 RX). 下载器 CH340C 虽然一个 CH340C 芯片只要不到 1 元钱, 但是成品的下载器至少 9 元起步&#8230; 欸, 一个省钱小窍门: 不买立省 100%. 只要从旧的开发板上拆下来, 甚至连拆都不用拆, 直接看原理图, 把对应的引脚引出来就好了. (请忽略这个混乱的连线) STC8PROG 之前使用的 stcgal 貌似没法识别芯片? &gt; stcgal -P /dev/tty.usbserial-1111 -P stc8 Waiting for MCU, please cycle power: done WARNING: Unknown model F794! Target model: Name: UNKNOWN Magic: F794 Code flash: 62.0 KB EEPROM flash: 0.0 KB ... 所以使用的是 stc8prog 进行程序烧写. &gt; stc8prog -p /dev/tty.usbserial-1110 Opening port /dev/tty.usbserial-1110: done Waiting for MCU, please cycle power: detected MCU type: STC8G1K08A-8PIN Protocol: STC8G/8H F/W version: 7.3.13U IRC frequency(Hz): unadjusted Switching to 115200 baud, chip: set, host: set, ping: succ 烧写方法: &gt; stc8prog -p /dev/tty.usbserial-1110 -e -f prog.ihx 开发环境 哇, 妙极. 发现 STC8PROG 作者 Github 上还有一个仓库: FwLib_STC8, 那么为了快速解决问题, 直接引用仓库. (等以后有时间了再满满琢磨官方文档里面的说明). 实际上也可以到 stcai.com 上去下载库函数, 但是是对 Keil 的语法, 没法直接用到 sdcc 上面. 尝试过 PlatformIO, 但是貌似并不是很行, 并且感觉不是很会用, 所以最终决定使用 Makefile 的方式来进行编译和下载. Makefile 看得我头昏眼花, 这真是一点也不注重可读性和可维护性啊&#8230; 核心的一个部分如下: $(BDIR)/%.rel: $(TOP)/%.c @printf &quot; CC $&lt;\n&quot; @mkdir -p $(dir $@) $(Q)$(CC) $&lt; -c $(CC_CFLAGS) $(USER_INCFLAGS) $(LIB_INCFLAGS) -o $@ 把最后一行展开来可能就是: sdcc source.c -c ... -o source.rel 该部分的作用就是在对多个文件编译前先解决依赖文件的编译, 然后对于最后一个文件的编译就变成了: sdcc source.rel requirement1.rel requirement2.rel ... 编译中使用了一个 AR, 对应的是 sdar 指令来构建一个库. 这个时候就很后悔没有去听类似的课 (不过话说真的存在这样的课程吗?) emmm, 不如用 Rakefile 重写一遍&#8230; 重写完了. 至少比原来的好读一些. 并且也可以烧写了. 等以后闲下来再好好修改一下, 这里放出核心的代码: Rakefile 的一个简单代码 require &#39;fileutils&#39;" />
+<meta property="og:description" content="About 之前学单片机的时候用的是 STC89C52RC, 并且还是那种非常完善的开发板套件. 手里一堆奇奇怪怪的教程, 所以用起来还算是无脑过, 并且因为写得少, 没有啥大坑. 现在做项目为了省钱和小型化要换一块芯片: STC8G1K08A, 在这里记录一下使用中遇到的一些小问题和解决方案. 技术参考手册 选型 本来应该为了好测试, 应该买 DIP 直插的, 但是卖完了(?) 并且贵一半, 所以最后选择用转接板和 SOP8 型号的. 简单的准备工作 第一次尝试 最小电路 按照手册上的说明确实可以这样做. 其中电容用于稳定电压输入, 理论上换成任意一个稳压结构应该都可以吧. TX 和 RX 为下载器上对应的引脚 (即芯片的 TX 对应下载器的 RX). 下载器 CH340C 虽然一个 CH340C 芯片只要不到 1 元钱, 但是成品的下载器至少 9 元起步&#8230; 欸, 一个省钱小窍门: 不买立省 100%. 只要从旧的开发板上拆下来, 甚至连拆都不用拆, 直接看原理图, 把对应的引脚引出来就好了. (请忽略这个混乱的连线) STC8PROG 之前使用的 stcgal 貌似没法识别芯片? &gt; stcgal -P /dev/tty.usbserial-1111 -P stc8 Waiting for MCU, please cycle power: done WARNING: Unknown model F794! Target model: Name: UNKNOWN Magic: F794 Code flash: 62.0 KB EEPROM flash: 0.0 KB ... 所以使用的是 stc8prog 进行程序烧写. &gt; stc8prog -p /dev/tty.usbserial-1110 Opening port /dev/tty.usbserial-1110: done Waiting for MCU, please cycle power: detected MCU type: STC8G1K08A-8PIN Protocol: STC8G/8H F/W version: 7.3.13U IRC frequency(Hz): unadjusted Switching to 115200 baud, chip: set, host: set, ping: succ 烧写方法: &gt; stc8prog -p /dev/tty.usbserial-1110 -e -f prog.ihx 开发环境 哇, 妙极. 发现 STC8PROG 作者 Github 上还有一个仓库: FwLib_STC8, 那么为了快速解决问题, 直接引用仓库. (等以后有时间了再满满琢磨官方文档里面的说明). 实际上也可以到 stcai.com 上去下载库函数, 但是是对 Keil 的语法, 没法直接用到 sdcc 上面. 尝试过 PlatformIO, 但是貌似并不是很行, 并且感觉不是很会用, 所以最终决定使用 Makefile 的方式来进行编译和下载. Makefile 看得我头昏眼花, 这真是一点也不注重可读性和可维护性啊&#8230; 核心的一个部分如下: $(BDIR)/%.rel: $(TOP)/%.c @printf &quot; CC $&lt;\n&quot; @mkdir -p $(dir $@) $(Q)$(CC) $&lt; -c $(CC_CFLAGS) $(USER_INCFLAGS) $(LIB_INCFLAGS) -o $@ 把最后一行展开来可能就是: sdcc source.c -c ... -o source.rel 该部分的作用就是在对多个文件编译前先解决依赖文件的编译, 然后对于最后一个文件的编译就变成了: sdcc source.rel requirement1.rel requirement2.rel ... 编译中使用了一个 AR, 对应的是 sdar 指令来构建一个库. 这个时候就很后悔没有去听类似的课 (不过话说真的存在这样的课程吗?) emmm, 不如用 Rakefile 重写一遍&#8230; 重写完了. 至少比原来的好读一些. 并且也可以烧写了. 等以后闲下来再好好修改一下, 这里放出核心的代码: Rakefile 的一个简单代码 require &#39;fileutils&#39;" />
+<link rel="canonical" href="/igem/stc8g1k08a/" />
+<meta property="og:url" content="/igem/stc8g1k08a/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-09-13T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="STC8G1K08A" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-09-13T00:00:00+00:00","datePublished":"2023-09-13T00:00:00+00:00","description":"About 之前学单片机的时候用的是 STC89C52RC, 并且还是那种非常完善的开发板套件. 手里一堆奇奇怪怪的教程, 所以用起来还算是无脑过, 并且因为写得少, 没有啥大坑. 现在做项目为了省钱和小型化要换一块芯片: STC8G1K08A, 在这里记录一下使用中遇到的一些小问题和解决方案. 技术参考手册 选型 本来应该为了好测试, 应该买 DIP 直插的, 但是卖完了(?) 并且贵一半, 所以最后选择用转接板和 SOP8 型号的. 简单的准备工作 第一次尝试 最小电路 按照手册上的说明确实可以这样做. 其中电容用于稳定电压输入, 理论上换成任意一个稳压结构应该都可以吧. TX 和 RX 为下载器上对应的引脚 (即芯片的 TX 对应下载器的 RX). 下载器 CH340C 虽然一个 CH340C 芯片只要不到 1 元钱, 但是成品的下载器至少 9 元起步&#8230; 欸, 一个省钱小窍门: 不买立省 100%. 只要从旧的开发板上拆下来, 甚至连拆都不用拆, 直接看原理图, 把对应的引脚引出来就好了. (请忽略这个混乱的连线) STC8PROG 之前使用的 stcgal 貌似没法识别芯片? &gt; stcgal -P /dev/tty.usbserial-1111 -P stc8 Waiting for MCU, please cycle power: done WARNING: Unknown model F794! Target model: Name: UNKNOWN Magic: F794 Code flash: 62.0 KB EEPROM flash: 0.0 KB ... 所以使用的是 stc8prog 进行程序烧写. &gt; stc8prog -p /dev/tty.usbserial-1110 Opening port /dev/tty.usbserial-1110: done Waiting for MCU, please cycle power: detected MCU type: STC8G1K08A-8PIN Protocol: STC8G/8H F/W version: 7.3.13U IRC frequency(Hz): unadjusted Switching to 115200 baud, chip: set, host: set, ping: succ 烧写方法: &gt; stc8prog -p /dev/tty.usbserial-1110 -e -f prog.ihx 开发环境 哇, 妙极. 发现 STC8PROG 作者 Github 上还有一个仓库: FwLib_STC8, 那么为了快速解决问题, 直接引用仓库. (等以后有时间了再满满琢磨官方文档里面的说明). 实际上也可以到 stcai.com 上去下载库函数, 但是是对 Keil 的语法, 没法直接用到 sdcc 上面. 尝试过 PlatformIO, 但是貌似并不是很行, 并且感觉不是很会用, 所以最终决定使用 Makefile 的方式来进行编译和下载. Makefile 看得我头昏眼花, 这真是一点也不注重可读性和可维护性啊&#8230; 核心的一个部分如下: $(BDIR)/%.rel: $(TOP)/%.c @printf &quot; CC $&lt;\\n&quot; @mkdir -p $(dir $@) $(Q)$(CC) $&lt; -c $(CC_CFLAGS) $(USER_INCFLAGS) $(LIB_INCFLAGS) -o $@ 把最后一行展开来可能就是: sdcc source.c -c ... -o source.rel 该部分的作用就是在对多个文件编译前先解决依赖文件的编译, 然后对于最后一个文件的编译就变成了: sdcc source.rel requirement1.rel requirement2.rel ... 编译中使用了一个 AR, 对应的是 sdar 指令来构建一个库. 这个时候就很后悔没有去听类似的课 (不过话说真的存在这样的课程吗?) emmm, 不如用 Rakefile 重写一遍&#8230; 重写完了. 至少比原来的好读一些. 并且也可以烧写了. 等以后闲下来再好好修改一下, 这里放出核心的代码: Rakefile 的一个简单代码 require &#39;fileutils&#39;","headline":"STC8G1K08A","mainEntityOfPage":{"@type":"WebPage","@id":"/igem/stc8g1k08a/"},"url":"/igem/stc8g1k08a/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">STC8G1K08A</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-09-13T00:00:00+00:00" itemprop="datePublished">Sep 13, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>之前学单片机的时候用的是 <a href="/igem/STC89C52RC/">STC89C52RC</a>, 并且还是那种非常完善的开发板套件.
+  手里一堆奇奇怪怪的教程, 所以用起来还算是无脑过, 并且因为写得少,
+  没有啥大坑.</p>
+<p>现在做项目为了省钱和小型化要换一块芯片: STC8G1K08A,
+  在这里记录一下使用中遇到的一些小问题和解决方案.</p>
+<ul>
+  <li><a href="https://datasheet.lcsc.com/lcsc/2304140030_STC-Micro-STC8G1K08A-36I-SOP8_C915663.pdf">技术参考手册</a></li>
+</ul>
+<h1>选型</h1>
+<p>本来应该为了好测试, 应该买 DIP 直插的, 但是卖完了(?) 并且贵一半,
+  所以最后选择用转接板和 SOP8 型号的.</p>
+<h1>简单的准备工作</h1>
+<h2>第一次尝试</h2>
+<h3>最小电路</h3>
+<p><img src="/_img/STC8G1K08A/minimum-system.png" alt="/_img/STC8G1K08A/minimum-system.png" /></p>
+<p>按照手册上的说明确实可以这样做. 其中电容用于稳定电压输入,
+  理论上换成任意一个稳压结构应该都可以吧.
+  TX 和 RX 为下载器上对应的引脚 (即芯片的 TX 对应下载器的 RX).</p>
+<h3>下载器 CH340C</h3>
+<p>虽然一个 CH340C 芯片只要不到 1 元钱, 但是成品的下载器至少 9 元起步&#8230;
+  欸, 一个省钱小窍门: 不买立省 100%. 只要从旧的开发板上拆下来,
+  甚至连拆都不用拆, 直接看原理图, 把对应的引脚引出来就好了.</p>
+<p><img src="/_img/STC8G1K08A/downloader.jpeg" alt="/_img/STC8G1K08A/downloader.jpeg" /></p>
+<p>(请忽略这个混乱的连线)</p>
+<h3>STC8PROG</h3>
+<p>之前使用的 stcgal 貌似没法识别芯片?</p>
+<div class="highlight"><pre><span></span>&gt;<span class="w"> </span>stcgal<span class="w"> </span>-P<span class="w"> </span>/dev/tty.usbserial-1111<span class="w"> </span>-P<span class="w"> </span>stc8
+Waiting<span class="w"> </span><span class="k">for</span><span class="w"> </span>MCU,<span class="w"> </span>please<span class="w"> </span>cycle<span class="w"> </span>power:<span class="w"> </span><span class="k">done</span>
+WARNING:<span class="w"> </span>Unknown<span class="w"> </span>model<span class="w"> </span>F794!
+Target<span class="w"> </span>model:
+<span class="w">  </span>Name:<span class="w"> </span>UNKNOWN
+<span class="w">  </span>Magic:<span class="w"> </span>F794
+<span class="w">  </span>Code<span class="w"> </span>flash:<span class="w"> </span><span class="m">62</span>.0<span class="w"> </span>KB
+<span class="w">  </span>EEPROM<span class="w"> </span>flash:<span class="w"> </span><span class="m">0</span>.0<span class="w"> </span>KB
+...
+</pre></div>
+<p>所以使用的是 <a href="https://github.com/IOsetting/stc8prog">stc8prog</a> 进行程序烧写.</p>
+<div class="highlight"><pre><span></span>&gt;<span class="w"> </span>stc8prog<span class="w"> </span>-p<span class="w"> </span>/dev/tty.usbserial-1110
+Opening<span class="w"> </span>port<span class="w"> </span>/dev/tty.usbserial-1110:<span class="w"> </span><span class="k">done</span>
+Waiting<span class="w"> </span><span class="k">for</span><span class="w"> </span>MCU,<span class="w"> </span>please<span class="w"> </span>cycle<span class="w"> </span>power:<span class="w"> </span>detected
+MCU<span class="w"> </span>type:<span class="w"> </span>STC8G1K08A-8PIN
+Protocol:<span class="w"> </span>STC8G/8H
+F/W<span class="w"> </span>version:<span class="w"> </span><span class="m">7</span>.3.13U
+IRC<span class="w"> </span>frequency<span class="o">(</span>Hz<span class="o">)</span>:<span class="w"> </span>unadjusted
+Switching<span class="w"> </span>to<span class="w"> </span><span class="m">115200</span><span class="w"> </span>baud,<span class="w"> </span>chip:<span class="w"> </span>set,<span class="w"> </span>host:<span class="w"> </span>set,<span class="w"> </span>ping:<span class="w"> </span>succ
+</pre></div>
+<p>烧写方法:</p>
+<div class="highlight"><pre><span></span>&gt;<span class="w"> </span>stc8prog<span class="w"> </span>-p<span class="w"> </span>/dev/tty.usbserial-1110<span class="w"> </span>-e<span class="w"> </span>-f<span class="w"> </span>prog.ihx
+</pre></div>
+<h3>开发环境</h3>
+<ul>
+  <li>哇, 妙极. 发现 STC8PROG 作者 <a href="https://github.com/IOsetting">Github</a> 上还有一个仓库: <a href="https://github.com/IOsetting/FwLib_STC8/tree/master">FwLib_STC8</a>,
+    那么为了快速解决问题, 直接引用仓库. (等以后有时间了再满满琢磨官方文档里面的说明).</li>
+  <li>实际上也可以到 <a href="https://www.stcai.com/khs">stcai.com</a> 上去下载库函数, 但是是对 Keil 的语法,
+    没法直接用到 sdcc 上面.</li>
+  <li>尝试过 PlatformIO, 但是貌似并不是很行, 并且感觉不是很会用,
+    所以最终决定使用 Makefile 的方式来进行编译和下载.</li>
+</ul>
+<p><del>Makefile 看得我头昏眼花, 这真是一点也不注重可读性和可维护性啊&#8230;</del></p>
+<p>核心的一个部分如下:</p>
+<pre class="example">
+$(BDIR)/%.rel: $(TOP)/%.c
+        @printf &quot;  CC $&lt;\n&quot;
+        @mkdir -p $(dir $@)
+        $(Q)$(CC) $&lt; -c $(CC_CFLAGS) $(USER_INCFLAGS) $(LIB_INCFLAGS) -o $@
+</pre>
+<p>把最后一行展开来可能就是:</p>
+<pre class="example">
+sdcc source.c -c ... -o source.rel
+</pre>
+<p>该部分的作用就是在对多个文件编译前先解决依赖文件的编译,
+  然后对于最后一个文件的编译就变成了:</p>
+<pre class="example">
+sdcc source.rel requirement1.rel requirement2.rel ...
+</pre>
+<p>编译中使用了一个 <code>AR</code>, 对应的是 <code>sdar</code> 指令来构建一个库.</p>
+<p><del>这个时候就很后悔没有去听类似的课 (不过话说真的存在这样的课程吗?)</del></p>
+<p>emmm, 不如用 Rakefile 重写一遍&#8230;</p>
+<p>重写完了. 至少比原来的好读一些. 并且也可以烧写了.
+  等以后闲下来再好好修改一下, 这里放出核心的代码:</p>
+<details><summary>Rakefile 的一个简单代码</summary>
+<div class="highlight"><pre><span></span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;fileutils&#39;</span>
+
+<span class="no">RAKE_DBG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kp">false</span>
+
+<span class="no">PROJECT_NAME</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;stc8&#39;</span>
+<span class="no">MCU_IRAM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">256</span>
+<span class="no">MCU_XRAM</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1024</span>
+<span class="no">MCU_CODE_SIZE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8192</span>
+
+<span class="no">USER_CSOURCES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;src&#39;</span>
+<span class="no">USER_INCLUDES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;include&#39;</span>
+<span class="no">USER_INCFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;-I</span><span class="si">#{</span><span class="no">USER_INCLUDES</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">]</span>
+
+<span class="no">LIB_DIR</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;lib&#39;</span>
+<span class="no">LIB_LIST</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">Dir</span><span class="o">.</span><span class="n">children</span><span class="p">(</span><span class="no">LIB_DIR</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">dir</span><span class="o">|</span><span class="w"> </span><span class="no">File</span><span class="o">.</span><span class="n">directory?</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">LIB_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="no">LIB_INCFLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">LIB_LIST</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">lib</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;-I</span><span class="si">#{</span><span class="no">LIB_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">lib</span><span class="si">}</span><span class="s2">/include&quot;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="no">LIB_FLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;__CONF_FOSC=11059200UL&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_MCU_MODEL=MCU_MODEL_STC8G1K08&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_CLKDIV=0x00&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_IRCBAND=0x01&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_VRTRIM=0x1F&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_IRTRIM=0xB5&quot;</span><span class="p">,</span>
+<span class="w">             </span><span class="s2">&quot;__CONF_LIRTRIM=0x00&quot;</span><span class="o">]</span>
+
+<span class="no">BUILD_PATH</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;build&#39;</span>
+
+<span class="no">CC</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;sdcc&#39;</span>
+<span class="no">AR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;sdar&#39;</span>
+<span class="no">SDRANLIB</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;sdranlib&#39;</span>
+<span class="no">PACKIHX</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;packihx&#39;</span>
+<span class="no">ARCH_FLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;-mmcs51&quot;</span>
+<span class="no">OPT</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;--opt-code-size&quot;</span>
+<span class="no">CSTD</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;--std-sdcc99&quot;</span>
+<span class="no">CC_CFLAGS</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="no">ARCH_FLAGS</span><span class="p">,</span><span class="w"> </span><span class="no">OPT</span><span class="p">,</span><span class="w"> </span><span class="no">CSTD</span><span class="o">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="no">LIB_FLAGS</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">flag</span><span class="o">|</span><span class="w"> </span><span class="s2">&quot;-D</span><span class="si">#{</span><span class="n">flag</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="no">LD_CFLAGS</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="no">ARCH_FLAGS</span><span class="p">,</span><span class="w"> </span><span class="no">OPT</span><span class="p">,</span>
+<span class="w">              </span><span class="s2">&quot;--iram-size </span><span class="si">#{</span><span class="no">MCU_IRAM</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="s2">&quot;--xram-size </span><span class="si">#{</span><span class="no">MCU_XRAM</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="s2">&quot;--code-size </span><span class="si">#{</span><span class="no">MCU_CODE_SIZE</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="w">              </span><span class="s2">&quot;--out-fmt-ihx&quot;</span><span class="o">]</span>
+<span class="no">TGT_FLAGS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[</span><span class="s2">&quot;-rcs&quot;</span><span class="o">]</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">shell</span><span class="p">(</span><span class="o">*</span><span class="n">cmd</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">print</span><span class="w"> </span><span class="n">cmd</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">),</span><span class="w"> </span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">RAKE_DBG</span>
+<span class="w">  </span><span class="nb">system</span><span class="w"> </span><span class="o">*</span><span class="n">cmd</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">dir?</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+<span class="w">  </span><span class="k">yield</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">File</span><span class="o">.</span><span class="n">directory?</span><span class="w"> </span><span class="n">path</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">file?</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span><span class="w"> </span><span class="n">ext</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">block</span><span class="p">)</span>
+<span class="w">  </span><span class="no">Dir</span><span class="o">.</span><span class="n">each_child</span><span class="p">(</span><span class="n">dir</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="k">yield</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">File</span><span class="o">.</span><span class="n">extname</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">ext</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="no">File</span><span class="o">.</span><span class="n">exist?</span><span class="w"> </span><span class="n">dir</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">extr</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">ext</span><span class="p">)</span>
+<span class="w">  </span><span class="n">f</span><span class="o">.</span><span class="n">gsub</span><span class="p">(</span><span class="no">File</span><span class="o">.</span><span class="n">extname</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="w"> </span><span class="n">ext</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_file</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="n">custom</span><span class="o">=[]</span><span class="p">)</span>
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Compile </span><span class="si">#{</span><span class="n">source</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="n">shell</span><span class="w"> </span><span class="no">CC</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-c&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="no">CC_CFLAGS</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">custom</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="no">LIB_INCFLAGS</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-o&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">target</span>
+<span class="k">end</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_lib</span><span class="p">(</span><span class="nb">name</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span>
+<span class="w">  </span><span class="n">lib_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span>
+<span class="w">  </span><span class="n">lib_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="w">  </span><span class="no">FileUtils</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="n">lib_path</span><span class="p">)</span>
+
+<span class="w">  </span><span class="n">file?</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2">/src&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;.c&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span>
+<span class="w">    </span><span class="n">build_file</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">path</span><span class="si">}</span><span class="s2">/src/</span><span class="si">#{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">lib_path</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">extr</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.rel&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="n">lib_file</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">lib_path</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">extr</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.rel&#39;</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">lib_file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/lib/</span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">.lib&quot;</span>
+<span class="w">  </span><span class="no">FileUtils</span><span class="o">.</span><span class="n">mkdir_p</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/lib&quot;</span><span class="p">)</span>
+
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Creating static lib </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">  </span><span class="n">shell</span><span class="w"> </span><span class="no">AR</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="no">TGT_FLAGS</span><span class="p">,</span><span class="w"> </span><span class="n">lib_file_path</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">lib_file</span>
+<span class="w">  </span><span class="n">shell</span><span class="w"> </span><span class="no">SDRANLIB</span><span class="p">,</span><span class="w"> </span><span class="n">lib_file_path</span>
+<span class="k">end</span>
+
+<span class="n">desc</span><span class="w"> </span><span class="s2">&quot;Libraries should be stored at lib dir.&quot;</span>
+<span class="n">task</span><span class="w"> </span><span class="ss">:build_lib</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="no">Dir</span><span class="o">.</span><span class="n">each_child</span><span class="p">(</span><span class="no">LIB_DIR</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">dir</span><span class="o">|</span>
+<span class="w">    </span><span class="n">dir?</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">LIB_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">path</span><span class="o">|</span><span class="w"> </span><span class="n">build_lib</span><span class="p">(</span><span class="n">dir</span><span class="p">,</span><span class="w"> </span><span class="n">path</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="n">desc</span><span class="w"> </span><span class="s2">&quot;User source file should be stored in project root or src dir.&quot;</span>
+<span class="n">task</span><span class="w"> </span><span class="ss">:build_user</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="nb">puts</span><span class="w"> </span><span class="s2">&quot;Build User Files:&quot;</span>
+<span class="w">  </span><span class="n">file?</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.c&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="n">build_file</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">extr</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.rel&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="no">USER_INCFLAGS</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">file?</span><span class="p">(</span><span class="s1">&#39;src&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.c&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="n">build_file</span><span class="p">(</span><span class="s2">&quot;src/</span><span class="si">#{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">extr</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.rel&#39;</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="no">USER_INCFLAGS</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="k">end</span>
+
+<span class="n">desc</span><span class="w"> </span><span class="s2">&quot;Build all the project and output PROJECT_NAME.hex under BUILD_PATH.&quot;</span>
+<span class="n">task</span><span class="w"> </span><span class="ss">:build_project</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="o">[</span><span class="ss">:build_lib</span><span class="p">,</span><span class="w"> </span><span class="ss">:build_user</span><span class="o">]</span><span class="w"> </span><span class="k">do</span>
+<span class="w">  </span><span class="n">lib_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span><span class="p">;</span><span class="w"> </span><span class="n">file?</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/lib&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.lib&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="n">lib_files</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/lib/</span><span class="si">#{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">usr_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span><span class="p">;</span><span class="w"> </span><span class="n">file?</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;.rel&#39;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">f</span><span class="o">|</span><span class="w"> </span><span class="n">usr_files</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="n">f</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">  </span><span class="n">target</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="no">BUILD_PATH</span><span class="si">}</span><span class="s2">/</span><span class="si">#{</span><span class="no">PROJECT_NAME</span><span class="si">}</span><span class="s2">.hex&quot;</span>
+<span class="w">  </span><span class="n">shell</span><span class="w"> </span><span class="no">CC</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="no">LD_CFLAGS</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">usr_files</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">lib_files</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;-o&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">target</span>
+<span class="k">end</span>
+</pre></div>
+</details>
+<p>注: 实际上最后发现了一个坑爹的事实, 就是 <code>stc8prog</code> 虽然能识别,
+  但是并不能修改芯片运行的频率, 就会导致没法串口波特率没法设置.</p>
+<p>这貌似就会导致串口读写有问题&#8230; 诶, 所以最后还是选择安装一个 Windows 虚拟机,
+  然后使用 STC-ISP 程序来进行下载.</p>
+<p>哦, 问题解决了, <code>stcgal</code> 在更新之后虽然也能识别了,
+  只要在写入的时候刷入运行的 IRC 参数即可:</p>
+<div class="highlight"><pre><span></span>&gt;<span class="w"> </span>stcgal<span class="w"> </span>-P<span class="w"> </span>stc8g<span class="w"> </span>-p<span class="w"> </span>/dev/tty.usbserial-1110<span class="w"> </span>build/stc8.hex<span class="w"> </span>-t<span class="w"> </span><span class="m">11059</span>
+</pre></div>
+<p>不过另外一个比较奇怪的问题就是需要设置工作模式为 Timer1,
+  使用 Timer2 的时候没法在我的电脑上收到数据, 但是 STC-ISP 程序却可以,
+  总之就是怪极了.</p>
+<p>不管了, 能跑就好.</p>
+<details><summary>一些总结和总体思路的简单介绍</summary>
+<p>(之所以折叠是因为可能并不是很正确)</p>
+<p>使用 sdcc 处理这些的一个简单流程图如下:</p>
+<div class="highlight"><pre><span></span><span class="k">digraph</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="na">bgcolor</span><span class="p">=</span><span class="s">transparent</span><span class="p">;</span>
+<span class="w">  </span><span class="k">node</span><span class="w"> </span><span class="p">[</span><span class="na">shape</span><span class="p">=</span><span class="s">rect</span><span class="p">];</span>
+<span class="w">  </span><span class="nt">&quot;Compile\nLibaries&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;Compile\nUser Scripts&quot;</span>
+<span class="w">  </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;Pack\nihx to hex&quot;</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="nt">&quot;Flash&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</details>
+<h1>大概就这样先吧</h1>
+<p>正如这篇文章被归类的一样, 我将其归为 iGEM 一类,
+  这是因为这块芯片是我为了给 iGEM 硬件组做传感器单元做的一个尝试.
+  最终的效果也还行吧.</p>
+<p>之后有空了就更新一下这个方面的东西.</p>
+
+  </div><a class="u-url" href="/igem/stc8g1k08a/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

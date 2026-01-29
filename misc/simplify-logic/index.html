@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Simplify Logic (Q-M Methods) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Simplify Logic (Q-M Methods)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="免责申明 本文不是学习用途, 只是一个为了打游戏做的 &#8220;攻略&#8221; 笔记罢了. 游戏的名字叫做 Turing Complete, (只要 70 元, 还有学生版). 简单来说就是一个连连看小游戏吧. (目前只玩了几关, 感觉挺有意思的). 那么为什么会有这篇攻略笔记呢? 因为这个游戏的交互我个人认为是非常不友好的. 甚至我可以说, 这个游戏的交互还不如我写的那个 垃圾节点编辑器: 拖动节点竟然不会同时移动边, 并且快捷键和操作比较反人类. (不过我的也没高级到哪里去了就是, 并且里面的功能和效果肯定是远超我的版本了). 啊, 闲话说多了, 那么这个和游戏有什么关系呢? 答案就是, 因为连线太麻烦了, 所以我想要来一个能够一键化简的程序, 来减少我连线的负担. 关于使用的符号和其他 符号约定 我在这里使用的符号大多都是和我在 离散数学课 上学到的差不多. 唯一不同的是, 可能我会为了好看而将部分的 \(&not; A\) 写成 \(\overline{A}\). 并且因为我熟悉的是 and, or, not 门, 而不是在游戏中提供的 nand 门, 所以我会使用前者来表示大多数的逻辑符号. NAND 和其他的门 (如果你懒得思考但是又很好气的话) NAND (\(&uarr; = &lambda; xy. &not;(x &and; y)\)) 代表了什么呢? 实际上可以看成 Not-AND 即与非门的缩写. NAND 拥有表述所有逻辑关系的能力, 其自身便可以构成联结词的完备集, 用人话来说, 就是可以通过 NAND 门组合来实现其他各种门的功能, 比如: NOT (非门): \(&not; = &lambda; x. x &uarr; y\) AND (与门): \(&and; = &lambda; x y. &not;(x &uarr; y)\) OR (或门): \(+ = &lambda; xy . \overline{\overline{x} &and; \overline{y}} = &lambda; xy . \overline{x} &uarr; \overline{y}\) (德摩根定律) 如果你不了解离散数学, 也不想的话, 实际上, 可能可以做得丑一点也没关系的. 这游戏, 能玩通关么? 我也不知道, 毕竟我可是连初始台地都打不过的废人啊&#8230; 并且感觉还挺忙的, 如果能玩游戏的话, 肯定优先选择和别人玩联机游戏啦. (吐槽一下这该死的校园网联机和该死的作息表. ) 使用的编程语言? 我使用的是 Common Lisp, 至于为什么要用 Lisp 类型的编程语言, 只能说是因为自己想要学学看吧&#8230; 其他倒是没有什么特别的想法, 毕竟也不能说对 Common Lisp 得心应手, 甚至不能够做到描述好了算法 (或者说脑子里有一个简单的过程), 就能够用代码来直接地表示出来. 总而言之就是代码写少了, 平时接触得还不够多呢&#8230; 化简逻辑表达式的方法: Q-M 方法 尽管化简逻辑表达式的方式有很多, 但是为了方便, 我选择使用 Quine–McCluskey algorithm 来执行. 并且为了方便理解, 我选择写一个程序来理解这个问题. 或者可以参考这个 视频, 只要你能够接受印度老哥的神奇口音&#8230; 逻辑运算, 最小表达式和真值表 一些简单的逻辑运算约定和方法 符号 =&#39;A= 用 0, 1 来表示真假 (∧ A B) 与门 (defun ∧ (&amp;rest in-s) &quot;Logic AND for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 0) 0 (iter (rest in))) 1))) (iter in-s))) (∨ A B) 或门 (defun ∨ (&amp;rest in-s) &quot;Logic OR for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 1) 1 (iter (rest in))) 0))) (iter in-s))) Note: 我觉得可以写得更加高明一些: 比如用高阶函数的方式来进行定义这两个函数. (¬ A) 非门 (defun ¬ (in) &quot;Logic NOT for IN.&quot; (if (eq in 0) 1 0)) 顺便来个 NAND (与非门) (defun ↑ (A B) &quot;NAND A and B. &quot; (¬ (∧ A B))) 通过 to-bits 来将整数变成以 base 为底, 长度为 length 的一个 List. (defun to-bits (num length &amp;optional (base 2)) &quot;Turn NUM into LENGTH bits list in BASE (default to binary).&quot; (let ((res &#39;())) (dotimes (i length) (push (mod num base) res) (setq num (floor (/ num base)))) res)) 当然, 高位溢出. 以及对应的转换函数: (defun to-num (bits &amp;optional (base 2)) &quot;Turn BITS into number in BASE (default to binary).&quot; (let ((acc 1) (num 0)) (loop for val in (reverse bits) do (setq num (+ num (* val acc)) acc (* acc base))) num)) 通过 =&#39;(∧ A B)= 这样的形式来表示符号表达式, 通过 truth-table 来计算: (defun logic-exp-eval (exp pattern) &quot;Replace SYM in EXP by VAL. PATTERN like &#39;((SYM VAL)). &quot; (let ((exp-val exp)) (loop for sym-val in pattern do (destructuring-bind (sym val) sym-val (setq exp-val (subst val sym exp-val)))) (eval exp-val)))" />
+<meta property="og:description" content="免责申明 本文不是学习用途, 只是一个为了打游戏做的 &#8220;攻略&#8221; 笔记罢了. 游戏的名字叫做 Turing Complete, (只要 70 元, 还有学生版). 简单来说就是一个连连看小游戏吧. (目前只玩了几关, 感觉挺有意思的). 那么为什么会有这篇攻略笔记呢? 因为这个游戏的交互我个人认为是非常不友好的. 甚至我可以说, 这个游戏的交互还不如我写的那个 垃圾节点编辑器: 拖动节点竟然不会同时移动边, 并且快捷键和操作比较反人类. (不过我的也没高级到哪里去了就是, 并且里面的功能和效果肯定是远超我的版本了). 啊, 闲话说多了, 那么这个和游戏有什么关系呢? 答案就是, 因为连线太麻烦了, 所以我想要来一个能够一键化简的程序, 来减少我连线的负担. 关于使用的符号和其他 符号约定 我在这里使用的符号大多都是和我在 离散数学课 上学到的差不多. 唯一不同的是, 可能我会为了好看而将部分的 \(&not; A\) 写成 \(\overline{A}\). 并且因为我熟悉的是 and, or, not 门, 而不是在游戏中提供的 nand 门, 所以我会使用前者来表示大多数的逻辑符号. NAND 和其他的门 (如果你懒得思考但是又很好气的话) NAND (\(&uarr; = &lambda; xy. &not;(x &and; y)\)) 代表了什么呢? 实际上可以看成 Not-AND 即与非门的缩写. NAND 拥有表述所有逻辑关系的能力, 其自身便可以构成联结词的完备集, 用人话来说, 就是可以通过 NAND 门组合来实现其他各种门的功能, 比如: NOT (非门): \(&not; = &lambda; x. x &uarr; y\) AND (与门): \(&and; = &lambda; x y. &not;(x &uarr; y)\) OR (或门): \(+ = &lambda; xy . \overline{\overline{x} &and; \overline{y}} = &lambda; xy . \overline{x} &uarr; \overline{y}\) (德摩根定律) 如果你不了解离散数学, 也不想的话, 实际上, 可能可以做得丑一点也没关系的. 这游戏, 能玩通关么? 我也不知道, 毕竟我可是连初始台地都打不过的废人啊&#8230; 并且感觉还挺忙的, 如果能玩游戏的话, 肯定优先选择和别人玩联机游戏啦. (吐槽一下这该死的校园网联机和该死的作息表. ) 使用的编程语言? 我使用的是 Common Lisp, 至于为什么要用 Lisp 类型的编程语言, 只能说是因为自己想要学学看吧&#8230; 其他倒是没有什么特别的想法, 毕竟也不能说对 Common Lisp 得心应手, 甚至不能够做到描述好了算法 (或者说脑子里有一个简单的过程), 就能够用代码来直接地表示出来. 总而言之就是代码写少了, 平时接触得还不够多呢&#8230; 化简逻辑表达式的方法: Q-M 方法 尽管化简逻辑表达式的方式有很多, 但是为了方便, 我选择使用 Quine–McCluskey algorithm 来执行. 并且为了方便理解, 我选择写一个程序来理解这个问题. 或者可以参考这个 视频, 只要你能够接受印度老哥的神奇口音&#8230; 逻辑运算, 最小表达式和真值表 一些简单的逻辑运算约定和方法 符号 =&#39;A= 用 0, 1 来表示真假 (∧ A B) 与门 (defun ∧ (&amp;rest in-s) &quot;Logic AND for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 0) 0 (iter (rest in))) 1))) (iter in-s))) (∨ A B) 或门 (defun ∨ (&amp;rest in-s) &quot;Logic OR for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 1) 1 (iter (rest in))) 0))) (iter in-s))) Note: 我觉得可以写得更加高明一些: 比如用高阶函数的方式来进行定义这两个函数. (¬ A) 非门 (defun ¬ (in) &quot;Logic NOT for IN.&quot; (if (eq in 0) 1 0)) 顺便来个 NAND (与非门) (defun ↑ (A B) &quot;NAND A and B. &quot; (¬ (∧ A B))) 通过 to-bits 来将整数变成以 base 为底, 长度为 length 的一个 List. (defun to-bits (num length &amp;optional (base 2)) &quot;Turn NUM into LENGTH bits list in BASE (default to binary).&quot; (let ((res &#39;())) (dotimes (i length) (push (mod num base) res) (setq num (floor (/ num base)))) res)) 当然, 高位溢出. 以及对应的转换函数: (defun to-num (bits &amp;optional (base 2)) &quot;Turn BITS into number in BASE (default to binary).&quot; (let ((acc 1) (num 0)) (loop for val in (reverse bits) do (setq num (+ num (* val acc)) acc (* acc base))) num)) 通过 =&#39;(∧ A B)= 这样的形式来表示符号表达式, 通过 truth-table 来计算: (defun logic-exp-eval (exp pattern) &quot;Replace SYM in EXP by VAL. PATTERN like &#39;((SYM VAL)). &quot; (let ((exp-val exp)) (loop for sym-val in pattern do (destructuring-bind (sym val) sym-val (setq exp-val (subst val sym exp-val)))) (eval exp-val)))" />
+<link rel="canonical" href="/misc/simplify-logic/" />
+<meta property="og:url" content="/misc/simplify-logic/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-05-02T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Simplify Logic (Q-M Methods)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-05-02T00:00:00+00:00","datePublished":"2023-05-02T00:00:00+00:00","description":"免责申明 本文不是学习用途, 只是一个为了打游戏做的 &#8220;攻略&#8221; 笔记罢了. 游戏的名字叫做 Turing Complete, (只要 70 元, 还有学生版). 简单来说就是一个连连看小游戏吧. (目前只玩了几关, 感觉挺有意思的). 那么为什么会有这篇攻略笔记呢? 因为这个游戏的交互我个人认为是非常不友好的. 甚至我可以说, 这个游戏的交互还不如我写的那个 垃圾节点编辑器: 拖动节点竟然不会同时移动边, 并且快捷键和操作比较反人类. (不过我的也没高级到哪里去了就是, 并且里面的功能和效果肯定是远超我的版本了). 啊, 闲话说多了, 那么这个和游戏有什么关系呢? 答案就是, 因为连线太麻烦了, 所以我想要来一个能够一键化简的程序, 来减少我连线的负担. 关于使用的符号和其他 符号约定 我在这里使用的符号大多都是和我在 离散数学课 上学到的差不多. 唯一不同的是, 可能我会为了好看而将部分的 \\(&not; A\\) 写成 \\(\\overline{A}\\). 并且因为我熟悉的是 and, or, not 门, 而不是在游戏中提供的 nand 门, 所以我会使用前者来表示大多数的逻辑符号. NAND 和其他的门 (如果你懒得思考但是又很好气的话) NAND (\\(&uarr; = &lambda; xy. &not;(x &and; y)\\)) 代表了什么呢? 实际上可以看成 Not-AND 即与非门的缩写. NAND 拥有表述所有逻辑关系的能力, 其自身便可以构成联结词的完备集, 用人话来说, 就是可以通过 NAND 门组合来实现其他各种门的功能, 比如: NOT (非门): \\(&not; = &lambda; x. x &uarr; y\\) AND (与门): \\(&and; = &lambda; x y. &not;(x &uarr; y)\\) OR (或门): \\(+ = &lambda; xy . \\overline{\\overline{x} &and; \\overline{y}} = &lambda; xy . \\overline{x} &uarr; \\overline{y}\\) (德摩根定律) 如果你不了解离散数学, 也不想的话, 实际上, 可能可以做得丑一点也没关系的. 这游戏, 能玩通关么? 我也不知道, 毕竟我可是连初始台地都打不过的废人啊&#8230; 并且感觉还挺忙的, 如果能玩游戏的话, 肯定优先选择和别人玩联机游戏啦. (吐槽一下这该死的校园网联机和该死的作息表. ) 使用的编程语言? 我使用的是 Common Lisp, 至于为什么要用 Lisp 类型的编程语言, 只能说是因为自己想要学学看吧&#8230; 其他倒是没有什么特别的想法, 毕竟也不能说对 Common Lisp 得心应手, 甚至不能够做到描述好了算法 (或者说脑子里有一个简单的过程), 就能够用代码来直接地表示出来. 总而言之就是代码写少了, 平时接触得还不够多呢&#8230; 化简逻辑表达式的方法: Q-M 方法 尽管化简逻辑表达式的方式有很多, 但是为了方便, 我选择使用 Quine–McCluskey algorithm 来执行. 并且为了方便理解, 我选择写一个程序来理解这个问题. 或者可以参考这个 视频, 只要你能够接受印度老哥的神奇口音&#8230; 逻辑运算, 最小表达式和真值表 一些简单的逻辑运算约定和方法 符号 =&#39;A= 用 0, 1 来表示真假 (∧ A B) 与门 (defun ∧ (&amp;rest in-s) &quot;Logic AND for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 0) 0 (iter (rest in))) 1))) (iter in-s))) (∨ A B) 或门 (defun ∨ (&amp;rest in-s) &quot;Logic OR for IN-S.&quot; (labels ((iter (in) (if (car in) (if (eq (car in) 1) 1 (iter (rest in))) 0))) (iter in-s))) Note: 我觉得可以写得更加高明一些: 比如用高阶函数的方式来进行定义这两个函数. (¬ A) 非门 (defun ¬ (in) &quot;Logic NOT for IN.&quot; (if (eq in 0) 1 0)) 顺便来个 NAND (与非门) (defun ↑ (A B) &quot;NAND A and B. &quot; (¬ (∧ A B))) 通过 to-bits 来将整数变成以 base 为底, 长度为 length 的一个 List. (defun to-bits (num length &amp;optional (base 2)) &quot;Turn NUM into LENGTH bits list in BASE (default to binary).&quot; (let ((res &#39;())) (dotimes (i length) (push (mod num base) res) (setq num (floor (/ num base)))) res)) 当然, 高位溢出. 以及对应的转换函数: (defun to-num (bits &amp;optional (base 2)) &quot;Turn BITS into number in BASE (default to binary).&quot; (let ((acc 1) (num 0)) (loop for val in (reverse bits) do (setq num (+ num (* val acc)) acc (* acc base))) num)) 通过 =&#39;(∧ A B)= 这样的形式来表示符号表达式, 通过 truth-table 来计算: (defun logic-exp-eval (exp pattern) &quot;Replace SYM in EXP by VAL. PATTERN like &#39;((SYM VAL)). &quot; (let ((exp-val exp)) (loop for sym-val in pattern do (destructuring-bind (sym val) sym-val (setq exp-val (subst val sym exp-val)))) (eval exp-val)))","headline":"Simplify Logic (Q-M Methods)","mainEntityOfPage":{"@type":"WebPage","@id":"/misc/simplify-logic/"},"url":"/misc/simplify-logic/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Simplify Logic (Q-M Methods)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-05-02T00:00:00+00:00" itemprop="datePublished">May 2, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>免责申明</h1>
+<p>本文不是学习用途, 只是一个为了打游戏做的 &#8220;攻略&#8221; 笔记罢了.</p>
+<p>游戏的名字叫做 <a href="https://turingcomplete.game">Turing Complete</a>, (只要 70 元, <del>还有学生版</del>).
+  简单来说就是一个连连看小游戏吧. (目前只玩了几关, 感觉挺有意思的).</p>
+<p>那么为什么会有这篇攻略笔记呢? 因为这个游戏的交互我个人认为是非常不友好的.
+  甚至我可以说, 这个游戏的交互还不如我写的那个 <a href="https://github.com/li-yiyang/write-myself-a-node-editor">垃圾节点编辑器</a>:
+  拖动节点竟然不会同时移动边, 并且快捷键和操作比较反人类.
+  (不过我的也没高级到哪里去了就是, 并且里面的功能和效果肯定是远超我的版本了).</p>
+<p>啊, 闲话说多了, 那么这个和游戏有什么关系呢? 答案就是,
+  因为连线太麻烦了, 所以我想要来一个能够一键化简的程序,
+  来减少我连线的负担.</p>
+<h2>关于使用的符号和其他</h2>
+<h3>符号约定</h3>
+<p>我在这里使用的符号大多都是和我在 <a href="/notes/discreate-mathematic/">离散数学课</a> 上学到的差不多.
+  唯一不同的是, 可能我会为了好看而将部分的 \(&not; A\) 写成 \(\overline{A}\).</p>
+<p>并且因为我熟悉的是 <code>and</code>, <code>or</code>, <code>not</code> 门, 而不是在游戏中提供的 <code>nand</code> 门,
+  所以我会使用前者来表示大多数的逻辑符号.</p>
+<details><summary>NAND 和其他的门 (如果你懒得思考但是又很好气的话)</summary>
+<p>NAND (\(&uarr; = &lambda; xy. &not;(x &and; y)\)) 代表了什么呢?
+  实际上可以看成 <code>Not-AND</code> 即与非门的缩写.</p>
+<p>NAND 拥有表述所有逻辑关系的能力, 其自身便可以构成联结词的完备集,
+  用人话来说, 就是可以通过 NAND 门组合来实现其他各种门的功能, 比如:</p>
+<ul>
+  <li>NOT (非门): \(&not; = &lambda; x. x &uarr; y\)</li>
+  <li>AND (与门): \(&and; = &lambda; x y. &not;(x &uarr; y)\)</li>
+  <li>OR (或门): \(+ = &lambda; xy . \overline{\overline{x} &and; \overline{y}} = &lambda; xy . \overline{x} &uarr; \overline{y}\) (德摩根定律)</li>
+</ul>
+</details>
+<p>如果你不了解离散数学, 也不想的话, 实际上, 可能可以做得丑一点也没关系的.</p>
+<h3>这游戏, 能玩通关么?</h3>
+<p>我也不知道, 毕竟我可是连初始台地都打不过的废人啊&#8230;
+  并且感觉还挺忙的, 如果能玩游戏的话, 肯定优先选择和别人玩联机游戏啦.</p>
+<p>(吐槽一下这该死的校园网联机和该死的作息表. )</p>
+<h3>使用的编程语言?</h3>
+<p>我使用的是 Common Lisp, 至于为什么要用 Lisp 类型的编程语言,
+  只能说是因为自己想要学学看吧&#8230; 其他倒是没有什么特别的想法,
+  毕竟也不能说对 Common Lisp 得心应手, 甚至不能够做到描述好了算法
+  (或者说脑子里有一个简单的过程), 就能够用代码来直接地表示出来.</p>
+<p>总而言之就是代码写少了, 平时接触得还不够多呢&#8230;</p>
+<h1>化简逻辑表达式的方法: Q-M 方法</h1>
+<p>尽管化简逻辑表达式的方式有很多, 但是为了方便,
+  我选择使用 <a href="https://en.wikipedia.org/wiki/Quine–McCluskey_algorithm">Quine–McCluskey algorithm</a> 来执行.</p>
+<p>并且为了方便理解, 我选择写一个程序来理解这个问题.
+  或者可以参考这个 <a href="https://www.youtube.com/watch?v=l1jgq0R5EwQ">视频</a>, 只要你能够接受印度老哥的神奇口音&#8230;</p>
+<h2>逻辑运算, 最小表达式和真值表</h2>
+<details><summary>一些简单的逻辑运算约定和方法</summary>
+<ul>
+  <li>符号 ='A= 用 <code>0</code>, <code>1</code> 来表示真假</li>
+  <li><code>(∧ A B)</code> 与门
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="err">∧</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">in-s</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Logic AND for IN-S.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">in</span><span class="p">)))</span>
+<span class="w">                 </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">in-s</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li><code>(∨ A B)</code> 或门
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="err">∨</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">in-s</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Logic OR for IN-S.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">in</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">in</span><span class="p">)))</span>
+<span class="w">                 </span><span class="mi">0</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">in-s</span><span class="p">)))</span>
+</pre></div>
+    <p>Note: 我觉得可以写得更加高明一些:
+      比如用高阶函数的方式来进行定义这两个函数.</p>
+  </li>
+  <li><code>(¬ A)</code> 非门
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="err">¬</span><span class="w"> </span><span class="p">(</span><span class="nf">in</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Logic NOT for IN.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>顺便来个 NAND (与非门)
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="err">↑</span><span class="w"> </span><span class="p">(</span><span class="nf">A</span><span class="w"> </span><span class="nv">B</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;NAND A and B. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="err">¬</span><span class="w"> </span><span class="p">(</span><span class="err">∧</span><span class="w"> </span><span class="nv">A</span><span class="w"> </span><span class="nv">B</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>通过 <code>to-bits</code> 来将整数变成以 <code>base</code> 为底,
+    长度为 <code>length</code> 的一个 List.
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">to-bits</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">base</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Turn NUM into LENGTH bits list in BASE (default to binary).&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="nb">length</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="nv">base</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="nv">base</span><span class="p">))))</span>
+<span class="w">    </span><span class="nv">res</span><span class="p">))</span>
+</pre></div>
+    <p>当然, 高位溢出.</p>
+  </li>
+  <li>以及对应的转换函数:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">to-num</span><span class="w"> </span><span class="p">(</span><span class="nf">bits</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">base</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">  </span><span class="s">&quot;Turn BITS into number in BASE (default to binary).&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">acc</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">num</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">bits</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">acc</span><span class="p">))</span>
+<span class="w">                          </span><span class="nv">acc</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">acc</span><span class="w"> </span><span class="nv">base</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">num</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>通过 ='(∧ A B)= 这样的形式来表示符号表达式,
+    通过 <code>truth-table</code> 来计算:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">logic-exp-eval</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Replace SYM in EXP by VAL. PATTERN like &#39;((SYM VAL)). &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">exp-val</span><span class="w"> </span><span class="nb">exp</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">sym-val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">pattern</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">sym-val</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">exp-val</span><span class="w"> </span><span class="p">(</span><span class="nf">subst</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">exp-val</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">eval</span><span class="w"> </span><span class="nv">exp-val</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">truth-table</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="nv">vars</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Generate Truth Table of EXP using VARS. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">vars</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">table</span><span class="w">  </span><span class="o">`</span><span class="p">((</span><span class="o">,</span><span class="nv">vars</span><span class="w"> </span><span class="nv">VAL</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">idx</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nb">length</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bits</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nb">length</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">val-pattern</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span><span class="w"> </span><span class="nv">vars</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="p">(</span><span class="nf">logic-exp-eval</span><span class="w"> </span><span class="nb">exp</span><span class="w"> </span><span class="nv">val-pattern</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="o">,</span><span class="nv">pattern</span><span class="w"> </span><span class="o">,</span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">table</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">table</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>实际上, 需要了解的事情基本上只有一个: 那就是真值表.
+  比如一个真值表可能如下:</p>
+<table>
+  <tr><td>(A B C D)</td><td>VAL</td></tr>
+  <tr><td>(0 0 0 0)</td><td>0</td></tr>
+  <tr><td>(0 0 0 1)</td><td>0</td></tr>
+  <tr><td>(0 0 1 0)</td><td>1</td></tr>
+  <tr><td>(0 0 1 1)</td><td>1</td></tr>
+  <tr><td>(0 1 0 0)</td><td>0</td></tr>
+  <tr><td>(0 1 0 1)</td><td>0</td></tr>
+  <tr><td>(0 1 1 0)</td><td>0</td></tr>
+  <tr><td>(0 1 1 1)</td><td>1</td></tr>
+  <tr><td>(1 0 0 0)</td><td>0</td></tr>
+  <tr><td>(1 0 0 1)</td><td>1</td></tr>
+  <tr><td>(1 0 1 0)</td><td>1</td></tr>
+  <tr><td>(1 0 1 1)</td><td>1</td></tr>
+  <tr><td>(1 1 0 0)</td><td>0</td></tr>
+  <tr><td>(1 1 0 1)</td><td>1</td></tr>
+  <tr><td>(1 1 1 0)</td><td>0</td></tr>
+  <tr><td>(1 1 1 1)</td><td>1</td></tr>
+</table>
+<p>实际上可以发现用这样的方式写起来还是挺麻烦的.
+  所以会想用一种叫做 <code>minterm</code> 的形式来进行缩写,
+  如 \(m_3\) 对应的就是 <code>(A B C D) -&gt; (0 1 0 1)</code> 的情况;
+  并且使用 \(m(1, 3, 4) = m_1 + m_3 + m_4\) 来进行缩写.
+  譬如上面的就可以写成 <code>(minterm &#39;(2 3 7 9 10 11 13 15) &#39;(A B C D))</code>.</p>
+<p>实际上, 对于任意的真值表, 都能够通过上面的 <code>minterm</code> 的形式来构建表示方法:</p>
+<p>首先找出所有的一个真值对应的逻辑组合 (即输出为 <code>1</code> 的点),
+  然后计算它们对应输入的 \(m_i\) (比如 <code>(1 1 0 1)</code> 的输入就是 <code>11</code>,
+  就对应的是 \(m_{11}\) 的结果).
+  将这些值 \(m_i\) 全部合在一起就得到了最终的结果了.</p>
+<details><summary>一些代码</summary>
+<p>如何通过逻辑真值表来得到 <code>minterm</code> 的表示法:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">to-minterm</span><span class="w"> </span><span class="p">(</span><span class="nf">table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Trun truth table TABLE into minterm expression.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">vars</span><span class="w"> </span><span class="p">(</span><span class="nb">caar</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">                         </span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                           </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nf">to-num</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">row</span><span class="p">))))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">          </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nb">length</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">minterm</span><span class="w"> </span><span class="p">(</span><span class="k">quote</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">minterms</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="k">quote</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">minterm</span><span class="w"> </span><span class="p">(</span><span class="k">quote</span><span class="w"> </span><span class="o">,</span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">quote</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">))))))</span>
+</pre></div>
+<p>关于如何通过 <code>minterm</code> 来还原完整的的逻辑表达式:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">minterm</span><span class="w"> </span><span class="p">(</span><span class="nf">patterns</span><span class="w"> </span><span class="nv">vars</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make logic expressions by PATTERNS using VARS.</span>
+
+<span class="s">PATTERNS can be a list: `(minterm &#39;(1 2) &#39;(A B))&#39;;</span>
+<span class="s">or could be a single item: `(minterm 1 &#39;(A B))&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">vars</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">single</span><span class="w"> </span><span class="p">(</span><span class="nf">num</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∧</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">sym</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span>
+<span class="w">                                  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="err">¬</span><span class="w"> </span><span class="o">,</span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">sym</span><span class="p">))</span>
+<span class="w">                                </span><span class="nv">vars</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bits</span><span class="w"> </span><span class="nv">num</span><span class="w"> </span><span class="nb">length</span><span class="p">)))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">single</span><span class="w"> </span><span class="nv">patterns</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∨</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;single</span><span class="w"> </span><span class="nv">patterns</span><span class="p">))))))</span>
+</pre></div>
+</details>
+<p>OK, 那么前置知识大概就是这么多了吧.</p>
+<h2>Q-M 方法的一步步解释</h2>
+<p>根据 <a href="http://www.cs.columbia.edu/~cs6861/handouts/quine-mccluskey-handout.pdf">这篇文档</a> 里面介绍的方式, Q-M 方法有 4 步:</p>
+<ol>
+  <li>Generate Prime Implicants</li>
+  <li>Construct Prime Implicant Table</li>
+  <li>Reduce Prime Implicant Table
+    <ol>
+      <li>Remove Essential Prime Implicants</li>
+      <li>Row Dominance</li>
+      <li>Column Dominance</li>
+    </ol>
+  </li>
+  <li>Solve Prime Implicant Table</li>
+</ol>
+<p>但是这里面写得全是看不懂的术语, 加上我最讨厌背东西,
+  所以离散代数一结束, 我就啥也不记得了&#8230;</p>
+<p>那么可以通过看看实际操作, 然后理解如何实现吧&#8230;
+  下面的例子参照的是前文提到的 <a href="https://www.youtube.com/watch?v=l1jgq0R5EwQ">视频</a>.</p>
+<h3>Step 1: Generate Prime Implicants</h3>
+<details><summary>对于一个真值表</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">truth-table</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">minterm</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="mi">9</span><span class="w"> </span><span class="mi">11</span><span class="w"> </span><span class="mi">15</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">A</span><span class="w"> </span><span class="nv">B</span><span class="w"> </span><span class="nv">C</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span>
+<span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">A</span><span class="w"> </span><span class="nv">B</span><span class="w"> </span><span class="nv">C</span><span class="w"> </span><span class="nv">D</span><span class="p">))</span>
+</pre></div>
+<table>
+  <tr><td>(A B C D)</td><td>VAL</td></tr>
+  <tr><td>(0 0 0 0)</td><td>1</td></tr>
+  <tr><td>(0 0 0 1)</td><td>1</td></tr>
+  <tr><td>(0 0 1 0)</td><td>0</td></tr>
+  <tr><td>(0 0 1 1)</td><td>1</td></tr>
+  <tr><td>(0 1 0 0)</td><td>0</td></tr>
+  <tr><td>(0 1 0 1)</td><td>0</td></tr>
+  <tr><td>(0 1 1 0)</td><td>0</td></tr>
+  <tr><td>(0 1 1 1)</td><td>1</td></tr>
+  <tr><td>(1 0 0 0)</td><td>1</td></tr>
+  <tr><td>(1 0 0 1)</td><td>1</td></tr>
+  <tr><td>(1 0 1 0)</td><td>0</td></tr>
+  <tr><td>(1 0 1 1)</td><td>1</td></tr>
+  <tr><td>(1 1 0 0)</td><td>0</td></tr>
+  <tr><td>(1 1 0 1)</td><td>0</td></tr>
+  <tr><td>(1 1 1 0)</td><td>0</td></tr>
+  <tr><td>(1 1 1 1)</td><td>1</td></tr>
+</table>
+</details>
+<p>要得到它的 Prime Implicants 需要如下的操作:
+  (这里仅仅只是一个非常粗略的介绍, 具体的细节步骤请看下面的实现和详细说明)</p>
+<ol>
+  <li>仅仅关心 \(m_i\), 所以首先不考虑真值表中结果为 <code>0</code> 的项;
+    对每一个 <code>(A B C D)</code> 的取值的 <code>1</code> 的数量进行计数;
+    并根据这个来对真值表进行分类.
+    <p>比如真值表中 <code>1</code> 个数为 <code>1</code> 个的组为 <code>(0 0 0 1)</code> 和 <code>(1 0 0 0)</code>,
+      即 \(m_1\) 和 \(m_8\).</p>
+  </li>
+  <li>将相邻类之间的两两元素进行比较并将不相同的部分做标记.
+    <p>如 \(m_0\) <code>(0 0 0 0)</code> 和 \(m_1\) <code>(0 0 0 1)</code>
+      分别属于 <code>count-1 -&gt; 0</code> 和 <code>count-1 -&gt; 1</code> 的类,
+      它们间不相同的只有 <code>D</code> 位, 于是将其进行标记 <code>(0 0 0 -)</code>.</p>
+    <p>于是可以发现, 如果想要表示 \(m_0 + m_1\),
+      由于结合律 \(\overline{A} \overline{B} \overline{C} (D + \overline{D})\),
+      \(D\) 就被消除了. 于是在这里就有了第一次简化.</p>
+    <p>之所以是相邻类, 也是因为每个类之间最少也会有 <code>1</code> 个不同的元素,
+      所以可以做到消去的功能.
+      (当然, 如果是两个不同的元素的话, 就做不到消去的目标了,
+      不过让我感到奇怪的是, 竟然没有一个教材专门指出这一点,
+      至少我看的这个没有, 可能是因为太简单吧&#8230;
+      不过至少对我这种笨蛋友好一点吧&#8230;)</p>
+  </li>
+  <li>在完成了上一步的基础上, 继续使用上面的技巧进行化简直到得到最简式.
+    即可以用最简式的或来表示原本的逻辑表达式.
+    <p>但是很显然, 这些逻辑表达式的和并不一定是最简的表达式.
+      所以需要之后的进一步的约化.</p>
+  </li>
+</ol>
+<h4>Step 1.1 Group by <code>count-1</code></h4>
+<details><summary>分组代码</summary>
+<ul>
+  <li>计数 <code>BINS</code> 中的 <code>1</code> 的数量:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">count-1</span><span class="w"> </span><span class="p">(</span><span class="nf">bins</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Count `1&#39; number in BINS.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">sum</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">bins</span>
+<span class="w">          </span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">sum</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">sum</span><span class="p">))</span>
+</pre></div>
+  </li>
+  <li>去掉不关心的部分
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">strip-zero-and-format</span><span class="w"> </span><span class="p">(</span><span class="nf">table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Read truth table TABLE and produce a formatted output for further process.</span>
+
+<span class="s">For example: `(strip-zero-and-format (truth-table LOGIC-EXP VARS))&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">vars</span><span class="w"> </span><span class="p">(</span><span class="nb">caar</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">table</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">val</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">row</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">bin</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">row</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">GROUP</span><span class="w"> </span><span class="nv">MINTERM</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">                  </span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nf">val</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                    </span><span class="nv">collect</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">bins</span><span class="w"> </span><span class="p">(</span><span class="nf">bin</span><span class="w"> </span><span class="nv">row</span><span class="p">)))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">count-1</span><span class="w"> </span><span class="nv">bins</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">to-num</span><span class="w"> </span><span class="nv">bins</span><span class="p">)</span><span class="w"> </span><span class="nv">bins</span><span class="p">)))))))</span>
+</pre></div>
+  </li>
+  <li>或者根据 <code>minterm</code> 来快速生成:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">format-by-minterm-exp</span><span class="w"> </span><span class="p">(</span><span class="nf">minterm</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Input MINTERM expression: `(minterm &#39;MINTERMS &#39;VARS)&#39;, generate formatted table.</span>
+
+<span class="s">For example: `(format-by-minterm-exp &#39;(minterm &#39;(0 1) &#39;(A B)))&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">vars</span><span class="p">))</span><span class="w"> </span><span class="nv">minterm</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">GROUP</span><span class="w"> </span><span class="nv">MINTERM</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">term</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span>
+<span class="w">                </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">bins</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bits</span><span class="w"> </span><span class="nv">term</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">vars</span><span class="p">))))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">count-1</span><span class="w"> </span><span class="nv">bins</span><span class="p">)</span><span class="w"> </span><span class="nv">term</span><span class="w"> </span><span class="nv">bins</span><span class="p">))))))</span>
+</pre></div>
+  </li>
+  <li>以及根据 <code>GROUP</code> 进行分组
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">assoc-update</span><span class="w"> </span><span class="p">(</span><span class="nf">key</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="nv">alist</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Insert OBJ into ALIST at KEY position.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">alist</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">obj</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="nv">alist</span><span class="p">)))</span><span class="w"> </span><span class="c1">; push to existed key</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">key</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">obj</span><span class="p">))</span><span class="w"> </span><span class="nv">alist</span><span class="p">))</span><span class="w"> </span><span class="c1">; add new key</span>
+<span class="w">  </span><span class="nv">alist</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">group-by</span><span class="w"> </span><span class="p">(</span><span class="nf">func</span><span class="w"> </span><span class="nv">lst</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Group items in LST by the value of FUNC. Return a AList.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">groups</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">item</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">lst</span><span class="w">               </span><span class="c1">; kinda like bucket-sort</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">groups</span><span class="w"> </span><span class="p">(</span><span class="nf">assoc-update</span><span class="w"> </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">func</span><span class="w"> </span><span class="nv">item</span><span class="p">)</span><span class="w"> </span><span class="nv">item</span><span class="w"> </span><span class="nv">groups</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">groups</span><span class="p">))</span>
+</pre></div>
+    <p>使用 <code>group-by</code> 函数就可以轻松对格式化的真值表进行分类了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">group-formatted</span><span class="w"> </span><span class="p">(</span><span class="nf">formatted</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Group formatted truth table FORMATTED.</span>
+
+<span class="s">For example: `(group-formatted (format-by-minterm-exp MINTERM))&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">vars</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">formatted</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">formatted</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="nf">GROUP</span><span class="w"> </span><span class="nv">MINTERMS</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">group-by</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;first</span><span class="w"> </span><span class="nv">body</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>为了得到更加好看一点的结果,
+    这里做一个格式化输出:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">grouped-and-format-output</span><span class="w"> </span><span class="p">(</span><span class="nf">grouped</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Input table with `(GROUP MINTERM (VALS))&#39; pattern, output grouped one.</span>
+
+<span class="s">For example: `(grouped-and-format-output (group-formatted FORMATTED))&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">title</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">grouped</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">grouped</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">grouped</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">group</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">grouped</span><span class="w">          </span><span class="c1">; for all groups</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">group</span><span class="p">)</span><span class="w"> </span><span class="c1">; push items to output table</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">title</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>根据 <code>(A B C D)</code> 中 <code>1</code> 的数量进行计数 (<code>count-1</code>),
+  然后分类的结果为:</p>
+<table>
+  <tr><td>GROUP</td><td>MINTERMS</td><td>(A B C D)</td></tr>
+  <tr><td>0</td><td>0</td><td>(0 0 0 0)</td></tr>
+  <tr><td>1</td><td>1</td><td>(0 0 0 1)</td></tr>
+  <tr><td>1</td><td>8</td><td>(1 0 0 0)</td></tr>
+  <tr><td>2</td><td>3</td><td>(0 0 1 1)</td></tr>
+  <tr><td>2</td><td>9</td><td>(1 0 0 1)</td></tr>
+  <tr><td>3</td><td>7</td><td>(0 1 1 1)</td></tr>
+  <tr><td>3</td><td>11</td><td>(1 0 1 1)</td></tr>
+  <tr><td>4</td><td>15</td><td>(1 1 1 1)</td></tr>
+</table>
+<h4>Step 1.2 Mark Difference</h4>
+<p>可以发现, 在相邻的类之间, 因为它们的 <code>minterm</code> 的 <code>count-1</code> 的数量相差 <code>1</code>,
+  所以在 <code>(A B C D)</code> 的比较形式中, 在相邻类间的两个元素, 至少会有一项是不相等的.</p>
+<p>其中核心的部分就是找出两个 <code>(A B C D)</code> 形式之间是否只有一位不同,
+  并将该位进行标记.</p>
+<details><summary>具体代码</summary>
+<ul>
+  <li>比较两个 <code>(A B C D)</code> 形式:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compare-bins</span><span class="w"> </span><span class="p">(</span><span class="nf">bins-a</span><span class="w"> </span><span class="nv">bins-b</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare BINS-A and BINS-B, return marked bins or NIL for fail.</span>
+
+<span class="s">For example: </span>
+<span class="s">+ `(compare-bins &#39;(0 0 1) &#39;(0 0 0))&#39; returns `(0 0 -)&#39;</span>
+<span class="s">+ `(compare-bins &#39;(0 1 1) &#39;(0 0 0))&#39; returns `NIL&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">count-diff</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">tape</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">bins-a</span>
+<span class="w">                     </span><span class="nv">for</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">bins-b</span>
+<span class="w">                     </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">count-diff</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="nv">a</span>
+<span class="w">                     </span><span class="k">else</span>
+<span class="w">                       </span><span class="nv">collect</span><span class="w"> </span><span class="ss">&#39;-</span>
+<span class="w">                       </span><span class="k">and</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">count-diff</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">count-diff</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">count-diff</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="nv">tape</span>
+<span class="w">        </span><span class="nv">NIL</span><span class="p">)))</span>
+</pre></div>
+  </li>
+  <li>将相邻两组之间进行比较 (比较 <code>count-1</code> 为 <code>n</code> 和 <code>n + 1</code> 的情况):
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compare-two-group</span><span class="w"> </span><span class="p">(</span><span class="nf">n</span><span class="w"> </span><span class="nv">g-n</span><span class="w"> </span><span class="nv">g-n+1</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare two group G-N and G-N+1.</span>
+
+<span class="s">The input two group are list of bins, for example: `((m1 (0 0 1)) (m2 (0 1 0)))&#39;. </span>
+<span class="s">The output are like `(((m1 m2) (1 0 -)) ((m3 m4) (0 - 0)))&#39;. </span>
+
+<span class="s">The input two group can also be like `(((m1 m2) (- 0 1)) ((m1 m2) (0 - 0)))&#39;,</span>
+<span class="s">which will be passed in Step 1.3 for further simplify. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">minterm-list</span><span class="w"> </span><span class="p">(</span><span class="nf">m-pattern</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">m-pattern</span><span class="p">)))</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">compare-res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">m-a</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">g-n</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">m-b</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">g-n+1</span>
+<span class="w">                     </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">m1</span><span class="w"> </span><span class="p">(</span><span class="nf">minterm-list</span><span class="w"> </span><span class="nv">m-a</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">bin-1</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">m-a</span><span class="p">))</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">m2</span><span class="w"> </span><span class="p">(</span><span class="nf">minterm-list</span><span class="w"> </span><span class="nv">m-b</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">bin-2</span><span class="w"> </span><span class="p">(</span><span class="nb">cadr</span><span class="w"> </span><span class="nv">m-b</span><span class="p">))</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">cmp</span><span class="w"> </span><span class="p">(</span><span class="nf">compare-bins</span><span class="w"> </span><span class="nv">bin-1</span><span class="w"> </span><span class="nv">bin-2</span><span class="p">)))</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">cmp</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="nv">m1</span><span class="w"> </span><span class="nv">m2</span><span class="p">)</span><span class="w"> </span><span class="nv">cmp</span><span class="p">)</span><span class="w"> </span><span class="nv">compare-res</span><span class="p">)))))</span>
+<span class="w">      </span><span class="nv">compare-res</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compare-grouped-nexts</span><span class="w"> </span><span class="p">(</span><span class="nf">grouped</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare the GROUPED input.</span>
+
+<span class="s">The input will be like `((GROUP MINTERM VARS) GROUPED-ALIST)&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">vars</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nv">grouped</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">grouped</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">vars</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">content</span><span class="w"> </span><span class="p">(</span><span class="nf">group</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">lst</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">lst</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">group</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">n-group</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">n+1-group</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">compare</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">cons</span>
+<span class="w">         </span><span class="o">`</span><span class="p">(</span><span class="nf">GROUP</span><span class="w"> </span><span class="nv">MINTERMS</span><span class="w"> </span><span class="o">,</span><span class="nv">vars</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nb">length</span><span class="p">)</span>
+<span class="w">               </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">n-group</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">n</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">n+1-group</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">body</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">compare</span><span class="w"> </span><span class="p">(</span><span class="nf">compare-two-group</span><span class="w"> </span><span class="nv">n</span>
+<span class="w">                                                        </span><span class="p">(</span><span class="nf">content</span><span class="w"> </span><span class="nv">n-group</span><span class="p">)</span>
+<span class="w">                                                        </span><span class="p">(</span><span class="nf">content</span><span class="w"> </span><span class="nv">n+1-group</span><span class="p">))))</span>
+<span class="w">                 </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">n</span><span class="p">)</span><span class="w"> </span><span class="nv">compare</span><span class="p">)))))))</span>
+</pre></div>
+  </li>
+  <li>为了方便查看, 进行格式化输出:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compared-group-format</span><span class="w"> </span><span class="p">(</span><span class="nf">compared-group</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Format the COMPARED-GROUP for output.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">title</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">compared-group</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">compared-group</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">group</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">group</span><span class="p">)</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">res</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">title</span><span class="w"> </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">res</span><span class="p">))))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>于是可以列出表来:</p>
+<table>
+  <tr><td>GROUP</td><td>MINTERMS</td><td>(A B C D)</td></tr>
+  <tr><td>0</td><td>(0 1)</td><td>(0 0 0 -)</td></tr>
+  <tr><td>0</td><td>(0 8)</td><td>(- 0 0 0)</td></tr>
+  <tr><td>1</td><td>(1 3)</td><td>(0 0 - 1)</td></tr>
+  <tr><td>1</td><td>(1 9)</td><td>(- 0 0 1)</td></tr>
+  <tr><td>1</td><td>(8 9)</td><td>(1 0 0 -)</td></tr>
+  <tr><td>2</td><td>(3 7)</td><td>(0 - 1 1)</td></tr>
+  <tr><td>2</td><td>(3 11)</td><td>(- 0 1 1)</td></tr>
+  <tr><td>2</td><td>(9 11)</td><td>(1 0 - 1)</td></tr>
+  <tr><td>3</td><td>(7 15)</td><td>(- 1 1 1)</td></tr>
+  <tr><td>3</td><td>(11 15)</td><td>(1 - 1 1)</td></tr>
+</table>
+<h4>Step 1.3 Repeat Step 1.2 Until NIL To Get Prime Implicants</h4>
+<p>重复 Step 1.2 的操作, 可以得到如下的表:</p>
+<table>
+  <tr><td>GROUP</td><td>MINTERMS</td><td>(A B C D)</td></tr>
+  <tr><td>0</td><td>(0 8 1 9)</td><td>(- 0 0 -)</td></tr>
+  <tr><td>0</td><td>(0 1 8 9)</td><td>(- 0 0 -)</td></tr>
+  <tr><td>1</td><td>(1 9 3 11)</td><td>(- 0 - 1)</td></tr>
+  <tr><td>1</td><td>(1 3 9 11)</td><td>(- 0 - 1)</td></tr>
+  <tr><td>2</td><td>(3 11 7 15)</td><td>(- - 1 1)</td></tr>
+  <tr><td>2</td><td>(3 7 11 15)</td><td>(- - 1 1)</td></tr>
+</table>
+<p>那么再一次重复, 会发现没有可以列出的表了:</p>
+<table>
+  <tr><td>GROUP</td><td>MINTERMS</td><td>(A B C D)</td></tr>
+</table>
+<p>于是可以说, 在执行 2 次之后, 就得到了 Prime Implicant 表.
+  (按照中文维基百科上说的, 叫做素蕴涵. )</p>
+<p>总结起来就是:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-prime-impilcant-of-formatted</span><span class="w"> </span><span class="p">(</span><span class="nf">grouped</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Find the Prime Impilcant of GROUPED. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">iter</span><span class="w"> </span><span class="p">(</span><span class="nf">formatted-input</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="p">(</span><span class="nf">compare-grouped-nexts</span><span class="w"> </span><span class="nv">formatted-input</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span><span class="w">           </span><span class="c1">; ALIST of formatted</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">res</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">formatted-input</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">iter</span><span class="w"> </span><span class="nv">grouped</span><span class="p">)))</span>
+</pre></div>
+<p>(注: 前文中提到的视频并没有提到一个中止条件的判断,
+  这里需要强调一下, 当然, 如果你逻辑那部分学得很好并且清楚地知道啥是素蕴涵的话,
+  当我没说, 毕竟我学得一塌糊涂&#8230; )</p>
+<p>在做完这一步的时候, 可以说原本的 \(&sum; m_i\) 可以被类似 \(\{m_p\}\)
+  这样的表达式的和 (或) 进行表示.</p>
+<h3>Step 2: Construct Prime Implicant Table</h3>
+<p>既然已经得到了最简单的 Prime Implicant 形式,
+  将其写成 Prime Implicant Table 不过就是一个 <code>format</code> 的工作了:</p>
+<ol>
+  <li>去掉重复的表达式</li>
+  <li>在表格中将表达式对应的 <code>minterm</code> 部分做标记</li>
+</ol>
+<details><summary>一些代码</summary>
+<p>因为传入的 Prime Implicants 并不包含完整的 <code>minterms</code> 的信息,
+  所以需要首先从其中还原出来 (虽然看起来像是很多于的事情就是了).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">restore-minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">prime-implicants</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Restore minterms from PRIME-IMPLICANTS. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">prime-implicants</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">minterm-lst</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">read-minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">m</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">m</span><span class="p">)</span><span class="w"> </span><span class="nv">m</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">group</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">group</span><span class="p">)</span>
+<span class="w">                     </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">read-minterms</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">                              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">minterm-lst</span><span class="p">))</span>
+<span class="w">                                   </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">minterm-lst</span><span class="p">)))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="nv">minterm-lst</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;&lt;</span><span class="p">))))</span>
+</pre></div>
+<p>于是构建表就比较轻松了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">construct-prime-implicant-table</span><span class="w"> </span><span class="p">(</span><span class="nf">prime-implicants</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Format the PRIME-IMPLICANTS, for convenice&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">vars</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">prime-implicants</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">body</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">prime-implicants</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">minterm-lst</span><span class="w"> </span><span class="p">(</span><span class="nf">restore-minterms</span><span class="w"> </span><span class="nv">prime-implicants</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">minterm-read</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">make-exp</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">vals</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">find-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">vals</span><span class="p">))</span>
+<span class="w">                                     </span><span class="nv">minterm-read</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">vals</span><span class="w"> </span><span class="nv">minterm-read</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∧</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span>
+<span class="w">                               </span><span class="nv">for</span><span class="w"> </span><span class="nv">sym</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">vars</span>
+<span class="w">                               </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="ss">&#39;-</span><span class="p">))</span>
+<span class="w">                                 </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="o">`</span><span class="p">(</span><span class="err">¬</span><span class="w"> </span><span class="o">,</span><span class="nv">sym</span><span class="p">)</span><span class="w"> </span><span class="nv">sym</span><span class="p">))))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">read-minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">min</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">find</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nb">min</span><span class="p">)</span><span class="w"> </span><span class="ss">&#39;X</span><span class="w"> </span><span class="ss">&#39;_</span><span class="p">))</span>
+<span class="w">                         </span><span class="nv">minterm-lst</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">res</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">group</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nv">group</span><span class="p">)</span>
+<span class="w">                       </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">minterms</span><span class="w"> </span><span class="p">(</span><span class="nf">read-minterms</span><span class="w"> </span><span class="nv">pattern</span><span class="p">))</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">logic-exp</span><span class="w"> </span><span class="p">(</span><span class="nf">make-exp</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)))</span>
+<span class="w">                            </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">logic-exp</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">logic-exp</span><span class="w"> </span><span class="nv">minterms</span><span class="p">)</span><span class="w"> </span><span class="nv">res</span><span class="p">)))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="ss">&#39;LOGIC-EXP</span><span class="w"> </span><span class="nv">minterm-lst</span><span class="p">)</span>
+<span class="w">              </span><span class="nv">res</span><span class="p">)))))</span>
+</pre></div>
+</details>
+<p>于是可以得到最终的表格:</p>
+<table>
+  <tr><td>LOGIC-EXP</td><td>0</td><td>1</td><td>3</td><td>7</td><td>8</td><td>9</td><td>11</td><td>15</td></tr>
+  <tr><td>(∧ C D)</td><td>_</td><td>_</td><td>X</td><td>X</td><td>_</td><td>_</td><td>X</td><td>X</td></tr>
+  <tr><td>(∧ (¬ B) D)</td><td>_</td><td>X</td><td>X</td><td>_</td><td>_</td><td>X</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ (¬ B) (¬ C))</td><td>X</td><td>X</td><td>_</td><td>_</td><td>X</td><td>X</td><td>_</td><td>_</td></tr>
+</table>
+<p>为何构建如此的表格的原因, 在下面将会介绍:</p>
+<h3>Step 3: Reduce Prime Implicant Table</h3>
+<p>上面的表格将表达式和其对应的 \(m_i\) 形式进行对应,
+  并且可以发现一些表达式之间存在重复,
+  于是只要找到能够覆盖所有 \(\{m_i\}\) 的最小的表达式集合,
+  将这些集合进行组合就可以描述最小的逻辑表达式了.</p>
+<p>显然, 通过穷举不失为一个可行的方法,
+  (注: 在我写了大半代码之后回来看, 感觉还是不如穷举算了&#8230; )
+  另一种可行的方法可以如下:</p>
+<ol>
+  <li>去掉所有在 \(m_i\) 中仅出现一次标记的表达式和对应的 \(m_i\),
+    这些表达式是要覆盖 \(\{m_i\}\) 不可或缺的元素</li>
+  <li>在去掉前者的基础上, 根据行和列去消去重复的元素,
+    消除的策略是尽可能地去消除可以被其他元素表示的项.</li>
+</ol>
+<h4>Step 3.1 Remove Essential Prime Implicants</h4>
+<p>对于上面的表格, 按列来看, 一列中只含有一个 <code>X</code> 的标记的行,
+  显然是一定会包含的必要的项:</p>
+<ul>
+  <li>对列进行计数</li>
+  <li>如果该列有且仅有一个 <code>X</code> 标记,
+    将该标记的表达式从表格中去除 (去除该列).</li>
+</ul>
+<details><summary>一些代码</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">transpose-table</span><span class="w"> </span><span class="p">(</span><span class="nf">table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Transpose input TABLE.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;list</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+</pre></div>
+<details><summary>转置的结果</summary>
+<table>
+  <tr><td>LOGIC-EXP</td><td>(∧ C D)</td><td>(∧ (¬ B) D)</td><td>(∧ (¬ B) (¬ C))</td></tr>
+  <tr><td>0</td><td>_</td><td>_</td><td>X</td></tr>
+  <tr><td>1</td><td>_</td><td>X</td><td>X</td></tr>
+  <tr><td>3</td><td>X</td><td>X</td><td>_</td></tr>
+  <tr><td>7</td><td>X</td><td>_</td><td>_</td></tr>
+  <tr><td>8</td><td>_</td><td>_</td><td>X</td></tr>
+  <tr><td>9</td><td>_</td><td>X</td><td>X</td></tr>
+  <tr><td>11</td><td>X</td><td>X</td><td>_</td></tr>
+  <tr><td>15</td><td>X</td><td>_</td><td>_</td></tr>
+</table>
+</details>
+<ul>
+  <li>首先在表中找到 Essential Prime Implicants:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">find-essential-prime-implicants</span><span class="w"> </span><span class="p">(</span><span class="nf">trans-table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Find essential parts in TRANS-TABLE. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">exps</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">trans-table</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">rows</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">trans-table</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">count-X</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">count</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span>
+<span class="w">                       </span><span class="nv">for</span><span class="w"> </span><span class="nb">exp</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">exps</span>
+<span class="w">                       </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">                       </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="ss">&#39;X</span><span class="p">)</span>
+<span class="w">                         </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nb">count</span><span class="p">)</span>
+<span class="w">                                  </span><span class="nv">expr</span><span class="w"> </span><span class="nb">exp</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">count</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">essential</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">rows</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="p">(</span><span class="nf">count-X</span><span class="w"> </span><span class="nv">row</span><span class="p">))</span>
+<span class="w">              </span><span class="k">if</span><span class="w"> </span><span class="nb">count</span>
+<span class="w">                </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">find-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nb">count</span><span class="p">))</span>
+<span class="w">                                       </span><span class="nv">essential</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="nv">essential</span><span class="p">)))</span>
+<span class="w">        </span><span class="nv">essential</span><span class="p">))))</span>
+</pre></div>
+  </li>
+  <li>然后在表中删除 Essential 对应的行:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">remove-essential-prime-implicants</span><span class="w"> </span><span class="p">(</span><span class="nf">table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Delete essential primes of TABLE, return removed table and essential ones.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">trans-table</span><span class="w"> </span><span class="p">(</span><span class="nf">transpose-table</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">essential</span><span class="w"> </span><span class="p">(</span><span class="nf">find-essential-prime-implicants</span><span class="w"> </span><span class="nv">trans-table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">trans-table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">exps</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">title</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">rows</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">trans-table</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">remain-rows</span><span class="w"> </span><span class="o">&#39;</span><span class="p">()))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">rows</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">remain-p</span><span class="w"> </span><span class="nv">T</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span>
+<span class="w">                     </span><span class="nv">for</span><span class="w"> </span><span class="nb">exp</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">exps</span>
+<span class="w">                     </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="ss">&#39;X</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">find-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nb">exp</span><span class="p">))</span>
+<span class="w">                                      </span><span class="nv">essential</span><span class="p">))</span>
+<span class="w">                       </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">remain-p</span><span class="w"> </span><span class="nv">NIL</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">remain-p</span><span class="p">)</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">remain-rows</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">delete-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">find-if</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">row</span><span class="p">)))</span>
+<span class="w">                                  </span><span class="nv">essential</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">transpose-table</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">title</span><span class="w"> </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="nv">remain-rows</span><span class="p">))))</span>
+<span class="w">            </span><span class="nv">essential</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+</details>
+<p>因为视频中的例子没有覆盖所有情况, 第一步去除之后就空了,
+  所以不太能够说明所有的问题, 换一个例子: \(m(0,2,5,6,7,8,10,12,13,14,15)\).</p>
+<p>其去除前的列表如下:</p>
+<table>
+  <tr><td>LOGIC-EXP</td><td>0</td><td>2</td><td>5</td><td>6</td><td>7</td><td>8</td><td>10</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+  <tr><td>(∧ B D)</td><td>_</td><td>_</td><td>X</td><td>_</td><td>X</td><td>_</td><td>_</td><td>_</td><td>X</td><td>_</td><td>X</td></tr>
+  <tr><td>(∧ B C)</td><td>_</td><td>_</td><td>_</td><td>X</td><td>X</td><td>_</td><td>_</td><td>_</td><td>_</td><td>X</td><td>X</td></tr>
+  <tr><td>(∧ A B)</td><td>_</td><td>_</td><td>_</td><td>_</td><td>_</td><td>_</td><td>_</td><td>X</td><td>X</td><td>X</td><td>X</td></tr>
+  <tr><td>(∧ C (¬ D))</td><td>_</td><td>X</td><td>_</td><td>X</td><td>_</td><td>_</td><td>X</td><td>_</td><td>_</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ A (¬ D))</td><td>_</td><td>_</td><td>_</td><td>_</td><td>_</td><td>X</td><td>X</td><td>X</td><td>_</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ (¬ B) (¬ D))</td><td>X</td><td>X</td><td>_</td><td>_</td><td>_</td><td>X</td><td>X</td><td>_</td><td>_</td><td>_</td><td>_</td></tr>
+</table>
+<p>其去除后的列表如下:</p>
+<table>
+  <tr><td>LOGIC-EXP</td><td>6</td><td>12</td><td>14</td></tr>
+  <tr><td>(∧ B C)</td><td>X</td><td>_</td><td>X</td></tr>
+  <tr><td>(∧ A B)</td><td>_</td><td>X</td><td>X</td></tr>
+  <tr><td>(∧ C (¬ D))</td><td>X</td><td>_</td><td>X</td></tr>
+  <tr><td>(∧ A (¬ D))</td><td>_</td><td>X</td><td>X</td></tr>
+</table>
+<p>注: 不过我认为用 &#8220;去除&#8221; 这个词倒是有点不太妥当, 为什么呢?
+  因为这些去除掉的元素, 原则上来说应该是最终需要保留的项.
+  以上面的去掉的元素为例, 它们在最后应该作为表达式中的一项进行保留才对.</p>
+<p>(注意这里和之后的消除的不同)</p>
+<h4>Step 3.2 &amp; 3.3 Row &amp; Column Dominance</h4>
+<p>(注: 因为接下来的操作实际上行列原则上是一样的, 所以这里就用其中一个来表示. )</p>
+<details><summary>代码 (建议先看例子后看代码)</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">remove-dominate</span><span class="w"> </span><span class="p">(</span><span class="nf">table</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Remove dominate elements in TABLE. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">title</span><span class="w">  </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">table</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">remain</span><span class="w"> </span><span class="p">(</span><span class="nb">sort</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">table</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">exp-leq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                                                          </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">b</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">detect-dominate</span><span class="w"> </span><span class="p">(</span><span class="nf">the-row</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">the-id</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">the-row</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">the-content</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">the-row</span><span class="p">))</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">dominate?</span><span class="w"> </span><span class="nv">T</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">the-content</span>
+<span class="w">                       </span><span class="nv">for</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">                       </span><span class="k">while</span><span class="w"> </span><span class="nv">dominate?</span>
+<span class="w">                       </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="ss">&#39;X</span><span class="p">)</span>
+<span class="w">                         </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">dominate?</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">body</span>
+<span class="w">                                    </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="nv">dominate?</span><span class="p">)</span>
+<span class="w">                                    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="nv">the-id</span><span class="p">))</span>
+<span class="w">                                            </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="nv">val</span><span class="p">))</span>
+<span class="w">                                      </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">dominate?</span><span class="w"> </span><span class="nv">T</span><span class="p">))))</span>
+<span class="w">                 </span><span class="nv">dominate?</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">            </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">remain</span><span class="p">))</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">detect-dominate</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span><span class="w"> </span><span class="nv">remain</span><span class="p">)</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">remain</span><span class="w"> </span><span class="p">(</span><span class="nf">nconc</span><span class="w"> </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="p">(</span><span class="nf">subseq</span><span class="w"> </span><span class="nv">remain</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">idx</span><span class="p">))</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nf">print</span><span class="w"> </span><span class="p">(</span><span class="nf">nthcdr</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">idx</span><span class="p">)</span><span class="w"> </span><span class="nv">remain</span><span class="p">))))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">idx</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">title</span><span class="w"> </span><span class="nv">remain</span><span class="p">))))</span>
+</pre></div>
+<p>注: 这里实际上还应该做一个按照表达式的复杂度进行排序的操作,
+  然后按照复杂度从高到低进行删除.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">exp-greater</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare expressions A and B if A &gt; B. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolp</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">symbolp</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span><span class="w"> </span><span class="nv">NIL</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">a</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span><span class="w"> </span><span class="nv">T</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">               </span><span class="nv">T</span>
+<span class="w">               </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">exp-greater</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">exp-greater</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">b</span><span class="p">)))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">exp-leq</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Compare expressions A and B is A ≤ B. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="nf">exp-greater</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+</pre></div>
+</details>
+<p>先从列来看: 在上面的结果中 \(m_{14}\) 出现的部分,
+  在其他的元素中都有出现, 也就是说, 只要其他元素有出现的话,
+  就可以忽略 \(m_{14}\).</p>
+<table>
+  <tr><td>LOGIC-EXP</td><td>6</td><td>12</td></tr>
+  <tr><td>(∧ B C)</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ A B)</td><td>_</td><td>X</td></tr>
+  <tr><td>(∧ C (¬ D))</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ A (¬ D))</td><td>_</td><td>X</td></tr>
+</table>
+<p>然后从行来看: 同样地可以去消除掉包含有其他元素出现的行,
+  最后剩下的就是需要进行保留的项了.
+  (注意这里和前面的不一样&#8230; )</p>
+<table>
+  <tr><td>LOGIC-EXP</td><td>12</td><td>6</td></tr>
+  <tr><td>(∧ A B)</td><td>X</td><td>_</td></tr>
+  <tr><td>(∧ B C)</td><td>_</td><td>X</td></tr>
+</table>
+<p>于是问题变成如何找到这样的包含其他元素的项?
+  (这样的项可以被叫做 Dominance 项, 尽管我觉得这个名字很烂,
+  听起来像是它在支配其他的项, 实际上却是它被其他项支配. )</p>
+<p>于是最终剩下的就只有最少的部分了.</p>
+<h3>Step 4: Solve Prime Implicant Table</h3>
+<p>于是只需要将剩下的元素提取出来, 就得到了最终的结果了:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">simplify-formatted</span><span class="w"> </span><span class="p">(</span><span class="nf">formatted</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Simplify the formatted input FORMATTED. </span>
+
+<span class="s">Note: the FORMATTED could be:</span>
+<span class="s">+ `strip-zero-and-format&#39;;</span>
+<span class="s">+ `format-by-minterm-exp&#39;.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">removed</span><span class="w"> </span><span class="nv">essential</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">remove-essential-prime-implicants</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">construct-prime-implicant-table</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">find-prime-impilcant-of-formatted</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">group-formatted</span><span class="w"> </span><span class="nv">formatted</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∨</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">append</span><span class="w"> </span><span class="nv">essential</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">transpose-table</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">remove-dominate</span>
+<span class="w">                           </span><span class="p">(</span><span class="nf">transpose-table</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">remove-dominate</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">transpose-table</span><span class="w"> </span><span class="nv">removed</span><span class="p">)))))))))))</span>
+</pre></div>
+<h1>又</h1>
+<p>顺带附送一个格式化输出的函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">exp-latex-format</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Export EXP to LaTeX format. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">labels</span><span class="w"> </span><span class="p">((</span><span class="nf">2-to-latex</span><span class="w"> </span><span class="p">(</span><span class="nf">op</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;string</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">exp-latex-format</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">                            </span><span class="nv">op</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">exp-latex-format</span><span class="w"> </span><span class="nv">b</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">string</span><span class="w"> </span><span class="nb">exp</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">op</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nb">exp</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∧</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="p">(</span><span class="nf">2-to-latex</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nb">exp</span><span class="p">)))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="o">&#39;</span><span class="err">∨</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">reduce</span><span class="w"> </span><span class="p">(</span><span class="nf">2-to-latex</span><span class="w"> </span><span class="s">&quot; + &quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nb">exp</span><span class="p">)))</span>
+<span class="w">                </span><span class="p">((</span><span class="nf">eq</span><span class="w"> </span><span class="nv">op</span><span class="w"> </span><span class="o">&#39;</span><span class="err">¬</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;string</span>
+<span class="w">                              </span><span class="s">&quot;</span><span class="se">\\</span><span class="s">bar{&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">exp-latex-format</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nb">exp</span><span class="p">))</span><span class="w"> </span><span class="s">&quot;}&quot;</span><span class="p">)))))))</span>
+</pre></div>
+<p>于是化简结果:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">exp-latex-format</span>
+<span class="w"> </span><span class="p">(</span><span class="nf">simplify-formatted</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">format-by-minterm-exp</span>
+<span class="w">   </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">minterm</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="mi">6</span><span class="w"> </span><span class="mi">7</span><span class="w"> </span><span class="mi">8</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="mi">13</span><span class="w"> </span><span class="mi">14</span><span class="w"> </span><span class="mi">15</span><span class="p">)</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">A</span><span class="w"> </span><span class="nv">B</span><span class="w"> </span><span class="nv">C</span><span class="w"> </span><span class="nv">D</span><span class="p">)))))</span>
+</pre></div>
+<p>也就是这个结果啦:</p>
+<p>\[B D + \bar{B} \bar{D} + A B + B C\]</p>
+<h1>About the Code</h1>
+<p>你可以在这里 <a href="/_img/pieces/q-m-simplify.lisp">下载</a> 这个的全部的代码.</p>
+<p>代码一般般, 还请随便看看.</p>
+<h2>免责申明</h2>
+<p>不过当前的代码基本上还是用于个人了解使用,
+  难说能不能有很好的效率和所谓的稳定性.</p>
+<h2>实际上真的好用么?</h2>
+<p>我不太觉得, 因为在游戏里面的体验并不是很好就是了&#8230;</p>
+<p>比如计数器那关的代码:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">pos</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">truth-tbl</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">cons</span>
+<span class="w">          </span><span class="o">&#39;</span><span class="p">((</span><span class="nf">A</span><span class="w"> </span><span class="nv">B</span><span class="w"> </span><span class="nv">C</span><span class="w"> </span><span class="nv">D</span><span class="p">)</span><span class="w"> </span><span class="nv">VAL</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">input</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="p">(</span><span class="nb">expt</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="mi">4</span><span class="p">))</span>
+<span class="w">                </span><span class="nv">collect</span><span class="w"> </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">bits</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bits</span><span class="w"> </span><span class="nv">input</span><span class="w"> </span><span class="mi">4</span><span class="p">))</span>
+<span class="w">                               </span><span class="p">(</span><span class="nb">count</span><span class="w"> </span><span class="p">(</span><span class="nb">count</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">bits</span><span class="p">)))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">bits</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="p">(</span><span class="nf">to-bits</span><span class="w"> </span><span class="nb">count</span><span class="w"> </span><span class="mi">3</span><span class="p">)))))))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">exp-latex-format</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">simplify-formatted</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">strip-zero-and-format</span><span class="w"> </span><span class="nv">truth-tbl</span><span class="p">))))</span>
+</pre></div>
+<p>最终化简结果:</p>
+<p>\[A B \bar{D} + A \bar{C} D + A \bar{B} C + \bar{B} C D + \bar{A} B C + B \bar{C} D\]</p>
+<p>其实也没有多简单, 甚至还有点地狱绘图的感觉&#8230;</p>
+<p><img src="/_img/pieces/pic-of-hell-q-m-simpilfy.jpg" alt="/_img/pieces/pic-of-hell-q-m-simpilfy.jpg" /></p>
+<p>原因我觉得可能是因为只用了两种门而没有用其他的门,
+  看来这个算法一般般欸. 要是有那种可以根据目标进行简化的算法就好了.</p>
+<h1>Others</h1>
+<h2>深夜的 EMO</h2>
+<p>在我调查并编写复现这个算法的时候, 我突然感到了十分的惶恐,
+  因为在实现这个算法的时候, 我感觉可以看到它的限制了:
+  那就是它的时间复杂度非常的大. (并且我的代码不能说普通吧,
+  只能说是完全不太行).</p>
+<p>这样的技术是否有像这样掌握的必要呢? 大概是没有的吧,
+  毕竟早已经有非常成熟的项目实现了, 并且实现了这个玩意,
+  除了对于我打游戏的某几关可能有那么点用处, 并不能直接给我带来什么有益的帮助.
+  而最没用的帮助就是它可能会吃掉我不少的时间使得我面临一个非常严重的灾难性的问题:</p>
+<ul>
+  <li>这假期结束了的考试怎么办?</li>
+  <li>这考试前布置的作业怎么办?</li>
+</ul>
+<p>淦啊, 他喵的时间安排!</p>
+<p>说实在的, 之所以我觉得这个算法有值得一试的可能性,
+  是因为它很简单, 并且它的基本单元很简单. 一个很简单的程序性的事情,
+  本来就不应该由人类来完成.</p>
+<p>而之所以我没有想过去实现什么数学物理方程里面的计算步骤,
+  只是因为它们的基本单元并不是那么的好实现.
+  (当然用 Mathematica 加上一堆的条件 Patch 估计能行,
+  基本上我的作业都是这么实现的, 但是有什么意义呢? )
+  这实在是过于痛苦了.</p>
+<p>算了, 继续造轮子吧&#8230; 管它那么多什么轮子不轮子的.</p>
+<h2>白天的 EMO?</h2>
+<p>怎么说呢, 感觉自己学得有点慢&#8230; 不仅仅是理解, 编程实现也很慢.</p>
+<p>看来研究这种估计已经没什么人搞的技术,
+  估计唯一的好处就是不会有人来卷我吧 (毕竟已经有成熟的软件提前帮我把他们卷死了).</p>
+<p>想到这里, 心情感觉还行. 闭门造车的井底之蛙的快乐还是要有的.</p>
+<h2>写完代码后又感觉自己行了</h2>
+<p>嘿嘿.</p>
+<p><del>实际上只剩下一天时间复习了</del></p>
+
+  </div><a class="u-url" href="/misc/simplify-logic/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

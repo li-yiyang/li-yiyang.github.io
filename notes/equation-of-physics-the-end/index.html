@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>数学物理方程 [期末] | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="数学物理方程 [期末]" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 考啥 分离变量 基本思路 将待求的函数 \(u\) 根据参数列表 \(t, q_i\) 展开成 \(T(t) Q_1(q_1) \cdots Q_n(q_n)\) 然后进行求解. X-Y 和极坐标系 球坐标系 Legendre 级数展开 积分小技巧 查表法 (神中神) 多项式展开 \(&hArr;\) 解线性方程组 结论: 对于 \(p(x)\) 为多项式的表达式, 其对应的广义 Fourier 展开阶数不超过多项式的最高阶数 \(\mathrm{deg}(p)\). 递推公式 暴力积分 (还是多项式, 但是没法数值用线性方程组来解) \[f_l = \frac{2l + 1}{2} &int;_{a}^{b} f(x) \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l {\mathrm{d} x}\] 连带 Legendre 级数展开 (球函数展开) 积分小技巧 查表法 比如对于 \(p(&theta;) cos m \varphi\) 的表达式, 其中 \(p\) 为关于 \(&theta;\) 的三角函数的简单函数. 那么可以先将 \(p\) 换成关于 \(sin &theta;\) 的多项式函数 \(R(sin &theta;)\), 然后查表套 \(P^m_l\). (实际上和 Legendre 展开一样.) 递推公式 暴力积分 \[f_l^m = \frac{(l - m)! (2l + 1)}{(l + m)! 2} &int;_a^{b} f(x) \frac{(1 - x^2)^{\frac{m}{2}}}{2^l l!} \frac{\mathrm{d}^{l+m}}{\mathrm{d} x^{l+m}} (x^2 - 1)^l\] 方程求解 求解小技巧 求解的基本步骤: 列出方程并确定坐标系 (这个时候需要判断是否有轴对称条件) 若有轴对称条件, 则选择 Legendre 级数展开, 否则选择连带 Legendre 级数展开. Legendre 级数展开: \[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + \frac{B_l}{r^{l+1}}) P_l(cos &theta;)\] 其中对于球内, 仅有 \(A_l\) 项; 球外仅有 \(B_l\) 项. 确定系数 \(A_l\) 和 \(B_l\) 的方法就是对边界条件进行一个级数展开. 连带 Legendre 级数展开 \[u(r, &theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} (A_l^m cos m \varphi + B_l^m sin m \varphi) (C_l^m r^l + \frac{D_l^m}{r^{l+1}}) P_l^m(cos &theta;)\] 其中对于球内, 没有 \(\frac{1}{r^{l+1}}\) 项; 球外没有 \(r^l\) 项. 可以利用奇偶性来判断 \(cos, sin\). 总而言之还就是那一个难算. 柱坐标系 Bessel 级数展开 (不定积分) 积分的小技巧 查表 递推公式 对于 \(I_l = &int; x^n J_l(x) {\mathrm{d} x}\) 类型的积分 核心递推公式: \({\mathrm{d} (x^m J_m)} = x^m J_{m-1}\) 和 \({\mathrm{d} (- x^{-m} J_m)} = x^{-m} J_{m+1}\); 核心的解法是利用分部积分 \(x^{n - l - 1} {\mathrm{d} (x^{l+1} J_{l+1})}\), 然后将 \(x^n\) 消去. 柱方程求解 求解过程 柱方程的通解: \[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\] 对于轴对称情况 (边界条件与 \(\varphi\) 无关), 可以简化为 \[J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\]. 其中对于 \(&mu; = 0\) 的情况, 特解为 \(A_0 + B_0 z\), 以轴对称情况为例, 通解为: \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{\sqrt{&mu;} z} + B_n e^{- \sqrt{&mu;} z}) J_0(\sqrt{&mu;} &rho;)\). 然后代入边界条件来进行系数的求解和展开. 其中往往有 \(&part;_{&rho;} u|_{&rho;_0} = 0\) 的边界条件, 对于这种边界条件, 可以得到 \(J_0&#39;(\sqrt{&mu;} &rho;_0) = 0\) 的结果, 于是可以用 \(x_n^{(0)} / &rho;_0\) 表示 \(\sqrt{&mu;_n}\), 其中 \(x_n^{(0)}\) 为 \(J_0&#39;(x)\) 的第 \(n\) 个正根. 球 Bessel 方程 关于级数的吐槽 折叠了 基本上这些级数的一个思路就是: 找函数性质: (通过母函数等) 找微分形式, 积分形式, 然后找递推公式 (以及积分, 微分形式的递推公式). 广义 Fourier 展开: 利用正交性和级数的模对函数进行展开. 实际上核心应该就是对应函数的一个积分. 展开的过程中, 往往需要利用一些结论或者递推公式进行快速展开, 不过如果完全没思路, 还可以进行暴力展开 (往往是微分形式的展开和积分). 级数展开之后可以用来求解方程 格林函数 基本思路 计算 \(G\), 然后根据边界条件还原 \(u\) \(&nabla;^2 u = f(\boldsymbol{r})\) 的边界条件 第一类 \(u|_{&Sigma;} = \varphi(\boldsymbol{r})\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) &part;_n G(\boldsymbol{r}, \boldsymbol{r}_0) {\mathrm{d} S}\] 第三类 \((&alpha; &part;_n u + &beta; u)|_{&Sigma;} = \varphi(\boldsymbol{r})\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\] 电像法 平面镜像 \[G = \frac{1}{4 &pi;} \left[\left(\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |}\right)_{\mathrm{real}} + \left(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\right)_{\mathrm{image}}\right]\] 圆形镜像 \[G = \frac{1}{4 &pi;} \left[ \left( \frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} \right)_{\mathrm{real}} + \left( \frac{a}{r_0 | \boldsymbol{r} - \boldsymbol{r}_1 |} \right)_{\mathrm{image}} \right]\] 注 可以和点电荷的来类比就是了, 如果忘了具体的比的话, 可以使用远端和近端势相等来求解: \[\frac{q_1}{r - d_1} + \frac{q_2}{d_2 - r} = \frac{q_1}{r + d_1} + \frac{q_2}{r + d_2} = 0\] 得到 \(\frac{q_1}{q_2} = - \frac{r}{d_2}\), \(d_1 d_2 = r^2\) 积分变换 核心思路 使用积分变换来消元. 基本计算过程 对方程进行 Fourier 变换: \[\begin{matrix} &part;_t &amp; &rarr; &amp; \frac{\mathrm{d} }{\mathrm{d} t} &#92;&#92; &nabla;^2 &amp; &rarr; &amp; - k^2 &#92;&#92; f(x) &amp; &rarr; &amp; \mathcal{F} f \end{matrix}\] 以 \(t\) 为变参求解常微分方程, 解得 \(U=u \overset{\mathcal{F}}{&rarr;} U\). 做 Fourier 逆变换还原 \(u = U \overset{\mathcal{F}^{-1}}{&rarr;} u\). Laplace 变换同理 Fourier Fourier 变换 \[\mathcal{F} = \frac{1}{2&pi;} &int;_{-&infin;}^{+ &infin;} {\mathrm{d} x} e^{- i k x} &hArr; \mathcal{F}^{-1} = &int;_{-&infin;}^{+&infin;} {\mathrm{d} k} e^{i k x}\] 基本计算过程 Laplace 求解问题 基本上用来求解问题的方法就是分离变量. 但是在不同的参考系下, 分离变量得到的方程的形式并不一样, 所以需要特殊处理. 分离变量的糊弄介绍 比如在 \(u(x, t) = X(x) T(t)\) 这样的分解里面, 又比如恰好是 \(u_{tt} - a^2 u_{xx} = 0\) 这个方程. 于是分解之后的方程为: \[\frac{T&#8221;(t)}{a^2 T(t)} = \frac{X&#8221;(x)}{X(x)} = &lambda;\] 于是 \(&lambda;\) 作为特征值的分解得到最终的结果. 如果换成极坐标系的话, 分解变成 \(u = R(&rho;) &Theta;(&theta;)\). 对于常见的坐标系和方程: Laplace 方程 \(&Delta; u = 0\) 球坐标系 柱坐标系 波动方程 \(u_{tt} - a^2 &Delta; u = 0\) \(u(\boldsymbol{r}, t) = T(t) v(t)\), 其中 \(T_0(t) = \left\{ \begin{matrix} 1&#92;&#92; t\end{matrix} \right\}\), \(T_k(t) = \left\{ \begin{matrix} cos k a t &#92;&#92; sin k a t \end{matrix} \right\}\). 然后 \(v\) 满足 Helmholtz 方程. 输运方程 \(u_t - a^2 &Delta; u = 0\) 球坐标系 柱坐标系 级数解法 对于线性二阶常微分方程, 可以采用级数解法或者是积分变换的方法来求解. 领域上的级数解 \[w(z) = &sum; a_k (z - z_0)^k\] 思路就是变成级数和然后通过递推公式和别的什么方式来进行一个求解. 那么对于奇点邻域, 即类似于 \(w&#8221; + p(z) w&#39; + q(z) w = 0\) 的方程, 假如选定的 \(z_0\) 是方程的奇点. 那么可行的方式就是通过加上 \((z - z_0)^{s_1 + k}\) 的项, 来使得方程可解. 本征值问题 球函数 球函数方程: \[\frac{1}{sin &theta;} \frac{&part;}{&part; &theta;}(sin &theta; \frac{&part; Y}{&part; &theta;}) + \frac{1}{sin^2 &theta;} \frac{&part;^2 Y}{&part; \varphi^2} + l(l + 1) Y = 0\] 轴对称球函数 Legendre 方程: \[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + l(l + 1) &Theta; = 0\] 其解可以用 Legendre 多项式来进行表示. Legendre 多项式的性质 微分表示 \[P_l(x) = \frac{1}{2^l l!} \frac{\mathrm{d}^l }{\mathrm{d}x^l} (x^2 - 1)^l\] 积分表示 \[P_l(x) = \frac{1}{2 &pi; i} \frac{1}{2^l} \oint_C \frac{(z^2 - 1)^l}{(z - x)^{l+1}} \mathrm{d}z\] 正交性质 \[&int;_{-1}^{+1} P_k(x) P_l(x) \mathrm{d}x = N_k^2 &delta;_{kl} = \frac{2}{2l + 1}\] 母函数 递推公式 \[\begin{matrix} (2k + 1) P_k(x) = P_{k+1}&#39;(x) - P_{k-1}&#39;(x)&#92;&#92; P_{k+1}&#39;(x) = (k + 1)P_k(x) + x P_k&#39;(x) &#92;&#92; k P_k(x) = x P_k&#39;(x) - P_{k-1}&#39;(x) &#92;&#92; (x^2 - 1) P_k&#39;(x) = k x P_k(x) - k P_{k-1}(x) \end{matrix}\] 第二类 Legendre 函数 \(Q(x)\) 以及 广义傅里叶级数展开 如何进行广义傅里叶级数展开 目标: 假如需要展开 \(f(x)\) 判断是否是多项式函数 \(f(x) &isin; \mathbb{C}[x]\) 若是, 则直接去求解线性方程组: \[&sum;_l^n A_l P_l(x) = f(x) = &sum;_0^n a_i x^i\] 如果不是, 那么就需要考虑进行一个积分的操作: \[A_l = \frac{2l + 1}{2} &int;_a^{b} f(x) P_l(x) {\mathrm{d} x}\] 证明 \[f(x) = &sum;_l A_l P_l(x) &rArr; &int; f(x) P_l(x) = &sum; &int; A_m P_m(x) P_l(x)\] 利用 \(&int; P_m P_l = \frac{2}{2l + 1} &delta;_{ml}\), 即 Legendre 级数的模, 即可得到 \(A_m\) 的值. 积分的技巧 对于函数的奇偶性, 若函数 利用递推公式 一些例子 \(f(x) = x^4 + 2x^3\) \(f(x) = &sum;_0^4 A_l P_l(x) &rArr; A_l\) Solve[ CoefficientList[ Sum[Indexed[A, l + 1] * LegendreP[l, x], {l, 0, 4}], x] == CoefficientList[x^4 + 2 * x^3, x], Table[Indexed[A, l + 1], {l, 0, 4}]] \(f(x) = \left\{\begin{matrix} x^2 &amp; (0 \leq x \leq 1) &#92;&#92; 0 &amp; (-1 \leq x \leq 0) \end{matrix}\right.\) 不能直接用结论, 因为不是多项式, 所以需要手动积分. 操作就是 \(f(x) = &int;_0^1 x^2 \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d}x^l} (x^2 - 1)^l\). 将微分部分用分布积分给提出去, 同时考虑边界为零和能否积分 (\(l\) 的大小), 然后慢慢积分&#8230; \(&int;_{-1}^1 x P_k(x) P_l(x) \mathrm{d}x\) 利用的是递推公式 \(x P_k(x) = \frac{1}{2k + 1} ((k+1)P_{k+1}(x) + k P_{k-1}(x))\), 然后利用正交性来进行积分. \((2l + 1) &int;_0^1 x P_l(x) \mathrm{d}x\) 利用的是递推公式 \(x P_k(x) = \frac{1}{2 k + 1} ((k + 1) P_{k+1}(x) + k P_{k-1}(x))\), 然后利用 \(P_l(1) = 1, P_l(-1) = (-1)^l\) 化简式子. 最终得到: \(I_l = \frac{l+1}{2l+3}(P_l(0) - P_{l+2}(0)) + \frac{l}{2l - 1}(P_{l-2}(0) - P_l(0))\). \(\frac{2l + 1}{2} &int;_{-1}^1 x^n P_l(x) \mathrm{d}x = \left\{\begin{matrix} 0 &amp; n &lt; l &and; n - l &equiv; \mathrm{odd} &#92;&#92; \frac{(2l + 1) n!}{(n - l)!! (n + l + 1)!!} \end{matrix}\right.\) 利用微分形式 \(\frac{1}{2^l l!} &int;_{-1}^1 x^n \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l\), 于是可以积分&#8230; 最后通过这个方法来求解方程 (仅限轴对称情况) 的通解: \[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + B_l \frac{1}{r^{l+1}})P_l(cos &theta;)\] 习题和说明 emmm, 电动力学里面用的比较多, 应该忘不了, 所以就不想啥记忆方法了. 基本上的解法就是代入边界条件然后对边界条件进行展开计算系数. 并且可以利用自然边界条件, 比如球内的仅有 \(A_l\), 球外的仅有 \(B_l\) 项. 静电场中的介质球 电动力学常客了. 边界条件为 \(\varphi_{\mathrm{in}}(R_0) = \varphi_{\mathrm{out}}(R_0), &epsilon;_{\mathrm{in}} &part;_n \varphi_{\mathrm{in}} = &epsilon;_{\mathrm{rout}} &part;_n \varphi_{\mathrm{out}}\), 然后去求解即可, 同时需要考虑一个电场 \(\varphi_E = E r cos &theta;\) 的原始场. 两个半球壳 和前者的不同的是, 边界条件为 \(\varphi_{\mathrm{in}}(&theta;) = v_1, (-&pi;/2 &lt; &theta; &lt; &pi;/2); v_2, \mathrm{else}\). 于是需要用 \(&int;_0^1 c P_l(x) {\mathrm{d} x}\) 这样的积分展开. 细导线首尾相接而构成圆环, 环的半径为 \(r_0\), 环上带电 \(4 &pi; &epsilon;_0 q\) 单位. 求圆环周围电场中的静电势. 在球坐标系下, 以圆环直径为 \(z\) 轴 (轴对称) 求解. 将问题分为球内 \(r&lt; r_0\), 以及球外 \(r &gt; r_0\). 然后代入边界条件来计算. 唯一需要注意的是, 这个边界条件比较神奇, 需要通过 \(&theta; = 0, &pi;\) 来进行计算. 一般球函数 连带 Legendre 方程: \[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + [l(l + 1) - \frac{m^2}{1 - x^2}] &Theta; = 0, (x = cos &theta;)\] 连带 Legendre 多项式 \(P_l^m(x)\). 连带 Legendre 函数性质 \(P_l^m(x) = (1 - x^2)^{\frac{m}{2}} \frac{\mathrm{d}^m}{\mathrm{d} x^{m}} P_l(x)\) 于是有结论 \(l &lt; m &rArr; P_l^m = 0\) 正交性 \(&int;_{-1}^{+1} P_k^m(x) P_l^m(x) \mathrm{d}x = (N_l^m)^2 &delta;_{kl} = \frac{(l+m)! 2}{(l - m)! (2l + 1)} &delta;_{kl}\) 递推公式 \[\begin{matrix} (2k + 1) x P_k^m(x) = (k + m)P_{k-1}^m(x) + (k - m + 1)P_{k+1}^m(x) &#92;&#92; (2k + 1)(1 - x^2)^{1/2} P_k^m(x) = P_{k+1}^{m+1}(x) - P_{k-1}^{m+1}(x) \end{matrix}\] 连带 Legendre 级数展开 \[f_l = \frac{2l + 1}{2} \frac{(l - m)!}{(l + m)!} &int;_{-1}^{+1} f(x) P_l^m(x) \mathrm{d}x\] 虽然但是, 如果可以通过查表法来计算的话, 还是查表比较靠谱. 最一般的方法就是硬积分: \(P_l^m(x) = \frac{(1 - x^2)^{m/2})}{2^l l!} \frac{\mathrm{d}^{l+m} (x^2 - 1)^l}{\mathrm{d} x^{l + m}}\) 然后是用这个来解方程: \[f(&theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} [A_l^m cos m \varphi + B_l^m sin m \varphi] P_l^m(cos &theta;)\] 一些例子 用球函数展开函数 对于能够查表展开的 (比如只含有 \(sin &theta;, cos &theta;\) 组成的多项式函数), 一个想法就是将其变换成全是 \(sin &theta;\) 的多项式, 然后去查表. \((1 + 3 cos &theta;) sin &theta; cos \varphi\) 变换为 \((sin &theta; + \frac{3}{2} sin 2 &theta;) cos \varphi\), 然后查表得到 \(P_1^1(sin &theta;) + P_2^1(sin &theta;)\) 对于不能查表的, 就只能暴力积分了 \(P_l^m(x) = (1 - x^2)^{m/2} \frac{\mathrm{d}^m}{\mathrm{d} x^m} P_l(x)\). 求解定解问题 + 柱函数 Bessel 方程: \[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} + (x^2 - m^2) R = 0, (x = \sqrt{&mu;} &rho;)\] 虚宗量 Bessel 方程: \[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} - (x^2 + m^2) R = 0, (x = &nu; &rho;)\] 三类柱函数 Bessel 函数 (第一类) \(J_{&nu;}(x)\) Bessel 函数的性质和不定积分 正交性: \(&int;_0^{&rho;_0} J_m(\sqrt{&mu;_n} &rho;) J_m(\sqrt{&mu;_l} &rho;) &rho; {\mathrm{d} &rho;} = (N_n^{(m)})^2 &delta;_{nl}\) Fourier-Bessel 积分 \[F(&rho;) = &sum; f_n J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rArr; F_n = \frac{1}{[N_n^{(m)}]^2} &int;_0^{&rho;_0} f(&rho;) J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rho; {\mathrm{d} &rho;}\] 一些辅助的不定积分: \[\begin{matrix} &int; x^{-m} J_{m+1}(x) {\mathrm{d} x} &amp; = &amp; - x^{-m} J_m(x) + C &#92;&#92; &int; J_1(x) {\mathrm{d} x} &amp; = &amp; - J_0(x) + C &#92;&#92; &int; x^m J_{m-1}(x) {\mathrm{d} x} &amp; = &amp; x^m J_m(x) + C \end{matrix}\] 于是可以通过上面的公式得到推理的结论: \[\begin{matrix} \frac{\mathrm{d} }{\mathrm{d} x}[x^n J_n(x)] &amp; = &amp; x^n J_{n-1}(x) \end{matrix}\] \(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x}\) 这个可以利用 \(&int; x J_0(x) = x J_1(x) + C, (m = -1)\). 然后可以得到 \(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x} = &int;_0^{x_0} x^2 {\mathrm{d} [x J_1(x)]}\). 和上面的式子类似的, 对于 \(&int; p(x) J_l(x)\), 其中 \(p(x)\) 为多项式的不定积分, 可以将 \(p(x) = &sum;_k a_k x^k\), 对 \(&int; x^k J_l(x)\) 进行分别积分. 利用的变换公式为 \(\frac{\mathrm{d} }{\mathrm{d} x}(x^n J_n) = x^n J_{n-1}\). 然后积分的时候, 利用分布积分: \(&int; x^{k-l} [x^l J_l(x) {\mathrm{d} x}]\) \(= &int; x^{k-l} {\mathrm{d} [x^l J_{l-1}(x)]}\) \(= x^k J_{l-1}(x) - (k-l) &int; x^{k-1} J_{l-1}(x) {\mathrm{d} x}\) 这个时候有几种可能性: \(x^{k-1} J_{l-1}(x)\) 形成了 \(x^n J_n\) 或者 \(x^n J_{n-1}(x)\) 的形式. 那么就可以用辅助的不定积分去积它. 如果不是的话, 继续用这个方法去削它. 直到把 \(x^k\) 消没. 如果 \(J_l\) 消没了的话, 使用 \(x^k J_0(x)\) 的积分进行变化. 类似的还有 \(\frac{\mathrm{d} }{\mathrm{d} x}(\frac{J_m}{x^m}) = - \frac{J_{m+1}}{x^m}\) Neumann 函数 (第二类) \(N_{&nu;}(x)\) Hanker 函数 (第三类) \(H_{&nu;}\) 解方程 径向或者 \(z\) 方向构成边界条件柱函数 一些例子 拉普拉斯方程 \(&nabla;^2 u = 0\), 通解为: \[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;}z} &#92;&#92; e^{-\sqrt{&mu;}z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\] \(\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; &part;_{&rho;} u|_{&rho;=&rho;_0} &amp; = &amp; 0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; f_1(&rho;) &#92;&#92; u|_{z = l} &amp; = &amp; f_2(&rho;) \end{matrix}\right.\) 对于轴对称的问题, 可以将 \(m = 0\), 于是问题解为 \(J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\). 即求解 \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{x_n^{(0)} z / &rho;_0} + B_n e^{- x_n^{(0)} z / &rho;_0}) J_0(\frac{x_n^{(0)}}{&rho;_0} &rho;)\). 于是问题变成了代入边界条件然后展开 Fourier-Bessel 级数的过程. 传热方程 \(u_t - a^2 &nabla;^2 u = 0\) \(\left\{\begin{matrix} u_t - a^2 &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{&rho; = &rho;_0} &amp; = &amp; u_0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; u_0 &#92;&#92; u_z|_{z=L} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; u_0 + f_1(&rho;) f_2(z) \end{matrix}\right.\) 遇到这种有有一个小小偏移量的, 可以先做一个 \(u = v + u_0\), 然后解 \(v\) 的解 (齐次化). 波动方程 球贝赛尔函数 格林函数 格林公式 格林公式: 第一格林公式 \[\iint_{&Sigma;} u &nabla; v &sdot; {\mathrm{d} \boldsymbol{S}} = \iiint_T u &nabla;^2 v {\mathrm{d} V} + \iiint_T &nabla; u &sdot; &nabla; v {\mathrm{d} V}\] 第二格林公式 \[\iint_{&Sigma;} (u &nabla; v - v &nabla; u) &sdot; {\mathrm{d} \boldsymbol{S}} = \iint_{&Sigma;} (u \frac{&part; v}{&part; n} - v \frac{&part; u}{&part; n}) {\mathrm{d} S} = \iiint_T (u &nabla;^2 v - v &nabla;^2 u) {\mathrm{d} V}\] 泊松方程 \(&Delta; u = f(\boldsymbol{r})\) 的基本积分形式: 三类边界条件 \([&alpha; \frac{&part; u}{&part; n} + &beta; u]_{&Sigma;} = \varphi(M)\): 第一边界条件 \(&alpha; = 0, &beta; &ne; 0\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) \frac{&part; G(\boldsymbol{r}, \boldsymbol{r}_0)}{&part; n} {\mathrm{d} S}\] 第二边界条件 \(&alpha; &ne; 0, &beta; = 0\) 第三边界条件 \(&alpha;, &beta; &ne; 0\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\] 电像法求解格林函数 一般边值问题的格林函数 \[G = G_0 + G_1\] 其中 \(G_0\) 为基本解, 满足 \(&nabla;^2 G_0 = &delta;(\boldsymbol{r} - \boldsymbol{r}_0)\). 一些补充说明 对于 \(\boldsymbol{r}_0\) 处的电量 \(- &epsilon;_0\) 在无界空间产生静电场的电势的 \(G_0 = - \frac{1}{4 &pi; | \boldsymbol{r} - \boldsymbol{r}_0 |}\). \(G_1\) 满足齐次方程 \(&nabla;^2 G_1 = 0\), 对应的边界条件 \(G_1|_{&Sigma;} = (G - G_0)|_{&Sigma;}\). 电像法求格林函数 平面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0&#39; |}\) 球面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{a}{r_0} \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\), 其中在球面上 \(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} : \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |} = \frac{1}{r_0} : \frac{1}{a}\), \(a\) 为电荷距离球心距离. 例题 在球 \(r = a\) 内求解拉普拉斯方程第一边值问题 \[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{r=a} &amp; = &amp; f(&theta;, \varphi) \end{matrix}\right.\] 这个是一个第一类边界条件的问题, 所以最终的结果为: \[u(\boldsymbol{r}_0) = \iiint_T 0 &times; G {\mathrm{d} V} + \iint_{&Sigma;} f(&theta;, \varphi) \frac{&part;}{&part; n} G {\mathrm{d} S}\] 为了方便计算, 一般选择球心为原点建立球坐标系. 并且其中 \(G\) 为球面镜像. 在半空间 \(z &gt; 0\) 求解第一边值问题: \[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{z = 0} &amp; = &amp; f(x, y) \end{matrix}\right.\] \(G = \frac{1}{4 &pi;} (\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |})\), 其中 \(\boldsymbol{r}_0\) 和 \(\boldsymbol{r}_1\) 关于 \(x-y\) 平面对称. 于是结果同前一问. 含时格林函数, 冲量定理 积分变换 Fourier 积分变换 一些例子 无限长弦自由振动: \[\left\{\begin{matrix} u_{tt} - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) &#92;&#92; u_t|_{t=0} &amp; = &amp; &psi;(x) \end{matrix}\right.\] 对 \(x\) 进行 Fourier 变换 (\(&times; e^{-ikx} / 2&pi;\) 后对 \(x\) 进行积分, 用意是去掉 \(x\), 使得方程仅包含 \(t\) 作为参数): \[\left\{\begin{matrix} U&#8221; + k^2 a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) &#92;&#92; U&#39;|_{t = 0} &amp; = &amp; &Psi;(k) \end{matrix}\right.\] 于是对于 \(t\), 方程的通解为 \(U(t, k) = A(k) e^{i k a t} + B(k) e^{-i k a t}\), 然后代入边界条件求解系数, 最后通过 Fourier 逆变换即可得到最终结果. 其中 \(&Phi;(k)\) 和 \(&Psi;(k)\) 是原本 \(\varphi(x)\) 和 \(&psi;(x)\) 的 Fourier 变换结果, 其中 \(\mathcal{F} f(x) = \frac{1}{2 &pi;} &int;_{-&infin;}^{&infin;} f(&xi;) e^{- i k &xi;} {\mathrm{d} &xi;}\), 反过来的逆变换 \(\mathcal{F}^{-1} F = &int;_{-&infin;}^{&infin;} F e^{i k x} {\mathrm{d} k}\). 无限长细杆传热方程 \[\left\{\begin{matrix} u_t - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) \end{matrix}\right.\] 变换得到: \[\left\{\begin{matrix} U&#39; + a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) \end{matrix}\right.\] 于是可以解得 \(U(t, k) = &Phi;(k) e^{- k^2 a^2 t}\), 然后做逆变换 \(u(x, t) = \mathcal{F}^{-1} U = &int;_{-&infin;}^{+&infin;} &Phi;(k) e^{-k^2 a^2 t} e^{i k x} {\mathrm{d} k}\). Laplace 积分变换" />
+<meta property="og:description" content="About 考啥 分离变量 基本思路 将待求的函数 \(u\) 根据参数列表 \(t, q_i\) 展开成 \(T(t) Q_1(q_1) \cdots Q_n(q_n)\) 然后进行求解. X-Y 和极坐标系 球坐标系 Legendre 级数展开 积分小技巧 查表法 (神中神) 多项式展开 \(&hArr;\) 解线性方程组 结论: 对于 \(p(x)\) 为多项式的表达式, 其对应的广义 Fourier 展开阶数不超过多项式的最高阶数 \(\mathrm{deg}(p)\). 递推公式 暴力积分 (还是多项式, 但是没法数值用线性方程组来解) \[f_l = \frac{2l + 1}{2} &int;_{a}^{b} f(x) \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l {\mathrm{d} x}\] 连带 Legendre 级数展开 (球函数展开) 积分小技巧 查表法 比如对于 \(p(&theta;) cos m \varphi\) 的表达式, 其中 \(p\) 为关于 \(&theta;\) 的三角函数的简单函数. 那么可以先将 \(p\) 换成关于 \(sin &theta;\) 的多项式函数 \(R(sin &theta;)\), 然后查表套 \(P^m_l\). (实际上和 Legendre 展开一样.) 递推公式 暴力积分 \[f_l^m = \frac{(l - m)! (2l + 1)}{(l + m)! 2} &int;_a^{b} f(x) \frac{(1 - x^2)^{\frac{m}{2}}}{2^l l!} \frac{\mathrm{d}^{l+m}}{\mathrm{d} x^{l+m}} (x^2 - 1)^l\] 方程求解 求解小技巧 求解的基本步骤: 列出方程并确定坐标系 (这个时候需要判断是否有轴对称条件) 若有轴对称条件, 则选择 Legendre 级数展开, 否则选择连带 Legendre 级数展开. Legendre 级数展开: \[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + \frac{B_l}{r^{l+1}}) P_l(cos &theta;)\] 其中对于球内, 仅有 \(A_l\) 项; 球外仅有 \(B_l\) 项. 确定系数 \(A_l\) 和 \(B_l\) 的方法就是对边界条件进行一个级数展开. 连带 Legendre 级数展开 \[u(r, &theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} (A_l^m cos m \varphi + B_l^m sin m \varphi) (C_l^m r^l + \frac{D_l^m}{r^{l+1}}) P_l^m(cos &theta;)\] 其中对于球内, 没有 \(\frac{1}{r^{l+1}}\) 项; 球外没有 \(r^l\) 项. 可以利用奇偶性来判断 \(cos, sin\). 总而言之还就是那一个难算. 柱坐标系 Bessel 级数展开 (不定积分) 积分的小技巧 查表 递推公式 对于 \(I_l = &int; x^n J_l(x) {\mathrm{d} x}\) 类型的积分 核心递推公式: \({\mathrm{d} (x^m J_m)} = x^m J_{m-1}\) 和 \({\mathrm{d} (- x^{-m} J_m)} = x^{-m} J_{m+1}\); 核心的解法是利用分部积分 \(x^{n - l - 1} {\mathrm{d} (x^{l+1} J_{l+1})}\), 然后将 \(x^n\) 消去. 柱方程求解 求解过程 柱方程的通解: \[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\] 对于轴对称情况 (边界条件与 \(\varphi\) 无关), 可以简化为 \[J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\]. 其中对于 \(&mu; = 0\) 的情况, 特解为 \(A_0 + B_0 z\), 以轴对称情况为例, 通解为: \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{\sqrt{&mu;} z} + B_n e^{- \sqrt{&mu;} z}) J_0(\sqrt{&mu;} &rho;)\). 然后代入边界条件来进行系数的求解和展开. 其中往往有 \(&part;_{&rho;} u|_{&rho;_0} = 0\) 的边界条件, 对于这种边界条件, 可以得到 \(J_0&#39;(\sqrt{&mu;} &rho;_0) = 0\) 的结果, 于是可以用 \(x_n^{(0)} / &rho;_0\) 表示 \(\sqrt{&mu;_n}\), 其中 \(x_n^{(0)}\) 为 \(J_0&#39;(x)\) 的第 \(n\) 个正根. 球 Bessel 方程 关于级数的吐槽 折叠了 基本上这些级数的一个思路就是: 找函数性质: (通过母函数等) 找微分形式, 积分形式, 然后找递推公式 (以及积分, 微分形式的递推公式). 广义 Fourier 展开: 利用正交性和级数的模对函数进行展开. 实际上核心应该就是对应函数的一个积分. 展开的过程中, 往往需要利用一些结论或者递推公式进行快速展开, 不过如果完全没思路, 还可以进行暴力展开 (往往是微分形式的展开和积分). 级数展开之后可以用来求解方程 格林函数 基本思路 计算 \(G\), 然后根据边界条件还原 \(u\) \(&nabla;^2 u = f(\boldsymbol{r})\) 的边界条件 第一类 \(u|_{&Sigma;} = \varphi(\boldsymbol{r})\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) &part;_n G(\boldsymbol{r}, \boldsymbol{r}_0) {\mathrm{d} S}\] 第三类 \((&alpha; &part;_n u + &beta; u)|_{&Sigma;} = \varphi(\boldsymbol{r})\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\] 电像法 平面镜像 \[G = \frac{1}{4 &pi;} \left[\left(\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |}\right)_{\mathrm{real}} + \left(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\right)_{\mathrm{image}}\right]\] 圆形镜像 \[G = \frac{1}{4 &pi;} \left[ \left( \frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} \right)_{\mathrm{real}} + \left( \frac{a}{r_0 | \boldsymbol{r} - \boldsymbol{r}_1 |} \right)_{\mathrm{image}} \right]\] 注 可以和点电荷的来类比就是了, 如果忘了具体的比的话, 可以使用远端和近端势相等来求解: \[\frac{q_1}{r - d_1} + \frac{q_2}{d_2 - r} = \frac{q_1}{r + d_1} + \frac{q_2}{r + d_2} = 0\] 得到 \(\frac{q_1}{q_2} = - \frac{r}{d_2}\), \(d_1 d_2 = r^2\) 积分变换 核心思路 使用积分变换来消元. 基本计算过程 对方程进行 Fourier 变换: \[\begin{matrix} &part;_t &amp; &rarr; &amp; \frac{\mathrm{d} }{\mathrm{d} t} &#92;&#92; &nabla;^2 &amp; &rarr; &amp; - k^2 &#92;&#92; f(x) &amp; &rarr; &amp; \mathcal{F} f \end{matrix}\] 以 \(t\) 为变参求解常微分方程, 解得 \(U=u \overset{\mathcal{F}}{&rarr;} U\). 做 Fourier 逆变换还原 \(u = U \overset{\mathcal{F}^{-1}}{&rarr;} u\). Laplace 变换同理 Fourier Fourier 变换 \[\mathcal{F} = \frac{1}{2&pi;} &int;_{-&infin;}^{+ &infin;} {\mathrm{d} x} e^{- i k x} &hArr; \mathcal{F}^{-1} = &int;_{-&infin;}^{+&infin;} {\mathrm{d} k} e^{i k x}\] 基本计算过程 Laplace 求解问题 基本上用来求解问题的方法就是分离变量. 但是在不同的参考系下, 分离变量得到的方程的形式并不一样, 所以需要特殊处理. 分离变量的糊弄介绍 比如在 \(u(x, t) = X(x) T(t)\) 这样的分解里面, 又比如恰好是 \(u_{tt} - a^2 u_{xx} = 0\) 这个方程. 于是分解之后的方程为: \[\frac{T&#8221;(t)}{a^2 T(t)} = \frac{X&#8221;(x)}{X(x)} = &lambda;\] 于是 \(&lambda;\) 作为特征值的分解得到最终的结果. 如果换成极坐标系的话, 分解变成 \(u = R(&rho;) &Theta;(&theta;)\). 对于常见的坐标系和方程: Laplace 方程 \(&Delta; u = 0\) 球坐标系 柱坐标系 波动方程 \(u_{tt} - a^2 &Delta; u = 0\) \(u(\boldsymbol{r}, t) = T(t) v(t)\), 其中 \(T_0(t) = \left\{ \begin{matrix} 1&#92;&#92; t\end{matrix} \right\}\), \(T_k(t) = \left\{ \begin{matrix} cos k a t &#92;&#92; sin k a t \end{matrix} \right\}\). 然后 \(v\) 满足 Helmholtz 方程. 输运方程 \(u_t - a^2 &Delta; u = 0\) 球坐标系 柱坐标系 级数解法 对于线性二阶常微分方程, 可以采用级数解法或者是积分变换的方法来求解. 领域上的级数解 \[w(z) = &sum; a_k (z - z_0)^k\] 思路就是变成级数和然后通过递推公式和别的什么方式来进行一个求解. 那么对于奇点邻域, 即类似于 \(w&#8221; + p(z) w&#39; + q(z) w = 0\) 的方程, 假如选定的 \(z_0\) 是方程的奇点. 那么可行的方式就是通过加上 \((z - z_0)^{s_1 + k}\) 的项, 来使得方程可解. 本征值问题 球函数 球函数方程: \[\frac{1}{sin &theta;} \frac{&part;}{&part; &theta;}(sin &theta; \frac{&part; Y}{&part; &theta;}) + \frac{1}{sin^2 &theta;} \frac{&part;^2 Y}{&part; \varphi^2} + l(l + 1) Y = 0\] 轴对称球函数 Legendre 方程: \[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + l(l + 1) &Theta; = 0\] 其解可以用 Legendre 多项式来进行表示. Legendre 多项式的性质 微分表示 \[P_l(x) = \frac{1}{2^l l!} \frac{\mathrm{d}^l }{\mathrm{d}x^l} (x^2 - 1)^l\] 积分表示 \[P_l(x) = \frac{1}{2 &pi; i} \frac{1}{2^l} \oint_C \frac{(z^2 - 1)^l}{(z - x)^{l+1}} \mathrm{d}z\] 正交性质 \[&int;_{-1}^{+1} P_k(x) P_l(x) \mathrm{d}x = N_k^2 &delta;_{kl} = \frac{2}{2l + 1}\] 母函数 递推公式 \[\begin{matrix} (2k + 1) P_k(x) = P_{k+1}&#39;(x) - P_{k-1}&#39;(x)&#92;&#92; P_{k+1}&#39;(x) = (k + 1)P_k(x) + x P_k&#39;(x) &#92;&#92; k P_k(x) = x P_k&#39;(x) - P_{k-1}&#39;(x) &#92;&#92; (x^2 - 1) P_k&#39;(x) = k x P_k(x) - k P_{k-1}(x) \end{matrix}\] 第二类 Legendre 函数 \(Q(x)\) 以及 广义傅里叶级数展开 如何进行广义傅里叶级数展开 目标: 假如需要展开 \(f(x)\) 判断是否是多项式函数 \(f(x) &isin; \mathbb{C}[x]\) 若是, 则直接去求解线性方程组: \[&sum;_l^n A_l P_l(x) = f(x) = &sum;_0^n a_i x^i\] 如果不是, 那么就需要考虑进行一个积分的操作: \[A_l = \frac{2l + 1}{2} &int;_a^{b} f(x) P_l(x) {\mathrm{d} x}\] 证明 \[f(x) = &sum;_l A_l P_l(x) &rArr; &int; f(x) P_l(x) = &sum; &int; A_m P_m(x) P_l(x)\] 利用 \(&int; P_m P_l = \frac{2}{2l + 1} &delta;_{ml}\), 即 Legendre 级数的模, 即可得到 \(A_m\) 的值. 积分的技巧 对于函数的奇偶性, 若函数 利用递推公式 一些例子 \(f(x) = x^4 + 2x^3\) \(f(x) = &sum;_0^4 A_l P_l(x) &rArr; A_l\) Solve[ CoefficientList[ Sum[Indexed[A, l + 1] * LegendreP[l, x], {l, 0, 4}], x] == CoefficientList[x^4 + 2 * x^3, x], Table[Indexed[A, l + 1], {l, 0, 4}]] \(f(x) = \left\{\begin{matrix} x^2 &amp; (0 \leq x \leq 1) &#92;&#92; 0 &amp; (-1 \leq x \leq 0) \end{matrix}\right.\) 不能直接用结论, 因为不是多项式, 所以需要手动积分. 操作就是 \(f(x) = &int;_0^1 x^2 \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d}x^l} (x^2 - 1)^l\). 将微分部分用分布积分给提出去, 同时考虑边界为零和能否积分 (\(l\) 的大小), 然后慢慢积分&#8230; \(&int;_{-1}^1 x P_k(x) P_l(x) \mathrm{d}x\) 利用的是递推公式 \(x P_k(x) = \frac{1}{2k + 1} ((k+1)P_{k+1}(x) + k P_{k-1}(x))\), 然后利用正交性来进行积分. \((2l + 1) &int;_0^1 x P_l(x) \mathrm{d}x\) 利用的是递推公式 \(x P_k(x) = \frac{1}{2 k + 1} ((k + 1) P_{k+1}(x) + k P_{k-1}(x))\), 然后利用 \(P_l(1) = 1, P_l(-1) = (-1)^l\) 化简式子. 最终得到: \(I_l = \frac{l+1}{2l+3}(P_l(0) - P_{l+2}(0)) + \frac{l}{2l - 1}(P_{l-2}(0) - P_l(0))\). \(\frac{2l + 1}{2} &int;_{-1}^1 x^n P_l(x) \mathrm{d}x = \left\{\begin{matrix} 0 &amp; n &lt; l &and; n - l &equiv; \mathrm{odd} &#92;&#92; \frac{(2l + 1) n!}{(n - l)!! (n + l + 1)!!} \end{matrix}\right.\) 利用微分形式 \(\frac{1}{2^l l!} &int;_{-1}^1 x^n \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l\), 于是可以积分&#8230; 最后通过这个方法来求解方程 (仅限轴对称情况) 的通解: \[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + B_l \frac{1}{r^{l+1}})P_l(cos &theta;)\] 习题和说明 emmm, 电动力学里面用的比较多, 应该忘不了, 所以就不想啥记忆方法了. 基本上的解法就是代入边界条件然后对边界条件进行展开计算系数. 并且可以利用自然边界条件, 比如球内的仅有 \(A_l\), 球外的仅有 \(B_l\) 项. 静电场中的介质球 电动力学常客了. 边界条件为 \(\varphi_{\mathrm{in}}(R_0) = \varphi_{\mathrm{out}}(R_0), &epsilon;_{\mathrm{in}} &part;_n \varphi_{\mathrm{in}} = &epsilon;_{\mathrm{rout}} &part;_n \varphi_{\mathrm{out}}\), 然后去求解即可, 同时需要考虑一个电场 \(\varphi_E = E r cos &theta;\) 的原始场. 两个半球壳 和前者的不同的是, 边界条件为 \(\varphi_{\mathrm{in}}(&theta;) = v_1, (-&pi;/2 &lt; &theta; &lt; &pi;/2); v_2, \mathrm{else}\). 于是需要用 \(&int;_0^1 c P_l(x) {\mathrm{d} x}\) 这样的积分展开. 细导线首尾相接而构成圆环, 环的半径为 \(r_0\), 环上带电 \(4 &pi; &epsilon;_0 q\) 单位. 求圆环周围电场中的静电势. 在球坐标系下, 以圆环直径为 \(z\) 轴 (轴对称) 求解. 将问题分为球内 \(r&lt; r_0\), 以及球外 \(r &gt; r_0\). 然后代入边界条件来计算. 唯一需要注意的是, 这个边界条件比较神奇, 需要通过 \(&theta; = 0, &pi;\) 来进行计算. 一般球函数 连带 Legendre 方程: \[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + [l(l + 1) - \frac{m^2}{1 - x^2}] &Theta; = 0, (x = cos &theta;)\] 连带 Legendre 多项式 \(P_l^m(x)\). 连带 Legendre 函数性质 \(P_l^m(x) = (1 - x^2)^{\frac{m}{2}} \frac{\mathrm{d}^m}{\mathrm{d} x^{m}} P_l(x)\) 于是有结论 \(l &lt; m &rArr; P_l^m = 0\) 正交性 \(&int;_{-1}^{+1} P_k^m(x) P_l^m(x) \mathrm{d}x = (N_l^m)^2 &delta;_{kl} = \frac{(l+m)! 2}{(l - m)! (2l + 1)} &delta;_{kl}\) 递推公式 \[\begin{matrix} (2k + 1) x P_k^m(x) = (k + m)P_{k-1}^m(x) + (k - m + 1)P_{k+1}^m(x) &#92;&#92; (2k + 1)(1 - x^2)^{1/2} P_k^m(x) = P_{k+1}^{m+1}(x) - P_{k-1}^{m+1}(x) \end{matrix}\] 连带 Legendre 级数展开 \[f_l = \frac{2l + 1}{2} \frac{(l - m)!}{(l + m)!} &int;_{-1}^{+1} f(x) P_l^m(x) \mathrm{d}x\] 虽然但是, 如果可以通过查表法来计算的话, 还是查表比较靠谱. 最一般的方法就是硬积分: \(P_l^m(x) = \frac{(1 - x^2)^{m/2})}{2^l l!} \frac{\mathrm{d}^{l+m} (x^2 - 1)^l}{\mathrm{d} x^{l + m}}\) 然后是用这个来解方程: \[f(&theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} [A_l^m cos m \varphi + B_l^m sin m \varphi] P_l^m(cos &theta;)\] 一些例子 用球函数展开函数 对于能够查表展开的 (比如只含有 \(sin &theta;, cos &theta;\) 组成的多项式函数), 一个想法就是将其变换成全是 \(sin &theta;\) 的多项式, 然后去查表. \((1 + 3 cos &theta;) sin &theta; cos \varphi\) 变换为 \((sin &theta; + \frac{3}{2} sin 2 &theta;) cos \varphi\), 然后查表得到 \(P_1^1(sin &theta;) + P_2^1(sin &theta;)\) 对于不能查表的, 就只能暴力积分了 \(P_l^m(x) = (1 - x^2)^{m/2} \frac{\mathrm{d}^m}{\mathrm{d} x^m} P_l(x)\). 求解定解问题 + 柱函数 Bessel 方程: \[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} + (x^2 - m^2) R = 0, (x = \sqrt{&mu;} &rho;)\] 虚宗量 Bessel 方程: \[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} - (x^2 + m^2) R = 0, (x = &nu; &rho;)\] 三类柱函数 Bessel 函数 (第一类) \(J_{&nu;}(x)\) Bessel 函数的性质和不定积分 正交性: \(&int;_0^{&rho;_0} J_m(\sqrt{&mu;_n} &rho;) J_m(\sqrt{&mu;_l} &rho;) &rho; {\mathrm{d} &rho;} = (N_n^{(m)})^2 &delta;_{nl}\) Fourier-Bessel 积分 \[F(&rho;) = &sum; f_n J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rArr; F_n = \frac{1}{[N_n^{(m)}]^2} &int;_0^{&rho;_0} f(&rho;) J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rho; {\mathrm{d} &rho;}\] 一些辅助的不定积分: \[\begin{matrix} &int; x^{-m} J_{m+1}(x) {\mathrm{d} x} &amp; = &amp; - x^{-m} J_m(x) + C &#92;&#92; &int; J_1(x) {\mathrm{d} x} &amp; = &amp; - J_0(x) + C &#92;&#92; &int; x^m J_{m-1}(x) {\mathrm{d} x} &amp; = &amp; x^m J_m(x) + C \end{matrix}\] 于是可以通过上面的公式得到推理的结论: \[\begin{matrix} \frac{\mathrm{d} }{\mathrm{d} x}[x^n J_n(x)] &amp; = &amp; x^n J_{n-1}(x) \end{matrix}\] \(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x}\) 这个可以利用 \(&int; x J_0(x) = x J_1(x) + C, (m = -1)\). 然后可以得到 \(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x} = &int;_0^{x_0} x^2 {\mathrm{d} [x J_1(x)]}\). 和上面的式子类似的, 对于 \(&int; p(x) J_l(x)\), 其中 \(p(x)\) 为多项式的不定积分, 可以将 \(p(x) = &sum;_k a_k x^k\), 对 \(&int; x^k J_l(x)\) 进行分别积分. 利用的变换公式为 \(\frac{\mathrm{d} }{\mathrm{d} x}(x^n J_n) = x^n J_{n-1}\). 然后积分的时候, 利用分布积分: \(&int; x^{k-l} [x^l J_l(x) {\mathrm{d} x}]\) \(= &int; x^{k-l} {\mathrm{d} [x^l J_{l-1}(x)]}\) \(= x^k J_{l-1}(x) - (k-l) &int; x^{k-1} J_{l-1}(x) {\mathrm{d} x}\) 这个时候有几种可能性: \(x^{k-1} J_{l-1}(x)\) 形成了 \(x^n J_n\) 或者 \(x^n J_{n-1}(x)\) 的形式. 那么就可以用辅助的不定积分去积它. 如果不是的话, 继续用这个方法去削它. 直到把 \(x^k\) 消没. 如果 \(J_l\) 消没了的话, 使用 \(x^k J_0(x)\) 的积分进行变化. 类似的还有 \(\frac{\mathrm{d} }{\mathrm{d} x}(\frac{J_m}{x^m}) = - \frac{J_{m+1}}{x^m}\) Neumann 函数 (第二类) \(N_{&nu;}(x)\) Hanker 函数 (第三类) \(H_{&nu;}\) 解方程 径向或者 \(z\) 方向构成边界条件柱函数 一些例子 拉普拉斯方程 \(&nabla;^2 u = 0\), 通解为: \[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;}z} &#92;&#92; e^{-\sqrt{&mu;}z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\] \(\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; &part;_{&rho;} u|_{&rho;=&rho;_0} &amp; = &amp; 0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; f_1(&rho;) &#92;&#92; u|_{z = l} &amp; = &amp; f_2(&rho;) \end{matrix}\right.\) 对于轴对称的问题, 可以将 \(m = 0\), 于是问题解为 \(J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\). 即求解 \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{x_n^{(0)} z / &rho;_0} + B_n e^{- x_n^{(0)} z / &rho;_0}) J_0(\frac{x_n^{(0)}}{&rho;_0} &rho;)\). 于是问题变成了代入边界条件然后展开 Fourier-Bessel 级数的过程. 传热方程 \(u_t - a^2 &nabla;^2 u = 0\) \(\left\{\begin{matrix} u_t - a^2 &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{&rho; = &rho;_0} &amp; = &amp; u_0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; u_0 &#92;&#92; u_z|_{z=L} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; u_0 + f_1(&rho;) f_2(z) \end{matrix}\right.\) 遇到这种有有一个小小偏移量的, 可以先做一个 \(u = v + u_0\), 然后解 \(v\) 的解 (齐次化). 波动方程 球贝赛尔函数 格林函数 格林公式 格林公式: 第一格林公式 \[\iint_{&Sigma;} u &nabla; v &sdot; {\mathrm{d} \boldsymbol{S}} = \iiint_T u &nabla;^2 v {\mathrm{d} V} + \iiint_T &nabla; u &sdot; &nabla; v {\mathrm{d} V}\] 第二格林公式 \[\iint_{&Sigma;} (u &nabla; v - v &nabla; u) &sdot; {\mathrm{d} \boldsymbol{S}} = \iint_{&Sigma;} (u \frac{&part; v}{&part; n} - v \frac{&part; u}{&part; n}) {\mathrm{d} S} = \iiint_T (u &nabla;^2 v - v &nabla;^2 u) {\mathrm{d} V}\] 泊松方程 \(&Delta; u = f(\boldsymbol{r})\) 的基本积分形式: 三类边界条件 \([&alpha; \frac{&part; u}{&part; n} + &beta; u]_{&Sigma;} = \varphi(M)\): 第一边界条件 \(&alpha; = 0, &beta; &ne; 0\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) \frac{&part; G(\boldsymbol{r}, \boldsymbol{r}_0)}{&part; n} {\mathrm{d} S}\] 第二边界条件 \(&alpha; &ne; 0, &beta; = 0\) 第三边界条件 \(&alpha;, &beta; &ne; 0\) \[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\] 电像法求解格林函数 一般边值问题的格林函数 \[G = G_0 + G_1\] 其中 \(G_0\) 为基本解, 满足 \(&nabla;^2 G_0 = &delta;(\boldsymbol{r} - \boldsymbol{r}_0)\). 一些补充说明 对于 \(\boldsymbol{r}_0\) 处的电量 \(- &epsilon;_0\) 在无界空间产生静电场的电势的 \(G_0 = - \frac{1}{4 &pi; | \boldsymbol{r} - \boldsymbol{r}_0 |}\). \(G_1\) 满足齐次方程 \(&nabla;^2 G_1 = 0\), 对应的边界条件 \(G_1|_{&Sigma;} = (G - G_0)|_{&Sigma;}\). 电像法求格林函数 平面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0&#39; |}\) 球面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{a}{r_0} \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\), 其中在球面上 \(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} : \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |} = \frac{1}{r_0} : \frac{1}{a}\), \(a\) 为电荷距离球心距离. 例题 在球 \(r = a\) 内求解拉普拉斯方程第一边值问题 \[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{r=a} &amp; = &amp; f(&theta;, \varphi) \end{matrix}\right.\] 这个是一个第一类边界条件的问题, 所以最终的结果为: \[u(\boldsymbol{r}_0) = \iiint_T 0 &times; G {\mathrm{d} V} + \iint_{&Sigma;} f(&theta;, \varphi) \frac{&part;}{&part; n} G {\mathrm{d} S}\] 为了方便计算, 一般选择球心为原点建立球坐标系. 并且其中 \(G\) 为球面镜像. 在半空间 \(z &gt; 0\) 求解第一边值问题: \[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{z = 0} &amp; = &amp; f(x, y) \end{matrix}\right.\] \(G = \frac{1}{4 &pi;} (\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |})\), 其中 \(\boldsymbol{r}_0\) 和 \(\boldsymbol{r}_1\) 关于 \(x-y\) 平面对称. 于是结果同前一问. 含时格林函数, 冲量定理 积分变换 Fourier 积分变换 一些例子 无限长弦自由振动: \[\left\{\begin{matrix} u_{tt} - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) &#92;&#92; u_t|_{t=0} &amp; = &amp; &psi;(x) \end{matrix}\right.\] 对 \(x\) 进行 Fourier 变换 (\(&times; e^{-ikx} / 2&pi;\) 后对 \(x\) 进行积分, 用意是去掉 \(x\), 使得方程仅包含 \(t\) 作为参数): \[\left\{\begin{matrix} U&#8221; + k^2 a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) &#92;&#92; U&#39;|_{t = 0} &amp; = &amp; &Psi;(k) \end{matrix}\right.\] 于是对于 \(t\), 方程的通解为 \(U(t, k) = A(k) e^{i k a t} + B(k) e^{-i k a t}\), 然后代入边界条件求解系数, 最后通过 Fourier 逆变换即可得到最终结果. 其中 \(&Phi;(k)\) 和 \(&Psi;(k)\) 是原本 \(\varphi(x)\) 和 \(&psi;(x)\) 的 Fourier 变换结果, 其中 \(\mathcal{F} f(x) = \frac{1}{2 &pi;} &int;_{-&infin;}^{&infin;} f(&xi;) e^{- i k &xi;} {\mathrm{d} &xi;}\), 反过来的逆变换 \(\mathcal{F}^{-1} F = &int;_{-&infin;}^{&infin;} F e^{i k x} {\mathrm{d} k}\). 无限长细杆传热方程 \[\left\{\begin{matrix} u_t - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) \end{matrix}\right.\] 变换得到: \[\left\{\begin{matrix} U&#39; + a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) \end{matrix}\right.\] 于是可以解得 \(U(t, k) = &Phi;(k) e^{- k^2 a^2 t}\), 然后做逆变换 \(u(x, t) = \mathcal{F}^{-1} U = &int;_{-&infin;}^{+&infin;} &Phi;(k) e^{-k^2 a^2 t} e^{i k x} {\mathrm{d} k}\). Laplace 积分变换" />
+<link rel="canonical" href="/notes/equation-of-physics-the-end/" />
+<meta property="og:url" content="/notes/equation-of-physics-the-end/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-07-06T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="数学物理方程 [期末]" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-06T00:00:00+00:00","datePublished":"2023-07-06T00:00:00+00:00","description":"About 考啥 分离变量 基本思路 将待求的函数 \\(u\\) 根据参数列表 \\(t, q_i\\) 展开成 \\(T(t) Q_1(q_1) \\cdots Q_n(q_n)\\) 然后进行求解. X-Y 和极坐标系 球坐标系 Legendre 级数展开 积分小技巧 查表法 (神中神) 多项式展开 \\(&hArr;\\) 解线性方程组 结论: 对于 \\(p(x)\\) 为多项式的表达式, 其对应的广义 Fourier 展开阶数不超过多项式的最高阶数 \\(\\mathrm{deg}(p)\\). 递推公式 暴力积分 (还是多项式, 但是没法数值用线性方程组来解) \\[f_l = \\frac{2l + 1}{2} &int;_{a}^{b} f(x) \\frac{1}{2^l l!} \\frac{\\mathrm{d}^l}{\\mathrm{d} x^l} (x^2 - 1)^l {\\mathrm{d} x}\\] 连带 Legendre 级数展开 (球函数展开) 积分小技巧 查表法 比如对于 \\(p(&theta;) cos m \\varphi\\) 的表达式, 其中 \\(p\\) 为关于 \\(&theta;\\) 的三角函数的简单函数. 那么可以先将 \\(p\\) 换成关于 \\(sin &theta;\\) 的多项式函数 \\(R(sin &theta;)\\), 然后查表套 \\(P^m_l\\). (实际上和 Legendre 展开一样.) 递推公式 暴力积分 \\[f_l^m = \\frac{(l - m)! (2l + 1)}{(l + m)! 2} &int;_a^{b} f(x) \\frac{(1 - x^2)^{\\frac{m}{2}}}{2^l l!} \\frac{\\mathrm{d}^{l+m}}{\\mathrm{d} x^{l+m}} (x^2 - 1)^l\\] 方程求解 求解小技巧 求解的基本步骤: 列出方程并确定坐标系 (这个时候需要判断是否有轴对称条件) 若有轴对称条件, 则选择 Legendre 级数展开, 否则选择连带 Legendre 级数展开. Legendre 级数展开: \\[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + \\frac{B_l}{r^{l+1}}) P_l(cos &theta;)\\] 其中对于球内, 仅有 \\(A_l\\) 项; 球外仅有 \\(B_l\\) 项. 确定系数 \\(A_l\\) 和 \\(B_l\\) 的方法就是对边界条件进行一个级数展开. 连带 Legendre 级数展开 \\[u(r, &theta;, \\varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} (A_l^m cos m \\varphi + B_l^m sin m \\varphi) (C_l^m r^l + \\frac{D_l^m}{r^{l+1}}) P_l^m(cos &theta;)\\] 其中对于球内, 没有 \\(\\frac{1}{r^{l+1}}\\) 项; 球外没有 \\(r^l\\) 项. 可以利用奇偶性来判断 \\(cos, sin\\). 总而言之还就是那一个难算. 柱坐标系 Bessel 级数展开 (不定积分) 积分的小技巧 查表 递推公式 对于 \\(I_l = &int; x^n J_l(x) {\\mathrm{d} x}\\) 类型的积分 核心递推公式: \\({\\mathrm{d} (x^m J_m)} = x^m J_{m-1}\\) 和 \\({\\mathrm{d} (- x^{-m} J_m)} = x^{-m} J_{m+1}\\); 核心的解法是利用分部积分 \\(x^{n - l - 1} {\\mathrm{d} (x^{l+1} J_{l+1})}\\), 然后将 \\(x^n\\) 消去. 柱方程求解 求解过程 柱方程的通解: \\[J_m(\\sqrt{&mu;} &rho;) \\left\\{\\begin{matrix} e^{\\sqrt{&mu;} z} &#92;&#92; e^{- \\sqrt{&mu;} z} \\end{matrix}\\right\\} \\left\\{\\begin{matrix} cos m \\varphi &#92;&#92; sin m \\varphi \\end{matrix}\\right\\}\\] 对于轴对称情况 (边界条件与 \\(\\varphi\\) 无关), 可以简化为 \\[J_0(\\sqrt{&mu;} &rho;) \\left\\{\\begin{matrix} e^{\\sqrt{&mu;} z} &#92;&#92; e^{- \\sqrt{&mu;} z} \\end{matrix}\\right\\}\\]. 其中对于 \\(&mu; = 0\\) 的情况, 特解为 \\(A_0 + B_0 z\\), 以轴对称情况为例, 通解为: \\(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{\\sqrt{&mu;} z} + B_n e^{- \\sqrt{&mu;} z}) J_0(\\sqrt{&mu;} &rho;)\\). 然后代入边界条件来进行系数的求解和展开. 其中往往有 \\(&part;_{&rho;} u|_{&rho;_0} = 0\\) 的边界条件, 对于这种边界条件, 可以得到 \\(J_0&#39;(\\sqrt{&mu;} &rho;_0) = 0\\) 的结果, 于是可以用 \\(x_n^{(0)} / &rho;_0\\) 表示 \\(\\sqrt{&mu;_n}\\), 其中 \\(x_n^{(0)}\\) 为 \\(J_0&#39;(x)\\) 的第 \\(n\\) 个正根. 球 Bessel 方程 关于级数的吐槽 折叠了 基本上这些级数的一个思路就是: 找函数性质: (通过母函数等) 找微分形式, 积分形式, 然后找递推公式 (以及积分, 微分形式的递推公式). 广义 Fourier 展开: 利用正交性和级数的模对函数进行展开. 实际上核心应该就是对应函数的一个积分. 展开的过程中, 往往需要利用一些结论或者递推公式进行快速展开, 不过如果完全没思路, 还可以进行暴力展开 (往往是微分形式的展开和积分). 级数展开之后可以用来求解方程 格林函数 基本思路 计算 \\(G\\), 然后根据边界条件还原 \\(u\\) \\(&nabla;^2 u = f(\\boldsymbol{r})\\) 的边界条件 第一类 \\(u|_{&Sigma;} = \\varphi(\\boldsymbol{r})\\) \\[u(\\boldsymbol{r}_0) = \\iiint_T G(\\boldsymbol{r}, \\boldsymbol{r}_0) f(\\boldsymbol{r}) {\\mathrm{d} V} + \\iint_{&Sigma;} \\varphi(\\boldsymbol{r}) &part;_n G(\\boldsymbol{r}, \\boldsymbol{r}_0) {\\mathrm{d} S}\\] 第三类 \\((&alpha; &part;_n u + &beta; u)|_{&Sigma;} = \\varphi(\\boldsymbol{r})\\) \\[u(\\boldsymbol{r}_0) = \\iiint_T G(\\boldsymbol{r}, \\boldsymbol{r}_0) f(\\boldsymbol{r}) {\\mathrm{d} V} - \\frac{1}{&alpha;} \\iint_{&Sigma;} G(\\boldsymbol{r}, \\boldsymbol{r}_0) \\varphi(\\boldsymbol{r}) {\\mathrm{d} S}\\] 电像法 平面镜像 \\[G = \\frac{1}{4 &pi;} \\left[\\left(\\frac{-1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |}\\right)_{\\mathrm{real}} + \\left(\\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_1 |}\\right)_{\\mathrm{image}}\\right]\\] 圆形镜像 \\[G = \\frac{1}{4 &pi;} \\left[ \\left( \\frac{-1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |} \\right)_{\\mathrm{real}} + \\left( \\frac{a}{r_0 | \\boldsymbol{r} - \\boldsymbol{r}_1 |} \\right)_{\\mathrm{image}} \\right]\\] 注 可以和点电荷的来类比就是了, 如果忘了具体的比的话, 可以使用远端和近端势相等来求解: \\[\\frac{q_1}{r - d_1} + \\frac{q_2}{d_2 - r} = \\frac{q_1}{r + d_1} + \\frac{q_2}{r + d_2} = 0\\] 得到 \\(\\frac{q_1}{q_2} = - \\frac{r}{d_2}\\), \\(d_1 d_2 = r^2\\) 积分变换 核心思路 使用积分变换来消元. 基本计算过程 对方程进行 Fourier 变换: \\[\\begin{matrix} &part;_t &amp; &rarr; &amp; \\frac{\\mathrm{d} }{\\mathrm{d} t} &#92;&#92; &nabla;^2 &amp; &rarr; &amp; - k^2 &#92;&#92; f(x) &amp; &rarr; &amp; \\mathcal{F} f \\end{matrix}\\] 以 \\(t\\) 为变参求解常微分方程, 解得 \\(U=u \\overset{\\mathcal{F}}{&rarr;} U\\). 做 Fourier 逆变换还原 \\(u = U \\overset{\\mathcal{F}^{-1}}{&rarr;} u\\). Laplace 变换同理 Fourier Fourier 变换 \\[\\mathcal{F} = \\frac{1}{2&pi;} &int;_{-&infin;}^{+ &infin;} {\\mathrm{d} x} e^{- i k x} &hArr; \\mathcal{F}^{-1} = &int;_{-&infin;}^{+&infin;} {\\mathrm{d} k} e^{i k x}\\] 基本计算过程 Laplace 求解问题 基本上用来求解问题的方法就是分离变量. 但是在不同的参考系下, 分离变量得到的方程的形式并不一样, 所以需要特殊处理. 分离变量的糊弄介绍 比如在 \\(u(x, t) = X(x) T(t)\\) 这样的分解里面, 又比如恰好是 \\(u_{tt} - a^2 u_{xx} = 0\\) 这个方程. 于是分解之后的方程为: \\[\\frac{T&#8221;(t)}{a^2 T(t)} = \\frac{X&#8221;(x)}{X(x)} = &lambda;\\] 于是 \\(&lambda;\\) 作为特征值的分解得到最终的结果. 如果换成极坐标系的话, 分解变成 \\(u = R(&rho;) &Theta;(&theta;)\\). 对于常见的坐标系和方程: Laplace 方程 \\(&Delta; u = 0\\) 球坐标系 柱坐标系 波动方程 \\(u_{tt} - a^2 &Delta; u = 0\\) \\(u(\\boldsymbol{r}, t) = T(t) v(t)\\), 其中 \\(T_0(t) = \\left\\{ \\begin{matrix} 1&#92;&#92; t\\end{matrix} \\right\\}\\), \\(T_k(t) = \\left\\{ \\begin{matrix} cos k a t &#92;&#92; sin k a t \\end{matrix} \\right\\}\\). 然后 \\(v\\) 满足 Helmholtz 方程. 输运方程 \\(u_t - a^2 &Delta; u = 0\\) 球坐标系 柱坐标系 级数解法 对于线性二阶常微分方程, 可以采用级数解法或者是积分变换的方法来求解. 领域上的级数解 \\[w(z) = &sum; a_k (z - z_0)^k\\] 思路就是变成级数和然后通过递推公式和别的什么方式来进行一个求解. 那么对于奇点邻域, 即类似于 \\(w&#8221; + p(z) w&#39; + q(z) w = 0\\) 的方程, 假如选定的 \\(z_0\\) 是方程的奇点. 那么可行的方式就是通过加上 \\((z - z_0)^{s_1 + k}\\) 的项, 来使得方程可解. 本征值问题 球函数 球函数方程: \\[\\frac{1}{sin &theta;} \\frac{&part;}{&part; &theta;}(sin &theta; \\frac{&part; Y}{&part; &theta;}) + \\frac{1}{sin^2 &theta;} \\frac{&part;^2 Y}{&part; \\varphi^2} + l(l + 1) Y = 0\\] 轴对称球函数 Legendre 方程: \\[(1 - x^2) \\frac{\\mathrm{d}^2 &Theta;}{\\mathrm{d} x^2} - 2 x \\frac{\\mathrm{d} &Theta;}{\\mathrm{d} x} + l(l + 1) &Theta; = 0\\] 其解可以用 Legendre 多项式来进行表示. Legendre 多项式的性质 微分表示 \\[P_l(x) = \\frac{1}{2^l l!} \\frac{\\mathrm{d}^l }{\\mathrm{d}x^l} (x^2 - 1)^l\\] 积分表示 \\[P_l(x) = \\frac{1}{2 &pi; i} \\frac{1}{2^l} \\oint_C \\frac{(z^2 - 1)^l}{(z - x)^{l+1}} \\mathrm{d}z\\] 正交性质 \\[&int;_{-1}^{+1} P_k(x) P_l(x) \\mathrm{d}x = N_k^2 &delta;_{kl} = \\frac{2}{2l + 1}\\] 母函数 递推公式 \\[\\begin{matrix} (2k + 1) P_k(x) = P_{k+1}&#39;(x) - P_{k-1}&#39;(x)&#92;&#92; P_{k+1}&#39;(x) = (k + 1)P_k(x) + x P_k&#39;(x) &#92;&#92; k P_k(x) = x P_k&#39;(x) - P_{k-1}&#39;(x) &#92;&#92; (x^2 - 1) P_k&#39;(x) = k x P_k(x) - k P_{k-1}(x) \\end{matrix}\\] 第二类 Legendre 函数 \\(Q(x)\\) 以及 广义傅里叶级数展开 如何进行广义傅里叶级数展开 目标: 假如需要展开 \\(f(x)\\) 判断是否是多项式函数 \\(f(x) &isin; \\mathbb{C}[x]\\) 若是, 则直接去求解线性方程组: \\[&sum;_l^n A_l P_l(x) = f(x) = &sum;_0^n a_i x^i\\] 如果不是, 那么就需要考虑进行一个积分的操作: \\[A_l = \\frac{2l + 1}{2} &int;_a^{b} f(x) P_l(x) {\\mathrm{d} x}\\] 证明 \\[f(x) = &sum;_l A_l P_l(x) &rArr; &int; f(x) P_l(x) = &sum; &int; A_m P_m(x) P_l(x)\\] 利用 \\(&int; P_m P_l = \\frac{2}{2l + 1} &delta;_{ml}\\), 即 Legendre 级数的模, 即可得到 \\(A_m\\) 的值. 积分的技巧 对于函数的奇偶性, 若函数 利用递推公式 一些例子 \\(f(x) = x^4 + 2x^3\\) \\(f(x) = &sum;_0^4 A_l P_l(x) &rArr; A_l\\) Solve[ CoefficientList[ Sum[Indexed[A, l + 1] * LegendreP[l, x], {l, 0, 4}], x] == CoefficientList[x^4 + 2 * x^3, x], Table[Indexed[A, l + 1], {l, 0, 4}]] \\(f(x) = \\left\\{\\begin{matrix} x^2 &amp; (0 \\leq x \\leq 1) &#92;&#92; 0 &amp; (-1 \\leq x \\leq 0) \\end{matrix}\\right.\\) 不能直接用结论, 因为不是多项式, 所以需要手动积分. 操作就是 \\(f(x) = &int;_0^1 x^2 \\frac{1}{2^l l!} \\frac{\\mathrm{d}^l}{\\mathrm{d}x^l} (x^2 - 1)^l\\). 将微分部分用分布积分给提出去, 同时考虑边界为零和能否积分 (\\(l\\) 的大小), 然后慢慢积分&#8230; \\(&int;_{-1}^1 x P_k(x) P_l(x) \\mathrm{d}x\\) 利用的是递推公式 \\(x P_k(x) = \\frac{1}{2k + 1} ((k+1)P_{k+1}(x) + k P_{k-1}(x))\\), 然后利用正交性来进行积分. \\((2l + 1) &int;_0^1 x P_l(x) \\mathrm{d}x\\) 利用的是递推公式 \\(x P_k(x) = \\frac{1}{2 k + 1} ((k + 1) P_{k+1}(x) + k P_{k-1}(x))\\), 然后利用 \\(P_l(1) = 1, P_l(-1) = (-1)^l\\) 化简式子. 最终得到: \\(I_l = \\frac{l+1}{2l+3}(P_l(0) - P_{l+2}(0)) + \\frac{l}{2l - 1}(P_{l-2}(0) - P_l(0))\\). \\(\\frac{2l + 1}{2} &int;_{-1}^1 x^n P_l(x) \\mathrm{d}x = \\left\\{\\begin{matrix} 0 &amp; n &lt; l &and; n - l &equiv; \\mathrm{odd} &#92;&#92; \\frac{(2l + 1) n!}{(n - l)!! (n + l + 1)!!} \\end{matrix}\\right.\\) 利用微分形式 \\(\\frac{1}{2^l l!} &int;_{-1}^1 x^n \\frac{\\mathrm{d}^l}{\\mathrm{d} x^l} (x^2 - 1)^l\\), 于是可以积分&#8230; 最后通过这个方法来求解方程 (仅限轴对称情况) 的通解: \\[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + B_l \\frac{1}{r^{l+1}})P_l(cos &theta;)\\] 习题和说明 emmm, 电动力学里面用的比较多, 应该忘不了, 所以就不想啥记忆方法了. 基本上的解法就是代入边界条件然后对边界条件进行展开计算系数. 并且可以利用自然边界条件, 比如球内的仅有 \\(A_l\\), 球外的仅有 \\(B_l\\) 项. 静电场中的介质球 电动力学常客了. 边界条件为 \\(\\varphi_{\\mathrm{in}}(R_0) = \\varphi_{\\mathrm{out}}(R_0), &epsilon;_{\\mathrm{in}} &part;_n \\varphi_{\\mathrm{in}} = &epsilon;_{\\mathrm{rout}} &part;_n \\varphi_{\\mathrm{out}}\\), 然后去求解即可, 同时需要考虑一个电场 \\(\\varphi_E = E r cos &theta;\\) 的原始场. 两个半球壳 和前者的不同的是, 边界条件为 \\(\\varphi_{\\mathrm{in}}(&theta;) = v_1, (-&pi;/2 &lt; &theta; &lt; &pi;/2); v_2, \\mathrm{else}\\). 于是需要用 \\(&int;_0^1 c P_l(x) {\\mathrm{d} x}\\) 这样的积分展开. 细导线首尾相接而构成圆环, 环的半径为 \\(r_0\\), 环上带电 \\(4 &pi; &epsilon;_0 q\\) 单位. 求圆环周围电场中的静电势. 在球坐标系下, 以圆环直径为 \\(z\\) 轴 (轴对称) 求解. 将问题分为球内 \\(r&lt; r_0\\), 以及球外 \\(r &gt; r_0\\). 然后代入边界条件来计算. 唯一需要注意的是, 这个边界条件比较神奇, 需要通过 \\(&theta; = 0, &pi;\\) 来进行计算. 一般球函数 连带 Legendre 方程: \\[(1 - x^2) \\frac{\\mathrm{d}^2 &Theta;}{\\mathrm{d} x^2} - 2 x \\frac{\\mathrm{d} &Theta;}{\\mathrm{d} x} + [l(l + 1) - \\frac{m^2}{1 - x^2}] &Theta; = 0, (x = cos &theta;)\\] 连带 Legendre 多项式 \\(P_l^m(x)\\). 连带 Legendre 函数性质 \\(P_l^m(x) = (1 - x^2)^{\\frac{m}{2}} \\frac{\\mathrm{d}^m}{\\mathrm{d} x^{m}} P_l(x)\\) 于是有结论 \\(l &lt; m &rArr; P_l^m = 0\\) 正交性 \\(&int;_{-1}^{+1} P_k^m(x) P_l^m(x) \\mathrm{d}x = (N_l^m)^2 &delta;_{kl} = \\frac{(l+m)! 2}{(l - m)! (2l + 1)} &delta;_{kl}\\) 递推公式 \\[\\begin{matrix} (2k + 1) x P_k^m(x) = (k + m)P_{k-1}^m(x) + (k - m + 1)P_{k+1}^m(x) &#92;&#92; (2k + 1)(1 - x^2)^{1/2} P_k^m(x) = P_{k+1}^{m+1}(x) - P_{k-1}^{m+1}(x) \\end{matrix}\\] 连带 Legendre 级数展开 \\[f_l = \\frac{2l + 1}{2} \\frac{(l - m)!}{(l + m)!} &int;_{-1}^{+1} f(x) P_l^m(x) \\mathrm{d}x\\] 虽然但是, 如果可以通过查表法来计算的话, 还是查表比较靠谱. 最一般的方法就是硬积分: \\(P_l^m(x) = \\frac{(1 - x^2)^{m/2})}{2^l l!} \\frac{\\mathrm{d}^{l+m} (x^2 - 1)^l}{\\mathrm{d} x^{l + m}}\\) 然后是用这个来解方程: \\[f(&theta;, \\varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} [A_l^m cos m \\varphi + B_l^m sin m \\varphi] P_l^m(cos &theta;)\\] 一些例子 用球函数展开函数 对于能够查表展开的 (比如只含有 \\(sin &theta;, cos &theta;\\) 组成的多项式函数), 一个想法就是将其变换成全是 \\(sin &theta;\\) 的多项式, 然后去查表. \\((1 + 3 cos &theta;) sin &theta; cos \\varphi\\) 变换为 \\((sin &theta; + \\frac{3}{2} sin 2 &theta;) cos \\varphi\\), 然后查表得到 \\(P_1^1(sin &theta;) + P_2^1(sin &theta;)\\) 对于不能查表的, 就只能暴力积分了 \\(P_l^m(x) = (1 - x^2)^{m/2} \\frac{\\mathrm{d}^m}{\\mathrm{d} x^m} P_l(x)\\). 求解定解问题 + 柱函数 Bessel 方程: \\[x^2 \\frac{\\mathrm{d}^2 R}{\\mathrm{d}x} + x \\frac{\\mathrm{d} R}{\\mathrm{d}x} + (x^2 - m^2) R = 0, (x = \\sqrt{&mu;} &rho;)\\] 虚宗量 Bessel 方程: \\[x^2 \\frac{\\mathrm{d}^2 R}{\\mathrm{d}x} + x \\frac{\\mathrm{d} R}{\\mathrm{d}x} - (x^2 + m^2) R = 0, (x = &nu; &rho;)\\] 三类柱函数 Bessel 函数 (第一类) \\(J_{&nu;}(x)\\) Bessel 函数的性质和不定积分 正交性: \\(&int;_0^{&rho;_0} J_m(\\sqrt{&mu;_n} &rho;) J_m(\\sqrt{&mu;_l} &rho;) &rho; {\\mathrm{d} &rho;} = (N_n^{(m)})^2 &delta;_{nl}\\) Fourier-Bessel 积分 \\[F(&rho;) = &sum; f_n J_m(\\sqrt{&mu;_n^{(m)}} &rho;) &rArr; F_n = \\frac{1}{[N_n^{(m)}]^2} &int;_0^{&rho;_0} f(&rho;) J_m(\\sqrt{&mu;_n^{(m)}} &rho;) &rho; {\\mathrm{d} &rho;}\\] 一些辅助的不定积分: \\[\\begin{matrix} &int; x^{-m} J_{m+1}(x) {\\mathrm{d} x} &amp; = &amp; - x^{-m} J_m(x) + C &#92;&#92; &int; J_1(x) {\\mathrm{d} x} &amp; = &amp; - J_0(x) + C &#92;&#92; &int; x^m J_{m-1}(x) {\\mathrm{d} x} &amp; = &amp; x^m J_m(x) + C \\end{matrix}\\] 于是可以通过上面的公式得到推理的结论: \\[\\begin{matrix} \\frac{\\mathrm{d} }{\\mathrm{d} x}[x^n J_n(x)] &amp; = &amp; x^n J_{n-1}(x) \\end{matrix}\\] \\(&int;_0^{x_0} x^3 J_0(x) {\\mathrm{d} x}\\) 这个可以利用 \\(&int; x J_0(x) = x J_1(x) + C, (m = -1)\\). 然后可以得到 \\(&int;_0^{x_0} x^3 J_0(x) {\\mathrm{d} x} = &int;_0^{x_0} x^2 {\\mathrm{d} [x J_1(x)]}\\). 和上面的式子类似的, 对于 \\(&int; p(x) J_l(x)\\), 其中 \\(p(x)\\) 为多项式的不定积分, 可以将 \\(p(x) = &sum;_k a_k x^k\\), 对 \\(&int; x^k J_l(x)\\) 进行分别积分. 利用的变换公式为 \\(\\frac{\\mathrm{d} }{\\mathrm{d} x}(x^n J_n) = x^n J_{n-1}\\). 然后积分的时候, 利用分布积分: \\(&int; x^{k-l} [x^l J_l(x) {\\mathrm{d} x}]\\) \\(= &int; x^{k-l} {\\mathrm{d} [x^l J_{l-1}(x)]}\\) \\(= x^k J_{l-1}(x) - (k-l) &int; x^{k-1} J_{l-1}(x) {\\mathrm{d} x}\\) 这个时候有几种可能性: \\(x^{k-1} J_{l-1}(x)\\) 形成了 \\(x^n J_n\\) 或者 \\(x^n J_{n-1}(x)\\) 的形式. 那么就可以用辅助的不定积分去积它. 如果不是的话, 继续用这个方法去削它. 直到把 \\(x^k\\) 消没. 如果 \\(J_l\\) 消没了的话, 使用 \\(x^k J_0(x)\\) 的积分进行变化. 类似的还有 \\(\\frac{\\mathrm{d} }{\\mathrm{d} x}(\\frac{J_m}{x^m}) = - \\frac{J_{m+1}}{x^m}\\) Neumann 函数 (第二类) \\(N_{&nu;}(x)\\) Hanker 函数 (第三类) \\(H_{&nu;}\\) 解方程 径向或者 \\(z\\) 方向构成边界条件柱函数 一些例子 拉普拉斯方程 \\(&nabla;^2 u = 0\\), 通解为: \\[J_m(\\sqrt{&mu;} &rho;) \\left\\{\\begin{matrix} e^{\\sqrt{&mu;}z} &#92;&#92; e^{-\\sqrt{&mu;}z} \\end{matrix}\\right\\} \\left\\{\\begin{matrix} cos m \\varphi &#92;&#92; sin m \\varphi \\end{matrix}\\right\\}\\] \\(\\left\\{\\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; &part;_{&rho;} u|_{&rho;=&rho;_0} &amp; = &amp; 0 &#92;&#92; u|_{&rho; = 0} &amp; \\leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; f_1(&rho;) &#92;&#92; u|_{z = l} &amp; = &amp; f_2(&rho;) \\end{matrix}\\right.\\) 对于轴对称的问题, 可以将 \\(m = 0\\), 于是问题解为 \\(J_0(\\sqrt{&mu;} &rho;) \\left\\{\\begin{matrix} e^{\\sqrt{&mu;} z} &#92;&#92; e^{- \\sqrt{&mu;} z} \\end{matrix}\\right\\}\\). 即求解 \\(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{x_n^{(0)} z / &rho;_0} + B_n e^{- x_n^{(0)} z / &rho;_0}) J_0(\\frac{x_n^{(0)}}{&rho;_0} &rho;)\\). 于是问题变成了代入边界条件然后展开 Fourier-Bessel 级数的过程. 传热方程 \\(u_t - a^2 &nabla;^2 u = 0\\) \\(\\left\\{\\begin{matrix} u_t - a^2 &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{&rho; = &rho;_0} &amp; = &amp; u_0 &#92;&#92; u|_{&rho; = 0} &amp; \\leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; u_0 &#92;&#92; u_z|_{z=L} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; u_0 + f_1(&rho;) f_2(z) \\end{matrix}\\right.\\) 遇到这种有有一个小小偏移量的, 可以先做一个 \\(u = v + u_0\\), 然后解 \\(v\\) 的解 (齐次化). 波动方程 球贝赛尔函数 格林函数 格林公式 格林公式: 第一格林公式 \\[\\iint_{&Sigma;} u &nabla; v &sdot; {\\mathrm{d} \\boldsymbol{S}} = \\iiint_T u &nabla;^2 v {\\mathrm{d} V} + \\iiint_T &nabla; u &sdot; &nabla; v {\\mathrm{d} V}\\] 第二格林公式 \\[\\iint_{&Sigma;} (u &nabla; v - v &nabla; u) &sdot; {\\mathrm{d} \\boldsymbol{S}} = \\iint_{&Sigma;} (u \\frac{&part; v}{&part; n} - v \\frac{&part; u}{&part; n}) {\\mathrm{d} S} = \\iiint_T (u &nabla;^2 v - v &nabla;^2 u) {\\mathrm{d} V}\\] 泊松方程 \\(&Delta; u = f(\\boldsymbol{r})\\) 的基本积分形式: 三类边界条件 \\([&alpha; \\frac{&part; u}{&part; n} + &beta; u]_{&Sigma;} = \\varphi(M)\\): 第一边界条件 \\(&alpha; = 0, &beta; &ne; 0\\) \\[u(\\boldsymbol{r}_0) = \\iiint_T G(\\boldsymbol{r}, \\boldsymbol{r}_0) f(\\boldsymbol{r}) {\\mathrm{d} V} + \\iint_{&Sigma;} \\varphi(\\boldsymbol{r}) \\frac{&part; G(\\boldsymbol{r}, \\boldsymbol{r}_0)}{&part; n} {\\mathrm{d} S}\\] 第二边界条件 \\(&alpha; &ne; 0, &beta; = 0\\) 第三边界条件 \\(&alpha;, &beta; &ne; 0\\) \\[u(\\boldsymbol{r}_0) = \\iiint_T G(\\boldsymbol{r}, \\boldsymbol{r}_0) f(\\boldsymbol{r}) {\\mathrm{d} V} - \\frac{1}{&alpha;} \\iint_{&Sigma;} G(\\boldsymbol{r}, \\boldsymbol{r}_0) \\varphi(\\boldsymbol{r}) {\\mathrm{d} S}\\] 电像法求解格林函数 一般边值问题的格林函数 \\[G = G_0 + G_1\\] 其中 \\(G_0\\) 为基本解, 满足 \\(&nabla;^2 G_0 = &delta;(\\boldsymbol{r} - \\boldsymbol{r}_0)\\). 一些补充说明 对于 \\(\\boldsymbol{r}_0\\) 处的电量 \\(- &epsilon;_0\\) 在无界空间产生静电场的电势的 \\(G_0 = - \\frac{1}{4 &pi; | \\boldsymbol{r} - \\boldsymbol{r}_0 |}\\). \\(G_1\\) 满足齐次方程 \\(&nabla;^2 G_1 = 0\\), 对应的边界条件 \\(G_1|_{&Sigma;} = (G - G_0)|_{&Sigma;}\\). 电像法求格林函数 平面镜像 \\(G_0 = - \\frac{1}{4 &pi;} \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |} + \\frac{1}{4 &pi;} \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_0&#39; |}\\) 球面镜像 \\(G_0 = - \\frac{1}{4 &pi;} \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |} + \\frac{a}{r_0} \\frac{1}{4 &pi;} \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_1 |}\\), 其中在球面上 \\(\\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |} : \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_1 |} = \\frac{1}{r_0} : \\frac{1}{a}\\), \\(a\\) 为电荷距离球心距离. 例题 在球 \\(r = a\\) 内求解拉普拉斯方程第一边值问题 \\[\\left\\{\\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{r=a} &amp; = &amp; f(&theta;, \\varphi) \\end{matrix}\\right.\\] 这个是一个第一类边界条件的问题, 所以最终的结果为: \\[u(\\boldsymbol{r}_0) = \\iiint_T 0 &times; G {\\mathrm{d} V} + \\iint_{&Sigma;} f(&theta;, \\varphi) \\frac{&part;}{&part; n} G {\\mathrm{d} S}\\] 为了方便计算, 一般选择球心为原点建立球坐标系. 并且其中 \\(G\\) 为球面镜像. 在半空间 \\(z &gt; 0\\) 求解第一边值问题: \\[\\left\\{\\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{z = 0} &amp; = &amp; f(x, y) \\end{matrix}\\right.\\] \\(G = \\frac{1}{4 &pi;} (\\frac{-1}{| \\boldsymbol{r} - \\boldsymbol{r}_0 |} + \\frac{1}{| \\boldsymbol{r} - \\boldsymbol{r}_1 |})\\), 其中 \\(\\boldsymbol{r}_0\\) 和 \\(\\boldsymbol{r}_1\\) 关于 \\(x-y\\) 平面对称. 于是结果同前一问. 含时格林函数, 冲量定理 积分变换 Fourier 积分变换 一些例子 无限长弦自由振动: \\[\\left\\{\\begin{matrix} u_{tt} - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \\varphi(x) &#92;&#92; u_t|_{t=0} &amp; = &amp; &psi;(x) \\end{matrix}\\right.\\] 对 \\(x\\) 进行 Fourier 变换 (\\(&times; e^{-ikx} / 2&pi;\\) 后对 \\(x\\) 进行积分, 用意是去掉 \\(x\\), 使得方程仅包含 \\(t\\) 作为参数): \\[\\left\\{\\begin{matrix} U&#8221; + k^2 a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) &#92;&#92; U&#39;|_{t = 0} &amp; = &amp; &Psi;(k) \\end{matrix}\\right.\\] 于是对于 \\(t\\), 方程的通解为 \\(U(t, k) = A(k) e^{i k a t} + B(k) e^{-i k a t}\\), 然后代入边界条件求解系数, 最后通过 Fourier 逆变换即可得到最终结果. 其中 \\(&Phi;(k)\\) 和 \\(&Psi;(k)\\) 是原本 \\(\\varphi(x)\\) 和 \\(&psi;(x)\\) 的 Fourier 变换结果, 其中 \\(\\mathcal{F} f(x) = \\frac{1}{2 &pi;} &int;_{-&infin;}^{&infin;} f(&xi;) e^{- i k &xi;} {\\mathrm{d} &xi;}\\), 反过来的逆变换 \\(\\mathcal{F}^{-1} F = &int;_{-&infin;}^{&infin;} F e^{i k x} {\\mathrm{d} k}\\). 无限长细杆传热方程 \\[\\left\\{\\begin{matrix} u_t - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \\varphi(x) \\end{matrix}\\right.\\] 变换得到: \\[\\left\\{\\begin{matrix} U&#39; + a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) \\end{matrix}\\right.\\] 于是可以解得 \\(U(t, k) = &Phi;(k) e^{- k^2 a^2 t}\\), 然后做逆变换 \\(u(x, t) = \\mathcal{F}^{-1} U = &int;_{-&infin;}^{+&infin;} &Phi;(k) e^{-k^2 a^2 t} e^{i k x} {\\mathrm{d} k}\\). Laplace 积分变换","headline":"数学物理方程 [期末]","mainEntityOfPage":{"@type":"WebPage","@id":"/notes/equation-of-physics-the-end/"},"url":"/notes/equation-of-physics-the-end/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">数学物理方程 [期末]</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-07-06T00:00:00+00:00" itemprop="datePublished">Jul 6, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<h2>考啥</h2>
+<ul>
+  <li>分离变量
+    <ul>
+      <li>基本思路
+        <p>将待求的函数 \(u\) 根据参数列表 \(t, q_i\)
+          展开成 \(T(t) Q_1(q_1) \cdots Q_n(q_n)\) 然后进行求解.</p>
+      </li>
+      <li>X-Y 和极坐标系</li>
+      <li>球坐标系
+        <ul>
+          <li>Legendre 级数展开
+      <details><summary> 积分小技巧 </summary>
+            <ul>
+              <li>查表法 (神中神)</li>
+              <li>多项式展开 \(&hArr;\) 解线性方程组
+                <p>结论: 对于 \(p(x)\) 为多项式的表达式,
+                  其对应的广义 Fourier 展开阶数不超过多项式的最高阶数 \(\mathrm{deg}(p)\).</p>
+              </li>
+              <li>递推公式</li>
+              <li>暴力积分 (还是多项式, 但是没法数值用线性方程组来解)
+                <p>\[f_l = \frac{2l + 1}{2} &int;_{a}^{b} f(x) \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l {\mathrm{d} x}\]</p>
+              </li>
+            </ul>
+      </details>
+          </li>
+          <li>连带 Legendre 级数展开 (球函数展开)
+      <details><summary> 积分小技巧 </summary>
+            <ul>
+              <li>查表法
+                <p>比如对于 \(p(&theta;) cos m \varphi\) 的表达式, 其中 \(p\) 为关于 \(&theta;\) 的三角函数的简单函数.
+                  那么可以先将 \(p\) 换成关于 \(sin &theta;\) 的多项式函数 \(R(sin &theta;)\), 然后查表套 \(P^m_l\).
+                  (实际上和 Legendre 展开一样.)</p>
+              </li>
+              <li>递推公式</li>
+              <li>暴力积分
+                <p>\[f_l^m = \frac{(l - m)! (2l + 1)}{(l + m)! 2} &int;_a^{b} f(x) \frac{(1 - x^2)^{\frac{m}{2}}}{2^l l!} \frac{\mathrm{d}^{l+m}}{\mathrm{d} x^{l+m}} (x^2 - 1)^l\]</p>
+              </li>
+            </ul>
+      </details>
+          </li>
+          <li>方程求解
+      <details><summary> 求解小技巧 </summary>
+            <p>求解的基本步骤:</p>
+            <ol>
+              <li>列出方程并确定坐标系 (这个时候需要判断是否有轴对称条件)</li>
+              <li>若有轴对称条件, 则选择 Legendre 级数展开,
+                否则选择连带 Legendre 级数展开.
+                <ul>
+                  <li>Legendre 级数展开:
+                    <p>\[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + \frac{B_l}{r^{l+1}}) P_l(cos &theta;)\]</p>
+                    <p>其中对于球内, 仅有 \(A_l\) 项; 球外仅有 \(B_l\) 项.
+                      确定系数 \(A_l\) 和 \(B_l\) 的方法就是对边界条件进行一个级数展开.</p>
+                  </li>
+                  <li>连带 Legendre 级数展开
+                    <p>\[u(r, &theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} (A_l^m cos m \varphi + B_l^m sin m \varphi) (C_l^m r^l + \frac{D_l^m}{r^{l+1}}) P_l^m(cos &theta;)\]</p>
+                    <p>其中对于球内, 没有 \(\frac{1}{r^{l+1}}\) 项; 球外没有 \(r^l\) 项.
+                      可以利用奇偶性来判断 \(cos, sin\). 总而言之还就是那一个难算.</p>
+                  </li>
+                </ul>
+              </li>
+            </ol>
+      </details>
+          </li>
+        </ul>
+      </li>
+      <li>柱坐标系
+        <ul>
+          <li>Bessel 级数展开 (不定积分)
+      <details><summary> 积分的小技巧 </summary>
+            <ul>
+              <li>查表</li>
+              <li>递推公式
+                <ul>
+                  <li>对于 \(I_l = &int; x^n J_l(x) {\mathrm{d} x}\) 类型的积分
+                    <p>核心递推公式: \({\mathrm{d} (x^m J_m)} = x^m J_{m-1}\) 和 \({\mathrm{d} (- x^{-m} J_m)} = x^{-m} J_{m+1}\);
+                      核心的解法是利用分部积分 \(x^{n - l - 1} {\mathrm{d} (x^{l+1} J_{l+1})}\), 然后将 \(x^n\) 消去.</p>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+      </details>
+          </li>
+          <li>柱方程求解
+      <details><summary> 求解过程 </summary>
+            <p>柱方程的通解:</p>
+            <p>\[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\]</p>
+            <ul>
+              <li>对于轴对称情况 (边界条件与 \(\varphi\) 无关), 可以简化为 \[J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\].</li>
+              <li>其中对于 \(&mu; = 0\) 的情况, 特解为 \(A_0 + B_0 z\), 以轴对称情况为例, 通解为:
+                \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{\sqrt{&mu;} z} + B_n e^{- \sqrt{&mu;} z}) J_0(\sqrt{&mu;} &rho;)\).
+                <p>然后代入边界条件来进行系数的求解和展开.</p>
+                <p>其中往往有 \(&part;_{&rho;} u|_{&rho;_0} = 0\) 的边界条件, 对于这种边界条件,
+                  可以得到 \(J_0'(\sqrt{&mu;} &rho;_0) = 0\) 的结果, 于是可以用 \(x_n^{(0)} / &rho;_0\) 表示 \(\sqrt{&mu;_n}\),
+                  其中 \(x_n^{(0)}\) 为 \(J_0'(x)\) 的第 \(n\) 个正根.</p>
+              </li>
+            </ul>
+      </details>
+          </li>
+          <li>球 Bessel 方程</li>
+        </ul>
+      </li>
+      <li>关于级数的吐槽
+    <details><summary> 折叠了 </summary>
+        <p>基本上这些级数的一个思路就是:</p>
+        <ol>
+          <li>找函数性质: (通过母函数等) 找微分形式, 积分形式,
+            然后找递推公式 (以及积分, 微分形式的递推公式).</li>
+          <li>广义 Fourier 展开: 利用正交性和级数的模对函数进行展开.
+            实际上核心应该就是对应函数的一个积分.
+            <p>展开的过程中, 往往需要利用一些结论或者递推公式进行快速展开,
+              不过如果完全没思路, 还可以进行暴力展开 (往往是微分形式的展开和积分).</p>
+          </li>
+          <li>级数展开之后可以用来求解方程</li>
+        </ol>
+    </details>
+      </li>
+    </ul>
+  </li>
+  <li>格林函数
+    <ul>
+      <li>基本思路
+    <details><summary> 计算 \(G\), 然后根据边界条件还原 \(u\) </summary>
+        <p>\(&nabla;^2 u = f(\boldsymbol{r})\) 的边界条件</p>
+        <ul>
+          <li>第一类 \(u|_{&Sigma;} = \varphi(\boldsymbol{r})\)
+            <p>\[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) &part;_n G(\boldsymbol{r}, \boldsymbol{r}_0) {\mathrm{d} S}\]</p>
+          </li>
+          <li>第三类 \((&alpha; &part;_n u + &beta; u)|_{&Sigma;} = \varphi(\boldsymbol{r})\)
+            <p>\[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\]</p>
+          </li>
+        </ul>
+    </details>
+      </li>
+      <li>电像法
+        <ul>
+          <li>平面镜像
+            <p>\[G = \frac{1}{4 &pi;} \left[\left(\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |}\right)_{\mathrm{real}} + \left(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\right)_{\mathrm{image}}\right]\]</p>
+          </li>
+          <li>圆形镜像
+            <p>\[G = \frac{1}{4 &pi;} \left[ \left( \frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} \right)_{\mathrm{real}} + \left( \frac{a}{r_0 | \boldsymbol{r} - \boldsymbol{r}_1 |} \right)_{\mathrm{image}} \right]\]</p>
+      <details><summary> 注 </summary>
+            <p>可以和点电荷的来类比就是了, 如果忘了具体的比的话,
+              可以使用远端和近端势相等来求解:</p>
+            <p>\[\frac{q_1}{r - d_1} + \frac{q_2}{d_2 - r} = \frac{q_1}{r + d_1} + \frac{q_2}{r + d_2} = 0\]</p>
+            <p>得到 \(\frac{q_1}{q_2} = - \frac{r}{d_2}\), \(d_1 d_2 = r^2\)</p>
+      </details>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>积分变换
+    <ul>
+      <li>核心思路
+        <p>使用积分变换来消元.</p>
+    <details><summary> 基本计算过程 </summary>
+        <ol>
+          <li>对方程进行 Fourier 变换:
+            <p>\[\begin{matrix} &part;_t &amp; &rarr; &amp; \frac{\mathrm{d} }{\mathrm{d} t} &#92;&#92; &nabla;^2 &amp; &rarr; &amp; - k^2 &#92;&#92; f(x) &amp; &rarr; &amp; \mathcal{F} f \end{matrix}\]</p>
+          </li>
+          <li>以 \(t\) 为变参求解常微分方程, 解得 \(U=u \overset{\mathcal{F}}{&rarr;} U\).</li>
+          <li>做 Fourier 逆变换还原 \(u = U \overset{\mathcal{F}^{-1}}{&rarr;} u\).</li>
+          <li>Laplace 变换同理</li>
+        </ol>
+    </details>
+      </li>
+      <li>Fourier
+        <ul>
+          <li>Fourier 变换
+            <p>\[\mathcal{F} = \frac{1}{2&pi;} &int;_{-&infin;}^{+ &infin;} {\mathrm{d} x} e^{- i k x} &hArr; \mathcal{F}^{-1} = &int;_{-&infin;}^{+&infin;} {\mathrm{d} k} e^{i k x}\]</p>
+          </li>
+          <li>基本计算过程</li>
+        </ul>
+      </li>
+      <li>Laplace</li>
+    </ul>
+  </li>
+</ul>
+<h2>求解问题</h2>
+<p>基本上用来求解问题的方法就是分离变量. 但是在不同的参考系下,
+  分离变量得到的方程的形式并不一样, 所以需要特殊处理.</p>
+<details><summary> 分离变量的糊弄介绍 </summary>
+<p>比如在 \(u(x, t) = X(x) T(t)\) 这样的分解里面,
+  又比如恰好是 \(u_{tt} - a^2 u_{xx} = 0\) 这个方程.
+  于是分解之后的方程为:</p>
+<p>\[\frac{T&#8221;(t)}{a^2 T(t)} = \frac{X&#8221;(x)}{X(x)} = &lambda;\]</p>
+<p>于是 \(&lambda;\) 作为特征值的分解得到最终的结果.</p>
+<p>如果换成极坐标系的话, 分解变成 \(u = R(&rho;) &Theta;(&theta;)\).</p>
+</details>
+<p>对于常见的坐标系和方程:</p>
+<ul>
+  <li>Laplace 方程 \(&Delta; u = 0\)
+    <ul>
+      <li>球坐标系</li>
+      <li>柱坐标系</li>
+    </ul>
+  </li>
+  <li>波动方程 \(u_{tt} - a^2 &Delta; u = 0\)
+    <p>\(u(\boldsymbol{r}, t) = T(t) v(t)\), 其中 \(T_0(t) = \left\{ \begin{matrix} 1&#92;&#92; t\end{matrix} \right\}\), \(T_k(t) = \left\{ \begin{matrix} cos k a t &#92;&#92; sin k a t \end{matrix} \right\}\).
+      然后 \(v\) 满足 Helmholtz 方程.</p>
+  </li>
+  <li>输运方程 \(u_t - a^2 &Delta; u = 0\)
+    <ul>
+      <li>球坐标系</li>
+      <li>柱坐标系</li>
+    </ul>
+  </li>
+</ul>
+<h1>级数解法</h1>
+<p>对于线性二阶常微分方程, 可以采用级数解法或者是积分变换的方法来求解.</p>
+<h2>领域上的级数解</h2>
+<p>\[w(z) = &sum; a_k (z - z_0)^k\]</p>
+<p>思路就是变成级数和然后通过递推公式和别的什么方式来进行一个求解.</p>
+<p>那么对于奇点邻域, 即类似于 \(w&#8221; + p(z) w' + q(z) w = 0\) 的方程,
+  假如选定的 \(z_0\) 是方程的奇点. 那么可行的方式就是通过加上 \((z - z_0)^{s_1 + k}\) 的项,
+  来使得方程可解.</p>
+<h2>本征值问题</h2>
+<h1>球函数</h1>
+<p>球函数方程:</p>
+<p>\[\frac{1}{sin &theta;} \frac{&part;}{&part; &theta;}(sin &theta; \frac{&part; Y}{&part; &theta;}) + \frac{1}{sin^2 &theta;} \frac{&part;^2 Y}{&part; \varphi^2} + l(l + 1) Y = 0\]</p>
+<h2>轴对称球函数</h2>
+<p>Legendre 方程:</p>
+<p>\[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + l(l + 1) &Theta; = 0\]</p>
+<p>其解可以用 Legendre 多项式来进行表示.</p>
+<details><summary>Legendre 多项式的性质</summary>
+<ul>
+  <li>微分表示
+    <p>\[P_l(x) = \frac{1}{2^l l!} \frac{\mathrm{d}^l }{\mathrm{d}x^l} (x^2 - 1)^l\]</p>
+  </li>
+  <li>积分表示
+    <p>\[P_l(x) = \frac{1}{2 &pi; i} \frac{1}{2^l} \oint_C \frac{(z^2 - 1)^l}{(z - x)^{l+1}} \mathrm{d}z\]</p>
+  </li>
+  <li>正交性质
+    <p>\[&int;_{-1}^{+1} P_k(x) P_l(x) \mathrm{d}x = N_k^2 &delta;_{kl} = \frac{2}{2l + 1}\]</p>
+  </li>
+  <li>母函数</li>
+  <li>递推公式
+    <p>\[\begin{matrix} (2k + 1) P_k(x) = P_{k+1}'(x) - P_{k-1}'(x)&#92;&#92; P_{k+1}'(x) = (k + 1)P_k(x) + x P_k'(x) &#92;&#92; k P_k(x) = x P_k'(x) - P_{k-1}'(x) &#92;&#92; (x^2 - 1) P_k'(x) = k x P_k(x) - k P_{k-1}(x) \end{matrix}\]</p>
+  </li>
+  <li>第二类 Legendre 函数 \(Q(x)\)</li>
+</ul>
+</details>
+<p>以及 <span style="text-decoration:underline;">广义傅里叶级数展开</span></p>
+<details><summary> 如何进行广义傅里叶级数展开 </summary>
+<p>目标: 假如需要展开 \(f(x)\)</p>
+<ul>
+  <li>判断是否是多项式函数 \(f(x) &isin; \mathbb{C}[x]\)
+    若是, 则直接去求解线性方程组:
+    <p>\[&sum;_l^n A_l P_l(x) = f(x) = &sum;_0^n a_i x^i\]</p>
+  </li>
+  <li>如果不是, 那么就需要考虑进行一个积分的操作:
+    <p>\[A_l = \frac{2l + 1}{2} &int;_a^{b} f(x) P_l(x) {\mathrm{d} x}\]</p>
+  <details><summary> 证明 </summary>
+    <p>\[f(x) = &sum;_l A_l P_l(x) &rArr; &int; f(x) P_l(x) = &sum; &int; A_m P_m(x) P_l(x)\]</p>
+    <p>利用 \(&int; P_m P_l = \frac{2}{2l + 1} &delta;_{ml}\), 即 Legendre 级数的模, 即可得到 \(A_m\) 的值.</p>
+  </details>
+  <details><summary> 积分的技巧 </summary>
+    <ul>
+      <li>对于函数的奇偶性, 若函数</li>
+      <li>利用递推公式</li>
+      <li>一些例子
+        <ul>
+          <li>\(f(x) = x^4 + 2x^3\)
+            <p>\(f(x) = &sum;_0^4 A_l P_l(x) &rArr; A_l\)</p>
+<div class="highlight"><pre><span></span><span class="n">Solve</span><span class="p">[</span>
+<span class="w">  </span><span class="n">CoefficientList</span><span class="p">[</span>
+<span class="w">    </span><span class="n">Sum</span><span class="p">[</span><span class="n">Indexed</span><span class="p">[</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">LegendreP</span><span class="p">[</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}],</span><span class="w"> </span><span class="n">x</span><span class="p">]</span>
+<span class="w">  </span><span class="o">==</span><span class="w"> </span><span class="n">CoefficientList</span><span class="p">[</span><span class="n">x</span><span class="o">^</span><span class="mi">4</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">x</span><span class="o">^</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">],</span>
+<span class="w">  </span><span class="n">Table</span><span class="p">[</span><span class="n">Indexed</span><span class="p">[</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="p">{</span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">}]]</span>
+</pre></div>
+          </li>
+          <li>\(f(x) = \left\{\begin{matrix}  x^2 &amp; (0 \leq x \leq 1) &#92;&#92; 0 &amp; (-1 \leq x \leq 0) \end{matrix}\right.\)
+            <p>不能直接用结论, 因为不是多项式, 所以需要手动积分.
+              操作就是 \(f(x) = &int;_0^1 x^2 \frac{1}{2^l l!} \frac{\mathrm{d}^l}{\mathrm{d}x^l} (x^2 - 1)^l\). 将微分部分用分布积分给提出去,
+              同时考虑边界为零和能否积分 (\(l\) 的大小), 然后慢慢积分&#8230;</p>
+          </li>
+          <li>\(&int;_{-1}^1 x P_k(x) P_l(x) \mathrm{d}x\)
+            <p>利用的是递推公式 \(x P_k(x) = \frac{1}{2k + 1} ((k+1)P_{k+1}(x) + k P_{k-1}(x))\),
+              然后利用正交性来进行积分.</p>
+          </li>
+          <li>\((2l + 1) &int;_0^1 x P_l(x) \mathrm{d}x\)
+            <p>利用的是递推公式 \(x P_k(x) = \frac{1}{2 k + 1} ((k + 1) P_{k+1}(x) + k P_{k-1}(x))\),
+              然后利用 \(P_l(1) = 1, P_l(-1) = (-1)^l\) 化简式子. 最终得到:
+              \(I_l = \frac{l+1}{2l+3}(P_l(0) - P_{l+2}(0)) + \frac{l}{2l - 1}(P_{l-2}(0) - P_l(0))\).</p>
+          </li>
+          <li>\(\frac{2l + 1}{2} &int;_{-1}^1 x^n P_l(x) \mathrm{d}x = \left\{\begin{matrix} 0 &amp; n &lt; l &and; n - l &equiv; \mathrm{odd} &#92;&#92; \frac{(2l + 1) n!}{(n - l)!! (n + l + 1)!!} \end{matrix}\right.\)
+            <p>利用微分形式 \(\frac{1}{2^l l!} &int;_{-1}^1 x^n \frac{\mathrm{d}^l}{\mathrm{d} x^l} (x^2 - 1)^l\), 于是可以积分&#8230;</p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+  </li>
+</ul>
+</details>
+<p>最后通过这个方法来求解方程 (仅限轴对称情况) 的通解:</p>
+<p>\[u(r, &theta;) = &sum;_{l=0}^{&infin;} (A_l r^l + B_l \frac{1}{r^{l+1}})P_l(cos &theta;)\]</p>
+<details><summary> 习题和说明 </summary>
+<ul>
+  <li>emmm, 电动力学里面用的比较多, 应该忘不了, 所以就不想啥记忆方法了.
+    <p>基本上的解法就是代入边界条件然后对边界条件进行展开计算系数.
+      并且可以利用自然边界条件, 比如球内的仅有 \(A_l\), 球外的仅有 \(B_l\) 项.</p>
+  </li>
+  <li>静电场中的介质球
+    <p>电动力学常客了. 边界条件为 \(\varphi_{\mathrm{in}}(R_0) = \varphi_{\mathrm{out}}(R_0), &epsilon;_{\mathrm{in}} &part;_n \varphi_{\mathrm{in}} = &epsilon;_{\mathrm{rout}} &part;_n \varphi_{\mathrm{out}}\),
+      然后去求解即可, 同时需要考虑一个电场 \(\varphi_E = E r cos &theta;\) 的原始场.</p>
+  </li>
+  <li>两个半球壳
+    <p>和前者的不同的是, 边界条件为 \(\varphi_{\mathrm{in}}(&theta;) = v_1, (-&pi;/2 &lt; &theta; &lt; &pi;/2); v_2, \mathrm{else}\).
+      于是需要用 \(&int;_0^1 c P_l(x) {\mathrm{d} x}\) 这样的积分展开.</p>
+  </li>
+  <li>细导线首尾相接而构成圆环, 环的半径为 \(r_0\), 环上带电 \(4 &pi; &epsilon;_0 q\) 单位.
+    求圆环周围电场中的静电势.
+    <p>在球坐标系下, 以圆环直径为 \(z\) 轴 (轴对称) 求解. 将问题分为球内 \(r&lt; r_0\),
+      以及球外 \(r &gt; r_0\). 然后代入边界条件来计算.</p>
+    <p>唯一需要注意的是, 这个边界条件比较神奇, 需要通过 \(&theta; = 0, &pi;\) 来进行计算.</p>
+  </li>
+</ul>
+</details>
+<h2>一般球函数</h2>
+<p>连带 Legendre 方程:</p>
+<p>\[(1 - x^2) \frac{\mathrm{d}^2 &Theta;}{\mathrm{d} x^2} - 2 x \frac{\mathrm{d} &Theta;}{\mathrm{d} x} + [l(l + 1) - \frac{m^2}{1 - x^2}] &Theta; = 0, (x = cos &theta;)\]</p>
+<p>连带 Legendre 多项式 \(P_l^m(x)\).</p>
+<details><summary> 连带 Legendre 函数性质 </summary>
+<ul>
+  <li>\(P_l^m(x) = (1 - x^2)^{\frac{m}{2}} \frac{\mathrm{d}^m}{\mathrm{d} x^{m}} P_l(x)\)
+    <p>于是有结论 \(l &lt; m &rArr; P_l^m = 0\)</p>
+  </li>
+  <li>正交性 \(&int;_{-1}^{+1} P_k^m(x) P_l^m(x) \mathrm{d}x = (N_l^m)^2 &delta;_{kl} = \frac{(l+m)! 2}{(l - m)! (2l + 1)} &delta;_{kl}\)</li>
+  <li>递推公式
+    \[\begin{matrix} (2k + 1) x P_k^m(x) = (k + m)P_{k-1}^m(x) + (k - m + 1)P_{k+1}^m(x) &#92;&#92; (2k + 1)(1 - x^2)^{1/2} P_k^m(x) = P_{k+1}^{m+1}(x) - P_{k-1}^{m+1}(x) \end{matrix}\]</li>
+</ul>
+</details>
+<details><summary> 连带 Legendre 级数展开 </summary>
+<p>\[f_l = \frac{2l + 1}{2} \frac{(l - m)!}{(l + m)!} &int;_{-1}^{+1} f(x) P_l^m(x) \mathrm{d}x\]</p>
+<ul>
+  <li>虽然但是, 如果可以通过查表法来计算的话, 还是查表比较靠谱.</li>
+  <li>最一般的方法就是硬积分: \(P_l^m(x) = \frac{(1 - x^2)^{m/2})}{2^l l!} \frac{\mathrm{d}^{l+m} (x^2 - 1)^l}{\mathrm{d} x^{l + m}}\)</li>
+</ul>
+</details>
+<p>然后是用这个来解方程:</p>
+<p>\[f(&theta;, \varphi) = &sum;_{m=0}^{&infin;} &sum;_{l=m}^{&infin;} [A_l^m cos m \varphi + B_l^m sin m \varphi] P_l^m(cos &theta;)\]</p>
+<details><summary> 一些例子 </summary>
+<ul>
+  <li>用球函数展开函数
+    <p>对于能够查表展开的 (比如只含有 \(sin &theta;, cos &theta;\) 组成的多项式函数),
+      一个想法就是将其变换成全是 \(sin &theta;\) 的多项式, 然后去查表.</p>
+    <ul>
+      <li>\((1 + 3 cos &theta;) sin &theta; cos \varphi\)
+        <p>变换为 \((sin &theta; + \frac{3}{2} sin 2 &theta;) cos \varphi\), 然后查表得到 \(P_1^1(sin &theta;) + P_2^1(sin &theta;)\)</p>
+      </li>
+    </ul>
+    <p>对于不能查表的, 就只能暴力积分了 \(P_l^m(x) = (1 - x^2)^{m/2} \frac{\mathrm{d}^m}{\mathrm{d} x^m} P_l(x)\).</p>
+  </li>
+  <li>求解定解问题
+    +</li>
+</ul>
+</details>
+<h1>柱函数</h1>
+<p>Bessel 方程:</p>
+<p>\[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} + (x^2 - m^2) R = 0, (x = \sqrt{&mu;} &rho;)\]</p>
+<p>虚宗量 Bessel 方程:</p>
+<p>\[x^2 \frac{\mathrm{d}^2 R}{\mathrm{d}x} + x \frac{\mathrm{d} R}{\mathrm{d}x} - (x^2 + m^2) R = 0, (x = &nu; &rho;)\]</p>
+<h2>三类柱函数</h2>
+<ul>
+  <li>Bessel 函数 (第一类) \(J_{&nu;}(x)\)
+  <details><summary> Bessel 函数的性质和不定积分 </summary>
+    <ul>
+      <li>正交性: \(&int;_0^{&rho;_0} J_m(\sqrt{&mu;_n} &rho;) J_m(\sqrt{&mu;_l} &rho;) &rho; {\mathrm{d} &rho;} = (N_n^{(m)})^2 &delta;_{nl}\)</li>
+      <li>Fourier-Bessel 积分
+        <p>\[F(&rho;) = &sum; f_n J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rArr; F_n = \frac{1}{[N_n^{(m)}]^2} &int;_0^{&rho;_0} f(&rho;) J_m(\sqrt{&mu;_n^{(m)}} &rho;) &rho; {\mathrm{d} &rho;}\]</p>
+        <p>一些辅助的不定积分:</p>
+        <p>\[\begin{matrix} &int; x^{-m} J_{m+1}(x) {\mathrm{d} x} &amp; = &amp; - x^{-m} J_m(x) + C &#92;&#92; &int; J_1(x) {\mathrm{d} x} &amp; = &amp; - J_0(x) + C &#92;&#92; &int; x^m J_{m-1}(x) {\mathrm{d} x} &amp; = &amp; x^m J_m(x) + C \end{matrix}\]</p>
+        <p>于是可以通过上面的公式得到推理的结论:</p>
+        <p>\[\begin{matrix} \frac{\mathrm{d} }{\mathrm{d} x}[x^n J_n(x)] &amp; = &amp; x^n J_{n-1}(x) \end{matrix}\]</p>
+        <ul>
+          <li>\(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x}\)
+            <p>这个可以利用 \(&int; x J_0(x) = x J_1(x) + C, (m = -1)\).
+              然后可以得到 \(&int;_0^{x_0} x^3 J_0(x) {\mathrm{d} x} = &int;_0^{x_0} x^2 {\mathrm{d} [x J_1(x)]}\).</p>
+          </li>
+          <li>和上面的式子类似的, 对于 \(&int; p(x) J_l(x)\), 其中 \(p(x)\) 为多项式的不定积分,
+            可以将 \(p(x) = &sum;_k a_k x^k\), 对 \(&int; x^k J_l(x)\) 进行分别积分.
+            利用的变换公式为 \(\frac{\mathrm{d} }{\mathrm{d} x}(x^n J_n) = x^n J_{n-1}\).
+            <p>然后积分的时候, 利用分布积分:
+              \(&int; x^{k-l} [x^l J_l(x) {\mathrm{d} x}]\)
+              \(= &int; x^{k-l} {\mathrm{d} [x^l J_{l-1}(x)]}\)
+              \(= x^k J_{l-1}(x) - (k-l) &int; x^{k-1} J_{l-1}(x) {\mathrm{d} x}\)</p>
+            <p>这个时候有几种可能性:</p>
+            <ol>
+              <li>\(x^{k-1} J_{l-1}(x)\) 形成了 \(x^n J_n\) 或者 \(x^n J_{n-1}(x)\) 的形式.
+                那么就可以用辅助的不定积分去积它.</li>
+              <li>如果不是的话, 继续用这个方法去削它. 直到把 \(x^k\) 消没.</li>
+              <li>如果 \(J_l\) 消没了的话, 使用 \(x^k J_0(x)\) 的积分进行变化.</li>
+            </ol>
+          </li>
+          <li>类似的还有 \(\frac{\mathrm{d} }{\mathrm{d} x}(\frac{J_m}{x^m}) = - \frac{J_{m+1}}{x^m}\)</li>
+        </ul>
+      </li>
+    </ul>
+  </details>
+  </li>
+  <li>Neumann 函数 (第二类) \(N_{&nu;}(x)\)</li>
+  <li>Hanker 函数 (第三类) \(H_{&nu;}\)</li>
+</ul>
+<h2>解方程</h2>
+<h3>径向或者 \(z\) 方向构成边界条件柱函数</h3>
+<details><summary> 一些例子 </summary>
+<ul>
+  <li>拉普拉斯方程 \(&nabla;^2 u = 0\), 通解为:
+    <p>\[J_m(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;}z} &#92;&#92; e^{-\sqrt{&mu;}z} \end{matrix}\right\} \left\{\begin{matrix} cos m \varphi &#92;&#92; sin m \varphi \end{matrix}\right\}\]</p>
+    <ul>
+      <li>\(\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; &part;_{&rho;} u|_{&rho;=&rho;_0} &amp; = &amp; 0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; f_1(&rho;) &#92;&#92; u|_{z = l} &amp; = &amp; f_2(&rho;) \end{matrix}\right.\)
+        <p>对于轴对称的问题, 可以将 \(m = 0\), 于是问题解为 \(J_0(\sqrt{&mu;} &rho;) \left\{\begin{matrix} e^{\sqrt{&mu;} z} &#92;&#92; e^{- \sqrt{&mu;} z} \end{matrix}\right\}\).
+          即求解 \(u(&rho;, z) = A_0 + B_0 z + &sum;_{n=1}^{&infin;} (A_n e^{x_n^{(0)} z / &rho;_0} + B_n e^{- x_n^{(0)} z / &rho;_0}) J_0(\frac{x_n^{(0)}}{&rho;_0} &rho;)\).
+          于是问题变成了代入边界条件然后展开 Fourier-Bessel 级数的过程.</p>
+      </li>
+    </ul>
+  </li>
+  <li>传热方程 \(u_t - a^2 &nabla;^2 u = 0\)
+    <ul>
+      <li>\(\left\{\begin{matrix} u_t - a^2 &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{&rho; = &rho;_0} &amp; = &amp; u_0 &#92;&#92; u|_{&rho; = 0} &amp; \leq &amp; M &#92;&#92; u|_{z=0} &amp; = &amp; u_0 &#92;&#92; u_z|_{z=L} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; u_0 + f_1(&rho;) f_2(z) \end{matrix}\right.\)
+        <p>遇到这种有有一个小小偏移量的, 可以先做一个 \(u = v + u_0\),
+          然后解 \(v\) 的解 (齐次化).</p>
+      </li>
+    </ul>
+  </li>
+  <li>波动方程</li>
+</ul>
+</details>
+<h2>球贝赛尔函数</h2>
+<h1>格林函数</h1>
+<h2>格林公式</h2>
+<p>格林公式:</p>
+<ul>
+  <li>第一格林公式
+    <p>\[\iint_{&Sigma;} u &nabla; v &sdot; {\mathrm{d} \boldsymbol{S}} = \iiint_T u &nabla;^2 v {\mathrm{d} V} + \iiint_T &nabla; u &sdot; &nabla; v {\mathrm{d} V}\]</p>
+  </li>
+  <li>第二格林公式
+    <p>\[\iint_{&Sigma;} (u &nabla; v - v &nabla; u) &sdot; {\mathrm{d} \boldsymbol{S}} = \iint_{&Sigma;} (u \frac{&part; v}{&part; n} - v \frac{&part; u}{&part; n}) {\mathrm{d} S} = \iiint_T (u &nabla;^2 v - v &nabla;^2 u) {\mathrm{d} V}\]</p>
+  </li>
+</ul>
+<p>泊松方程 \(&Delta; u = f(\boldsymbol{r})\) 的基本积分形式:</p>
+<p>三类边界条件 \([&alpha; \frac{&part; u}{&part; n} + &beta; u]_{&Sigma;} = \varphi(M)\):</p>
+<ul>
+  <li>第一边界条件 \(&alpha; = 0, &beta; &ne; 0\)
+    <p>\[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} + \iint_{&Sigma;} \varphi(\boldsymbol{r}) \frac{&part; G(\boldsymbol{r}, \boldsymbol{r}_0)}{&part; n} {\mathrm{d} S}\]</p>
+  </li>
+  <li>第二边界条件 \(&alpha; &ne; 0, &beta; = 0\)</li>
+  <li>第三边界条件 \(&alpha;, &beta; &ne; 0\)
+    <p>\[u(\boldsymbol{r}_0) = \iiint_T G(\boldsymbol{r}, \boldsymbol{r}_0) f(\boldsymbol{r}) {\mathrm{d} V} - \frac{1}{&alpha;} \iint_{&Sigma;} G(\boldsymbol{r}, \boldsymbol{r}_0) \varphi(\boldsymbol{r}) {\mathrm{d} S}\]</p>
+  </li>
+</ul>
+<h2>电像法求解格林函数</h2>
+<ul>
+  <li>一般边值问题的格林函数
+    <p>\[G = G_0 + G_1\]</p>
+    <p>其中 \(G_0\) 为基本解, 满足 \(&nabla;^2 G_0 = &delta;(\boldsymbol{r} - \boldsymbol{r}_0)\).</p>
+  <details><summary> 一些补充说明 </summary>
+    <ul>
+      <li>对于 \(\boldsymbol{r}_0\) 处的电量 \(- &epsilon;_0\) 在无界空间产生静电场的电势的 \(G_0 = - \frac{1}{4 &pi; | \boldsymbol{r} - \boldsymbol{r}_0 |}\).</li>
+    </ul>
+  </details>
+    <p>\(G_1\) 满足齐次方程 \(&nabla;^2 G_1 = 0\), 对应的边界条件 \(G_1|_{&Sigma;} = (G - G_0)|_{&Sigma;}\).</p>
+  </li>
+  <li>电像法求格林函数
+    <ul>
+      <li>平面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0' |}\)</li>
+      <li>球面镜像 \(G_0 = - \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{a}{r_0} \frac{1}{4 &pi;} \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |}\),
+        其中在球面上 \(\frac{1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} : \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |} = \frac{1}{r_0} : \frac{1}{a}\), \(a\) 为电荷距离球心距离.</li>
+    </ul>
+  <details><summary> 例题 </summary>
+    <ul>
+      <li>在球 \(r = a\) 内求解拉普拉斯方程第一边值问题
+        <p>\[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{r=a} &amp; = &amp; f(&theta;, \varphi) \end{matrix}\right.\]</p>
+        <p>这个是一个第一类边界条件的问题, 所以最终的结果为:</p>
+        <p>\[u(\boldsymbol{r}_0) = \iiint_T 0 &times; G {\mathrm{d} V} + \iint_{&Sigma;} f(&theta;, \varphi) \frac{&part;}{&part; n} G {\mathrm{d} S}\]</p>
+        <p>为了方便计算, 一般选择球心为原点建立球坐标系.
+          并且其中 \(G\) 为球面镜像.</p>
+      </li>
+      <li>在半空间 \(z &gt; 0\) 求解第一边值问题:
+        <p>\[\left\{\begin{matrix} &nabla;^2 u &amp; = &amp; 0 &#92;&#92; u|_{z = 0} &amp; = &amp; f(x, y) \end{matrix}\right.\]</p>
+        <p>\(G = \frac{1}{4 &pi;} (\frac{-1}{| \boldsymbol{r} - \boldsymbol{r}_0 |} + \frac{1}{| \boldsymbol{r} - \boldsymbol{r}_1 |})\), 其中 \(\boldsymbol{r}_0\) 和 \(\boldsymbol{r}_1\) 关于 \(x-y\) 平面对称.
+          于是结果同前一问.</p>
+      </li>
+    </ul>
+  </details>
+  </li>
+</ul>
+<h2>含时格林函数, 冲量定理</h2>
+<h1>积分变换</h1>
+<h2>Fourier 积分变换</h2>
+<h3>一些例子</h3>
+<ul>
+  <li>无限长弦自由振动:
+    <p>\[\left\{\begin{matrix} u_{tt} - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) &#92;&#92; u_t|_{t=0} &amp; = &amp; &psi;(x) \end{matrix}\right.\]</p>
+    <p>对 \(x\) 进行 Fourier 变换 (\(&times; e^{-ikx} / 2&pi;\) 后对 \(x\) 进行积分,
+      用意是去掉 \(x\), 使得方程仅包含 \(t\) 作为参数):</p>
+    <p>\[\left\{\begin{matrix} U&#8221; + k^2 a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) &#92;&#92; U'|_{t = 0} &amp; = &amp; &Psi;(k) \end{matrix}\right.\]</p>
+    <p>于是对于 \(t\), 方程的通解为 \(U(t, k) = A(k) e^{i k a t} + B(k) e^{-i k a t}\),
+      然后代入边界条件求解系数, 最后通过 Fourier 逆变换即可得到最终结果.</p>
+    <p>其中 \(&Phi;(k)\) 和 \(&Psi;(k)\) 是原本 \(\varphi(x)\) 和 \(&psi;(x)\) 的 Fourier 变换结果,
+      其中 \(\mathcal{F} f(x) = \frac{1}{2 &pi;} &int;_{-&infin;}^{<del>&infin;} f(&xi;) e^{- i k &xi;} {\mathrm{d} &xi;}\),
+      反过来的逆变换 \(\mathcal{F}^{-1} F = &int;_{-&infin;}^{</del>&infin;} F e^{i k x} {\mathrm{d} k}\).</p>
+  </li>
+  <li>无限长细杆传热方程
+    <p>\[\left\{\begin{matrix} u_t - a^2 u_{xx} &amp; = &amp; 0 &#92;&#92; u|_{t=0} &amp; = &amp; \varphi(x) \end{matrix}\right.\]</p>
+    <p>变换得到:</p>
+    <p>\[\left\{\begin{matrix} U' + a^2 U &amp; = &amp; 0 &#92;&#92; U|_{t=0} &amp; = &amp; &Phi;(k) \end{matrix}\right.\]</p>
+    <p>于是可以解得 \(U(t, k) = &Phi;(k) e^{- k^2 a^2 t}\),
+      然后做逆变换 \(u(x, t) = \mathcal{F}^{-1} U = &int;_{-&infin;}^{+&infin;} &Phi;(k) e^{-k^2 a^2 t} e^{i k x} {\mathrm{d} k}\).</p>
+  </li>
+</ul>
+<h2>Laplace 积分变换</h2>
+
+  </div><a class="u-url" href="/notes/equation-of-physics-the-end/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

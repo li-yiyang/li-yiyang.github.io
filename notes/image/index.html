@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Image Processing | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Image Processing" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 这是数字图像处理的笔记. 和作业一样, 这里采用 mlx-cl 来实现一些简单的算法和说明. 简单的准备工作 (defpackage #:blog.notes.image (:use :mlx-cl) (:local-nicknames (:fft :mlx-cl.fft) (:la :mlx-cl.linalg)))" />
+<meta property="og:description" content="About 这是数字图像处理的笔记. 和作业一样, 这里采用 mlx-cl 来实现一些简单的算法和说明. 简单的准备工作 (defpackage #:blog.notes.image (:use :mlx-cl) (:local-nicknames (:fft :mlx-cl.fft) (:la :mlx-cl.linalg)))" />
+<link rel="canonical" href="/notes/image/" />
+<meta property="og:url" content="/notes/image/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2026-01-03T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Image Processing" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2026-01-03T00:00:00+00:00","datePublished":"2026-01-03T00:00:00+00:00","description":"About 这是数字图像处理的笔记. 和作业一样, 这里采用 mlx-cl 来实现一些简单的算法和说明. 简单的准备工作 (defpackage #:blog.notes.image (:use :mlx-cl) (:local-nicknames (:fft :mlx-cl.fft) (:la :mlx-cl.linalg)))","headline":"Image Processing","mainEntityOfPage":{"@type":"WebPage","@id":"/notes/image/"},"url":"/notes/image/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Image Processing</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2026-01-03T00:00:00+00:00" itemprop="datePublished">Jan 3, 2026
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>这是数字图像处理的笔记.</p>
+<p>和作业一样, 这里采用 <a href="https://github.com/li-yiyang/mlx-cl">mlx-cl</a> 来实现一些简单的算法和说明.</p>
+<details><summary>简单的准备工作</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="kd">#:blog</span><span class="o">.</span><span class="nv">notes</span><span class="o">.</span><span class="nv">image</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:mlx-cl</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:local-nicknames</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:fft</span><span class="w"> </span><span class="nv">:mlx-cl</span><span class="o">.</span><span class="nv">fft</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:la</span><span class="w">  </span><span class="nv">:mlx-cl</span><span class="o">.</span><span class="nv">linalg</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:blog</span><span class="o">.</span><span class="nv">notes</span><span class="o">.</span><span class="nv">image</span><span class="p">)</span>
+</pre></div>
+</details>
+<h1>图像的基础</h1>
+<h2>图像格式示例</h2>
+<ul>
+  <li>PBM/PGM/PPM
+    <ul>
+      <li>mlx-cl/io/ppm</li>
+    </ul>
+  </li>
+  <li>TIFF (<a href="https://li-yiyang.github.io/mlx-cl/io/tiff/">mlx-cl/io/tiff</a>)
+    <p>实际上作业里面大部分用的是这种格式, 虽然并不知道为啥&#8230;</p>
+  </li>
+  <li>JPEG (<a href="https://li-yiyang.github.io/mlx-cl/io/jpeg/">mlx-cl/io/jpeg</a>)</li>
+  <li>PNG (<a href="https://li-yiyang.github.io/mlx-cl/io/png/">mlx-cl/io/png</a>)</li>
+</ul>
+<details><summary>一些不算遗憾的遗憾</summary>
+<p>本来为了性能, 应该让针对 MLX 专门编写一些优化后的文件读取函数,
+  但是因为没有很多的时间, 所以现在的做法是用已有的库把数据读到 Lisp 中,
+  再读到 MLX 中, 有两道转换的过程, 存在一些性能的损失.</p>
+</details>
+<p>下文中的处理, 都是基于如下的假设:
+  图像是形如 <code>(H W C)</code> 的张量 (宽 <code>W</code>, 高 <code>H</code>, 有 <code>C</code> 个色彩通道).</p>
+<p>分辨率:</p>
+<ul>
+  <li>空间分辨率: <code>H</code>, <code>W</code></li>
+  <li>灰度分辨率: <code>dtype</code></li>
+</ul>
+<h3>奇异值分解</h3>
+<ul>
+  <li>特征值分解 \(A = P D P^{-1}\)</li>
+  <li>奇异值分解 \(A = U &Sigma; V^{\mathrm{T}}\)</li>
+</ul>
+<h2>图像色彩空间</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">as-colorspace</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">convert</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">convert</span><span class="w"> </span><span class="p">(</span><span class="nf">channels-list</span><span class="w"> </span><span class="nv">image</span><span class="p">)))</span>
+</pre></div>
+<details><summary>一些函数的实现</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">channels</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">len</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">channels-list</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">split</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="p">(</span><span class="nf">channels</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span><span class="w"> </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">-1</span><span class="p">))</span>
+</pre></div>
+</details>
+<ul>
+  <li>RGB</li>
+  <li>CMYK</li>
+  <li>HSV</li>
+</ul>
+<h2>图像噪声模型</h2>
+<ul>
+  <li>加性噪声</li>
+  <li>乘性噪声</li>
+  <li>高斯噪声</li>
+  <li>椒盐噪声</li>
+  <li>泊松噪声</li>
+</ul>
+<h1>图像变换与滤波</h1>
+<h2>傅里叶变换</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">dft2d</span><span class="w"> </span><span class="p">(</span><span class="nf">img</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;2D FFT transform on IMG.</span>
+<span class="s">Return a FFT grayscale spectrum image.</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ IMG is a grayscale image</span>
+
+<span class="s">Algorithm:</span>
+<span class="s">1. row 1-D FFT</span>
+<span class="s">2. col 1-D FFT</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="nv">img</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">fft:1dfft</span><span class="w"> </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w">                 </span><span class="c1">; Row: axis=1</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">fft:1dfft</span><span class="w"> </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">0</span><span class="p">)))</span><span class="w">               </span><span class="c1">; Col: axis=0</span>
+</pre></div>
+<p>没什么, 大家都爱 FFT. 相当于是提供了另一种视角: 空间域不好做就从频域去做.</p>
+<p>频率域滤波:</p>
+<ul>
+  <li>给定图像 \(f(x, y)\) 计算 2D-DFT \(F(u, v)\)</li>
+  <li>在频率域构建滤波器 \(H(u, v) &rArr; G(u, v) = H(u, v) F(u, v)\)</li>
+  <li>通过逆变换得到 \(g(x, y)\)</li>
+</ul>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">image-freq-filter</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nb">filter</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="p">(</span><span class="nf">dft2d</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">gen-filter</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="nb">filter</span><span class="p">))</span>
+<span class="w">    </span><span class="nv">dft2d</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">image</span><span class="p">))))</span>
+</pre></div>
+<details><summary>一些辅助函数</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">uniformed-coord</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">cornerp</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">cornerp</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">w</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">h</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">rest</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">rest</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">h/2</span><span class="w">  </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">w/2</span><span class="w">  </span><span class="p">(</span><span class="nb">floor</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">xR</span><span class="w">   </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="nv">w/2</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">xL</span><span class="w">   </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="nv">w/2</span><span class="p">)))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">yB</span><span class="w">   </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="nv">h/2</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">yT</span><span class="w">   </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="mf">1.0</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="nv">h/2</span><span class="p">))))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">tl</span><span class="w"> </span><span class="nv">tr</span><span class="w"> </span><span class="nv">bl</span><span class="w"> </span><span class="nv">br</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="nv">tl</span><span class="w"> </span><span class="nv">tr</span><span class="w"> </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="nv">bl</span><span class="w"> </span><span class="nv">br</span><span class="w"> </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">1</span><span class="p">)))</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="nv">xL</span><span class="w"> </span><span class="nv">yT</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="nv">xR</span><span class="w"> </span><span class="nv">yT</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="nv">xL</span><span class="w"> </span><span class="nv">yB</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="nv">xR</span><span class="w"> </span><span class="nv">yB</span><span class="p">))))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gen-filter</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">filter-function</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="nv">filter-function</span><span class="w"> </span><span class="p">(</span><span class="nf">uniformed-coord</span><span class="w"> </span><span class="nv">image</span><span class="p">)))</span>
+</pre></div>
+</details>
+<p>不过如果用另外一种视角来看:</p>
+<p>用图像的正交空间, 即将图片看作是在正交基上的分解, 在傅里叶变换的时候,
+  相当于是分解到三角函数基, 同时也可以换成别的基.</p>
+<ul>
+  <li>Walsh-Hadamard 变换</li>
+  <li>Slant 斜变换</li>
+  <li>Haar 变换</li>
+</ul>
+<h2>卷积</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">2d-conv</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">weight</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">padding</span><span class="w"> </span><span class="nv">:zero</span><span class="p">)</span>
+<span class="w">                </span><span class="nv">&amp;aux</span><span class="w"> </span><span class="p">(</span><span class="nf">mode</span><span class="w"> </span><span class="p">(</span><span class="nf">ecase</span><span class="w"> </span><span class="nv">padding</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">:zero</span><span class="w">      </span><span class="nv">:const</span><span class="p">)</span>
+<span class="w">                             </span><span class="p">(</span><span class="nf">:replicate</span><span class="w"> </span><span class="nv">:edge</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;Conv kernel W on IMAGE.</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ IMAGE: input `image&#39;</span>
+<span class="s">+ W: rectangle conv kernel</span>
+<span class="s">+ PADDING: padding mode:</span>
+<span class="s">  + `:zero&#39;: fill padding with zeros</span>
+<span class="s">  + `:replicate&#39;: copy edge pixels</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">h</span><span class="w"> </span><span class="nv">w</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">weight</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">img</span><span class="w"> </span><span class="p">(</span><span class="nf">pad</span><span class="w"> </span><span class="nv">image</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:floor</span><span class="w"> </span><span class="nv">h</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">cl:floor</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="mi">2</span><span class="p">))</span>
+<span class="w">                    </span><span class="c1">;; :fill 0</span>
+<span class="w">                    </span><span class="nv">:mode</span><span class="w"> </span><span class="nv">mode</span><span class="p">)))</span>
+<span class="w">      </span><span class="c1">;; mlx:2dconv need input (N H W C) array input</span>
+<span class="w">      </span><span class="c1">;; and weight as (C_out KH KW C_in)</span>
+<span class="w">      </span><span class="c1">;; output is (C_out H W C), squeeze the first axis</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="p">(</span><span class="nf">2dconv</span><span class="w"> </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="p">(</span><span class="nf">expand-dims</span><span class="w"> </span><span class="nv">img</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w">      </span><span class="nv">:float32</span><span class="p">)</span><span class="w"> </span><span class="c1">; N = 1</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="p">(</span><span class="nf">expand-dims</span><span class="w"> </span><span class="nv">weight</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="nv">:float32</span><span class="p">)</span><span class="w"> </span><span class="c1">; dim=2</span>
+<span class="w">                   </span><span class="nv">:padding</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                   </span><span class="nv">:stride</span><span class="w">  </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">squeeze</span><span class="w">  </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">img</span><span class="p">))))))</span>
+</pre></div>
+<p>感觉卷积并没有什么很高大上的数学意义&#8230; 只是个乘法&#8230;</p>
+<p>不过其实要看具体在什么情况下使用, 比如:
+  把滤波系统看作是线性系统:</p>
+<p>\[\mathrm{image} \xrightarrow{f(x, y)} \fbox{w(x, y)} \xrightarrow{g(x, y)} \mathrm{output}\]</p>
+<p>即: \(g(x, y) = w(x, y) &otimes; f(x, y)\), 放到频率域上即 \(G(u, v) = W(u, v) &sdot; F(u, v)\).</p>
+<p>不过这么讲也没啥意义, 纯纯数学概念 show-off 罢了.</p>
+<p>如果结合具体例子来看:</p>
+<ul>
+  <li>对于均值滤波器
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">mean-filter-weight</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">unify</span><span class="w"> </span><span class="p">(</span><span class="nf">ones</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">size</span><span class="p">))))</span>
+</pre></div>
+  <details><summary>一些辅助函数</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">unify</span><span class="w"> </span><span class="p">(</span><span class="nf">matrix</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="nv">matrix</span><span class="w"> </span><span class="nv">:float32</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="w"> </span><span class="nb">*</span><span class="p">))))</span>
+</pre></div>
+  </details>
+    <p>比如说 <code>(mean-filter-weight 3)</code> 是一个 \(3 &times; 3\) 的矩阵.
+      或者也可以写作:</p>
+    <p>\[\mathrm{pix}(x, y) = (\mathrm{pix}(x - 1, y) + \mathrm{pix}(x + 1, y) + \cdots ) / 9\]</p>
+    <p>可以解释为对周围的 pixel 求和后平均 &#8211; 从空间域上的理解.</p>
+  </li>
+  <li>理想低通滤波器
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-circle-mask</span><span class="w"> </span><span class="p">(</span><span class="nf">thres</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">sqrt</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="mf">0.5</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="mf">0.5</span><span class="p">))))</span>
+<span class="w">              </span><span class="nv">thres</span><span class="p">)</span>
+<span class="w">           </span><span class="nv">t</span>
+<span class="w">           </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">ideal-low-pass-filter</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">thres</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">image-freq-filter</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="p">(</span><span class="nf">make-circle-mask</span><span class="w"> </span><span class="nv">thres</span><span class="p">)))</span>
+</pre></div>
+    <p>矩形函数的 FFT 变换存在一堆小波, 所以在频率域上的矩形函数 (理想低通函数)
+      会导致在空间域上的波纹状.</p>
+  </li>
+  <li>对于高斯滤波器
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gauss-filter-weight</span><span class="w"> </span><span class="p">(</span><span class="nf">sigma</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">m</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                            </span><span class="nv">&amp;aux</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">m-min</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:ceiling</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:*</span><span class="w"> </span><span class="mi">3</span><span class="w"> </span><span class="nv">sigma</span><span class="p">)))))</span>
+<span class="w">                              </span><span class="p">(</span><span class="nf">m-val</span><span class="w"> </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">null</span><span class="w"> </span><span class="p">(</span><span class="nf">integer</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">m</span><span class="w"> </span><span class="nv">m-min</span><span class="p">))))</span>
+<span class="w">  </span><span class="s">&quot;Return a Gauss kernel matrix.</span>
+
+<span class="s">Definition:</span>
+
+<span class="s">    gauss(x, y) = exp(- (x^2 + y^2) / (2 * sigma^2)) / (2 * pi * sigma^2)</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ SIGMA: std of Gauss function (&gt; 0)</span>
+<span class="s">+ M: size of kernel, by default it&#39;s determined by SIGMA:</span>
+
+<span class="s">  m = 1 + 2 * ceiling(3 * sigma)</span>
+
+<span class="s">  if given M is lower than above value, a warning would be throw</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:&lt;</span><span class="w"> </span><span class="nv">m-val</span><span class="w"> </span><span class="nv">m-min</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">warn</span><span class="w"> </span><span class="s">&quot;Given m=~A is lower than m_min=~A. &quot;</span><span class="w"> </span><span class="nv">m-val</span><span class="w"> </span><span class="nv">m-min</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">half</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:/</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">m-val</span><span class="p">)</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">arange</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:-</span><span class="w"> </span><span class="nv">half</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">half</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">arange</span><span class="w"> </span><span class="p">(</span><span class="nf">cl:-</span><span class="w"> </span><span class="nv">half</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">half</span><span class="p">))))</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">ker</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="nv">y</span><span class="p">))</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="nv">sigma</span><span class="p">)))))))</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">ker</span><span class="w"> </span><span class="p">(</span><span class="nf">sum</span><span class="w"> </span><span class="nv">ker</span><span class="p">))))))</span>
+</pre></div>
+    <p>在空间域上: 看作是一种按位置 (距离) 的加权平均, 越是远离的影响权重越小,
+      越是靠近的影响权重越大. 差不多是这样的.</p>
+    <p>在频率域上: 邻近的频率的影响也一样&#8230; 差不多一样的加权平均.</p>
+  </li>
+  <li>图像的导数</li>
+  <li>Laplacian 算子</li>
+  <li>Roberts 算子</li>
+  <li>Sobel 算子</li>
+  <li>Prewitt 算子</li>
+  <li>Scharr 算子</li>
+  <li>距离变换</li>
+  <li>高斯低通滤波器 (GLPF)</li>
+  <li>巴特沃斯低通滤波器 (BLPF)</li>
+  <li>IHPF</li>
+  <li>GHPF</li>
+  <li>BHPF</li>
+  <li>带阻滤波器</li>
+</ul>
+<h1>图像的统计描述</h1>
+<h1>图像增强</h1>
+<h2>空间域</h2>
+<h3>点处理</h3>
+<ul>
+  <li>输出 \(g(x, y)\) 仅和输入 \(f(x, y)\) 有关 \(g(x, y) = &phi;(f(x, y))\)</li>
+  <li>灰度变换
+    <ul>
+      <li>线性灰度变换
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gray-image-unify</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nb">min</span><span class="w"> </span><span class="p">(</span><span class="nf">minimum</span><span class="w"> </span><span class="nv">image</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">max</span><span class="w"> </span><span class="p">(</span><span class="nf">maximum</span><span class="w"> </span><span class="nv">image</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="nb">min</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nb">max</span><span class="w"> </span><span class="nb">min</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">linear-gray-rescale</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nb">min</span><span class="w"> </span><span class="nb">max</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="p">(</span><span class="nf">gray-image-unify</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nb">max</span><span class="w"> </span><span class="nb">min</span><span class="p">)</span><span class="w"> </span><span class="nb">*</span><span class="p">)</span><span class="w"> </span><span class="nb">min</span><span class="p">)))</span>
+</pre></div>
+      </li>
+      <li>分段线性变换</li>
+      <li>对数变换
+        <p>\[g(x, y) = a + \frac{\mathrm{ln}\left[ f(x, y) + 1 \right]}{b &sdot; \mathrm{ln}(c)}\]</p>
+        <p>压缩高灰度区, 拉伸低灰度区</p>
+      </li>
+      <li>指数变换
+        <p>\[g(x, y) = b^{c \left[ f(x, y) - a \right]} - 1\]</p>
+        <p>拉伸高灰度区</p>
+      </li>
+      <li>伽马变换</li>
+    </ul>
+  </li>
+  <li>直方图
+    <ul>
+      <li>直方图均衡化</li>
+    </ul>
+  </li>
+  <li>图像平滑
+    <ul>
+      <li>均值平滑
+        <p>如名, 略.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">unify-smooth</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">2d-conv</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="p">(</span><span class="nf">full</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">size</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">size</span><span class="w"> </span><span class="nv">size</span><span class="p">))</span>
+<span class="w">                       </span><span class="nv">:dtype</span><span class="w"> </span><span class="nv">:float32</span><span class="p">)))</span>
+</pre></div>
+      </li>
+      <li>超限像素平滑
+        <p>在均值平滑的基础上, 只在均值和像素值差特别多的情况下才应用均值平均.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">threshold-unify-smooth</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">thres</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">size</span><span class="w"> </span><span class="mi">3</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">smooth</span><span class="w"> </span><span class="p">(</span><span class="nf">unify-smooth</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="nv">size</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">where</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="nv">smooth</span><span class="p">))</span><span class="w"> </span><span class="nv">thres</span><span class="p">)</span>
+<span class="w">           </span><span class="nv">smooth</span>
+<span class="w">           </span><span class="nv">image</span><span class="p">)))</span>
+</pre></div>
+      </li>
+      <li>K-mean 平均
+        <p>用窗口内和中心像素最接近的 K 个邻近像素的平均灰度表示</p>
+      </li>
+      <li>最大均匀性平滑
+        <p>环绕图像中每个像素的最均匀的区域, 用灰度均值代替原来的灰度值</p>
+      </li>
+      <li>有选择保留边缘平滑法</li>
+      <li>空间低通滤波
+        <ul>
+          <li>\(H_{1} = \frac{1}{9} \left(\begin{matrix} 1 &amp; 1 &amp; 1 &#92;&#92; 1 &amp; 1 &amp; 1 &#92;&#92; 1 &amp; 1 &amp; 1 \end{matrix}\right)\)</li>
+          <li>\(H_{2} = \frac{1}{10} \left(\begin{matrix} 1 &amp; 1 &amp; 1 &#92;&#92; 1 &amp; 2 &amp; 1 &#92;&#92; 1 &amp; 1 &amp; 1 \end{matrix}\right)\)</li>
+          <li>\(H_{3} = \frac{1}{16} \left(\begin{matrix}1 &amp; 2 &amp; 1 &#92;&#92; 2 &amp; 4 &amp; 2 &#92;&#92; 1 &amp; 2 &amp; 1 \end{matrix}\right)\)</li>
+          <li>\(H_{4} = \frac{1}{8} \left(\begin{matrix}1 &amp; 1 &amp; 1 &#92;&#92; 1 &amp; 0 &amp; 1 &#92;&#92; 1 &amp; 1 &amp; 1 \end{matrix}\right)\)</li>
+          <li>\(H_{5} = \frac{1}{2} \left(\begin{matrix}0 &amp; \frac{1}{4} &amp; 0 &#92;&#92; \frac{1}{4} &amp; 1 &amp; \frac{1}{4} &#92;&#92; 0 &amp; \frac{1}{4} &amp; 0 \end{matrix}\right)\)</li>
+        </ul>
+      </li>
+      <li>中值滤波
+        <p>对窗口中的像素灰度排序, 然后用中值代替原来的灰度值.
+          不适合点, 线等细节较多的图像.</p>
+    <details><summary>实现思路</summary>
+        <p>没时间了, 这里给一个实现思路:</p>
+        <ol>
+          <li>构造 padding 后的图像</li>
+          <li>将图像进行 offset 后按像素值排序</li>
+          <li>取中值得到最后的图像</li>
+        </ol>
+    </details>
+      </li>
+    </ul>
+  </li>
+  <li>图像锐化
+    <ul>
+      <li>梯度锐化</li>
+      <li>Laplacian 增强算子</li>
+      <li>高通滤波法
+        <p>用高通滤波算子和图像卷积增强边缘</p>
+        <ul>
+          <li>\(H_{1} = \left(\begin{matrix}0 &amp; -1 &amp; 0 &#92;&#92; -1 &amp; 5 &amp; -1 &#92;&#92; 0 &amp; -1 &amp; 0\end{matrix}\right)\)</li>
+          <li>\(H_{2} = \left(\begin{matrix}-1 &amp; -1 &amp; -1 &#92;&#92; -1 &amp; 9 &amp; -1 &#92;&#92; -1 &amp; -1 &amp; -1\end{matrix}\right)\)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>频率域</h2>
+<h2>色彩增强</h2>
+<h3>伪彩色</h3>
+<ul>
+  <li>密度分割法
+    <p>按图像灰度级别将图像分成几个区间, 每个区间变成伪彩色图像</p>
+  </li>
+  <li>频率域伪彩色增强
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">gray-to-rgb-freq-filter</span><span class="w"> </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="nv">r</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">-&gt;*</span><span class="w"> </span><span class="p">(</span><span class="nf">dft2d</span><span class="w"> </span><span class="nv">image</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">concat</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">r</span><span class="w"> </span><span class="nb">*</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nb">*</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nb">*</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">:axis</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">dft2d</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">as-dtype</span><span class="w"> </span><span class="p">(</span><span class="nf">dtype</span><span class="w"> </span><span class="nv">image</span><span class="p">))))</span>
+</pre></div>
+  </li>
+</ul>
+<h3>彩色图像</h3>
+<ul>
+  <li>假彩色增强</li>
+  <li>HIS 增强
+    <ul>
+      <li>RGB \(&rarr;\) IHS</li>
+      <li>对 IHS 通道应用灰度增强</li>
+      <li>重新变换回 RGB</li>
+    </ul>
+  </li>
+</ul>
+<h2>图像代数运算</h2>
+<h1>图像统计描述</h1>
+<h1>图像的形态学处理</h1>
+<h1>图像的分割与边缘检测</h1>
+<h1>小波变换初步及应用</h1>
+<h1>图像复原与重建</h1>
+<ul>
+  <li>图像的复原是根据图像退化的数学模型为基础的客观图像复原</li>
+  <li>数学描述:
+    <p>在空间域上, 退化模型可以看作是加性噪声 (\(n(x, y)\))
+      和退化函数 (\(h(x, y)\)) 作用在原始图像 (\(i(x, y)\)) 上的:</p>
+    <p>\[d(x, y) = h(x, y) * i(x, y) + n(x, y)\]</p>
+    <p>或者是在频率域上</p>
+    <p>\[D(u, v) = H(u, v) I(u, v) + N(u, v)\]</p>
+  </li>
+</ul>
+<h2>图像去噪</h2>
+<ul>
+  <li>噪声模型
+    <p>使用噪声直方分布描述噪声模型</p>
+    <ul>
+      <li>高斯噪声
+        <p>\[\mathrm{gauss} = \frac{1}{\sqrt{2 &pi; &sigma;^{2}}} \mathrm{e}^{-(g-m)^{2} / 2 &sigma;^{2}}\]</p>
+      </li>
+      <li>均匀噪声
+        <p>\[\mathrm{uniform} = \frac{1}{b - a}\ \mathrm{iff}\ a \leq x \leq b\]</p>
+      </li>
+      <li>椒盐噪声</li>
+      <li>瑞利噪声
+        <p>例: 雷达测距和测速噪声</p>
+        <p>\[\mathrm{rayleigh} = \frac{2 x}{&alpha;} \mathrm{e}^{-x^{2} / &alpha;}\]</p>
+      </li>
+      <li>负指数噪声
+        <p>例: 激光图像</p>
+        <p>\[\mathrm{neg\ exp} = \frac{\mathrm{e}^{-x/&alpha;}}{&alpha;}\]</p>
+      </li>
+      <li>爱尔兰 (伽马) 噪声
+        <p>\[\mathrm{gamma} = \frac{x^{&alpha;-1}}{(&alpha; - 1)! a^{&alpha;}} \mathrm{e}^{- x / a}\]</p>
+      </li>
+      <li>周期噪声
+        <p>常见产生于干扰, 在频域表现为脉冲信号, 通过带阻滤波器或陷波滤波器去除</p>
+      </li>
+    </ul>
+  </li>
+  <li>噪声估计
+    <p>无纯噪声图像: 选择图像中已知直方图的一部分, 通过减去已知直方图的方式获得噪声模型</p>
+  </li>
+  <li>去噪声
+    <p>只存在加性噪声的情况下, 可以:</p>
+    <ul>
+      <li>空间滤波器
+        <ul>
+          <li>排序滤波</li>
+          <li>均值滤波
+            <p>在窗口中排序并选择第 \(k\) 大的数, 比如:</p>
+            <ul>
+              <li>中值排序滤波
+                <ul>
+                  <li>迭代中值滤波器
+                    <p>依次采用窗口不断增大的中值滤波器</p>
+                  </li>
+                  <li>混合中值滤波器
+                    <p>对对角线, 边缘分别中值滤波, 然后对这些中值进行中值滤波</p>
+                  </li>
+                </ul>
+              </li>
+              <li>最大值最小值滤波</li>
+              <li>中点滤波: 最大值和最小值的平均</li>
+              <li>alpha-trimmed mean: 排除端点值的均值
+                <p>适合高斯噪声和椒盐噪声</p>
+              </li>
+            </ul>
+          </li>
+          <li>几何均值滤波
+            <p>\[\mathrm{geo\ mean} = &prod; \left[ i(x, y) \right]^{1/N^{2}}\]</p>
+            <p>其中 \(N\) 为窗口大小</p>
+          </li>
+          <li>谐波均值滤波器
+            <p>\[\mathrm{harmonic\ mean} = \frac{N^{2}}{&sum; \frac{1}{i(x, y)}}\]</p>
+          </li>
+          <li>反谐波均值滤波器
+            <p>\[\mathrm{contraharmonic\ mean} = \frac{&sum; i(x, y)^{R+1}}{&sum; i(x, y)^{R}}\]</p>
+          </li>
+          <li>最小均方差 (MMSE)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>退化函数频率域复原滤波</h2>
+<ul>
+  <li>PSF: 点扩散函数</li>
+  <li>退化函数估计
+    <ul>
+      <li>数学建模法</li>
+      <li>&#8230;</li>
+    </ul>
+  </li>
+  <li>退化图像还原
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">wiener-filtering</span><span class="w"> </span><span class="p">(</span><span class="nf">img</span><span class="w"> </span><span class="nv">psf</span><span class="w"> </span><span class="nv">gamma</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Image restoration via Wiener Filtering.</span>
+<span class="s">Return restored IMG by applying PSF on IMG with noise-signal power ratio GAMMA.</span>
+
+<span class="s">Parameter:</span>
+<span class="s">+ IMG: initial `image&#39; object</span>
+<span class="s">+ PSF: Point Spread Function</span>
+<span class="s">  (funcall psf X Y) should return point spread function on X and Y</span>
+<span class="s">+ GAMMA: noise / signal power ratio</span>
+
+<span class="s">Definition:</span>
+
+<span class="s">  let H = dft2d(make-psf-kernel(PSF, IMG))</span>
+
+<span class="s">        conjugate(H)</span>
+<span class="s">  R = -------------------            (Wiener Filtering)</span>
+<span class="s">       norm(H)^2 + gamma</span>
+
+<span class="s">  res = idft2d(fft2d(IMG) * R)</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="nv">psf</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">real</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="nv">gamma</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">g</span><span class="w"> </span><span class="p">(</span><span class="nf">dft2d</span><span class="w"> </span><span class="nv">img</span><span class="p">))</span>
+<span class="w">         </span><span class="c1">;; h should be (H W 1)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">h</span><span class="w"> </span><span class="p">(</span><span class="nf">dft2d</span><span class="w"> </span><span class="p">(</span><span class="nf">expand-dims</span><span class="w"> </span><span class="p">(</span><span class="nf">make-psf-kernel</span><span class="w"> </span><span class="nv">psf</span><span class="w"> </span><span class="nv">img</span><span class="p">)</span><span class="w"> </span><span class="mi">-1</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">r</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nf">conjugate</span><span class="w"> </span><span class="nv">h</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">square</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="nv">h</span><span class="p">))</span><span class="w"> </span><span class="nv">gamma</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">corner-centered</span><span class="w"> </span><span class="p">(</span><span class="nb">abs</span><span class="w"> </span><span class="p">(</span><span class="nf">idft2d</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">g</span><span class="w"> </span><span class="nv">r</span><span class="p">))))))</span>
+</pre></div>
+  <details><summary>一些辅助函数</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-psf-kernel</span><span class="w"> </span><span class="p">(</span><span class="nf">psf</span><span class="w"> </span><span class="nv">img</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make PSF Kernel Matrix with shape of IMG.</span>
+<span class="s">Return a new Kernel Matrix of shape (H W) from IMG.</span>
+
+<span class="s">Parameters:</span>
+<span class="s">+ PSF: Point Spread Function</span>
+<span class="s">  (funcall psf X Y) should return element-wise PSF on X and Y</span>
+<span class="s">  X, Y are unified into [-1, 1]</span>
+<span class="s">+ IMG: an `image&#39; whose shape would be used to calculate PSF kernel</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">function</span><span class="w"> </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span><span class="w"> </span><span class="nv">psf</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">image</span><span class="w"> </span><span class="nv">img</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">ny</span><span class="w"> </span><span class="nv">nx</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">ignore</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">shape</span><span class="w"> </span><span class="nv">img</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">ignore</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">destructuring-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">meshgrid</span><span class="w"> </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">nx</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">linspace</span><span class="w"> </span><span class="mi">-1</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">ny</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">funcall</span><span class="w"> </span><span class="nv">psf</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="p">))))</span>
+</pre></div>
+  </details>
+  </li>
+</ul>
+<h1>图像压缩</h1>
+<h2>术语</h2>
+<ul>
+  <li>压缩率: 原始图像大小/压缩后图像大小</li>
+  <li>每像素比特率 (bpp): 图像大小 (bits) / 图像比特数 (pixels)</li>
+  <li>冗余
+    <ul>
+      <li>编码冗余</li>
+      <li>像素间冗余: 相邻像素重复</li>
+      <li>波段间冗余: 色彩波段</li>
+      <li>心理视觉冗余: 人看不出来</li>
+    </ul>
+  </li>
+  <li>保真度
+    <ul>
+      <li>客观保真度
+        <ul>
+          <li>均方根误差 \(e_{\mathrm{RMS}} = \sqrt{\frac{1}{N^{2}} &sum; \left[ \hat{i} - i \right]}\)</li>
+          <li>均方根信噪比 \(\mathrm{SNR}_{\mathrm{RMS}} = \sqrt{\frac{&sum; \hat{i}^{2} }{&sum; (\hat{i} - i)^{2} }}\)</li>
+          <li>峰值信噪比 \(\mathrm{SNR}_{\mathrm{PEAK}} = 10 log_{10} \frac{(L - 1)^{2} }{\frac{1}{N^{2}} &sum; (\hat{i} - i)^{2}}\) (越高越好)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>无损压缩</h2>
+<ul>
+  <li>霍夫曼编码
+    <ol>
+      <li>计算直方图得到灰度概率</li>
+      <li>按概率从小到大排序</li>
+      <li>合并最小两个</li>
+      <li>递归生成树</li>
+      <li>用数进行编码</li>
+    </ol>
+  </li>
+  <li>哥伦布编码</li>
+  <li>行程编码
+    <ul>
+      <li>(长度 数据)</li>
+    </ul>
+  </li>
+  <li>LZW 编码</li>
+  <li>算术编码</li>
+</ul>
+<h2>有损压缩</h2>
+<ul>
+  <li>灰度编码
+    <p>减少灰度级别后应用行程编码</p>
+  </li>
+  <li>块截断编码
+    <p>将图像分成多个小块, 然后对每个小块进行灰度编码</p>
+  </li>
+  <li>向量编码</li>
+  <li>差分预测编码</li>
+  <li>变换编码</li>
+  <li>混合编码</li>
+</ul>
+<h1>边, 线, 形状检测</h1>
+<h2>边缘检测</h2>
+<ul>
+  <li>类似于微分算子, 检测图像亮度剧烈变换的边缘</li>
+  <li>梯度算子
+    <p>利用灰度函数的一阶或二阶导数作为边缘检测</p>
+  </li>
+  <li>罗盘掩码
+    <p>使用单个掩码将其旋转到指南针的八个主要方向</p>
+    <ul>
+      <li>Kirsch 罗盘掩码
+        <ul>
+          <li>\(k_{0} \left(\begin{matrix} -3 &amp; -3 &amp; 5 &#92;&#92; -3 &amp; 0 &amp; 5 &#92;&#92; -3 &amp; -3 &amp; 5 \end{matrix}\right)\)</li>
+          <li>\(k_{1} \left(\begin{matrix} -3 &amp; 5 &amp; 5 &#92;&#92; -3 &amp; 0 &amp; 5 &#92;&#92; -3 &amp; -3 &amp; -3 \end{matrix}\right)\)</li>
+          <li>\(k_{2} \left(\begin{matrix} 5 &amp; 5 &amp; 5 &#92;&#92; -3 &amp; 0 &amp; -3 &#92;&#92; -3 &amp; -3 &amp; -3 \end{matrix}\right)\)</li>
+          <li>\(k_{3} \left(\begin{matrix} 5 &amp; 5 &amp; -3 &#92;&#92; 5 &amp; 0 &amp; -3 &#92;&#92; -3 &amp; -3 &amp; -3 \end{matrix}\right)\)</li>
+          <li>\(k_{4} \left(\begin{matrix} 5 &amp; -3 &amp; -3 &#92;&#92; 5 &amp; 0 &amp; -3 &#92;&#92; 5 &amp; -3 &amp; -3 \end{matrix}\right)\)</li>
+          <li>\(k_{5} \left(\begin{matrix} -3 &amp; -3 &amp; -3 &#92;&#92; 5 &amp; 0 &amp; -3 &#92;&#92; 5 &amp; 5 &amp; -3 \end{matrix}\right)\)</li>
+          <li>\(k_{6} \left(\begin{matrix} -3 &amp; -3 &amp; -3 &#92;&#92; -3 &amp; 0 &amp; -3 &#92;&#92; 5 &amp; 5 &amp; 5 \end{matrix}\right)\)</li>
+          <li>\(k_{7} \left(\begin{matrix} -3 &amp; -3 &amp; -3 &#92;&#92; -3 &amp; 0 &amp; 5 &#92;&#92; -3 &amp; 5 &amp; 5 \end{matrix}\right)\)</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>边缘检测器阈值
+    <p>Otsu</p>
+  </li>
+  <li>先进边缘检测
+    <ul>
+      <li>Marr-Hildreth 算法
+        <ol>
+          <li>高斯卷积 (预处理)</li>
+          <li>Laplacian 卷积</li>
+          <li>计算零交叉点</li>
+        </ol>
+        <p>\[\mathrm{LoG} = \left[ \frac{r^{2} + c^{2} - 2 &sigma;^{2}}{&sigma;^{4}} \mathrm{e}^{- \left( \frac{r^{2} + c^{2}}{2 &sigma;^{2}} \right)} \right]\]</p>
+      </li>
+      <li>Canny 算法
+        <ol>
+          <li>高斯平滑 (预处理)</li>
+          <li>利用 Sobel 或 Prewitt 计算梯度幅度和方向</li>
+          <li>应用非极大值抑制, 使边缘变细</li>
+          <li>滞后阈值处理: 用两个阈值</li>
+        </ol>
+      </li>
+    </ul>
+  </li>
+  <li>边缘检测</li>
+  <li>直线检测
+    <ul>
+      <li>Hough 变换</li>
+    </ul>
+  </li>
+  <li>角点检测
+    <ul>
+      <li>Harris-Stephens 角点检测</li>
+    </ul>
+  </li>
+  <li>形状检测</li>
+</ul>
+<h1>图像分割</h1>
+<h2>预处理</h2>
+<ul>
+  <li>减少物体个数简化数量</li>
+  <li>超像素预处理
+    <ul>
+      <li>SLIC
+        <p>用 R, G, B, 行坐标, 列坐标 进行 K-means 聚类</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>分割方法</h2>
+<ul>
+  <li>分水岭分割: 对较小梯度图像进行分割得到梯度图像</li>
+  <li>聚类分割</li>
+  <li>阈值处理
+    <ul>
+      <li>Otsu 阈值
+        <p>适合双峰检测</p>
+        <ol>
+          <li>归一化灰度直方图 \(p_{i}\)
+            <p>记:</p>
+            <ul>
+              <li>阈值为 \(t\)</li>
+              <li>小于 \(t\) 的概率为 \(P_{1}\), 大于 \(t\) 的概率为 \(P_{2}\),</li>
+              <li>\(m_{1}\) 为小于 \(t\) 的均值, \(m_{2}\) 为大于 \(t\) 的均值</li>
+            </ul>
+          </li>
+          <li>计算使得 \(&sigma;^{2}_{B} = P_{1} P_{2} (m_{1} - m_{2})^{2}\) 最大的阈值</li>
+        </ol>
+      </li>
+      <li>边缘改进全局阈值处理</li>
+    </ul>
+  </li>
+  <li>K-means 聚类
+    <ol>
+      <li>设定一组初始均值</li>
+      <li>将每个样本分配给最近的聚类</li>
+      <li>更新聚类中心</li>
+      <li>重新迭代</li>
+    </ol>
+    <p>K-mean 也适合全局阈值的搜索</p>
+  </li>
+  <li>SLIC 超像素
+    <p>用 R, G, B, 行坐标, 列坐标 进行 K-means 聚类,
+      但是衡量的距离测度不是欧氏距离</p>
+  </li>
+</ul>
+<h2>形态学滤波</h2>
+<ul>
+  <li>膨胀: 结构元在图像上卷积滑动</li>
+  <li>腐蚀: 结构元在图像上收缩</li>
+  <li>开运算: 先腐蚀后膨胀</li>
+  <li>闭运算: 先膨胀后腐蚀</li>
+  <li>击中-击不中变换: 结构元叠加在图像上, 只在完全匹配的时候表示击中 1</li>
+  <li>骨架化: 对象被腐蚀到只有一个像素宽所剩下的部分</li>
+</ul>
+<h2>图像分割评判标准</h2>
+<ul>
+  <li>整体误差</li>
+  <li>均方根误差</li>
+  <li>信噪比</li>
+  <li>峰值信噪比</li>
+</ul>
+<h1>特征提取和分析</h1>
+<h1>最后</h1>
+<p>讲得很多, 但是实际上有印象的也就只有那几个写过的代码,
+  真的有没有理解倒是另外一回事了.</p>
+<p>我的评价: 把这些念 PPT 的课都换成自己写代码算了,
+  写完还能有助于国产基础软件开发 (bushi).
+  只是讲概念完全理解不了, 没有那种具体的印象.
+  而且好多课做的纸笔作业更是抽象: 认清课程定位啊淦!
+  工程系的课讲证明和定义也就算了, 应用呢?</p>
+<p>不过这门课至少还行, 作业有编程&#8230;</p>
+
+  </div><a class="u-url" href="/notes/image/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

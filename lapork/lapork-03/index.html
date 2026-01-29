@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>LapOrk (03: A Little More on Sound Waves) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="LapOrk (03: A Little More on Sound Waves)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 之后的一些代码会放到 Github 上面 (li-yiyang/lapork-lecture), 方便复用了. TLDR 声音是波, 一些特别的波型的产生和对他们进行一个调参数 采样的播放 声道, 输出的设备以及其他 Sound is Waves 咬文嚼字一下 其实严格来说, 声音是振动 \(f(t)\), 而波是声音的传播 (时空分布) \(f(x, t)\). 不知道这样会不会更加严格一些. 比如说打开示波器, 去检查声音信号随时间的变化情况: (play (* 0.125 (+ (sin-osc.ar 350) (sin-osc.ar 440)))) 波形与频谱的显示 lapork.plot emmm, 但是不是所有时候都能手上拿着一台示波器, 那么是否有没有好的方法来解决这个问题呢? 虽然在 SuperCollider 中有 =plot= 这样的函数, 但是在 cl-collider 中并没有类似的功能. 参考 cl-collider/issue #81 中的方法, 可以用 Gnuplot 简单的实现一个绘图功能. 完整的代码见 lapork/plot. 具体思路的说明 plot: 相当于是在后台开了一个 Gnuplot 程序, 通过生成 inline data 和 plot 命令, 可以用来绘图 scope: 例 (scope (sin-osc.ar 440) :frames 200) freqscope: 各种各样的波形的显示 在前面的几节里面已经接触过: sin-osc: 正弦波 blip: 脉冲 white-noise: 白噪声 类似的还有: brown-noise: 棕噪声 pink-noise: 粉噪声 下面是一些声音种类以及其波形的形状: 声音波形 sin-osc 正弦波 blip 脉冲波 saw 锯齿波 pulse 方波 white-noise 白噪声 brown-noise 粽噪声 pink-noise 粉噪声 gray-noise 灰噪声 lf-tri 低频 (Low Frequency) 三角波 lf-pulse 低频 (Low Frequency) 方波 sin-osc 和 lf-noise1 (低频噪声) 的合成 部分解释: lf-* 开头的 (对应 SuperCollider 中 LF) 开头的表示 Low Frequency, 用于去更好地生成一些低频的信号. 例: 比较 pulse 和 lf-pulse 的波形, 前者是通过多个正弦波 (傅立叶分解) 叠加得到的, 后者则是直接通过翻转值 (0 或 1) 来产生的. 在低频的情况下, (通过 CPU 控制的) 直接翻转显然更优, 而高频情况下, 由于会对 CPU 产生较大的负担, 还是不如用声卡的输出来的方便. 不同的音色 滤波器 你说, 我在听 &#8211; 录音的导入和导出 导入声音 可以导入一段声音 (sampling, 采样) 进行播放: (defparameter layer (buffer-read &quot;~/Code/lapork-lecture/samples/whispers/layer.aiff&quot;))" />
+<meta property="og:description" content="About 之后的一些代码会放到 Github 上面 (li-yiyang/lapork-lecture), 方便复用了. TLDR 声音是波, 一些特别的波型的产生和对他们进行一个调参数 采样的播放 声道, 输出的设备以及其他 Sound is Waves 咬文嚼字一下 其实严格来说, 声音是振动 \(f(t)\), 而波是声音的传播 (时空分布) \(f(x, t)\). 不知道这样会不会更加严格一些. 比如说打开示波器, 去检查声音信号随时间的变化情况: (play (* 0.125 (+ (sin-osc.ar 350) (sin-osc.ar 440)))) 波形与频谱的显示 lapork.plot emmm, 但是不是所有时候都能手上拿着一台示波器, 那么是否有没有好的方法来解决这个问题呢? 虽然在 SuperCollider 中有 =plot= 这样的函数, 但是在 cl-collider 中并没有类似的功能. 参考 cl-collider/issue #81 中的方法, 可以用 Gnuplot 简单的实现一个绘图功能. 完整的代码见 lapork/plot. 具体思路的说明 plot: 相当于是在后台开了一个 Gnuplot 程序, 通过生成 inline data 和 plot 命令, 可以用来绘图 scope: 例 (scope (sin-osc.ar 440) :frames 200) freqscope: 各种各样的波形的显示 在前面的几节里面已经接触过: sin-osc: 正弦波 blip: 脉冲 white-noise: 白噪声 类似的还有: brown-noise: 棕噪声 pink-noise: 粉噪声 下面是一些声音种类以及其波形的形状: 声音波形 sin-osc 正弦波 blip 脉冲波 saw 锯齿波 pulse 方波 white-noise 白噪声 brown-noise 粽噪声 pink-noise 粉噪声 gray-noise 灰噪声 lf-tri 低频 (Low Frequency) 三角波 lf-pulse 低频 (Low Frequency) 方波 sin-osc 和 lf-noise1 (低频噪声) 的合成 部分解释: lf-* 开头的 (对应 SuperCollider 中 LF) 开头的表示 Low Frequency, 用于去更好地生成一些低频的信号. 例: 比较 pulse 和 lf-pulse 的波形, 前者是通过多个正弦波 (傅立叶分解) 叠加得到的, 后者则是直接通过翻转值 (0 或 1) 来产生的. 在低频的情况下, (通过 CPU 控制的) 直接翻转显然更优, 而高频情况下, 由于会对 CPU 产生较大的负担, 还是不如用声卡的输出来的方便. 不同的音色 滤波器 你说, 我在听 &#8211; 录音的导入和导出 导入声音 可以导入一段声音 (sampling, 采样) 进行播放: (defparameter layer (buffer-read &quot;~/Code/lapork-lecture/samples/whispers/layer.aiff&quot;))" />
+<link rel="canonical" href="/lapork/lapork-03/" />
+<meta property="og:url" content="/lapork/lapork-03/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-10-16T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="LapOrk (03: A Little More on Sound Waves)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-10-16T00:00:00+00:00","datePublished":"2025-10-16T00:00:00+00:00","description":"About 之后的一些代码会放到 Github 上面 (li-yiyang/lapork-lecture), 方便复用了. TLDR 声音是波, 一些特别的波型的产生和对他们进行一个调参数 采样的播放 声道, 输出的设备以及其他 Sound is Waves 咬文嚼字一下 其实严格来说, 声音是振动 \\(f(t)\\), 而波是声音的传播 (时空分布) \\(f(x, t)\\). 不知道这样会不会更加严格一些. 比如说打开示波器, 去检查声音信号随时间的变化情况: (play (* 0.125 (+ (sin-osc.ar 350) (sin-osc.ar 440)))) 波形与频谱的显示 lapork.plot emmm, 但是不是所有时候都能手上拿着一台示波器, 那么是否有没有好的方法来解决这个问题呢? 虽然在 SuperCollider 中有 =plot= 这样的函数, 但是在 cl-collider 中并没有类似的功能. 参考 cl-collider/issue #81 中的方法, 可以用 Gnuplot 简单的实现一个绘图功能. 完整的代码见 lapork/plot. 具体思路的说明 plot: 相当于是在后台开了一个 Gnuplot 程序, 通过生成 inline data 和 plot 命令, 可以用来绘图 scope: 例 (scope (sin-osc.ar 440) :frames 200) freqscope: 各种各样的波形的显示 在前面的几节里面已经接触过: sin-osc: 正弦波 blip: 脉冲 white-noise: 白噪声 类似的还有: brown-noise: 棕噪声 pink-noise: 粉噪声 下面是一些声音种类以及其波形的形状: 声音波形 sin-osc 正弦波 blip 脉冲波 saw 锯齿波 pulse 方波 white-noise 白噪声 brown-noise 粽噪声 pink-noise 粉噪声 gray-noise 灰噪声 lf-tri 低频 (Low Frequency) 三角波 lf-pulse 低频 (Low Frequency) 方波 sin-osc 和 lf-noise1 (低频噪声) 的合成 部分解释: lf-* 开头的 (对应 SuperCollider 中 LF) 开头的表示 Low Frequency, 用于去更好地生成一些低频的信号. 例: 比较 pulse 和 lf-pulse 的波形, 前者是通过多个正弦波 (傅立叶分解) 叠加得到的, 后者则是直接通过翻转值 (0 或 1) 来产生的. 在低频的情况下, (通过 CPU 控制的) 直接翻转显然更优, 而高频情况下, 由于会对 CPU 产生较大的负担, 还是不如用声卡的输出来的方便. 不同的音色 滤波器 你说, 我在听 &#8211; 录音的导入和导出 导入声音 可以导入一段声音 (sampling, 采样) 进行播放: (defparameter layer (buffer-read &quot;~/Code/lapork-lecture/samples/whispers/layer.aiff&quot;))","headline":"LapOrk (03: A Little More on Sound Waves)","mainEntityOfPage":{"@type":"WebPage","@id":"/lapork/lapork-03/"},"url":"/lapork/lapork-03/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">LapOrk (03: A Little More on Sound Waves)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-10-16T00:00:00+00:00" itemprop="datePublished">Oct 16, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <style>img { width: 400px; display: block; margin: auto; }</style>
+<h1>About</h1>
+<p>之后的一些代码会放到 Github 上面 (<a href="https://github.com/li-yiyang/lapork-lecture">li-yiyang/lapork-lecture</a>),
+  方便复用了.</p>
+<h2>TLDR</h2>
+<ul>
+  <li>声音是波, 一些特别的波型的产生和对他们进行一个调参数</li>
+  <li>采样的播放</li>
+  <li>声道, 输出的设备以及其他</li>
+</ul>
+<h1>Sound is Waves</h1>
+<details><summary>咬文嚼字一下</summary>
+<p>其实严格来说, 声音是振动 \(f(t)\), 而波是声音的传播 (时空分布) \(f(x, t)\).
+  不知道这样会不会更加严格一些.</p>
+</details>
+<p>比如说打开示波器, 去检查声音信号随时间的变化情况:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mf">0.125</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">350</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">440</span><span class="p">))))</span>
+</pre></div>
+<p><img src="/_img/lapork/03/phone.png" alt="/_img/lapork/03/phone.png" /></p>
+<h2>波形与频谱的显示</h2>
+<h3>lapork.plot</h3>
+<p>emmm, 但是不是所有时候都能手上拿着一台示波器,
+  那么是否有没有好的方法来解决这个问题呢?
+  虽然在 SuperCollider 中有 <a href="https://doc.sccode.org/Reference/plot.html">=plot=</a> 这样的函数,
+  但是在 <code>cl-collider</code> 中并没有类似的功能.</p>
+<p>参考 <a href="https://github.com/byulparan/cl-collider/issues/81">cl-collider/issue #81</a> 中的方法,
+  可以用 Gnuplot 简单的实现一个绘图功能.</p>
+<p>完整的代码见 <a href="https://github.com/li-yiyang/lapork-lecture/tree/main/lisp/plot">lapork/plot</a>.</p>
+<details><summary>具体思路的说明</summary>
+<ul>
+  <li><code>plot</code>: 相当于是在后台开了一个 <a href="http://www.gnuplot.info/">Gnuplot</a> 程序,
+    通过生成 inline data 和 plot 命令, 可以用来绘图</li>
+  <li><code>scope</code>: 例
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">scope</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">440</span><span class="p">)</span><span class="w"> </span><span class="nv">:frames</span><span class="w"> </span><span class="mi">200</span><span class="p">)</span>
+</pre></div>
+  </li>
+  <li><code>freqscope</code>:</li>
+</ul>
+</details>
+<h3>各种各样的波形的显示</h3>
+<p>在前面的几节里面已经接触过:</p>
+<ul>
+  <li><code>sin-osc</code>: 正弦波</li>
+  <li><code>blip</code>: 脉冲</li>
+  <li><code>white-noise</code>: 白噪声
+    <p>类似的还有:</p>
+    <ul>
+      <li><code>brown-noise</code>: 棕噪声</li>
+      <li><code>pink-noise</code>: 粉噪声</li>
+    </ul>
+  </li>
+</ul>
+<p>下面是一些声音种类以及其波形的形状:</p>
+<style>td img { width: 200px; display: block; margin: auto; } </style>
+<table>
+  <tr><th>声音</th><th>波形</th></tr>
+  <tr><td><code>sin-osc</code> 正弦波</td><td><img src="/_img/lapork/03/sin.svg" alt="/_img/lapork/03/sin.svg" /></td></tr>
+  <tr><td><code>blip</code> 脉冲波</td><td><img src="/_img/lapork/03/blip.svg" alt="/_img/lapork/03/blip.svg" /></td></tr>
+  <tr><td><code>saw</code> 锯齿波</td><td><img src="/_img/lapork/03/saw.svg" alt="/_img/lapork/03/saw.svg" /></td></tr>
+  <tr><td><code>pulse</code> 方波</td><td><img src="/_img/lapork/03/pulse.svg" alt="/_img/lapork/03/pulse.svg" /></td></tr>
+  <tr><td><code>white-noise</code> 白噪声</td><td><img src="/_img/lapork/03/white-noise.svg" alt="/_img/lapork/03/white-noise.svg" /></td></tr>
+  <tr><td><code>brown-noise</code> 粽噪声</td><td><img src="/_img/lapork/03/brown-noise.svg" alt="/_img/lapork/03/brown-noise.svg" /></td></tr>
+  <tr><td><code>pink-noise</code> 粉噪声</td><td><img src="/_img/lapork/03/pink-noise.svg" alt="/_img/lapork/03/pink-noise.svg" /></td></tr>
+  <tr><td><code>gray-noise</code> 灰噪声</td><td><img src="/_img/lapork/03/gray-noise.svg" alt="/_img/lapork/03/gray-noise.svg" /></td></tr>
+  <tr><td><code>lf-tri</code> 低频 (Low Frequency) 三角波</td><td><img src="/_img/lapork/03/lf-tri.svg" alt="/_img/lapork/03/lf-tri.svg" /></td></tr>
+  <tr><td><code>lf-pulse</code> 低频 (Low Frequency) 方波</td><td><img src="/_img/lapork/03/lf-pulse.svg" alt="/_img/lapork/03/lf-pulse.svg" /></td></tr>
+  <tr><td><code>sin-osc</code> 和 <code>lf-noise1</code> (低频噪声) 的合成</td><td><img src="/_img/lapork/03/sin-noise1.svg" alt="/_img/lapork/03/sin-noise1.svg" /></td></tr>
+</table>
+<p>部分解释:</p>
+<ul>
+  <li><code>lf-*</code> 开头的 (对应 SuperCollider 中 <code>LF</code>) 开头的表示 Low Frequency,
+    用于去更好地生成一些低频的信号.
+    <p>例: 比较 <code>pulse</code> 和 <code>lf-pulse</code> 的波形, 前者是通过多个正弦波 (傅立叶分解) 叠加得到的,
+      后者则是直接通过翻转值 (<code>0</code> 或 <code>1</code>) 来产生的. 在低频的情况下,
+      (通过 CPU 控制的) 直接翻转显然更优, 而高频情况下, 由于会对 CPU 产生较大的负担,
+      还是不如用声卡的输出来的方便.</p>
+  </li>
+  <li>不同的音色</li>
+</ul>
+<h2>滤波器</h2>
+<h2>你说, 我在听 &#8211; 录音的导入和导出</h2>
+<h3>导入声音</h3>
+<p>可以导入一段声音 (sampling, 采样) 进行播放:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">layer</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">buffer-read</span><span class="w"> </span><span class="s">&quot;~/Code/lapork-lecture/samples/whispers/layer.aiff&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">play</span><span class="w"> </span><span class="p">(</span><span class="nf">play-buf</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">layer</span><span class="w"> </span><span class="p">(</span><span class="nf">buf-rate-scale</span><span class="o">.</span><span class="nv">ir</span><span class="w"> </span><span class="nv">layer</span><span class="p">)))</span>
+</pre></div>
+<p>解释:</p>
+<ul>
+  <li><code>buffer-read</code> 可以读入一段采样音频文件</li>
+  <li><code>play-buf.ar</code> 给 <code>layer</code> 这个 buffer 准备了一些预先需要知道的信息:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">play-buf</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">channels</span><span class="w"> </span><span class="nv">buffer-id</span><span class="w"> </span><span class="nv">rate</span><span class="p">)</span>
+</pre></div>
+    <ul>
+      <li><code>channels</code> 有几个声道</li>
+      <li><code>buffer-id</code> 也就是读到的 <code>layer</code></li>
+      <li><code>rate</code> 播放速率, 默认的 <code>rate</code> 不知道为啥会让速度变得非常快, 所以这里需要加上</li>
+    </ul>
+    <p>代码调用有些不太优雅了其实</p>
+  </li>
+</ul>
+<details><summary>这段采样的来历</summary>
+<p>在 Lain 每一集开头都会有一段很有意思的机械合成声音,
+  传说是用 Macintosh 发布会的那个问候同款的合成器制成的 (ref: <a href="https://www.reddit.com/r/Lain/comments/15x63rn/looking_for_the_macintosh_voice/">r/Lain</a>).</p>
+<p>在今天的 macOS 里面, 其实还保留了这个神奇的声音生成工具:</p>
+<div class="highlight"><pre><span></span>say<span class="w"> </span>-v<span class="w"> </span><span class="s1">&#39;Whisper&#39;</span><span class="w"> </span><span class="s1">&#39;Layer, zero two&#39;</span><span class="w"> </span><span class="c1"># read</span>
+</pre></div>
+<p>你可以用:</p>
+<div class="highlight"><pre><span></span>say<span class="w"> </span>-v<span class="w"> </span><span class="s1">&#39;Whisper&#39;</span><span class="w"> </span>-o<span class="w"> </span><span class="nv">$OUTPUT</span><span class="w"> </span><span class="s1">&#39;Layer&#39;</span>
+</pre></div>
+<p>来生成采样.</p>
+</details>
+<h3>拿小本本记下 &#8211; 导出声音</h3>
+<h2>合成声音 &#8211; 一些应用?</h2>
+<h3>Phone Tones</h3>
+<p>做这个的原因是之前听过一首歌, 开头是一段拨号, 然后是 “Hello, its me&#8230; ”,
+  挺好听的, 只是我忘了具体歌名叫啥了.</p>
+<p>根据 <a href="https://www.itu.int/rec/T-REC-Q.23-198811-I/en">Technical features of push-button telephone sets (ITU)</a> 的说明,
+  可以得到一个拨号声音信号是如下定义的:</p>
+<p>在按下按钮的时候, 根据按钮的编码发送一个混合频率的声音:</p>
+<table>
+  <tr><th>Low freq \ High freq</th><th>1209</th><th>1336</th><th>1477</th><th>1633</th></tr>
+  <tr><td>697</td><td>1</td><td>2</td><td>3</td><td>A</td></tr>
+  <tr><td>770</td><td>4</td><td>5</td><td>6</td><td>B</td></tr>
+  <tr><td>852</td><td>7</td><td>8</td><td>9</td><td>C</td></tr>
+  <tr><td>941</td><td>*</td><td>0</td><td>#</td><td>D</td></tr>
+</table>
+<p>这, 简单啊:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defsynth</span><span class="w"> </span><span class="nv">phone-tone</span><span class="w"> </span><span class="p">((</span><span class="nf">gate</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">amp</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">out</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">low</span><span class="w"> </span><span class="mi">350</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">high</span><span class="w"> </span><span class="mi">440</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">out</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">out</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mf">0.5</span><span class="w"> </span><span class="nv">amp</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">low</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">sin-osc</span><span class="o">.</span><span class="nv">ar</span><span class="w"> </span><span class="nv">high</span><span class="p">))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">env-gen</span><span class="o">.</span><span class="nv">kr</span><span class="w"> </span><span class="p">(</span><span class="nf">adsr</span><span class="w"> </span><span class="mf">0.01</span><span class="w"> </span><span class="mf">0.01</span><span class="w"> </span><span class="mf">0.8</span><span class="w"> </span><span class="mf">0.02</span><span class="p">)</span><span class="w"> </span><span class="nv">:gate</span><span class="w"> </span><span class="nv">gate</span><span class="p">))))</span>
+</pre></div>
+<p>解释:</p>
+<ul>
+  <li><code>gate</code> 用来作为 <code>ADSR</code> 的开启和关闭的信号, 这个可以参考后文中和 TouchOSC 联动的部分</li>
+  <li><code>low</code> 和 <code>high</code> 作为拨号信号编码的两个频率
+    <p>默认播放的是 <code>350</code>, <code>440</code>, 也就是常听到的拿起电话准备拨号的声音</p>
+  </li>
+</ul>
+<p>那么做一个简单的 TouchOSC 界面:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">start-osc-server</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="p">(</span><span class="nf">synth</span><span class="w"> </span><span class="ss">&#39;phone-tone</span><span class="w"> </span><span class="nv">:gate</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">on/off</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="nv">:tone-switch</span><span class="w"> </span><span class="p">(</span><span class="nf">gate</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:gate</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">on/off</span><span class="w"> </span><span class="nv">gate</span><span class="p">)))</span>
+
+<span class="w">  </span><span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="nv">:tone-silent</span><span class="w"> </span><span class="p">(</span><span class="nf">gate</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">gate</span><span class="p">)</span><span class="w"> </span><span class="c1">;; OFF</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:gate</span><span class="w"> </span><span class="nv">on/off</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:gate</span><span class="w"> </span><span class="mi">0</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="nv">:tone1</span><span class="w"> </span><span class="p">(</span><span class="nf">on/off</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">on/off</span><span class="p">)</span><span class="w"> </span><span class="c1">;; OFF</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:low</span><span class="w"> </span><span class="mi">350</span><span class="w"> </span><span class="nv">:high</span><span class="w"> </span><span class="mi">440</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:low</span><span class="w"> </span><span class="mi">697</span><span class="w"> </span><span class="nv">:high</span><span class="w"> </span><span class="mi">1209</span><span class="p">)))</span>
+
+<span class="c1">;;; ...</span>
+</pre></div>
+<p>解释:</p>
+<ul>
+  <li><a href="https://github.com/li-yiyang/lapork-lecture/blob/e0d1b28b7a39440d0ab02eda50b0cf3abfa8aee5/lisp/oscdef/oscdef.lisp#L55">=start-osc-server=</a> 打开一个 OSC server 来接受控制的 OSC 指令</li>
+  <li><code>synth</code> 定义了一个初始 <code>gate</code> 状态为关闭的 <code>phone-tone</code> 的合成器, 也就是我们的拨号器</li>
+  <li>定义了三个 OSC 指令, 分别对应 TouchOSC 中的按钮名称:
+    <ul>
+      <li><code>toneSwitch</code>: 是否使用拨号器 (开关合成器 <code>phone</code> 的 <code>gate</code> 信号,
+        同时修改局部变量 <code>on/off</code> 的值为开或关);</li>
+      <li><code>toneSilent</code>: 一时的静音, 当 <code>gate</code> 为非 <code>0</code> 时, 将 <code>phone</code> 的 <code>gate</code> 信号设为 <code>0</code>,
+        其他的时候恢复正常状态;</li>
+      <li><code>tone1</code>: 使用按键 <code>1</code> 的声音, 若关闭, 则将声音重新置为等待拨号的呜呜声状态</li>
+      <li>其他的 <code>tone*</code> 同理</li>
+    </ul>
+  </li>
+</ul>
+<details><summary>完整的 TouchOSC 和控制代码</summary>
+<p>因为手动一个个设置 <code>tone*</code> 太麻烦了, 所以这里我使用了 Common Lisp 的特性:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">macrolet</span><span class="w"> </span><span class="p">((</span><span class="nf">tone*</span><span class="w"> </span><span class="p">(</span><span class="nf">high-freqs</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">tone-table</span><span class="p">)</span>
+<span class="w">             </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">                </span><span class="o">,@</span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="p">(</span><span class="nf">low</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">tones</span><span class="p">)</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">tone-table</span>
+<span class="w">                        </span><span class="nv">:collect</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="nv">tone</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">tones</span>
+<span class="w">                              </span><span class="nv">:for</span><span class="w"> </span><span class="nv">high</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">high-freqs</span>
+<span class="w">                              </span><span class="nv">:collect</span>
+<span class="w">                              </span><span class="o">`</span><span class="p">(</span><span class="nf">oscdef</span><span class="w"> </span><span class="o">,</span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;tone~A&quot;</span><span class="w"> </span><span class="nv">tone</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">gate</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="nv">gate</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:low</span><span class="w"> </span><span class="mi">350</span><span class="w">  </span><span class="nv">:high</span><span class="w"> </span><span class="mi">440</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">ctrl</span><span class="w"> </span><span class="nv">phone</span><span class="w"> </span><span class="nv">:low</span><span class="w"> </span><span class="o">,</span><span class="nv">low</span><span class="w"> </span><span class="nv">:high</span><span class="w"> </span><span class="o">,</span><span class="nv">high</span><span class="p">))))</span>
+<span class="w">                          </span><span class="nv">:into</span><span class="w"> </span><span class="nv">defs</span>
+<span class="w">                        </span><span class="nv">:finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;append</span><span class="w"> </span><span class="nv">defs</span><span class="p">))))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">tone*</span><span class="w"> </span><span class="p">(</span><span class="w">        </span><span class="mi">1209</span><span class="w"> </span><span class="mi">1336</span><span class="w"> </span><span class="mi">1477</span><span class="w"> </span><span class="mi">1633</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="mi">697</span><span class="w">     </span><span class="mi">1</span><span class="w">    </span><span class="mi">2</span><span class="w">    </span><span class="mi">3</span><span class="w">    </span><span class="nv">A</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="mi">770</span><span class="w">     </span><span class="mi">4</span><span class="w">    </span><span class="mi">5</span><span class="w">    </span><span class="mi">6</span><span class="w">    </span><span class="nv">B</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="mi">852</span><span class="w">     </span><span class="mi">7</span><span class="w">    </span><span class="mi">8</span><span class="w">    </span><span class="mi">9</span><span class="w">    </span><span class="nv">C</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="mi">941</span><span class="w">     </span><span class="nb">*</span><span class="w">    </span><span class="mi">0</span><span class="w">    </span><span class="nv">|</span><span class="cm">#|  D)))</span>
+</pre></div>
+<p>解释:</p>
+<ul>
+  <li><code>macrolet</code> 定义了一个局部的宏展开 <code>tone*</code>, 将输入的参数看作是一个表格,
+    第一行是高频信息, 剩下的行 (<code>&amp;rest</code>) 为 <code>(低频信息 . 按键名称)</code></li>
+</ul>
+<p>完整的代码见: <a href="https://github.com/li-yiyang/lapork-lecture/blob/main/lisp/examples/lapork-03/phone.lisp">phone.lisp</a> 以及 <a href="https://github.com/li-yiyang/lapork-lecture/blob/main/touchosc/lecture-03/phone-calling.tosc">phone-calling.tosc</a>.</p>
+</details>
+<p>效果如下:</p>
+<video controls width="600" style="display: block; margin: auto;"><source src="/_img/lapork/03/phone.mp4" type="video/mp4" /></video>
+<p>一些鬼点子: 如果用这个生成一段随机拨号音, 然后配上 Lain 的 Whisper 采样 greeting,
+  估计会有种赛博朋克的感觉.</p>
+<h3>Fire</h3>
+
+  </div><a class="u-url" href="/lapork/lapork-03/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

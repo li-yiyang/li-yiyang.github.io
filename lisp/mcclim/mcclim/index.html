@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>CLIM, the galaxy’s most advanced graphics toolkit | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="CLIM, the galaxy’s most advanced graphics toolkit" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Preface 这是我对 CLIM, the galaxy&#39;s most advanced graphics toolkit 的一个不完全翻译, 因为要用到 McCLIM 来做 GUI. 并且既然是不完全翻译, 所以不一定按照原始的文字和代码, 是按照我在自己电脑上进行测试的结果和过程进行一个翻译. 可能会有出入. Setting up the basic environment 假设已经拥有了一个配置好的 Common Lisp 环境 (包含 Quicklisp). 假设其他加载 mcclim 和 clim-listener 的必要组件 (system) 都已经具备, 其实可以直接通过 Quicklisp 来进行加载: (ql:quickload &#39;(mcclim clim-listener)) 在另外一个线程中启用 clim-listner: (clim-listener:run-listener :new-process t) 注: 在这里相当于是将 clim-listener 当作是一个好用的快速 GUI 测试工具. (2023/12/4) 注: Quicklisp 上的版本貌似有点问题, 还是建议直接源码来用. Finding Your way around CLIM CLIM 是一个精简的抽象图形工具库 (graphics toolkits). 切换到 CLIM-INTERNALS 包来开始, 在 REPL 中输入: (in-package climi) Animations 运行如下的命令: (defparameter *scale-multiplier* 150 &quot;请尝试在运行时修改我! &quot;)" />
+<meta property="og:description" content="Preface 这是我对 CLIM, the galaxy&#39;s most advanced graphics toolkit 的一个不完全翻译, 因为要用到 McCLIM 来做 GUI. 并且既然是不完全翻译, 所以不一定按照原始的文字和代码, 是按照我在自己电脑上进行测试的结果和过程进行一个翻译. 可能会有出入. Setting up the basic environment 假设已经拥有了一个配置好的 Common Lisp 环境 (包含 Quicklisp). 假设其他加载 mcclim 和 clim-listener 的必要组件 (system) 都已经具备, 其实可以直接通过 Quicklisp 来进行加载: (ql:quickload &#39;(mcclim clim-listener)) 在另外一个线程中启用 clim-listner: (clim-listener:run-listener :new-process t) 注: 在这里相当于是将 clim-listener 当作是一个好用的快速 GUI 测试工具. (2023/12/4) 注: Quicklisp 上的版本貌似有点问题, 还是建议直接源码来用. Finding Your way around CLIM CLIM 是一个精简的抽象图形工具库 (graphics toolkits). 切换到 CLIM-INTERNALS 包来开始, 在 REPL 中输入: (in-package climi) Animations 运行如下的命令: (defparameter *scale-multiplier* 150 &quot;请尝试在运行时修改我! &quot;)" />
+<link rel="canonical" href="/lisp/mcclim/mcclim/" />
+<meta property="og:url" content="/lisp/mcclim/mcclim/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="CLIM, the galaxy’s most advanced graphics toolkit" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-04T00:00:00+00:00","datePublished":"2023-12-04T00:00:00+00:00","description":"Preface 这是我对 CLIM, the galaxy&#39;s most advanced graphics toolkit 的一个不完全翻译, 因为要用到 McCLIM 来做 GUI. 并且既然是不完全翻译, 所以不一定按照原始的文字和代码, 是按照我在自己电脑上进行测试的结果和过程进行一个翻译. 可能会有出入. Setting up the basic environment 假设已经拥有了一个配置好的 Common Lisp 环境 (包含 Quicklisp). 假设其他加载 mcclim 和 clim-listener 的必要组件 (system) 都已经具备, 其实可以直接通过 Quicklisp 来进行加载: (ql:quickload &#39;(mcclim clim-listener)) 在另外一个线程中启用 clim-listner: (clim-listener:run-listener :new-process t) 注: 在这里相当于是将 clim-listener 当作是一个好用的快速 GUI 测试工具. (2023/12/4) 注: Quicklisp 上的版本貌似有点问题, 还是建议直接源码来用. Finding Your way around CLIM CLIM 是一个精简的抽象图形工具库 (graphics toolkits). 切换到 CLIM-INTERNALS 包来开始, 在 REPL 中输入: (in-package climi) Animations 运行如下的命令: (defparameter *scale-multiplier* 150 &quot;请尝试在运行时修改我! &quot;)","headline":"CLIM, the galaxy’s most advanced graphics toolkit","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/mcclim/mcclim/"},"url":"/lisp/mcclim/mcclim/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">CLIM, the galaxy&#39;s most advanced graphics toolkit</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-04T00:00:00+00:00" itemprop="datePublished">Dec 4, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>Preface</h1>
+<p>这是我对 <a href="https://mcclim.common-lisp.dev/posts/CLIM-the-galaxys-most-advanced-graphics-toolkit.html">CLIM, the galaxy's most advanced graphics toolkit</a> 的一个不完全翻译,
+  因为要用到 McCLIM 来做 GUI.</p>
+<p>并且既然是不完全翻译, 所以不一定按照原始的文字和代码,
+  是按照我在自己电脑上进行测试的结果和过程进行一个翻译. 可能会有出入.</p>
+<h1>Setting up the basic environment</h1>
+<p>假设已经拥有了一个配置好的 Common Lisp 环境 (包含 Quicklisp).
+  假设其他加载 <code>mcclim</code> 和 <code>clim-listener</code> 的必要组件 (system) 都已经具备,
+  其实可以直接通过 <a href="https://www.quicklisp.org/beta/">Quicklisp</a> 来进行加载:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">ql:quickload</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">mcclim</span><span class="w"> </span><span class="nv">clim-listener</span><span class="p">))</span>
+</pre></div>
+<p>在另外一个线程中启用 <code>clim-listner</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">clim-listener:run-listener</span><span class="w"> </span><span class="nv">:new-process</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+</pre></div>
+<p>注: 在这里相当于是将 <code>clim-listener</code> 当作是一个好用的快速 GUI 测试工具.</p>
+<p>(2023/12/4) 注: Quicklisp 上的版本貌似有点问题, 还是建议直接源码来用.</p>
+<h1>Finding Your way around CLIM</h1>
+<p>CLIM 是一个精简的抽象图形工具库 (graphics toolkits).</p>
+<p>切换到 <code>CLIM-INTERNALS</code> 包来开始, 在 REPL 中输入:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">climi</span><span class="p">)</span>
+</pre></div>
+<h2>Animations</h2>
+<p>运行如下的命令:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*scale-multiplier*</span><span class="w"> </span><span class="mi">150</span>
+<span class="w">  </span><span class="s">&quot;请尝试在运行时修改我! &quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*sleep-time*</span><span class="w"> </span><span class="mf">0.0001</span>
+<span class="w">  </span><span class="s">&quot;修改我来加速或者减速动画的速度, 设为 `nil&#39; 来停止动画.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">cos-animation</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">range</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">k</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">pi</span><span class="p">)</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="mf">0.1</span><span class="w"> </span><span class="nv">collect</span><span class="w"> </span><span class="nv">k</span><span class="p">))</span><span class="w"> </span><span class="c1">; 长度: 62</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">idx</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">record</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">updating-output</span><span class="w"> </span><span class="p">(</span><span class="nf">*standard-output*</span><span class="p">)</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">from</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">range</span><span class="p">)</span><span class="w"> </span><span class="nv">to</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">range</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="nv">pi</span><span class="p">))</span><span class="w"> </span><span class="nv">by</span><span class="w"> </span><span class="mf">0.01</span>
+<span class="w">                   </span><span class="nv">with</span><span class="w"> </span><span class="nv">y-offset</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="mi">150</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">x-offset</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">*scale-multiplier*</span><span class="w"> </span><span class="p">(</span><span class="nf">nth</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="nv">range</span><span class="p">)))</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">x-value</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">y-offset</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">*scale-multiplier*</span><span class="w"> </span><span class="p">(</span><span class="nb">cos</span><span class="w"> </span><span class="nv">x</span><span class="p">)))</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">y-value</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">x-offset</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">*scale-multiplier*</span><span class="w"> </span><span class="nv">x</span><span class="p">))</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-point*</span><span class="w"> </span><span class="nv">*standard-output*</span>
+<span class="w">                                   </span><span class="nv">x-value</span>
+<span class="w">                                   </span><span class="nv">y-value</span>
+<span class="w">                                   </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">+green+</span>
+<span class="w">                                   </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="mi">3</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">*sleep-time*</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">progn</span><span class="w"> </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="nv">*sleep-time*</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="mi">61</span><span class="w"> </span><span class="nv">idx</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">idx</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">idx</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">redisplay</span><span class="w"> </span><span class="nv">record</span><span class="w"> </span><span class="nv">*standard-output*</span><span class="p">)))))</span>
+</pre></div>
+<p>其效果大概如下图所示:</p>
+<p><img src="/_img/lisp/mcclim/quick-tutorial/cos-animation.gif" alt="/_img/lisp/mcclim/quick-tutorial/cos-animation.gif" /></p>
+<p>你可以通过在 SLY/SLIME 中设置 <code>*sleep-time*</code> 为 <code>nil</code> 来停止动画:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">*sleep-time*</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+</pre></div>
+<p>如果这有点 low, 不如试试看 (在 listener 中, 因为是直接返回一个待渲染元素):</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">clim-listener::draw-function-filled-graph</span>
+<span class="w"> </span><span class="o">#</span><span class="ss">&#39;sin</span><span class="w"> </span><span class="nv">:min-x</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="nv">pi</span><span class="w"> </span><span class="nv">pi</span><span class="p">)</span><span class="w"> </span><span class="nv">:max-x</span><span class="w"> </span><span class="nv">pi</span><span class="w"> </span><span class="nv">:min-y</span><span class="w"> </span><span class="mf">-1.1</span><span class="w"> </span><span class="nv">:max-y</span><span class="w"> </span><span class="mf">1.5</span><span class="w"> </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">+pink+</span><span class="p">)</span>
+</pre></div>
+<p><img src="/_img/lisp/mcclim/quick-tutorial/draw-function-filled-graph.png" alt="/_img/lisp/mcclim/quick-tutorial/draw-function-filled-graph.png" /></p>
+<p>(在 listener 中输入 =,clear output history= 可以清空屏幕, 单一个 =,clear= 也行.
+  可以使用 <code>C-/</code> 来激活补全, <code>C-c C-c</code> 来忽略补全, 但是在我这里的按键绑定坏了,
+  之后再修)</p>
+<h2>Draw class hierarchy</h2>
+<p>可以通过 <code>(clim-listener::com-show-class-subclass &#39;sheet)</code> 来绘制 <code>CLIMI::SHEET</code>
+  的类的继承关系:</p>
+<p><img src="/_img/lisp/mcclim/quick-tutorial/class-hierarchy.png" alt="/_img/lisp/mcclim/quick-tutorial/class-hierarchy.png" /></p>
+<h2>Commands and presentations</h2>
+<p>就如同你在使用 SLIME 或者 SLY 的时候按下 =,= 的命令输入一样,
+  CLIM 的命令也是以一个 =,= 开始的. 你可以在 SLIME 或者 SLY 中定义这些命令.
+  这些命令需要以 <code>COM-</code> 开头.</p>
+<div class="highlight"><pre><span></span><span class="c1">;;; 首先进入到 clim-listener 包</span>
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">clim-listener</span><span class="p">)</span>
+
+<span class="c1">;;; 往 /tmp 文件夹下放一些简单的示例图片, 不过貌似</span>
+<span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">image-name</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;face-paji.jpg&quot;</span>
+<span class="w">                      </span><span class="s">&quot;i-do-said-so.jpg&quot;</span>
+<span class="w">                      </span><span class="s">&quot;korewa-unmei.jpg&quot;</span>
+<span class="w">                      </span><span class="s">&quot;overload.jpg&quot;</span>
+<span class="w">                      </span><span class="s">&quot;sodayou.jpg&quot;</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">uiop:run-program</span>
+<span class="w">   </span><span class="p">(</span><span class="nb">list</span>
+<span class="w">    </span><span class="s">&quot;curl&quot;</span><span class="w"> </span><span class="s">&quot;-L&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;https://li-yiyang.github.io/_img/meme/~a&quot;</span><span class="w"> </span><span class="nv">image-name</span><span class="p">)</span>
+<span class="w">    </span><span class="s">&quot;--output&quot;</span><span class="w"> </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="s">&quot;/tmp/~a&quot;</span><span class="w"> </span><span class="nv">image-name</span><span class="p">))))</span>
+
+<span class="c1">;;; 定义一个 listener 命令</span>
+<span class="p">(</span><span class="nf">define-listener-command</span><span class="w"> </span><span class="p">(</span><span class="nf">com-ls</span><span class="w"> </span><span class="nv">:name</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">    </span><span class="p">((</span><span class="nf">path</span><span class="w"> </span><span class="ss">&#39;string</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">clim-listener::com-show-directory</span><span class="w"> </span><span class="nv">path</span><span class="p">))</span>
+</pre></div>
+<p>然后在 listener 中输入: =,ls /tmp/= 然后 =,display image= 可以通过点击前一步
+  <code>ls</code> 得到的结果来输入 <code>display image</code> 的参数.</p>
+<p>因为 CLIM 的核心是 Presentation 记号 (the notion of a presentation).
+  每个对象可以拥有其 presentation 的方法 (method), 比如一些特殊声明的渲染几何逻辑.
+  然后当对象被 PRESENT 到屏幕上时, CLIM 根据其类型进行渲染.
+  而被渲染到屏幕上的对象又可以通过点击的方式以参数的形式重新进入 REPL 的命令输入.</p>
+<p>可以阅读 <a href="http://bauhh.dyndns.org:8000/clim-spec/27-1.html#_1380">CLIMI::DEFINE-COMMAND</a> 来了解更多.</p>
+<p>下面是一个稍微具体的例子:</p>
+<h2>Intermixing S-expressions with the presentation types</h2>
+<p>在 SLIME / SLY 中定义:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">climi</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">nijigen</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="s">&quot;face paji&quot;</span><span class="w"> </span><span class="s">&quot;korewa unmei&quot;</span><span class="w"> </span><span class="s">&quot;sodayou&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">meme</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">name</span><span class="w"> </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:name</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">avatar</span><span class="w"> </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">avatar</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:avatar</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">nijigen?</span><span class="w"> </span><span class="p">((</span><span class="nf">meme</span><span class="w"> </span><span class="nv">meme</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">member</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">meme</span><span class="p">)</span><span class="w"> </span><span class="nv">nijigen</span><span class="w"> </span><span class="nv">:test</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;string=</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-presentation-type</span><span class="w"> </span><span class="nv">meme</span><span class="w"> </span><span class="p">())</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-meme</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">avatar</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;meme</span>
+<span class="w">                 </span><span class="nv">:name</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">                 </span><span class="nv">:avatar</span><span class="w"> </span><span class="nv">avatar</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*memes*</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">info</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;make-meme</span><span class="w"> </span><span class="nv">info</span><span class="p">))</span>
+<span class="w">          </span><span class="o">&#39;</span><span class="p">((</span><span class="s">&quot;face paji&quot;</span><span class="w">    </span><span class="o">#</span><span class="nv">P</span><span class="w"> </span><span class="s">&quot;/tmp/face-paji.jpg&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="s">&quot;i do said so&quot;</span><span class="w"> </span><span class="o">#</span><span class="nv">P</span><span class="w"> </span><span class="s">&quot;/tmp/i-do-said-so.jpg&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="s">&quot;korewa unmei&quot;</span><span class="w"> </span><span class="o">#</span><span class="nv">P</span><span class="w"> </span><span class="s">&quot;/tmp/korewa-unmei.jpg&quot;</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="s">&quot;overload&quot;</span><span class="w">     </span><span class="o">#</span><span class="nv">P</span><span class="w"> </span><span class="s">&quot;/tmp/overload.jpg&quot;</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">define-presentation-method</span><span class="w"> </span><span class="nv">present</span><span class="w"> </span><span class="p">(</span><span class="nf">object</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">meme</span><span class="p">)</span>
+<span class="w">                                            </span><span class="nv">stream</span>
+<span class="w">                                            </span><span class="p">(</span><span class="nf">view</span><span class="w"> </span><span class="nv">textual-view</span><span class="p">)</span>
+<span class="w">                                            </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">acceptably</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignorable</span><span class="w"> </span><span class="nv">acceptably</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">x</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">stream-cursor-position</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">with-slots</span><span class="w"> </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">avatar</span><span class="p">)</span><span class="w"> </span><span class="nv">object</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">draw-pattern*</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">make-pattern-from-bitmap-file</span><span class="w"> </span><span class="nv">avatar</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">150</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span>
+<span class="w">                     </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">30</span><span class="w">  </span><span class="nv">y</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">draw-text*</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">153</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">167</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">+black+</span>
+<span class="w">                  </span><span class="nv">:text-size</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">draw-text*</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">152</span><span class="w"> </span><span class="nv">x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">166</span><span class="w"> </span><span class="nv">y</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">:ink</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">nijigen?</span><span class="w"> </span><span class="nv">object</span><span class="p">)</span>
+<span class="w">                           </span><span class="nv">+gold+</span>
+<span class="w">                           </span><span class="nv">+blue+</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">:text-size</span><span class="w"> </span><span class="mi">20</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">stream-cursor-position</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="nv">y</span><span class="p">)))</span>
+<span class="w">    </span><span class="nv">object</span><span class="p">))</span>
+</pre></div>
+<p>在 listener 中执行如下的命令:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="nv">*memes*</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">present</span><span class="w"> </span><span class="nv">i</span><span class="p">))</span>
+</pre></div>
+<p>即可得到:</p>
+<p><img src="/_img/lisp/mcclim/quick-tutorial/present-example.png" alt="/_img/lisp/mcclim/quick-tutorial/present-example.png" /></p>
+<p>并且通过点击还可进行更加有意思的事情, 输入 <code>(nijigen?</code> 后点击上面的图片:</p>
+<p><img src="/_img/lisp/mcclim/quick-tutorial/present-input-example.png" alt="/_img/lisp/mcclim/quick-tutorial/present-input-example.png" /></p>
+<p>就可以将这种图形化的参数像正常的参数一样输出诶&#8230; 这难道不是一个非常吸引人的点吗?</p>
+<h1>Notes</h1>
+<blockquote>
+  <p>Unripe fruits. The future isn't what it used to be - some assembly required.</p>
+  <ul>
+    <li><code>(CLIM-DEMO::DEMODEMO)</code> (available with system <code>clim-examples</code>)</li>
+    <li>The essential machinery of a 'live' <a href="http://paste.lisp.org/display/320742#1">GUI builder</a></li>
+    <li><a href="https://github.com/robert-strandh/McCLIM/issues/55#issuecomment-234805226">Navigator</a> (essentially an extended `apropos')</li>
+  </ul>
+</blockquote>
+
+  </div><a class="u-url" href="/lisp/mcclim/mcclim/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

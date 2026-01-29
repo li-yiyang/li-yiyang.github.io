@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Open Genera 2 on macOS via QEMU | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Open Genera 2 on macOS via QEMU" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 一直在网上看到有说 Lisp Machine 时代有多么的美妙, 所以对 Symbolics 的 Genera 比较好奇, 非常想要玩玩看. 但是因为历史原因, 大部分这些都是一些过时的信息, 或者是有一些落后的数据没有得到更新. 于是在折腾了快两天之后 (没错, 这就是周末消失术), 我终于得到了一个跑起来的 Open Genera 2 了. 然后又经过了快一天的时间, 我把它自动化了, 现在你可以直接使用 cloud-init (也就是 cidata.iso (github repo release)), 配合 Ubuntu Cloud Image 来自动化地安装一个镜像. 简单的概要 感觉跑通了之后就会觉得, 啊, 好像不是很难的感觉. (实际上还是有很多的坑的&#8230; 之后用的过程中估计还得手动修一修. ) 这里是大概的一些概念: INETD: 用来为 Genera 提供时间, 如果你在启动的时候发现什么都没有, 只有一段文字在问你设置时间, 那么大概就是它挂了, 可以检查的点有: 是否安装了 inetutils-inetd 在 /etc/inetd.conf 中是否有信息: daytime stream tcp nowait root internal daytime dgram udp wait root internal time stream tcp nowait root internal time dgram udp wait root internal NFS-KERNEL-SERVER: 用来提供 NFS 网络服务, 如果在 login 的时候, 出现无法访问文件的提示, 估计是它挂了, 可以检查的点有: 是否安装了 nfs-kernel-server 在 /etc/exports 中是否有信息: / genera(rw,sync,no_subtree_check,all_squash,anonuid=0,anongid=0) 在 /var/lib/symbolics/.VLM 中的 genera.network 是否正确设置 在 ip tap0 中是否可以找到 tap0 (当前是做了一个 tap0 用来接入) 实在想不出来了&#8230; 现在我还卡在那个地方呢&#8230; 解决后再来更新一下, 不过好消息是也不是不能用&#8230; xxx.vlod: 是一个 Genera 的核心的 dump, 类似于虚拟机快照的东西, 这里使用的是一个带 NFSv3 patch 的镜像 .VLM, 用于配置 vlm 启动的时候的行为 After 之后会再更新一下使用的部分的体验&#8230; 不过我还是更想要一个移植的 linux-vlm, 估计会好很多&#8230; 虽然&#8230; Lisp Machines are something that you think is really cool when you first learn about them, then you come to the realization that pining for them is a waste of time. 就酱先. OpenGenera Fonts on macOS 参考 Genera X11 Fonts on Mac, 可以在 sys.sct/x11/fonts/bdf/genera 中找到形为 *.bdf.~*~ 的 BDF 形式的字体. 可以使用 FontForge 来进行转换: for i in *; do fontforge -c &quot;open(argv[1]).generate(argv[2], &#39;dfont&#39;)&quot; $i $i:r:r done 转换为 Apple 的 dfont 的格式, 就可以添加到 macOS 的字体中去了. 不过实际会发现, 里面有一部分是用来表示一些特殊符号的, 比如 GENERA-ARROW 之类的. 并且也不是所有的字体都适合用来作为写代码的字体&#8230; 不过要是点阵字体真有那么好的话, 估计也不会有人想要做矢量字体了吧. (哦, 实际发现使用的效果貌似字间距有些问题, 在 Emacs 上测试是没有问题的, 但是在其他正常的显示里面会有问题&#8230; 感觉还是需要一些修正.)" />
+<meta property="og:description" content="About 一直在网上看到有说 Lisp Machine 时代有多么的美妙, 所以对 Symbolics 的 Genera 比较好奇, 非常想要玩玩看. 但是因为历史原因, 大部分这些都是一些过时的信息, 或者是有一些落后的数据没有得到更新. 于是在折腾了快两天之后 (没错, 这就是周末消失术), 我终于得到了一个跑起来的 Open Genera 2 了. 然后又经过了快一天的时间, 我把它自动化了, 现在你可以直接使用 cloud-init (也就是 cidata.iso (github repo release)), 配合 Ubuntu Cloud Image 来自动化地安装一个镜像. 简单的概要 感觉跑通了之后就会觉得, 啊, 好像不是很难的感觉. (实际上还是有很多的坑的&#8230; 之后用的过程中估计还得手动修一修. ) 这里是大概的一些概念: INETD: 用来为 Genera 提供时间, 如果你在启动的时候发现什么都没有, 只有一段文字在问你设置时间, 那么大概就是它挂了, 可以检查的点有: 是否安装了 inetutils-inetd 在 /etc/inetd.conf 中是否有信息: daytime stream tcp nowait root internal daytime dgram udp wait root internal time stream tcp nowait root internal time dgram udp wait root internal NFS-KERNEL-SERVER: 用来提供 NFS 网络服务, 如果在 login 的时候, 出现无法访问文件的提示, 估计是它挂了, 可以检查的点有: 是否安装了 nfs-kernel-server 在 /etc/exports 中是否有信息: / genera(rw,sync,no_subtree_check,all_squash,anonuid=0,anongid=0) 在 /var/lib/symbolics/.VLM 中的 genera.network 是否正确设置 在 ip tap0 中是否可以找到 tap0 (当前是做了一个 tap0 用来接入) 实在想不出来了&#8230; 现在我还卡在那个地方呢&#8230; 解决后再来更新一下, 不过好消息是也不是不能用&#8230; xxx.vlod: 是一个 Genera 的核心的 dump, 类似于虚拟机快照的东西, 这里使用的是一个带 NFSv3 patch 的镜像 .VLM, 用于配置 vlm 启动的时候的行为 After 之后会再更新一下使用的部分的体验&#8230; 不过我还是更想要一个移植的 linux-vlm, 估计会好很多&#8230; 虽然&#8230; Lisp Machines are something that you think is really cool when you first learn about them, then you come to the realization that pining for them is a waste of time. 就酱先. OpenGenera Fonts on macOS 参考 Genera X11 Fonts on Mac, 可以在 sys.sct/x11/fonts/bdf/genera 中找到形为 *.bdf.~*~ 的 BDF 形式的字体. 可以使用 FontForge 来进行转换: for i in *; do fontforge -c &quot;open(argv[1]).generate(argv[2], &#39;dfont&#39;)&quot; $i $i:r:r done 转换为 Apple 的 dfont 的格式, 就可以添加到 macOS 的字体中去了. 不过实际会发现, 里面有一部分是用来表示一些特殊符号的, 比如 GENERA-ARROW 之类的. 并且也不是所有的字体都适合用来作为写代码的字体&#8230; 不过要是点阵字体真有那么好的话, 估计也不会有人想要做矢量字体了吧. (哦, 实际发现使用的效果貌似字间距有些问题, 在 Emacs 上测试是没有问题的, 但是在其他正常的显示里面会有问题&#8230; 感觉还是需要一些修正.)" />
+<link rel="canonical" href="/lisp/opengenera2-on-macos-via-qemu/" />
+<meta property="og:url" content="/lisp/opengenera2-on-macos-via-qemu/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Open Genera 2 on macOS via QEMU" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-03-24T00:00:00+00:00","datePublished":"2024-03-24T00:00:00+00:00","description":"About 一直在网上看到有说 Lisp Machine 时代有多么的美妙, 所以对 Symbolics 的 Genera 比较好奇, 非常想要玩玩看. 但是因为历史原因, 大部分这些都是一些过时的信息, 或者是有一些落后的数据没有得到更新. 于是在折腾了快两天之后 (没错, 这就是周末消失术), 我终于得到了一个跑起来的 Open Genera 2 了. 然后又经过了快一天的时间, 我把它自动化了, 现在你可以直接使用 cloud-init (也就是 cidata.iso (github repo release)), 配合 Ubuntu Cloud Image 来自动化地安装一个镜像. 简单的概要 感觉跑通了之后就会觉得, 啊, 好像不是很难的感觉. (实际上还是有很多的坑的&#8230; 之后用的过程中估计还得手动修一修. ) 这里是大概的一些概念: INETD: 用来为 Genera 提供时间, 如果你在启动的时候发现什么都没有, 只有一段文字在问你设置时间, 那么大概就是它挂了, 可以检查的点有: 是否安装了 inetutils-inetd 在 /etc/inetd.conf 中是否有信息: daytime stream tcp nowait root internal daytime dgram udp wait root internal time stream tcp nowait root internal time dgram udp wait root internal NFS-KERNEL-SERVER: 用来提供 NFS 网络服务, 如果在 login 的时候, 出现无法访问文件的提示, 估计是它挂了, 可以检查的点有: 是否安装了 nfs-kernel-server 在 /etc/exports 中是否有信息: / genera(rw,sync,no_subtree_check,all_squash,anonuid=0,anongid=0) 在 /var/lib/symbolics/.VLM 中的 genera.network 是否正确设置 在 ip tap0 中是否可以找到 tap0 (当前是做了一个 tap0 用来接入) 实在想不出来了&#8230; 现在我还卡在那个地方呢&#8230; 解决后再来更新一下, 不过好消息是也不是不能用&#8230; xxx.vlod: 是一个 Genera 的核心的 dump, 类似于虚拟机快照的东西, 这里使用的是一个带 NFSv3 patch 的镜像 .VLM, 用于配置 vlm 启动的时候的行为 After 之后会再更新一下使用的部分的体验&#8230; 不过我还是更想要一个移植的 linux-vlm, 估计会好很多&#8230; 虽然&#8230; Lisp Machines are something that you think is really cool when you first learn about them, then you come to the realization that pining for them is a waste of time. 就酱先. OpenGenera Fonts on macOS 参考 Genera X11 Fonts on Mac, 可以在 sys.sct/x11/fonts/bdf/genera 中找到形为 *.bdf.~*~ 的 BDF 形式的字体. 可以使用 FontForge 来进行转换: for i in *; do fontforge -c &quot;open(argv[1]).generate(argv[2], &#39;dfont&#39;)&quot; $i $i:r:r done 转换为 Apple 的 dfont 的格式, 就可以添加到 macOS 的字体中去了. 不过实际会发现, 里面有一部分是用来表示一些特殊符号的, 比如 GENERA-ARROW 之类的. 并且也不是所有的字体都适合用来作为写代码的字体&#8230; 不过要是点阵字体真有那么好的话, 估计也不会有人想要做矢量字体了吧. (哦, 实际发现使用的效果貌似字间距有些问题, 在 Emacs 上测试是没有问题的, 但是在其他正常的显示里面会有问题&#8230; 感觉还是需要一些修正.)","headline":"Open Genera 2 on macOS via QEMU","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/opengenera2-on-macos-via-qemu/"},"url":"/lisp/opengenera2-on-macos-via-qemu/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Open Genera 2 on macOS via QEMU</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-24T00:00:00+00:00" itemprop="datePublished">Mar 24, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>一直在网上看到有说 <a href="https://en.wikipedia.org/wiki/Lisp_machine">Lisp Machine</a> 时代有多么的美妙,
+  所以对 Symbolics 的 Genera 比较好奇, 非常想要玩玩看.</p>
+<p><img src="/_img/lisp/misc/opengenera/Ryo-genera.png" alt="/_img/lisp/misc/opengenera/Ryo-genera.png" /></p>
+<p>但是因为历史原因, 大部分这些都是一些过时的信息,
+  或者是有一些落后的数据没有得到更新. 于是在折腾了快两天之后
+  (没错, 这就是周末消失术), 我终于得到了一个跑起来的 Open Genera 2 了.
+  然后又经过了快一天的时间, 我把它自动化了,
+  现在你可以直接使用 cloud-init (也就是 <a href="https://github.com/li-yiyang/qemu-opengenera/releases/tag/first-workable-qemu">cidata.iso (github repo release)</a>),
+  配合 <a href="https://cloud-images.ubuntu.com">Ubuntu Cloud Image</a> 来自动化地安装一个镜像.</p>
+<h1>简单的概要</h1>
+<p>感觉跑通了之后就会觉得, 啊, 好像不是很难的感觉.</p>
+<p>(实际上还是有很多的坑的&#8230; 之后用的过程中估计还得手动修一修. )</p>
+<p>这里是大概的一些概念:</p>
+<ul>
+  <li>INETD: 用来为 Genera 提供时间, 如果你在启动的时候发现什么都没有,
+    只有一段文字在问你设置时间, 那么大概就是它挂了, 可以检查的点有:
+    <ol>
+      <li>是否安装了 <code>inetutils-inetd</code></li>
+      <li>在 <code>/etc/inetd.conf</code> 中是否有信息:
+        <pre class="example">
+daytime stream tcp nowait root internal
+daytime dgram udp wait root internal
+time stream tcp nowait root internal
+time dgram udp wait root internal
+        </pre>
+      </li>
+    </ol>
+  </li>
+  <li>NFS-KERNEL-SERVER: 用来提供 NFS 网络服务, 如果在 <code>login</code> 的时候,
+    出现无法访问文件的提示, 估计是它挂了, 可以检查的点有:
+    <ol>
+      <li>是否安装了 <code>nfs-kernel-server</code></li>
+      <li>在 <code>/etc/exports</code> 中是否有信息:
+        <pre class="example">
+/       genera(rw,sync,no_subtree_check,all_squash,anonuid=0,anongid=0)
+        </pre>
+      </li>
+      <li>在 <code>/var/lib/symbolics/.VLM</code> 中的 <code>genera.network</code> 是否正确设置</li>
+      <li>在 <code>ip tap0</code> 中是否可以找到 <code>tap0</code> (当前是做了一个 <code>tap0</code> 用来接入)</li>
+      <li>实在想不出来了&#8230; 现在我还卡在那个地方呢&#8230; 解决后再来更新一下,
+        不过好消息是也不是不能用&#8230;</li>
+    </ol>
+  </li>
+  <li><code>xxx.vlod</code>: 是一个 Genera 的核心的 dump, 类似于虚拟机快照的东西,
+    这里使用的是一个带 NFSv3 patch 的镜像</li>
+  <li><code>.VLM</code>, 用于配置 vlm 启动的时候的行为</li>
+</ul>
+<h1>After</h1>
+<p>之后会再更新一下使用的部分的体验&#8230; 不过我还是更想要一个移植的 <a href="https://github.com/jjachemich/linux-vlm">linux-vlm</a>,
+  估计会好很多&#8230;</p>
+<p>虽然&#8230; <a href="https://news.ycombinator.com/item?id=1878608">Lisp Machines are something that you think is really cool when you first learn about them, then you come to the realization that pining for them is a waste of time.</a></p>
+<p>就酱先.</p>
+<h2>OpenGenera Fonts on macOS</h2>
+<p>参考 <a href="https://symbolics.lisp.engineer/genera-x11-fonts-on-mac/">Genera X11 Fonts on Mac</a>, 可以在 <code>sys.sct/x11/fonts/bdf/genera</code>
+  中找到形为 <code>*.bdf.~*~</code> 的 <a href="https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format">BDF</a> 形式的字体. 可以使用 FontForge 来进行转换:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span>i<span class="w"> </span><span class="k">in</span><span class="w"> </span>*<span class="p">;</span>
+<span class="k">do</span>
+<span class="w">    </span>fontforge<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;open(argv[1]).generate(argv[2], &#39;dfont&#39;)&quot;</span><span class="w"> </span><span class="nv">$i</span><span class="w"> </span><span class="nv">$i</span>:r:r
+<span class="k">done</span>
+</pre></div>
+<p>转换为 Apple 的 dfont 的格式, 就可以添加到 macOS 的字体中去了.
+  不过实际会发现, 里面有一部分是用来表示一些特殊符号的,
+  比如 <code>GENERA-ARROW</code> 之类的.</p>
+<p>并且也不是所有的字体都适合用来作为写代码的字体&#8230;
+  不过要是点阵字体真有那么好的话, 估计也不会有人想要做矢量字体了吧.</p>
+<p>(哦, 实际发现使用的效果貌似字间距有些问题, 在 Emacs 上测试是没有问题的,
+  但是在其他正常的显示里面会有问题&#8230; 感觉还是需要一些修正.)</p>
+
+  </div><a class="u-url" href="/lisp/opengenera2-on-macos-via-qemu/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

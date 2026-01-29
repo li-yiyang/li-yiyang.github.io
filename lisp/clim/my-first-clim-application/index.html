@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>My First CLIM Application | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="My First CLIM Application" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About This as my first CLIM (via McCLIM) application. The logic of the application should be like my 2-D-Ising code, while the main object of the application should focus on CLIM. This test code is inspired by Tixel Viewer, where animation part and other reference code are learnt from the blog post. CLIM-2-D-Ising Note: This code should only focus on how to draw by CLIM, rather than how to write a good 2-D-Ising code. Simple Ising Code I think it should be folded (defpackage 2-d-ising-clim (:use :clim-user :clim :cl))" />
+<meta property="og:description" content="About This as my first CLIM (via McCLIM) application. The logic of the application should be like my 2-D-Ising code, while the main object of the application should focus on CLIM. This test code is inspired by Tixel Viewer, where animation part and other reference code are learnt from the blog post. CLIM-2-D-Ising Note: This code should only focus on how to draw by CLIM, rather than how to write a good 2-D-Ising code. Simple Ising Code I think it should be folded (defpackage 2-d-ising-clim (:use :clim-user :clim :cl))" />
+<link rel="canonical" href="/lisp/clim/my-first-clim-application/" />
+<meta property="og:url" content="/lisp/clim/my-first-clim-application/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-08T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="My First CLIM Application" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-08T00:00:00+00:00","datePublished":"2023-12-08T00:00:00+00:00","description":"About This as my first CLIM (via McCLIM) application. The logic of the application should be like my 2-D-Ising code, while the main object of the application should focus on CLIM. This test code is inspired by Tixel Viewer, where animation part and other reference code are learnt from the blog post. CLIM-2-D-Ising Note: This code should only focus on how to draw by CLIM, rather than how to write a good 2-D-Ising code. Simple Ising Code I think it should be folded (defpackage 2-d-ising-clim (:use :clim-user :clim :cl))","headline":"My First CLIM Application","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/clim/my-first-clim-application/"},"url":"/lisp/clim/my-first-clim-application/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">My First CLIM Application</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-08T00:00:00+00:00" itemprop="datePublished">Dec 8, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>This as my first CLIM (via McCLIM) application.
+  The logic of the application should be like my 2-D-Ising code,
+  while the main object of the application should focus on CLIM.</p>
+<p>This test code is inspired by <a href="https://turtleware.eu/posts/Tixel-Viewer.html">Tixel Viewer</a>, where animation
+  part and other reference code are learnt from the blog post.</p>
+<h1>CLIM-2-D-Ising</h1>Note: This code should only focus on how to draw by CLIM,
+  rather than how to write a good 2-D-Ising code.
+<h2>Simple Ising Code</h2>
+<details><summary>I think it should be folded</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="nv">2-d-ising-clim</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:clim-user</span><span class="w"> </span><span class="nv">:clim</span><span class="w"> </span><span class="nv">:cl</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">2-d-ising-clim</span><span class="p">)</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">ising-model</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">row</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:row</span><span class="w"> </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:col</span><span class="w"> </span><span class="nv">:reader</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">spins</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:spins</span><span class="w"> </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">spins</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="o">#</span><span class="p">())</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">energy</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:energy</span><span class="w"> </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">mag-m</span><span class="w">  </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:mag-m</span><span class="w">  </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">mag-m</span><span class="w">  </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">mag-f</span><span class="w">  </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:mag-f</span><span class="w">  </span><span class="nv">:accessor</span><span class="w"> </span><span class="nv">mag-f</span><span class="w">  </span><span class="nv">:initform</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;2 dimension Ising model.&quot;</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">at</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">)</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="p">(</span><span class="nf">spins</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">near</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">)</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="p">(</span><span class="nb">1-</span><span class="w"> </span><span class="nv">col</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="p">(</span><span class="nb">1+</span><span class="w"> </span><span class="nv">col</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">flip-spin</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">)</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">i</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">j</span><span class="w"> </span><span class="p">(</span><span class="nf">mod</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="p">(</span><span class="nf">spins</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nf">grid:aref</span><span class="w"> </span><span class="p">(</span><span class="nf">spins</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">j</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">update-energy</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">energy</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">decf</span><span class="w"> </span><span class="nv">energy</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="p">(</span><span class="nf">near</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)))</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span>
+<span class="w">                        </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">mag-f</span><span class="w"> </span><span class="nv">ising</span><span class="p">))))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">energy</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="nv">energy</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">update-mag-m</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">mag-m</span><span class="w"> </span><span class="mi">0</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="nv">mag-m</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">mag-m</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="nv">mag-m</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">init-ising-spin-grid</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">init-state</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">spins</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">make-array</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">))</span>
+<span class="w">                    </span><span class="nv">:initial-element</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">init-state</span><span class="w"> </span><span class="ss">&#39;random</span><span class="p">)</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">init-state</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">init-state</span><span class="w"> </span><span class="ss">&#39;random</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">)</span><span class="w"> </span><span class="mf">0.5</span><span class="p">)</span>
+<span class="w">              </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">flip-spin</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">init-ising-model</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">row</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">mag-f</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">init-state</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;ising-model</span><span class="w"> </span><span class="nv">:mag-f</span><span class="w"> </span><span class="nv">mag-f</span><span class="w"> </span><span class="nv">:col</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">:row</span><span class="w"> </span><span class="nv">row</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">init-ising-spin-grid</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">init-state</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">update-mag-m</span><span class="w">  </span><span class="nv">ising</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">update-energy</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">ising</span><span class="p">))</span>
+</pre></div>
+<p><code>metropolis-step</code> function as below:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">metropolis-step</span><span class="w"> </span><span class="p">((</span><span class="nf">ising</span><span class="w"> </span><span class="nv">ising-model</span><span class="p">)</span><span class="w"> </span><span class="nv">kT</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">      </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">dE</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">                    </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;+</span><span class="w"> </span><span class="p">(</span><span class="nf">near</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">))</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">mag-f</span><span class="w"> </span><span class="nv">ising</span><span class="p">))))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">rand</span><span class="w"> </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">p</span><span class="w"> </span><span class="p">(</span><span class="nb">exp</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="nv">kT</span><span class="p">)))))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">dE</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">rand</span><span class="w"> </span><span class="nv">p</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">flip-spin</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="p">(</span><span class="nf">energy</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="nv">dE</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">decf</span><span class="w"> </span><span class="p">(</span><span class="nf">mag-m</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">))))))))</span>
+</pre></div>
+</details>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*ising*</span><span class="w"> </span><span class="p">(</span><span class="nf">init-ising-model</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="nv">:init-state</span><span class="w"> </span><span class="ss">&#39;random</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;The 2d ising model.&quot;</span><span class="p">)</span>
+</pre></div>
+<h2>Some Scaffoldings</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-playground</span><span class="w"> </span><span class="p">((</span><span class="nf">stream</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">width</span><span class="w"> </span><span class="mi">600</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">height</span><span class="w"> </span><span class="mi">800</span><span class="p">)</span>
+<span class="w">                                     </span><span class="p">(</span><span class="nf">scroll-bars</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">                           </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;A playground environment to play CLIM test.&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nb">symbol</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">clim-backend:with-output-to-drawing-stream</span>
+<span class="w">       </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:borders</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:width</span><span class="w"> </span><span class="o">,</span><span class="nv">width</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="o">,</span><span class="nv">height</span>
+<span class="w">                        </span><span class="nv">:scroll-bars</span><span class="w"> </span><span class="o">,</span><span class="nv">scroll-bars</span><span class="p">)</span>
+<span class="w">     </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="mf">.1</span><span class="p">)</span><span class="w">                         </span><span class="c1">; wait for window to create</span>
+<span class="w">     </span><span class="o">,@</span><span class="nv">body</span><span class="p">))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-scene</span><span class="w"> </span><span class="p">((</span><span class="nf">stream</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nb">symbol</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">alexandria:with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">pixmap</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">height</span><span class="p">)</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">pixmap</span><span class="w"> </span><span class="p">(</span><span class="nf">with-output-to-pixmap</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">                       </span><span class="o">,@</span><span class="nv">body</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="o">,</span><span class="nv">width</span><span class="w"> </span><span class="p">(</span><span class="nf">pixmap-width</span><span class="w"> </span><span class="o">,</span><span class="nv">pixmap</span><span class="p">))</span>
+<span class="w">            </span><span class="p">(</span><span class="o">,</span><span class="nv">height</span><span class="w"> </span><span class="p">(</span><span class="nf">pixmap-height</span><span class="w"> </span><span class="o">,</span><span class="nv">pixmap</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">medium-copy-area</span><span class="w"> </span><span class="o">,</span><span class="nv">pixmap</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="o">,</span><span class="nv">width</span><span class="w"> </span><span class="o">,</span><span class="nv">height</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">deallocate-pixmap</span><span class="w"> </span><span class="o">,</span><span class="nv">pixmap</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">finish-output</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">with-animated</span><span class="w"> </span><span class="p">((</span><span class="nf">stream</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">fps</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">continuep</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nb">symbol</span><span class="w"> </span><span class="nv">stream</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">alexandria:with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">err</span><span class="p">)</span>
+<span class="w">    </span><span class="o">`</span><span class="p">(</span><span class="nf">progn</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">handler-case</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">sheet-grafted-p</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">)</span><span class="w"> </span><span class="o">,</span><span class="nv">continuep</span><span class="p">)</span>
+<span class="w">                 </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">with-scene</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="p">)</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)</span>
+<span class="w">                 </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nb">sleep</span><span class="w"> </span><span class="p">(</span><span class="nb">/</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="o">,</span><span class="nv">fps</span><span class="p">)))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">err</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">princ</span><span class="w"> </span><span class="o">,</span><span class="nv">err</span><span class="w"> </span><span class="nv">*debug-io*</span><span class="p">)))</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">close</span><span class="w"> </span><span class="o">,</span><span class="nv">stream</span><span class="p">))))</span>
+</pre></div>
+<h2>Barebone Animation</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">draw</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="p">(</span><span class="nf">thickness</span><span class="w"> </span><span class="mi">5</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">row</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span><span class="w"> </span><span class="k">do</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">below</span><span class="w"> </span><span class="p">(</span><span class="nf">col</span><span class="w"> </span><span class="nv">ising</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">thickness</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">col</span><span class="w"> </span><span class="nv">thickness</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">for</span><span class="w"> </span><span class="nv">color</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">(</span><span class="nf">at</span><span class="w"> </span><span class="nv">ising</span><span class="w"> </span><span class="nv">row</span><span class="w"> </span><span class="nv">col</span><span class="p">))</span><span class="w"> </span><span class="nv">+black+</span><span class="w"> </span><span class="nv">+white+</span><span class="p">)</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">draw-point*</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span>
+<span class="w">                          </span><span class="nv">:ink</span><span class="w"> </span><span class="nv">color</span><span class="w"> </span><span class="nv">:line-thickness</span><span class="w"> </span><span class="nv">thickness</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*ising-fps*</span><span class="w"> </span><span class="mi">24</span>
+<span class="w">  </span><span class="s">&quot;FPS of draw ising model.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*kT*</span><span class="w"> </span><span class="mf">3.0</span>
+<span class="w">  </span><span class="s">&quot;The temperature of ising simulation.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defparameter</span><span class="w"> </span><span class="nv">*simulated*</span><span class="w"> </span><span class="nv">t</span>
+<span class="w">  </span><span class="s">&quot;If continue simulation.&quot;</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">with-playground</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-animated</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">:fps</span><span class="w"> </span><span class="nv">*ising-fps*</span><span class="w"> </span><span class="nv">:continuep</span><span class="w"> </span><span class="nv">*simulated*</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">draw</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">*ising*</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nv">*simulated*</span>
+<span class="w">      </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">metropolis-step</span><span class="w"> </span><span class="nv">*ising*</span><span class="w"> </span><span class="nv">*kT*</span><span class="p">))</span>
+</pre></div>
+<p>意料之外的好:</p>
+<p><img src="/_img/lisp/mcclim/animated-2-d-ising-model.gif" alt="/_img/lisp/mcclim/animated-2-d-ising-model.gif" /></p>
+<h1>对 CLIM 的感觉</h1>
+<p>就不知道大家有没有用过 <a href="http://shoesrb.com">Shoes</a> (_why 写的一个 Ruby 的 GUI 库),
+  简单使用 CLIM 给我的感觉就是有点像. (虽然可能并不像, 因为我已经很久没用过了).</p>
+<p>虽然一开始的学习资料确实少了一些, 并且 CLIM 的说明还很冗长,
+  McCLIM 乍一看挺破旧的 (mac 上的 XQuartz 效果一般).
+  但是不论怎么说, 用上了之后就还挺香的, 之后再想办法试试看能不能进一步应用.</p>
+<p>如果有时间的话, 我希望能够摸一个简单的入门教程来.</p>
+
+  </div><a class="u-url" href="/lisp/clim/my-first-clim-application/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

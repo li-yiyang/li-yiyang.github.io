@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Read] The Symbolics Ivory Design and Verification Strategy | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[Read] The Symbolics Ivory Design and Verification Strategy" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 想要把之前没有写完的 Chip-8 模拟器给写完 (其实已经写完了, 但是现在来看旧的做法并不是很好, 也没法拓展应用到其他的模拟器). 恰好之前在 Reddit 上看到了这篇文章的介绍, 想着不如试试. This paper summarizes the set of tools and design approaches used in the development of the chip. Where possible we will show how Lisp was used as a specification or verification lanaguage. 注: 本文不是翻译. 只是阅读笔记以及可能可以学习的语法和设计的参考. 注: 原始的论文 (也有可能是会议报告就是了) 扫描得有些差劲. 不过可以在 webarchieve 上搞到. 注: 原始的论文里面用到了 Symbolics Lisp Machine 上的 Flavor, 而非现在 CL 中的 CLOS 作为 OOP, 稍微有些不同但是应该可以分辨. Architectural Design Architectural Simulation This level of design is used to verify the virtual machine architecture and gather architectural statistics. (defemulator add operand (multiple-value-bind (first-operand second-operand) (fetch-two-operands operand) (stack-push (+ first-operand second-operand)))) 这部分的语法感觉可以学习, 用来作为模拟器的编写估计会非常有效. Behavioral Simulation Each module defines a set of I/O signals that constitute a module&#39;s communication ports. These specify the ports to be used in the circuit design. (defmodule (adder ivory) :local-state () :local-phase-1-registers () :local-phase-2-registers () :phase-1-registers () :pahse-2-registers () :phase-1-inputs () :phase-1-outputs () :pahse-2-inputs (op1 op2) :phase-2-outputs (external-bus) ) 有点类似于 Verilog 中的 module adder (input op1, op2, output external-bus); 这样的感觉. Each class has a method for simulating the behavior of a module during the first phase of the clock, another for simulating the second phase, and other for updating the window-oriented display after each phase. (defaction (adder :execute-phase-2) (let* ((unsigned-op1 (32-bit op1)) (unsigned-op2 (32-bit op2)) (unsigned-result (+ unsigned-op1 unsigned-op2))) (setq external-bus unsigned-result)))" />
+<meta property="og:description" content="About 想要把之前没有写完的 Chip-8 模拟器给写完 (其实已经写完了, 但是现在来看旧的做法并不是很好, 也没法拓展应用到其他的模拟器). 恰好之前在 Reddit 上看到了这篇文章的介绍, 想着不如试试. This paper summarizes the set of tools and design approaches used in the development of the chip. Where possible we will show how Lisp was used as a specification or verification lanaguage. 注: 本文不是翻译. 只是阅读笔记以及可能可以学习的语法和设计的参考. 注: 原始的论文 (也有可能是会议报告就是了) 扫描得有些差劲. 不过可以在 webarchieve 上搞到. 注: 原始的论文里面用到了 Symbolics Lisp Machine 上的 Flavor, 而非现在 CL 中的 CLOS 作为 OOP, 稍微有些不同但是应该可以分辨. Architectural Design Architectural Simulation This level of design is used to verify the virtual machine architecture and gather architectural statistics. (defemulator add operand (multiple-value-bind (first-operand second-operand) (fetch-two-operands operand) (stack-push (+ first-operand second-operand)))) 这部分的语法感觉可以学习, 用来作为模拟器的编写估计会非常有效. Behavioral Simulation Each module defines a set of I/O signals that constitute a module&#39;s communication ports. These specify the ports to be used in the circuit design. (defmodule (adder ivory) :local-state () :local-phase-1-registers () :local-phase-2-registers () :phase-1-registers () :pahse-2-registers () :phase-1-inputs () :phase-1-outputs () :pahse-2-inputs (op1 op2) :phase-2-outputs (external-bus) ) 有点类似于 Verilog 中的 module adder (input op1, op2, output external-bus); 这样的感觉. Each class has a method for simulating the behavior of a module during the first phase of the clock, another for simulating the second phase, and other for updating the window-oriented display after each phase. (defaction (adder :execute-phase-2) (let* ((unsigned-op1 (32-bit op1)) (unsigned-op2 (32-bit op2)) (unsigned-result (+ unsigned-op1 unsigned-op2))) (setq external-bus unsigned-result)))" />
+<link rel="canonical" href="/lisp/the-symbolics-ivory-design-and-verification-strategy/" />
+<meta property="og:url" content="/lisp/the-symbolics-ivory-design-and-verification-strategy/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-11-25T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Read] The Symbolics Ivory Design and Verification Strategy" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-11-25T00:00:00+00:00","datePublished":"2024-11-25T00:00:00+00:00","description":"About 想要把之前没有写完的 Chip-8 模拟器给写完 (其实已经写完了, 但是现在来看旧的做法并不是很好, 也没法拓展应用到其他的模拟器). 恰好之前在 Reddit 上看到了这篇文章的介绍, 想着不如试试. This paper summarizes the set of tools and design approaches used in the development of the chip. Where possible we will show how Lisp was used as a specification or verification lanaguage. 注: 本文不是翻译. 只是阅读笔记以及可能可以学习的语法和设计的参考. 注: 原始的论文 (也有可能是会议报告就是了) 扫描得有些差劲. 不过可以在 webarchieve 上搞到. 注: 原始的论文里面用到了 Symbolics Lisp Machine 上的 Flavor, 而非现在 CL 中的 CLOS 作为 OOP, 稍微有些不同但是应该可以分辨. Architectural Design Architectural Simulation This level of design is used to verify the virtual machine architecture and gather architectural statistics. (defemulator add operand (multiple-value-bind (first-operand second-operand) (fetch-two-operands operand) (stack-push (+ first-operand second-operand)))) 这部分的语法感觉可以学习, 用来作为模拟器的编写估计会非常有效. Behavioral Simulation Each module defines a set of I/O signals that constitute a module&#39;s communication ports. These specify the ports to be used in the circuit design. (defmodule (adder ivory) :local-state () :local-phase-1-registers () :local-phase-2-registers () :phase-1-registers () :pahse-2-registers () :phase-1-inputs () :phase-1-outputs () :pahse-2-inputs (op1 op2) :phase-2-outputs (external-bus) ) 有点类似于 Verilog 中的 module adder (input op1, op2, output external-bus); 这样的感觉. Each class has a method for simulating the behavior of a module during the first phase of the clock, another for simulating the second phase, and other for updating the window-oriented display after each phase. (defaction (adder :execute-phase-2) (let* ((unsigned-op1 (32-bit op1)) (unsigned-op2 (32-bit op2)) (unsigned-result (+ unsigned-op1 unsigned-op2))) (setq external-bus unsigned-result)))","headline":"[Read] The Symbolics Ivory Design and Verification Strategy","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/the-symbolics-ivory-design-and-verification-strategy/"},"url":"/lisp/the-symbolics-ivory-design-and-verification-strategy/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[Read] The Symbolics Ivory Design and Verification Strategy</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-11-25T00:00:00+00:00" itemprop="datePublished">Nov 25, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>想要把之前没有写完的 Chip-8 模拟器给写完 (其实已经写完了,
+  但是现在来看旧的做法并不是很好, 也没法拓展应用到其他的模拟器).</p>
+<p>恰好之前在 <a href="https://www.reddit.com/r/lisp/comments/1fgoi1x/the_symbolics_ivory_design_and_verification/">Reddit</a> 上看到了这篇文章的介绍, 想着不如试试.</p>
+<blockquote>
+  <p>This paper summarizes the set of tools and design approaches
+    used in the development of the chip. Where possible we will
+    show how Lisp was used as a specification or verification lanaguage.</p>
+</blockquote>
+<p>注: 本文不是翻译. 只是阅读笔记以及可能可以学习的语法和设计的参考.</p>
+<p>注: 原始的论文 (也有可能是会议报告就是了) 扫描得有些差劲.
+  不过可以在 <a href="https://archive.org/details/bitsavers_symbolicsIerification198707_2716421">webarchieve</a> 上搞到.</p>
+<p>注: 原始的论文里面用到了 Symbolics Lisp Machine 上的 Flavor,
+  而非现在 CL 中的 CLOS 作为 OOP, 稍微有些不同但是应该可以分辨.</p>
+<h1>Architectural Design</h1>
+<h2>Architectural Simulation</h2>
+<blockquote>
+  <p>This level of design is used to verify the virtual machine
+    architecture and gather architectural statistics.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defemulator</span><span class="w"> </span><span class="nv">add</span><span class="w"> </span><span class="nv">operand</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">first-operand</span><span class="w"> </span><span class="nv">second-operand</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">fetch-two-operands</span><span class="w"> </span><span class="nv">operand</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stack-push</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">first-operand</span><span class="w"> </span><span class="nv">second-operand</span><span class="p">))))</span>
+</pre></div>
+<p>这部分的语法感觉可以学习, 用来作为模拟器的编写估计会非常有效.</p>
+<h2>Behavioral Simulation</h2>
+<blockquote>
+  <p>Each module defines a set of I/O signals that constitute a
+    module's communication ports. These specify the ports to be
+    used in the circuit design.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmodule</span><span class="w"> </span><span class="p">(</span><span class="nf">adder</span><span class="w"> </span><span class="nv">ivory</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">:local-state</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:local-phase-1-registers</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:local-phase-2-registers</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:phase-1-registers</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:pahse-2-registers</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:phase-1-inputs</span><span class="w">    </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:phase-1-outputs</span><span class="w">   </span><span class="p">()</span>
+<span class="w">  </span><span class="nv">:pahse-2-inputs</span><span class="w">    </span><span class="p">(</span><span class="nf">op1</span><span class="w"> </span><span class="nv">op2</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">:phase-2-outputs</span><span class="w">   </span><span class="p">(</span><span class="nf">external-bus</span><span class="p">)</span>
+<span class="w">  </span><span class="p">)</span>
+</pre></div>
+<p>有点类似于 Verilog 中的</p>
+<div class="highlight"><pre><span></span><span class="k">module</span><span class="w"> </span><span class="n">adder</span><span class="w"> </span><span class="p">(</span><span class="k">input</span><span class="w"> </span><span class="n">op1</span><span class="p">,</span><span class="w"> </span><span class="n">op2</span><span class="p">,</span><span class="w"> </span><span class="k">output</span><span class="w"> </span><span class="n">external</span><span class="o">-</span><span class="n">bus</span><span class="p">);</span>
+</pre></div>
+<p>这样的感觉.</p>
+<blockquote>
+  <p>Each class has a method for simulating the behavior of a
+    module during the first phase of the clock, another for
+    simulating the second phase, and other for updating the
+    window-oriented display after each phase.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defaction</span><span class="w"> </span><span class="p">(</span><span class="nf">adder</span><span class="w"> </span><span class="nv">:execute-phase-2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">unsigned-op1</span><span class="w"> </span><span class="p">(</span><span class="nf">32-bit</span><span class="w"> </span><span class="nv">op1</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">unsigned-op2</span><span class="w"> </span><span class="p">(</span><span class="nf">32-bit</span><span class="w"> </span><span class="nv">op2</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">unsigned-result</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">unsigned-op1</span><span class="w"> </span><span class="nv">unsigned-op2</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">external-bus</span><span class="w"> </span><span class="nv">unsigned-result</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defaction</span><span class="w"> </span><span class="p">(</span><span class="nf">adder</span><span class="w"> </span><span class="nv">:display-phase-2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">window</span><span class="w"> </span><span class="s">&quot; op1 ~D ~&amp; op2 ~D&quot;</span><span class="w"> </span><span class="nv">op1</span><span class="w"> </span><span class="nv">op2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">window</span><span class="w"> </span><span class="s">&quot; ~&amp; external-bus ~D&quot;</span><span class="w"> </span><span class="nv">external-bus</span><span class="p">))</span>
+</pre></div>
+<p>相当于运行模块 (<code>execute-phase-2</code>), 并显示模块输出 (<code>display-phase-2</code>),
+  感觉类似于编写对模块模拟/测试用的代码.</p>
+<blockquote>
+  <p>An assembler supports the development of the microcode module.
+    The following represents the microcode specification for the
+    ADD instruction:</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">definstruction</span><span class="w"> </span><span class="nv">add</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">parallel</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">check-arithmetic-operands</span><span class="w"> </span><span class="nv">operand-1</span><span class="w"> </span><span class="nv">operand-2</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">pop2push</span><span class="w"> </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="nv">operand-1</span><span class="w"> </span><span class="nv">operand-2</span><span class="p">))</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">enable-overflow-exception</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">next-instruction</span><span class="p">)))</span>
+</pre></div>
+<h1>Structural Design</h1>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">def-std-cell-schematic</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;simple-example&quot;</span>
+<span class="w">                         </span><span class="nv">:inputs</span><span class="w">  </span><span class="p">(</span><span class="nf">p</span><span class="w"> </span><span class="nv">q</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">                         </span><span class="nv">:outputs</span><span class="w"> </span><span class="p">(</span><span class="nf">z</span><span class="w"> </span><span class="nv">w</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">z</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="nv">q</span><span class="p">)</span>
+<span class="w">              </span><span class="nv">a</span>
+<span class="w">              </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">w</span><span class="w"> </span><span class="p">(</span><span class="nb">not</span><span class="w"> </span><span class="p">(</span><span class="k">and</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">p</span><span class="w"> </span><span class="nv">q</span><span class="p">))))</span>
+</pre></div>
+<blockquote>
+  <p>When compiled, the logic is simplified and a rule-based
+    technology selector optimizes the circuit used by choosing
+    gates, merging gates and eliminating unnecessary inverters.</p>
+</blockquote>
+<p>这部分类似于把 Lisp 表达式变成逻辑门 (这里的 <code>setq</code> 是会被视为
+  Verilog 中的 <code>assign</code> 还是单纯的视为 <code>wire</code>? 从 Schematic Editor
+  Interface 的截图里面看起来像是单纯的 <code>wire</code> 就是了).</p>
+<blockquote>
+  <p>A simple pattern matching language is used to apply the
+    rules. The rules are augmented as different situations arise
+    during the course of the design.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-eqn-transformer</span><span class="w"> </span><span class="nv">AOI</span><span class="w"> </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="p">(</span><span class="nf">AND</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">)</span><span class="w"> </span><span class="nv">a</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">AND3-NOR2</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-eqn-transformer</span><span class="w"> </span><span class="nv">AOI</span><span class="w"> </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">OR2-OR2-AND2</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">define-eqn-transformer</span><span class="w"> </span><span class="nv">AOI</span><span class="w"> </span><span class="p">(</span><span class="nf">AND</span><span class="w"> </span><span class="p">(</span><span class="nf">NOT</span><span class="w"> </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">                                 </span><span class="p">(</span><span class="nf">NOT</span><span class="w"> </span><span class="p">(</span><span class="nf">NOR</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">OR2-OR2-AND2</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="w"> </span><span class="nv">c</span><span class="w"> </span><span class="nv">d</span><span class="p">))</span>
+</pre></div>
+<p>这个思路感觉有点暴力, 但是估计确实还挺有效的?
+  编译之后用于减少逻辑门数量, (把多个逻辑门用一个标准单元实现代替)
+  以更有效地利用区域.</p>
+<details><summary>感觉也不是很难实现</summary>
+<div class="highlight"><pre><span></span><span class="c1">;; -*- Package: ryo -*-</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">non-conflicts-alist-union</span><span class="w"> </span><span class="p">(</span><span class="nf">alist</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">more-alists</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Merge alists.</span>
+<span class="s">If conflicts, return `nil&#39;. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">alist-union</span><span class="w"> </span><span class="p">(</span><span class="nf">copy-list</span><span class="w"> </span><span class="nv">alist</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">conflicts-p</span><span class="w"> </span><span class="nv">nil</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">alist</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">more-alists</span>
+<span class="w">          </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">var</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">alist</span>
+<span class="w">                   </span><span class="nv">for</span><span class="w"> </span><span class="nv">exisiting-val</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">var</span><span class="w"> </span><span class="nv">alist-union</span><span class="p">))</span>
+<span class="w">                   </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">exisiting-val</span>
+<span class="w">                          </span><span class="p">(</span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="nf">equal</span><span class="w"> </span><span class="nv">val</span><span class="w"> </span><span class="nv">exisiting-val</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">conflicts-p</span><span class="w"> </span><span class="nv">t</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">var</span><span class="w"> </span><span class="nv">val</span><span class="p">)</span><span class="w"> </span><span class="nv">alist-union</span><span class="p">)))</span>
+<span class="w">          </span><span class="k">if</span><span class="w"> </span><span class="nv">conflicts-p</span>
+<span class="w">            </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">NIL</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">alist-union</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pattern-match</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Match `s-expr&#39; with `pattern&#39;.</span>
+<span class="s">Return alist for (var . expr) or `nil&#39; for not matched.</span>
+
+<span class="s">Pattern matching rules:</span>
+<span class="s">* If `pattern&#39; is atom (stands for a single `var&#39; name):</span>
+<span class="s">  the `var&#39; will be binded with value `s-expr&#39;</span>
+<span class="s">* If `pattern&#39; is list (stands for a expression):</span>
+<span class="s">  will test if `s-expr&#39; has the same list root,</span>
+<span class="s">  if same, try to match the rest arguments with rest `pattern&#39;</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">atom</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">((</span><span class="nf">atom</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span><span class="w">  </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">        </span><span class="p">((</span><span class="k">and</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">))</span><span class="w">   </span><span class="c1">; if `s-expr&#39; has the same list root</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)))</span><span class="w"> </span><span class="c1">; and try to match the rest arugments</span>
+<span class="w">         </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">matches</span><span class="w"> </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;pattern-match</span>
+<span class="w">                                </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">pattern</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">))))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">assert</span><span class="w"> </span><span class="p">(</span><span class="nf">notevery</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;null</span><span class="w"> </span><span class="nv">matches</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;non-conflicts-alist-union</span><span class="w"> </span><span class="nv">matches</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="nv">nil</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">alist-leaves-subst</span><span class="w"> </span><span class="p">(</span><span class="nf">alist</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Substitude `tree&#39; leaves with `alist&#39;.</span>
+
+<span class="s">* If tree is atom (leaf), try to replace if tree is in alist;</span>
+<span class="s">* If tree is list (tree), replace only leaves (keep root same)&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">tree</span><span class="w"> </span><span class="nv">alist</span><span class="p">))</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="p">(</span><span class="nb">first</span><span class="w"> </span><span class="nv">tree</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">alist-subst</span><span class="w"> </span><span class="nv">alist</span><span class="w"> </span><span class="nv">node</span><span class="p">))</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">rest</span><span class="w"> </span><span class="nv">tree</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pattern-match-replace</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;If `s-expr&#39; matches `pattern&#39;, replace with `replace-pattern&#39;.</span>
+<span class="s">Return `s-expr&#39; itself if not matches.</span>
+
+<span class="s">Example:</span>
+<span class="s">+ if `pattern&#39; is (fn a b c), `s-expr&#39; is (+ 1 2 3),</span>
+<span class="s">  `replace-pattern&#39; is (- a b c), return (- 1 2 3)</span>
+<span class="s">&quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="k">match</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern-match</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="k">match</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">alist-leaves-subst</span><span class="w"> </span><span class="k">match</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="p">)</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">s-expr</span><span class="w"> </span><span class="nv">nil</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pattern-match-replace-all</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Try to replace `s-expr&#39; recursively. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">new-expr</span><span class="w"> </span><span class="nv">match-p</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">pattern-match-replace</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">match-p</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">new-expr</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nf">atom</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="nv">s-expr</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">with</span><span class="w"> </span><span class="nv">matched</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                  </span><span class="nv">with</span><span class="w"> </span><span class="nv">new-expr</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">()</span>
+<span class="w">                  </span><span class="nv">for</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">s-expr</span>
+<span class="w">                  </span><span class="k">do</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">match-p</span><span class="p">)</span>
+<span class="w">                         </span><span class="p">(</span><span class="nf">pattern-match-replace-all</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">expr</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">expr</span><span class="w"> </span><span class="nv">new-expr</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">match-p</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="nv">matched</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+<span class="w">                  </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="p">(</span><span class="nb">values</span><span class="w"> </span><span class="p">(</span><span class="nf">nreverse</span><span class="w"> </span><span class="nv">new-expr</span><span class="p">)</span><span class="w"> </span><span class="nv">matched</span><span class="p">)))))))</span>
+</pre></div>
+<p>注: 这里的 <code>pattern-match-replace-all</code> 其实还有些问题:</p>
+<ol>
+  <li>无法化简到最简, 不过这个可以通过加一个循环来解决:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">pattern-match-replace-all!</span><span class="w"> </span><span class="p">(</span><span class="nf">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">s-expr</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Replace all. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="p">(</span><span class="nf">expr</span><span class="w"> </span><span class="nv">match-p</span><span class="p">)</span><span class="w"> </span><span class="nb">=</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">s-expr</span><span class="w"> </span><span class="nv">t</span><span class="p">)</span>
+<span class="w">          </span><span class="nv">then</span><span class="w"> </span><span class="p">(</span><span class="nf">multiple-value-list</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">pattern-match-replace-all</span><span class="w"> </span><span class="nv">pattern</span><span class="w"> </span><span class="nv">replace-pattern</span><span class="w"> </span><span class="nv">expr</span><span class="p">))</span>
+<span class="w">        </span><span class="k">while</span><span class="w"> </span><span class="nv">match-p</span>
+<span class="w">        </span><span class="nv">finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">expr</span><span class="p">)))</span>
+</pre></div>
+    <p>不过可以注意到这个是一个正则序的应用, 理论上来说也可以变成应用序.
+      某种程度上来说是否也算是一种更加变态的宏呢?</p>
+  </li>
+  <li>匹配过于简单了, 如果能再带上带参数的匹配, 类似正则表达式的匹配,
+    以及根据匹配来展开的估计就更帅了.</li>
+</ol>
+</details>
+<p>同理, 除了简化逻辑门, 还有电路加速 (recognize circuit speed-up rules) 的匹配规则:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-eqn-transformer</span><span class="w"> </span><span class="nv">INVERSE</span><span class="w"> </span><span class="p">(</span><span class="nf">XOR</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="p">(</span><span class="nf">NOT</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">XNOR</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+</pre></div>
+<p>以及用于简化布线占用 (reducing channel routing occupancy) 的替换规则:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-eqn-transformer</span><span class="w"> </span><span class="nv">IMPLODE</span><span class="w"> </span><span class="p">(</span><span class="nf">NOT</span><span class="w"> </span><span class="p">(</span><span class="nf">NAND</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">AND</span><span class="w"> </span><span class="nv">a</span><span class="w"> </span><span class="nv">b</span><span class="p">))</span>
+</pre></div>
+<p>更底层的 OOP 数据库的操作:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="p">(</span><span class="nf">internal-capacitance</span><span class="w"> </span><span class="nv">rsim-network-mixin</span><span class="p">)</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">for</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">nodes</span>
+<span class="w">        </span><span class="k">unless</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">gnd</span><span class="p">)</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">vdd</span><span class="p">))</span>
+<span class="w">          </span><span class="nv">sum</span><span class="w"> </span><span class="p">(</span><span class="nf">node-capacitancne</span><span class="w"> </span><span class="nv">node</span><span class="p">)))</span>
+</pre></div>
+<h1>Physical Design</h1>
+<p>前面做得有点类似 KiCAD 中的 Scheme 的工作, 下面的类似于 Layout 的工作.</p>
+<blockquote>
+  <p>A standard cell layout system automatically generates
+    symbolic layout from control schematic diagrams with the
+    option of using port locations specified by the mask-outline.
+    Both min-cut and thermal-annealing approaches have been
+    used&#8230;</p>
+  <p>Data paths are constructed manualy. Basic cells such as registers,
+    muxes and addres are provided in a data-path standard cell library.
+    To improve generator horizontally abuts three cells and raises the
+    instance ports to this level of the hierarchy.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defaspect-generator</span><span class="w"> </span><span class="p">(</span><span class="nf">data-path</span><span class="w"> </span><span class="nv">:virtual-grid</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">flag</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">HORIZONTALLY-ABUT</span><span class="w"> </span><span class="ss">&#39;module-a</span>
+<span class="w">                     </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">flag</span>
+<span class="w">                         </span><span class="ss">&#39;module-b</span>
+<span class="w">                         </span><span class="ss">&#39;module-d</span><span class="p">)</span>
+<span class="w">                     </span><span class="ss">&#39;module-c</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">import-ports-on-edges</span><span class="p">))</span>
+</pre></div>
+<p>相当于定义自动布线规则, 然后将一些手动布线的组件作为标准库.</p>
+<blockquote>
+  <p>When all modules have been designed symblically and compacted, the
+    NS interactive editor is used to specify a slicing style floorplan.
+    Using the connectivity of the corresponding schematic, this floorplan
+    is used as the basis to automatically place and route the entire chip.
+    A global router first assigns nets to the routing channels. When
+    this is complete, modules are composed according to the floorplan
+    composition ordering. As they are connected, power ground and clocks
+    are also routed. This chip composition takes 2 hours to run for the
+    complete Ivory chip. At early stages of design, partial floorplans can
+    be constructed using estimates of block sizes. The following specifies
+    the &#8220;expample&#8221; module which has an estimated size of 250u by 300u
+    and has the inputs entering on the top and the outputs exiting on the
+    bottom.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">def-mask-outline</span><span class="w"> </span><span class="nv">example</span><span class="w"> </span><span class="p">(</span><span class="mi">250</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:top</span><span class="w"> </span><span class="s">&quot;s&lt;3:0&gt;&quot;</span>
+<span class="w">        </span><span class="nv">memory-write-pending</span>
+<span class="w">        </span><span class="nv">bus-master-pin</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:bottom</span><span class="w"> </span><span class="nv">mcw</span><span class="w"> </span><span class="nv">mcr</span><span class="w"> </span><span class="nv">mcrw</span><span class="p">))</span>
+</pre></div>
+<p>类似于通过给提示来加速 floorplan 布线.</p>
+<blockquote>
+  <p>A network comparison program is able to compare any two extracted networks
+    (i.e. from virtual-grid layouts, schematics, mask layouts and vendor
+    net-list files). Interactive feedback is provided to identify suspicious
+    nodes. No node names are necessary.</p>
+  <p>A fast interactive DRC is provided for finaly mask artwork checks.</p>
+</blockquote>
+<p>这部分的工作流程应该是可以固定下来, 其中的 floorplan 的算法估计有更新的迭代.
+  鉴于我不可能接触到门电路级别的芯片 (最多 FPGA 吧? ), 所以感觉如果真闲的话,
+  可以考虑用这种方式去替代/学习几个开源的 router 程序? (虽然感觉意义不大)</p>
+<h1>Simulatioin</h1>
+<h2>Circuit Simulation</h2>
+<blockquote>
+  <p>A switch-level simulator with timing (RSIM) was used to bridge both
+    the gate and switch level circuit simulation requirements. Apart from
+    being optimized for fast simulation, our version of RSIM has the
+    ablility to specify functional models in the following manner (a RAM):</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">deffunctional-model</span><span class="w"> </span><span class="nv">cache-memory</span>
+<span class="w">  </span><span class="nv">:inputs</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;addr&lt;6:0&gt;&quot;</span>
+<span class="w">           </span><span class="nv">-row-enable</span>
+<span class="w">           </span><span class="nb">write</span>
+<span class="w">           </span><span class="s">&quot;write-data&lt;39:0&gt;&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">:outputs</span><span class="w"> </span><span class="p">((</span><span class="s">&quot;data&lt;39:0&gt;&quot;</span><span class="w"> </span><span class="nv">:pd-size</span><span class="w"> </span><span class="mi">8/1</span><span class="w"> </span><span class="nv">:pu-size</span><span class="w"> </span><span class="mi">16/1</span><span class="p">))</span>
+<span class="w">  </span><span class="nv">:local-state</span><span class="w"> </span><span class="p">((</span><span class="nf">cache-array</span>
+<span class="w">                 </span><span class="nv">:initform</span>
+<span class="w">                 </span><span class="p">(</span><span class="nb">make-array</span><span class="w"> </span><span class="mi">128</span><span class="w"> </span><span class="nv">:initial-element</span><span class="w"> </span><span class="ss">&#39;x</span><span class="p">)))</span>
+<span class="w">  </span><span class="nv">:delays</span><span class="w"> </span><span class="p">((</span><span class="nf">row-enable</span><span class="err">↓→</span><span class="nv">data</span><span class="w"> </span><span class="nv">:delay</span><span class="w"> </span><span class="mi">25</span><span class="p">))</span>
+<span class="w">  </span><span class="nv">:timing-constraints</span><span class="w"> </span><span class="p">((</span><span class="nf">addr</span><span class="err">→</span><span class="nv">-row-enable</span><span class="err">↓</span><span class="w"> </span><span class="nv">:setup</span><span class="w"> </span><span class="mi">16</span><span class="p">)</span>
+<span class="w">                       </span><span class="p">(</span><span class="nf">write-data</span><span class="err">→</span><span class="nb">write</span><span class="err">↓</span><span class="w"> </span><span class="nv">:setup</span><span class="w"> </span><span class="mi">15</span><span class="p">))</span>
+<span class="w">  </span><span class="nv">:model</span><span class="w"> </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">eql</span><span class="w"> </span><span class="nv">addr</span><span class="w"> </span><span class="ss">&#39;x</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">data</span><span class="w"> </span><span class="ss">&#39;x</span><span class="p">))</span>
+<span class="w">               </span><span class="p">((</span><span class="nf">eql</span><span class="w"> </span><span class="nb">write</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">cache-array</span><span class="w"> </span><span class="nv">addr</span><span class="p">)</span>
+<span class="w">                                    </span><span class="nv">write-data</span><span class="p">))</span>
+<span class="w">               </span><span class="p">((</span><span class="nf">eql</span><span class="w"> </span><span class="nb">write</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setq</span><span class="w"> </span><span class="nv">data</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">cache-array</span><span class="w"> </span><span class="nv">addr</span><span class="p">)))))</span>
+</pre></div>
+<p>这部分做得有点像是手工编写的逻辑, 而不是很像一个仿真的结果?
+  对 SPICE 并不是很了解, 可能之后可以去阅读一下 SPICE 的实现和算法.
+  在这里 (<code>NS</code>) 的模拟中, SPICE 干的活是通过一个 lisp interface 做电路模拟.</p>
+<p>后注: 这里的 <code>functional-level</code> 和后面的 <code>switch-level</code> 可以进行一个区分,
+  <code>functional-level</code> 有点类似于 &#8220;解析解&#8221; 电压上升和下降的模式都用一个简单的模型表示;
+  而 <code>switch-level</code> 则是在门电路级别上进行一个模拟仿真 (更加耗时, 但更准确)</p>
+<blockquote>
+  <p>Access to the RSIM simulator is available in parallel either
+    via Lip code that can set, read and compare values on a circuit
+    node, or via mouse clicks on a schematic displayed in the graphics
+    editor window. A hierarchical schematica can be traversed using
+    PUSH/POP commands&#8230; Test programs writtern in Lisp use a protocol
+    consisting of three generic functions:</p>
+  <ul>
+    <li><code>value</code>, which returns the value of a node,</li>
+    <li><code>set-value</code>, which sets the value of a node, and</li>
+    <li><code>sim-step</code>, which propagates all changes through the network until
+      no further changes occur. Optional arguments to <code>sim-step</code> can
+      specify the length of the simulation period</li>
+  </ul>
+</blockquote>
+<details><summary>一段论文里面凡尔赛的话</summary>
+<blockquote>
+  <p>To give some idea of the extensibility of NS, an exerimental
+    timing simulator mode based on backward Eular intergration
+    was added to NS in a matter of morning by a designer. We
+    intend to incorporate parallel fault simulation into RSIM
+    in the future, but it will probably take more than a morning.</p>
+</blockquote>
+<p>哼, backward Eular 我也可以用一个早上 (大概是晚上) 实现.
+  只是估计没法保证在这么大的一个项目里面应用吧&#8230;</p>
+<p>背后应该是一个解多元线性微分方程组的活 (简单看了一下
+  <a href="https://archive.org/details/kielkowski-inside-spice-1994/">Kielkowski Inside SPICE</a> 的 <a href="https://archive.org/details/kielkowski-inside-spice-1994/page/14/mode/2up">第二章</a>, 更多细节并没有深入),
+  那么用 backward Eular 作为求解器感觉很合理.</p>
+</details>
+<h2>Hardware Simulation Acceleration</h2>
+<p>简而言之就是 RSIM 在仿真大规模的芯片 (门电路) 的时候太慢了:</p>
+<blockquote>
+  <p>operating one module at a time at the switch level while
+    the others operate at the functional level</p>
+</blockquote>
+<p>加速方法就是混用 functional level 和 switch level 的模拟.</p>
+<h1>Design Verification</h1>
+<h2>Functional Comparison</h2>
+<p>思路就是对 behavioral simulator 和 RSIM 同时进行应用,
+  并对结果进行比较 (on a signal by signal basis as the
+  bahavioral simulator is used to specify the modularity
+  and communication between modules of the chip).</p>
+<blockquote>
+  <p>During verification, <code>set-value</code> message are passed to both
+    the behavioral simulator and RSIM. Each particular simulator
+    takes the appropriate action to set internal nodes to a particular
+    value. This is achieved using a &#8220;forwarding network&#8221; which
+    takes a list of two networks, on the RSIM network and the other
+    the behavioral simulator &#8220;network&#8221; and the node under question
+    and successively applies the <code>set-value</code> procedure to both
+    nodes in each simulator. Thus the <code>setv</code> function is used to
+    set values in both networks:</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="p">(</span><span class="nf">setv</span><span class="w"> </span><span class="nv">forwarding-network</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">node</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">set-value</span><span class="w"> </span><span class="nv">rsim-network</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">value</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">set-value</span><span class="w"> </span><span class="nv">behavioral-module</span><span class="w"> </span><span class="nv">node</span><span class="w"> </span><span class="nv">value</span><span class="p">))</span>
+</pre></div>
+<blockquote>
+  <p>As the functional simulator works with a two-phase clock,
+    a function is written to emulate the clocks for the RSIM
+    simulation. A simple version of this would look as follows:</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="p">(</span><span class="nf">simulate-phase-1</span><span class="w"> </span><span class="nv">rsim-network-mixin</span><span class="p">)</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">set-value</span><span class="w"> </span><span class="nv">self</span><span class="w"> </span><span class="ss">&#39;ph1</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">sim-step</span><span class="w"> </span><span class="nv">self</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">set-value</span><span class="w"> </span><span class="nv">self</span><span class="w"> </span><span class="ss">&#39;ph1</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">sim-step</span><span class="w"> </span><span class="nv">self</span><span class="p">))</span>
+</pre></div>
+<blockquote>
+  <p>This message is applied to both networks to advance through
+    a phasel clock cycle. The following forwarding network
+    function calls both phasel execution functions:</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="p">(</span><span class="nf">phase1</span><span class="w"> </span><span class="nv">forwarding-network</span><span class="p">)</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">simulate-phase-1</span><span class="w"> </span><span class="nv">rsim-network</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">simulate-phase-1</span><span class="w"> </span><span class="nv">bahavioral-model</span><span class="p">))</span>
+</pre></div>
+<blockquote>
+  <p>The <code>verify</code> command operates by asking the two simulators
+    for values and then comparing the results. If the results
+    disagree, a debugging session with the user is initiated.</p>
+</blockquote>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">declare-bus</span><span class="w"> </span><span class="ss">&#39;op1</span><span class="w"> </span><span class="mi">32</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">declare-bus</span><span class="w"> </span><span class="ss">&#39;op2</span><span class="w"> </span><span class="mi">32</span><span class="p">)</span>
+<span class="p">(</span><span class="nf">declare-bus</span><span class="w"> </span><span class="ss">&#39;external-bus</span><span class="w"> </span><span class="mi">32</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compare-adder-ops</span><span class="w"> </span><span class="p">(</span><span class="nf">op1</span><span class="w"> </span><span class="nv">op2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">phase1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setv</span><span class="w"> </span><span class="ss">&#39;op1</span><span class="w"> </span><span class="nv">op1</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">setv</span><span class="w"> </span><span class="ss">&#39;op2</span><span class="w"> </span><span class="nv">op2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">phase2</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">verify</span><span class="w"> </span><span class="ss">&#39;external-bus</span><span class="p">))</span>
+</pre></div>
+<blockquote>
+  <p>Such programs are written by designers to test the functionality of
+    individual modules.</p>
+  <p>To provide higher level tests, a spy strategy was developed.
+    With this facility, the complete behavioral simulator could
+    be exercised by Lisp test programs. Arbitrary collections of
+    modules can be grouped together (to model physical layout
+    groupings) and their colective inputs and outputs monitored
+    to provide a trace history of the boundary signals. The
+    storage of the history allows both interactive and batch
+    simulation. RSIM simulation code consisting of <code>setv</code> and verify
+    statements, is generated from the history. This code was then
+    applied directly to the extracted network with any discrepancies
+    detected by <code>verify</code> errors.</p>
+  <p>The <code>spy</code> code was extended to allow interfacing to an engineering
+    tester. This allows interactive debugging of tests in an
+    engineering environment that was closely linked to the program
+    development environment of the Lisp machine.</p>
+</blockquote>
+<p>这部分感觉思路很合理, 就是实现起来感觉可能并不会像这里说的那么简洁?
+  基本的几个 method 的实现感觉可以这样做, 如果想要拓展的话,
+  不清楚是通过 <code>:after</code> <code>:before</code> 这样的方式去做 patch 还是重新写逻辑.</p>
+<details><summary>一个感觉可以学习的点</summary>
+<p>正好我现在也要做模拟和实验的比对, 这种验证方式不清楚是否可以学习一下.</p>
+</details>
+<h2>Timing Analysis</h2>
+<blockquote>
+  <p>A timing analyzer based on finding critical paths through transistor
+    networks was implemented based on Crystal.</p>
+</blockquote>
+<h1>Version Control</h1>
+<h1>后记</h1>
+<p>感觉可以学的:</p>
+<ul>
+  <li><code>defemulator</code> (用来重构 Chip8 模拟器)</li>
+  <li><code>defmodule</code> (用来和实验, 此处为 RSIM 进行检验)</li>
+  <li><code>definstruction</code></li>
+</ul>
+<p>感觉有时间可以折腾的:</p>
+<ul>
+  <li>SPICE 的模拟以及和 <code>deffunctional-model</code> 的验证和比对</li>
+  <li>layout 和 router (感觉意义不大)</li>
+</ul>
+<p>感觉差不多已经实现的:</p>
+<ul>
+  <li><code>define-eqn-transformer</code> 模式匹配替换的感觉没问题了</li>
+  <li>实际上配合很早之前的逻辑门生成 (大概是在数电或者是 Turing Complete 那边),
+    加上这个模式匹配替换规则, 应该来说可以做到 伪 HDL 代码到门电路的工作</li>
+</ul>
+<p>一些奇怪的点子:</p>
+<ul>
+  <li>之前做的 <a href="https://github.com/li-yiyang/write-myself-a-node-editor">节点编辑器</a>, 之前的想法是能够做成用于 iGEM 的 BioBlock 的编辑器.
+    看到这个之后感觉其实可以迁移一下应用这个逻辑来进行一些拓展:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">def-std-bioblock-part</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;promopter&quot;</span>
+<span class="w">                        </span><span class="nv">:enable</span><span class="w"> </span><span class="p">((</span><span class="nf">a</span><span class="w"> </span><span class="nv">:by</span><span class="w"> </span><span class="s">&quot;Ara h 1&quot;</span><span class="p">))</span>
+<span class="w">                        </span><span class="nv">:next</span><span class="w"> </span><span class="p">(</span><span class="nf">b</span><span class="p">))</span>
+<span class="w">  </span><span class="c1">;; some behavior code</span>
+<span class="w">  </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">a</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">enable</span><span class="w">  </span><span class="nv">b</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">disable</span><span class="w"> </span><span class="nv">b</span><span class="p">)))</span>
+</pre></div>
+  </li>
+</ul>
+
+  </div><a class="u-url" href="/lisp/the-symbolics-ivory-design-and-verification-strategy/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

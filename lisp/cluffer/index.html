@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>[Reading] A CLOS Protocol for Editor Buffers | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="[Reading] A CLOS Protocol for Editor Buffers" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 虽然前一篇还是 Lem 这样的新生编辑器, 这篇就又回到了想如何去自己来写一个. 那么具体是为什么呢? 一个是我在魔改 Lem 的代码的时候发现, 作者真的好喜欢分包&#8230; (感觉是一个文件分一个包 defpackage) 这样不是很喜欢, 并且做了太多的抽象导致一个 terminal-input 包装了三层. 虽然维护上来说是好了一些, 但是感觉还是不太习惯. 以及虽然去模仿了 Emacs 的一些设计, 但是自己做了好多 “小巧思”, 虽然说不上坏, 但是我用下来还是有点不太习惯 (已经成为 Emacs 的形状哩). 不过最破防的还是没啥文档, 毕竟感觉 Emacs 里面的 C-h f, C-h v 这些小文档才是一个 “可以编辑” 的编辑器的核心竞争力. Lem 的缺点 (目前来看) 主要就是缺少文档, 想要魔改的话比较费劲. 以及 (Emacs 也有), 缺少一个代码设计的说明, 改底层感觉很难. 不过好处是我可以把 Emacs 的 历史版本 的代码拿来抄 (bushi), 可以大概地了解一些基本的设计思路. 那么还是先搞清楚我想要啥: 一个类似 Emacs 一样 “可以拓展” 的编辑器. 为了可以 拓展, 所以我需要: 很好的文档 (self-documentation) 每个函数 (尽量) 都需要有: 类型标注 (core and lowlevel), 文档 代码中需要有注释来标注设计思路 接口设计 (protocol) buffer 我需要借鉴 Cluffer frontend 我需要借鉴 Lem, 将前后端分离, 但是最好需要将对 buffer 的操作可以视为类似 Emacs 的单线程策略, 即对于单个 buffer 的一系列操作应当可以被视为一个 queue 队列. 因为在写 lem 的终端模拟的时候被坑到了, update 的 thread 会让整个编辑器崩掉, 感觉有点不太合理了. API 需要尽可能和 Emacs 相同 (如果能折腾出一套兼容层就好了, 虽然感觉不太现实) 尽可能的代码复用, Lem 中频繁的建新包的缺点我觉得就是让代码复用变得比较痛苦 (也有可能是有一些我不知道的小巧思) 争取之后可以自举 (自己编辑自己吧) 那么这篇文章是阅读 Cluffer 的会议论文: A CLOS Protocol for Editor Buffers 的一个阅读笔记, 希望能够帮助我更好地抄他的代码 (bushi). A CLOS Protocol for Editor Buffers Two Control Loops innermost loop: insert, delete items in buffer cursor movement outer loop: updating the views of the buffer incremental paring cite: Incremental Parsing of Common Lisp Code 这个之后再慢慢看 Representing items in a buffer 主要是知道有哪些, 具体的实现详见下文 Line oriented 将 buffer 看作是 list of vector line. (defclass line () ((buff :initarg :buff))) (defun make-line (str) (declare (type string str)) (make-instance &#39;line :buff (coerce str &#39;simple-vector)))" />
+<meta property="og:description" content="About 虽然前一篇还是 Lem 这样的新生编辑器, 这篇就又回到了想如何去自己来写一个. 那么具体是为什么呢? 一个是我在魔改 Lem 的代码的时候发现, 作者真的好喜欢分包&#8230; (感觉是一个文件分一个包 defpackage) 这样不是很喜欢, 并且做了太多的抽象导致一个 terminal-input 包装了三层. 虽然维护上来说是好了一些, 但是感觉还是不太习惯. 以及虽然去模仿了 Emacs 的一些设计, 但是自己做了好多 “小巧思”, 虽然说不上坏, 但是我用下来还是有点不太习惯 (已经成为 Emacs 的形状哩). 不过最破防的还是没啥文档, 毕竟感觉 Emacs 里面的 C-h f, C-h v 这些小文档才是一个 “可以编辑” 的编辑器的核心竞争力. Lem 的缺点 (目前来看) 主要就是缺少文档, 想要魔改的话比较费劲. 以及 (Emacs 也有), 缺少一个代码设计的说明, 改底层感觉很难. 不过好处是我可以把 Emacs 的 历史版本 的代码拿来抄 (bushi), 可以大概地了解一些基本的设计思路. 那么还是先搞清楚我想要啥: 一个类似 Emacs 一样 “可以拓展” 的编辑器. 为了可以 拓展, 所以我需要: 很好的文档 (self-documentation) 每个函数 (尽量) 都需要有: 类型标注 (core and lowlevel), 文档 代码中需要有注释来标注设计思路 接口设计 (protocol) buffer 我需要借鉴 Cluffer frontend 我需要借鉴 Lem, 将前后端分离, 但是最好需要将对 buffer 的操作可以视为类似 Emacs 的单线程策略, 即对于单个 buffer 的一系列操作应当可以被视为一个 queue 队列. 因为在写 lem 的终端模拟的时候被坑到了, update 的 thread 会让整个编辑器崩掉, 感觉有点不太合理了. API 需要尽可能和 Emacs 相同 (如果能折腾出一套兼容层就好了, 虽然感觉不太现实) 尽可能的代码复用, Lem 中频繁的建新包的缺点我觉得就是让代码复用变得比较痛苦 (也有可能是有一些我不知道的小巧思) 争取之后可以自举 (自己编辑自己吧) 那么这篇文章是阅读 Cluffer 的会议论文: A CLOS Protocol for Editor Buffers 的一个阅读笔记, 希望能够帮助我更好地抄他的代码 (bushi). A CLOS Protocol for Editor Buffers Two Control Loops innermost loop: insert, delete items in buffer cursor movement outer loop: updating the views of the buffer incremental paring cite: Incremental Parsing of Common Lisp Code 这个之后再慢慢看 Representing items in a buffer 主要是知道有哪些, 具体的实现详见下文 Line oriented 将 buffer 看作是 list of vector line. (defclass line () ((buff :initarg :buff))) (defun make-line (str) (declare (type string str)) (make-instance &#39;line :buff (coerce str &#39;simple-vector)))" />
+<link rel="canonical" href="/lisp/cluffer/" />
+<meta property="og:url" content="/lisp/cluffer/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-05T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="[Reading] A CLOS Protocol for Editor Buffers" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-08-05T00:00:00+00:00","datePublished":"2025-08-05T00:00:00+00:00","description":"About 虽然前一篇还是 Lem 这样的新生编辑器, 这篇就又回到了想如何去自己来写一个. 那么具体是为什么呢? 一个是我在魔改 Lem 的代码的时候发现, 作者真的好喜欢分包&#8230; (感觉是一个文件分一个包 defpackage) 这样不是很喜欢, 并且做了太多的抽象导致一个 terminal-input 包装了三层. 虽然维护上来说是好了一些, 但是感觉还是不太习惯. 以及虽然去模仿了 Emacs 的一些设计, 但是自己做了好多 “小巧思”, 虽然说不上坏, 但是我用下来还是有点不太习惯 (已经成为 Emacs 的形状哩). 不过最破防的还是没啥文档, 毕竟感觉 Emacs 里面的 C-h f, C-h v 这些小文档才是一个 “可以编辑” 的编辑器的核心竞争力. Lem 的缺点 (目前来看) 主要就是缺少文档, 想要魔改的话比较费劲. 以及 (Emacs 也有), 缺少一个代码设计的说明, 改底层感觉很难. 不过好处是我可以把 Emacs 的 历史版本 的代码拿来抄 (bushi), 可以大概地了解一些基本的设计思路. 那么还是先搞清楚我想要啥: 一个类似 Emacs 一样 “可以拓展” 的编辑器. 为了可以 拓展, 所以我需要: 很好的文档 (self-documentation) 每个函数 (尽量) 都需要有: 类型标注 (core and lowlevel), 文档 代码中需要有注释来标注设计思路 接口设计 (protocol) buffer 我需要借鉴 Cluffer frontend 我需要借鉴 Lem, 将前后端分离, 但是最好需要将对 buffer 的操作可以视为类似 Emacs 的单线程策略, 即对于单个 buffer 的一系列操作应当可以被视为一个 queue 队列. 因为在写 lem 的终端模拟的时候被坑到了, update 的 thread 会让整个编辑器崩掉, 感觉有点不太合理了. API 需要尽可能和 Emacs 相同 (如果能折腾出一套兼容层就好了, 虽然感觉不太现实) 尽可能的代码复用, Lem 中频繁的建新包的缺点我觉得就是让代码复用变得比较痛苦 (也有可能是有一些我不知道的小巧思) 争取之后可以自举 (自己编辑自己吧) 那么这篇文章是阅读 Cluffer 的会议论文: A CLOS Protocol for Editor Buffers 的一个阅读笔记, 希望能够帮助我更好地抄他的代码 (bushi). A CLOS Protocol for Editor Buffers Two Control Loops innermost loop: insert, delete items in buffer cursor movement outer loop: updating the views of the buffer incremental paring cite: Incremental Parsing of Common Lisp Code 这个之后再慢慢看 Representing items in a buffer 主要是知道有哪些, 具体的实现详见下文 Line oriented 将 buffer 看作是 list of vector line. (defclass line () ((buff :initarg :buff))) (defun make-line (str) (declare (type string str)) (make-instance &#39;line :buff (coerce str &#39;simple-vector)))","headline":"[Reading] A CLOS Protocol for Editor Buffers","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/cluffer/"},"url":"/lisp/cluffer/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">[Reading] A CLOS Protocol for Editor Buffers</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-08-05T00:00:00+00:00" itemprop="datePublished">Aug 5, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>虽然前一篇还是 <a href="/lem/lem-0/">Lem</a> 这样的新生编辑器, 这篇就又回到了想如何去自己来写一个.
+  那么具体是为什么呢? 一个是我在魔改 Lem 的代码的时候发现,
+  作者真的好喜欢分包&#8230; (感觉是一个文件分一个包 <code>defpackage</code>)
+  这样不是很喜欢, 并且做了太多的抽象导致一个 <code>terminal-input</code> 包装了三层.
+  虽然维护上来说是好了一些, 但是感觉还是不太习惯.</p>
+<p>以及虽然去模仿了 Emacs 的一些设计, 但是自己做了好多 “小巧思”,
+  虽然说不上坏, 但是我用下来还是有点不太习惯 (已经成为 Emacs 的形状哩).
+  不过最破防的还是没啥文档, 毕竟感觉 Emacs 里面的 <code>C-h f</code>, <code>C-h v</code>
+  这些小文档才是一个 “可以编辑” 的编辑器的核心竞争力.</p>
+<p>Lem 的缺点 (目前来看) 主要就是缺少文档, 想要魔改的话比较费劲.
+  以及 (Emacs 也有), 缺少一个代码设计的说明, 改底层感觉很难.
+  不过好处是我可以把 Emacs 的 <a href="https://github.com/larsbrinkhoff/emacs-history">历史版本</a> 的代码拿来抄 (bushi),
+  可以大概地了解一些基本的设计思路.</p>
+<p>那么还是先搞清楚我想要啥: 一个类似 Emacs 一样 “可以拓展” 的编辑器.</p>
+<p>为了可以 <b>拓展</b>, 所以我需要:</p>
+<ul>
+  <li>很好的文档 (self-documentation)
+    <ul>
+      <li>每个函数 (尽量) 都需要有: 类型标注 (core and lowlevel), 文档</li>
+      <li>代码中需要有注释来标注设计思路</li>
+    </ul>
+  </li>
+  <li>接口设计 (protocol)
+    <ul>
+      <li>buffer 我需要借鉴 <a href="https://github.com/robert-strandh/Cluffer/">Cluffer</a></li>
+      <li>frontend 我需要借鉴 Lem, 将前后端分离,
+        但是最好需要将对 buffer 的操作可以视为类似 Emacs 的单线程策略,
+        即对于单个 buffer 的一系列操作应当可以被视为一个 queue 队列.
+        <p>因为在写 lem 的终端模拟的时候被坑到了, update 的 thread 会让整个编辑器崩掉,
+          感觉有点不太合理了.</p>
+      </li>
+      <li>API 需要尽可能和 Emacs 相同
+        (如果能折腾出一套兼容层就好了, 虽然感觉不太现实)</li>
+    </ul>
+  </li>
+  <li>尽可能的代码复用,
+    Lem 中频繁的建新包的缺点我觉得就是让代码复用变得比较痛苦
+    (也有可能是有一些我不知道的小巧思)</li>
+  <li>争取之后可以自举 (自己编辑自己吧)</li>
+</ul>
+<p>那么这篇文章是阅读 Cluffer 的会议论文: A CLOS Protocol for Editor Buffers
+  的一个阅读笔记, 希望能够帮助我更好地抄他的代码 (bushi).</p>
+<h1>A CLOS Protocol for Editor Buffers</h1>
+<h2>Two Control Loops</h2>
+<ul>
+  <li><b>innermost loop</b>:
+    <ul>
+      <li>insert, delete items in buffer</li>
+      <li>cursor movement</li>
+    </ul>
+  </li>
+  <li><b>outer loop</b>:
+    <ul>
+      <li>updating the views of the buffer</li>
+      <li>incremental paring
+        <p>cite: Incremental Parsing of Common Lisp Code</p>
+        <p>这个之后再慢慢看</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Representing items in a buffer</h2>
+<p>主要是知道有哪些, 具体的实现详见下文</p>
+<ul>
+  <li>Line oriented
+    <p>将 buffer 看作是 list of vector line.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">line</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">((</span><span class="nf">buff</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:buff</span><span class="p">)))</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-line</span><span class="w"> </span><span class="p">(</span><span class="nf">str</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nv">str</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;line</span><span class="w"> </span><span class="nv">:buff</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="ss">&#39;simple-vector</span><span class="p">)))</span>
+
+<span class="c1">;; lines should be a list of line</span>
+<span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">buff</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">((</span><span class="nf">lines</span><span class="w"> </span><span class="nv">:initarg</span><span class="w"> </span><span class="nv">:lines</span><span class="w"> </span><span class="nv">:initform</span><span class="w"> </span><span class="p">())))</span>
+</pre></div>
+    <p>也有用 ring of vector line 来做储存的 (方便从尾回到头之类的跳转),
+      或者 double linked list (方便上下滚动).</p>
+  </li>
+  <li><a href="https://en.wikipedia.org/wiki/Gap_buffer">Gap buffer</a>
+    <p>一种特殊的 vector line 可以如下实现 (<a href="https://en.wikipedia.org/wiki/Dynamic_array">dynamic array</a>):
+      把 vector 后面用空空间进行填充, 这样可以方便插入和修改.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">make-line</span><span class="w"> </span><span class="p">(</span><span class="nf">str</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nb">string</span><span class="w"> </span><span class="nv">str</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">len</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="p">(</span><span class="nb">ceiling</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">str</span><span class="p">)</span><span class="w"> </span><span class="nv">+line-size+</span><span class="p">)</span><span class="w"> </span><span class="nv">+line-size+</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">arr</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="p">(</span><span class="nb">make-array</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="nv">:element-type</span><span class="w"> </span><span class="ss">&#39;character</span><span class="p">)</span>
+<span class="w">                      </span><span class="ss">&#39;simple-vector</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">dotimes</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="nv">len</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">svref</span><span class="w"> </span><span class="nv">arr</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">aref</span><span class="w"> </span><span class="nv">str</span><span class="w"> </span><span class="nv">i</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">make-instance</span><span class="w"> </span><span class="ss">&#39;line</span><span class="w"> </span><span class="nv">:buff</span><span class="w"> </span><span class="nv">arr</span><span class="p">)))</span>
+</pre></div>
+    <p>这样的 vector line 可以看作是一种特殊的 gap buffer (gap 全在后面).
+      一般是 gap 在 pointer 的附近 (方便插入).</p>
+    <p>不过有意思的是看到了一个叫做 <a href="https://en.wikipedia.org/wiki/Zipper_(data_structure)">Zipper</a> 的数据抽象 (gap buffer),
+      估计可以仔细看看.</p>
+    <p>cite: <a href="https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf">The Zipper</a></p>
+  </li>
+</ul>
+<p>下面是一些论文里面并没有介绍的内容:</p>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Rope_(data_structure)">Rope</a>
+    <p>一个二叉树来储存 vector piece.</p>
+    <p>cite: <a href="https://www.cs.tufts.edu/comp/150FP/archive/hans-boehm/ropes.pdf">Ropes: an Alternative to Strings</a></p>
+  </li>
+  <li><a href="https://en.wikipedia.org/wiki/Piece_table">Piece Table</a>
+    <p>原 buffer 视为 immutable 的 buffer, 修改储存在 piece table 中.</p>
+    <p>不过好像缺少很多的说明, 估计只能抄抄别人的代码实现了.</p>
+  </li>
+  <li>&#8230;</li>
+</ul>
+<h2>Protocol</h2>
+<p>下面这种基本就看代码了, 不一定全, 并且代码里面也没有文档, 难受.</p>
+<h3>Inner Protocol</h3>
+<p>几个概念:</p>
+<ul>
+  <li><code>buffer</code>: 嗯, 就叫 buffer (<a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/Buffers.html">Buffers, Emacs Manual</a>)</li>
+  <li><code>line</code>: 行抽象</li>
+  <li><code>cursor</code>: 当前编辑的位置</li>
+  <li><code>dock</code>: 将 <code>line</code> 和 <code>buffer</code> 连接在一起</li>
+</ul>
+<h3>Outter Protocol</h3>
+<ul>
+  <li>Update
+    <ul>
+      <li><code>(update buffer time sync skip modify create)</code></li>
+    </ul>
+  </li>
+  <li>Edit
+    <p>从用户的角度来看, 一个 <code>buffer</code> 由一堆 <code>line</code> 组成,
+      一个 <code>line</code> 由一堆 <code>item</code> 组成, <code>cursor</code> 在 <code>line</code> 上编辑.
+      这里的 <code>item</code> 算是一个对字符, 图像之类的任意的玩意的一个抽象.</p>
+    <p>一些我觉得比较 misc 的设计</p>
+    <ul>
+      <li><code>(line-count buffer)</code>
+        <p>返回 <code>buffer</code> 中的行数</p>
+      </li>
+      <li><code>(item-count entity)</code>
+        <p>计数 <code>entity</code> (<code>buffer</code>, <code>line</code>, <code>cursor</code>) 中的元素</p>
+      </li>
+      <li><code>(line-number entity)</code>
+        <p>得到 <code>entity</code> (<code>line</code>, <code>item</code>, <code>cursor</code>) 所在的行</p>
+      </li>
+      <li><code>(join-line entity)</code>
+        <p>合并行 (感觉这个不知道为啥设计)</p>
+      </li>
+      <li><code>(items entity &amp;key start end)</code>
+        <p>以 <code>vector</code> 的形式返回区域内的内容</p>
+      </li>
+      <li><code>(buffer entity)</code>
+        <p>返回 <code>entity</code> 对应的 <code>buffer</code></p>
+      </li>
+    </ul>
+    <p>在 <code>line</code> 上提供了一些这样的 protocol:</p>
+    <ul>
+      <li>Position
+        <ul>
+          <li><code>(first-line-p line)</code></li>
+          <li><code>(last-line-p line)</code></li>
+        </ul>
+      </li>
+      <li>Reading
+        <ul>
+          <li><code>(item-at-position line position)</code></li>
+          <li><code>(find-line buffer line-number)</code></li>
+        </ul>
+      </li>
+      <li>Writing
+        <ul>
+          <li><code>(insert-item-at-position line item position)</code></li>
+          <li><code>(delete-item-at-position line position)</code></li>
+          <li><code>(split-line-at-position line position)</code></li>
+        </ul>
+      </li>
+    </ul>
+    <p><code>cursor</code> 有如下的抽象:</p>
+    <ul>
+      <li>Position
+        <p><code>cursor</code> 应当附在 <code>line</code> 上,
+          若没有附在 <code>line</code> 上的 <code>cursor</code> 被执行读写或者其他操作的时候,
+          就应当抛出 <code>cursor-detached</code> 信号.</p>
+        <ul>
+          <li><code>(cursor-attached-p cursor)</code></li>
+          <li><code>(attach-cursor cursor line &amp;optional position)</code></li>
+          <li><code>(detach-cursor cursor)</code></li>
+        </ul>
+        <p>位置的判定:</p>
+        <ul>
+          <li><code>(cursor-position cursor)</code></li>
+          <li><code>(beginning-of-line-p cursor)</code></li>
+          <li><code>(end-of-line-p cursor)</code></li>
+          <li><code>(line cursor)</code></li>
+          <li><code>(cursor=/2 cursor1 cursor2)</code></li>
+          <li><code>(cursor&lt;/2 cursor1 cursor2)</code></li>
+          <li><code>(cursor/= cursor &amp;rest more-cursors)</code></li>
+        </ul>
+      </li>
+      <li>Moving
+        <ul>
+          <li><code>(beginning-of-line cursor)</code></li>
+          <li><code>(end-of-line cursor)</code></li>
+          <li><code>(forward-item cursor)</code></li>
+          <li><code>(backward-item cursor)</code></li>
+        </ul>
+      </li>
+      <li>Reading
+        <ul>
+          <li><code>(item-before-cursor cursor)</code></li>
+          <li><code>(item-after-cursor cursor)</code></li>
+        </ul>
+      </li>
+      <li>Writing
+        <ul>
+          <li><code>(insert-item cursor item)</code></li>
+          <li><code>(delete-item cursor)</code></li>
+          <li><code>(erase-item cursor)</code></li>
+          <li><code>(split-line cursor)</code></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h2>Supplied implementations</h2>
+<p>具体的实现不太重要, 这里会只挑 Cluffer 中的标准实现,</p>
+<h3>Line</h3>
+<ul>
+  <li>区分 <code>open-line</code> 和 <code>closed-line</code>
+    <ul>
+      <li><code>open-line</code> 使用 gap buffer 来保证可编辑</li>
+      <li><code>closed-line</code> 即为一个 <code>(simple-vector item)</code></li>
+      <li>通过 <code>close-line</code> 和 <code>open-line</code> 函数来相互转换</li>
+    </ul>
+  </li>
+</ul>
+<h3>Buffer</h3>
+<h1>The Zipper</h1>
+<h2>TLDR*</h2>
+<blockquote>
+  <p>the tree is turned inside-out like a returned glove, pointers from the
+    root to the current position being reversed in a path structure. The
+    current location holds both the downward current subtree and the
+    upward path. All navigation and modification primitives operate on the
+    location structure. Going up and down in the structure is analogous to
+    closing and opening a zipper in a piece of clothing, whence the name.</p>
+</blockquote>
+<p>可以参考 <a href="https://www.slideshare.net/slideshow/zippers-presentation/28611495">Zippers presentation</a> 这个 Slide 里面的一个演示:</p>
+<p>假如有一个 <code>list</code>:</p>
+<pre class="example">
+(1 2 3 4 5 6 7 8 9 10)
+</pre>
+<blockquote>
+  <p>Zipper is a functional cursor into a data structure.</p>
+</blockquote>
+<p>即, 当 <code>cursor</code> 在 <code>list</code> 上进行移动的时候:</p>
+<div class="highlight"><pre><span></span>1 (2 3 4 5 6 7 8 9 10)    ;; 0
+^
+
+(1) 2 (3 4 5 6 7 8 9 10)  ;; 1
+    ^
+
+(2 1) 3 (4 5 6 7 8 9 10)  ;; 2
+      ^
+
+(3 2 1) 4 (5 6 7 8 9 10)  ;; 3
+        ^
+</pre></div>
+<p>就像是在拉拉链一样进行滑动, 同时在 <code>cursor</code> 处插入和删除的效率是 <code>O(1)</code>.</p>
+<p>妙啊, 相当于是一个 gap 无限大的 gap buffer.</p>
+<p>(吐槽: 喵的函数式那帮人写代码都跟写数学公式一样,
+  简直就是在用一堆不严谨 (indeterminate) 的鬼画符 (数学),
+  去描述一个严谨的 (determinate) 的东西&#8230;</p>
+<h2>A Trivial Implementation</h2>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defpackage</span><span class="w"> </span><span class="kd">#:trivial-zipper</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:use</span><span class="w"> </span><span class="nv">:cl</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:export</span>
+<span class="w">   </span><span class="kd">#:zipper</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:trivial-zipper</span><span class="p">)</span>
+</pre></div>
+<h3><code>zipper</code> structure</h3>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defstruct</span><span class="w"> </span><span class="nv">zipper</span>
+<span class="w">  </span><span class="s">&quot;The trivial Zipper implementation. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">unfold</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">  </span><span class="nv">cursor</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">folded</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nb">list</span><span class="p">))</span>
+</pre></div>
+<p>如上文所说, 将 <code>zipper</code> 的数据结构分为 <code>unfold</code>, <code>cursor</code>, <code>folded</code> 三个部分:</p>
+<pre class="example">
+(3 2 1)   4     (5 6 7 8 9 10)
+unfold  cursor      folded
+</pre>
+<h3>Allocation and Reading</h3>
+<h4><code>(zipper&lt;- sequence)</code> \(&rarr;\) turn <code>sequence</code> to <code>zipper</code></h4>
+<p>将 <code>sequence</code> 转换为 <code>zipper</code> 数据结构</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">zipper&lt;-</span><span class="w"> </span><span class="p">(</span><span class="nf">sequence</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span><span class="w"> </span><span class="s">&quot;Turn SEQUENCE to `zipper&#39; structure. &quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">seq</span><span class="w"> </span><span class="nv">sequence</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">zerop</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">seq</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;~A is empty. &quot;</span><span class="w"> </span><span class="nv">seq</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">coerce</span><span class="w"> </span><span class="nv">seq</span><span class="w"> </span><span class="ss">&#39;list</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">make-zipper</span><span class="w"> </span><span class="nv">:folded</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">:cursor</span><span class="w"> </span><span class="p">(</span><span class="nb">car</span><span class="w"> </span><span class="nb">list</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">:unfold</span><span class="w"> </span><span class="p">()))))</span>
+</pre></div>
+<h4><code>(print-object zipper stream)</code></h4>
+<p>这里用类似 <code>#&lt;unfold cursor folded&gt;</code> 的形式来显示 <code>zipper</code> 数据结构:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defmethod</span><span class="w"> </span><span class="nv">print-object</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">print-unreadable-object</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">stream</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;~A ~A ~A&quot;</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">zipper-cursor</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))))</span>
+</pre></div>
+<p>例:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">zipper&lt;-</span><span class="w"> </span><span class="s">&quot;Hello World&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+#&lt;nil H (e l l o   W o r l d)&gt;
+</pre>
+<h4><code>(zipper-length zipper)</code> \(&rarr;\) length of zipper data</h4>
+<p>类似于 <code>length</code> 的一个简单函数:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">zipper-length</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return ZIPPER length. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="nv">unsigned-byte</span>
+<span class="w">       </span><span class="p">(</span><span class="nb">+</span><span class="w"> </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">          </span><span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+<h4><code>(string&lt;-zipper zipper)</code> \(&rarr;\) turn <code>zipper</code> as <code>string</code></h4>
+<p>类似于 <code>print-object</code>, 但是以更加常见的形式去输出这个 <code>zipper</code> 元素:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">string&lt;-zipper</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return ZIPPER as string. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;string</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">reverse</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-cursor</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+</pre></div>
+<p>注: 如果 <code>zipper</code> 中的 <code>element</code> 并非 <code>character</code>,
+  我觉得可以做一个简单的预处理之类的.
+  这样可以支持更多的 <code>item</code> 类型.</p>
+<h4><code>(zipper-cursor-position zipper)</code> \(&rarr;\) return cursor position</h4>
+<p>当前 <code>cursor</code> 的位置</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">zipper-cursor-position</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Return ZIPPER cursor position. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+</pre></div>
+<h3>Transforming</h3>
+<p>这里使用 <code>zipper-forward</code>, <code>zipper-backward</code> 来进行滑移:</p>
+<h4><code>(zipper-forward zipper)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">zipper-forward</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Move ZIPPER cursor forward.</span>
+<span class="s">Return t if success, nil otherwise.</span>
+
+<span class="s">Side Effect:</span>
+<span class="s">ZIPPER cursor position would be moved. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="nv">boolean</span>
+<span class="w">       </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">(</span><span class="nf">prev</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">shiftf</span><span class="w"> </span><span class="nv">prev</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-cursor</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">prev</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">           </span><span class="nv">t</span><span class="p">))))</span>
+</pre></div>
+<h4><code>(zipper-backward zipper)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">zipper-backward</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Move ZIPPER cursor backward.</span>
+<span class="s">Return t if success, nil otherwise.</span>
+
+<span class="s">Side Effect:</span>
+<span class="s">ZIPPER cursor position would be moved. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">the</span><span class="w"> </span><span class="nv">boolean</span>
+<span class="w">       </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">(</span><span class="nf">next</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">shiftf</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-cursor</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">next</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">))</span>
+<span class="w">           </span><span class="nv">t</span><span class="p">))))</span>
+</pre></div>
+<h4><code>(zipper-move-cursor zipper position)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">zipper-cursor-move</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">position</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Move ZIPPER cursor to POSITION.</span>
+<span class="s">Return t if moved successfully, nil otherwise. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">unsigned-byte</span><span class="w"> </span><span class="nv">position</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">pos</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-cursor-position</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nb">&lt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">position</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:repeat</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">position</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">:unless</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-forward</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">:return</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                 </span><span class="nv">:finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">((</span><span class="nb">&gt;</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">position</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:repeat</span><span class="w"> </span><span class="p">(</span><span class="nb">-</span><span class="w"> </span><span class="nv">pos</span><span class="w"> </span><span class="nv">position</span><span class="p">)</span>
+<span class="w">                 </span><span class="nv">:unless</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-backward</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">:return</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">                 </span><span class="nv">:finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">t</span><span class="w"> </span><span class="nv">t</span><span class="p">))))</span>
+</pre></div>
+<h3>Writing</h3>
+<h4><code>(zipper-insert zipper elem)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">zipper-insert</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span>
+<span class="w">   </span><span class="s">&quot;Insert ELEM before ZIPPER cursor.</span>
+<span class="s">Return ZIPPER. &quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="nv">:around</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">call-next-method</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">char</span><span class="w"> </span><span class="nv">character</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">seq</span><span class="w"> </span><span class="nv">sequence</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">map</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-unfold</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span><span class="w"> </span><span class="nv">seq</span><span class="p">)))</span>
+</pre></div>
+<h4><code>(zipper-insert-after zipper elem)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">zipper-insert-after</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span>
+<span class="w">   </span><span class="s">&quot;Insert ELEM after ZIPPER cursor.</span>
+<span class="s">Return ZIPPER itself. &quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="nv">:around</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">elem</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">call-next-method</span><span class="p">)</span>
+<span class="w">    </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">char</span><span class="w"> </span><span class="nv">character</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">push</span><span class="w"> </span><span class="nv">char</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">seq</span><span class="w"> </span><span class="nv">sequence</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">          </span><span class="p">(</span><span class="nb">concatenate</span><span class="w"> </span><span class="ss">&#39;list</span><span class="w"> </span><span class="nv">seq</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))))</span>
+</pre></div>
+<h4><code>(zipper-delete zipper &amp;optional repeat)</code></h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defgeneric</span><span class="w"> </span><span class="nv">zipper-delete</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">repeat</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:documentation</span>
+<span class="w">   </span><span class="s">&quot;Delete ZIPPER element at cursor REPEAT times.</span>
+<span class="s">Return t if success, nil otherwise. &quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="nv">:around</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">repeat</span><span class="w"> </span><span class="mi">1</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="nv">unsigned-byte</span><span class="w"> </span><span class="nv">repeat</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:repeat</span><span class="w"> </span><span class="nv">repeat</span>
+<span class="w">          </span><span class="nv">:unless</span><span class="w"> </span><span class="p">(</span><span class="nf">call-next-method</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">            </span><span class="nv">:return</span><span class="w"> </span><span class="nv">nil</span>
+<span class="w">          </span><span class="nv">:finally</span><span class="w"> </span><span class="p">(</span><span class="nf">return</span><span class="w"> </span><span class="nv">t</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:method</span><span class="w"> </span><span class="p">((</span><span class="nf">zipper</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="nv">repeat</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">repeat</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">shiftf</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-cursor</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">pop</span><span class="w"> </span><span class="p">(</span><span class="nf">zipper-folded</span><span class="w"> </span><span class="nv">zipper</span><span class="p">)))</span>
+<span class="w">      </span><span class="nv">t</span><span class="p">)))</span>
+</pre></div>
+<h4>&#8230;</h4>
+<h3>Ending</h3>
+<p>其实基本上已经实现了大部分的增删查改了? 也许吧.
+  假如不实现嵌套的 (nested) 数据结构的话, 感觉其实非常好实现,
+  完全可以作为编程入门课来教学的感觉.</p>
+<p>(C 那一套还是害人不浅啊&#8230; )</p>
+<p>当然, 你也可以说, 那么代价呢? 用 <code>list</code> 作为数据结构必然要付出相比
+  <code>array</code> 这样可以随机寻址的数据结构更多的代价. 这只能说算是一种取舍了吧?</p>
+
+  </div><a class="u-url" href="/lisp/cluffer/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

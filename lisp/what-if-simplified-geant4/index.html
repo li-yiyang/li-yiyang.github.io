@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>What if a simplified Geant4 | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="What if a simplified Geant4" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About Note: this is not a proposal for how to improve the Geant 4. I think those Rust guys may have more plans about how to rewrite Geant 4 in a more efficient way. C++ is too easy to get yourself in trouble. So this blog is like my thoughts on these days struggling with Geant 4. And what if we could make a easier Geant 4. The Design The main ideas cames from my Comsol learning experience, the HTML usage experience and the design of Gnuplot wrapper. The final design would look like this: (Note the code is just I copied from B3a, but made it much messy. It should not work, but would give a proper overview). (define-g4-detector-project :my-detector (:physics-list &quot;G4DecayPhysics&quot; &quot;G4EmStandardPhysics&quot; &quot;G4RadioactiveDecayPhysics&quot;) (:materials (:default :g4material &quot;G4_AIR&quot;) (:foobar :elements &#39;(:o 5 :si 1 :lu 2))) (:detector ((:world (g4box 100 200 300 :mm) :material :default) ((:ring (g4tubs 50 20 30 :mm) :material :default :place (dotimes-collect (i 3) (g4placement :transform (g4rotation (quantity (* i 30) :deg) (quantity (* i 20) :deg)) :posistion (list (quantity (* i 30) :mm) (quantity (* i 30) :mm) (quantity (* i 30) :mm))))) ((:detector (g4tubes 10 10 10 :mm) :material :default)))))) So focus on :detector part, it should wrap geometry sepcification, logical volume specification and physical volume (placement) specification. So just introduce a HTML-like S-expr would be a nice idea: (&lt;node&gt; . &lt;childrens&gt;) where the node should be: &lt;node&gt; ::= &lt;keyword-of-detector-element&gt; | ( &lt;keyword-of-detector-element&gt; ( ;; geometry definition [:g4box | :g4tubs | :g4ellipsoid | ... ] . &lt;g4-geometry-arguments-with-a-unit-at-last&gt; ) . [property property-value]* ;; for other properities ) And it would be nice if :detector itself could have interactively preview while modeling. (I think this could be done using Kons-9 or other 3D modeling process). (Note: it would be nice if using CAD and import it to Geant 4, but as you know, I was just struggling with Geant 4 and have no time to try it out. ) In the end, the project should be tangled into a CMake project locally and automatically linted, and compiled. Possible Routes to make this real As mentioned before, this G4 simplification is just a proposal, rather than a specific implementation. Because it would cost massive time to cover all the Cpp features and Geant 4 features. format Just like what I did in Gnuplot, I think I&#39;ll use a format method alist to store how to formatting the Codes. (define-alist-with-define-and-undefine cpp-format)" />
+<meta property="og:description" content="About Note: this is not a proposal for how to improve the Geant 4. I think those Rust guys may have more plans about how to rewrite Geant 4 in a more efficient way. C++ is too easy to get yourself in trouble. So this blog is like my thoughts on these days struggling with Geant 4. And what if we could make a easier Geant 4. The Design The main ideas cames from my Comsol learning experience, the HTML usage experience and the design of Gnuplot wrapper. The final design would look like this: (Note the code is just I copied from B3a, but made it much messy. It should not work, but would give a proper overview). (define-g4-detector-project :my-detector (:physics-list &quot;G4DecayPhysics&quot; &quot;G4EmStandardPhysics&quot; &quot;G4RadioactiveDecayPhysics&quot;) (:materials (:default :g4material &quot;G4_AIR&quot;) (:foobar :elements &#39;(:o 5 :si 1 :lu 2))) (:detector ((:world (g4box 100 200 300 :mm) :material :default) ((:ring (g4tubs 50 20 30 :mm) :material :default :place (dotimes-collect (i 3) (g4placement :transform (g4rotation (quantity (* i 30) :deg) (quantity (* i 20) :deg)) :posistion (list (quantity (* i 30) :mm) (quantity (* i 30) :mm) (quantity (* i 30) :mm))))) ((:detector (g4tubes 10 10 10 :mm) :material :default)))))) So focus on :detector part, it should wrap geometry sepcification, logical volume specification and physical volume (placement) specification. So just introduce a HTML-like S-expr would be a nice idea: (&lt;node&gt; . &lt;childrens&gt;) where the node should be: &lt;node&gt; ::= &lt;keyword-of-detector-element&gt; | ( &lt;keyword-of-detector-element&gt; ( ;; geometry definition [:g4box | :g4tubs | :g4ellipsoid | ... ] . &lt;g4-geometry-arguments-with-a-unit-at-last&gt; ) . [property property-value]* ;; for other properities ) And it would be nice if :detector itself could have interactively preview while modeling. (I think this could be done using Kons-9 or other 3D modeling process). (Note: it would be nice if using CAD and import it to Geant 4, but as you know, I was just struggling with Geant 4 and have no time to try it out. ) In the end, the project should be tangled into a CMake project locally and automatically linted, and compiled. Possible Routes to make this real As mentioned before, this G4 simplification is just a proposal, rather than a specific implementation. Because it would cost massive time to cover all the Cpp features and Geant 4 features. format Just like what I did in Gnuplot, I think I&#39;ll use a format method alist to store how to formatting the Codes. (define-alist-with-define-and-undefine cpp-format)" />
+<link rel="canonical" href="/lisp/what-if-simplified-geant4/" />
+<meta property="og:url" content="/lisp/what-if-simplified-geant4/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-03-18T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="What if a simplified Geant4" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-03-18T00:00:00+00:00","datePublished":"2025-03-18T00:00:00+00:00","description":"About Note: this is not a proposal for how to improve the Geant 4. I think those Rust guys may have more plans about how to rewrite Geant 4 in a more efficient way. C++ is too easy to get yourself in trouble. So this blog is like my thoughts on these days struggling with Geant 4. And what if we could make a easier Geant 4. The Design The main ideas cames from my Comsol learning experience, the HTML usage experience and the design of Gnuplot wrapper. The final design would look like this: (Note the code is just I copied from B3a, but made it much messy. It should not work, but would give a proper overview). (define-g4-detector-project :my-detector (:physics-list &quot;G4DecayPhysics&quot; &quot;G4EmStandardPhysics&quot; &quot;G4RadioactiveDecayPhysics&quot;) (:materials (:default :g4material &quot;G4_AIR&quot;) (:foobar :elements &#39;(:o 5 :si 1 :lu 2))) (:detector ((:world (g4box 100 200 300 :mm) :material :default) ((:ring (g4tubs 50 20 30 :mm) :material :default :place (dotimes-collect (i 3) (g4placement :transform (g4rotation (quantity (* i 30) :deg) (quantity (* i 20) :deg)) :posistion (list (quantity (* i 30) :mm) (quantity (* i 30) :mm) (quantity (* i 30) :mm))))) ((:detector (g4tubes 10 10 10 :mm) :material :default)))))) So focus on :detector part, it should wrap geometry sepcification, logical volume specification and physical volume (placement) specification. So just introduce a HTML-like S-expr would be a nice idea: (&lt;node&gt; . &lt;childrens&gt;) where the node should be: &lt;node&gt; ::= &lt;keyword-of-detector-element&gt; | ( &lt;keyword-of-detector-element&gt; ( ;; geometry definition [:g4box | :g4tubs | :g4ellipsoid | ... ] . &lt;g4-geometry-arguments-with-a-unit-at-last&gt; ) . [property property-value]* ;; for other properities ) And it would be nice if :detector itself could have interactively preview while modeling. (I think this could be done using Kons-9 or other 3D modeling process). (Note: it would be nice if using CAD and import it to Geant 4, but as you know, I was just struggling with Geant 4 and have no time to try it out. ) In the end, the project should be tangled into a CMake project locally and automatically linted, and compiled. Possible Routes to make this real As mentioned before, this G4 simplification is just a proposal, rather than a specific implementation. Because it would cost massive time to cover all the Cpp features and Geant 4 features. format Just like what I did in Gnuplot, I think I&#39;ll use a format method alist to store how to formatting the Codes. (define-alist-with-define-and-undefine cpp-format)","headline":"What if a simplified Geant4","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/what-if-simplified-geant4/"},"url":"/lisp/what-if-simplified-geant4/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">What if a simplified Geant4</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-03-18T00:00:00+00:00" itemprop="datePublished">Mar 18, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>Note: this is not a proposal for how to improve the Geant 4.
+  I think those Rust guys may have more plans about how to
+  rewrite Geant 4 in a more efficient way. C++ is too easy to
+  get yourself in trouble.</p>
+<p>So this blog is like my thoughts on these days struggling with
+  Geant 4. And what if we could make a easier Geant 4.</p>
+<h1>The Design</h1>
+<p>The main ideas cames from my <a href="/learning/finite-element-method/">Comsol</a> learning experience, the
+  HTML usage experience and the design of <a href="/lisp/gnuplot/">Gnuplot</a> wrapper.</p>
+<p>The final design would look like this:
+  (Note the code is just I copied from B3a, but made it much
+  messy. It should not work, but would give a proper overview).</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-g4-detector-project</span><span class="w"> </span><span class="nv">:my-detector</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:physics-list</span>
+<span class="w">   </span><span class="s">&quot;G4DecayPhysics&quot;</span>
+<span class="w">   </span><span class="s">&quot;G4EmStandardPhysics&quot;</span>
+<span class="w">   </span><span class="s">&quot;G4RadioactiveDecayPhysics&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:materials</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:default</span><span class="w"> </span><span class="nv">:g4material</span><span class="w"> </span><span class="s">&quot;G4_AIR&quot;</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">:foobar</span><span class="w">  </span><span class="nv">:elements</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:o</span><span class="w"> </span><span class="mi">5</span><span class="w"> </span><span class="nv">:si</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="nv">:lu</span><span class="w"> </span><span class="mi">2</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:detector</span>
+<span class="w">   </span><span class="p">((</span><span class="nf">:world</span><span class="w"> </span><span class="p">(</span><span class="nf">g4box</span><span class="w"> </span><span class="mi">100</span><span class="w"> </span><span class="mi">200</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span><span class="w"> </span><span class="nv">:material</span><span class="w"> </span><span class="nv">:default</span><span class="p">)</span>
+<span class="w">    </span><span class="p">((</span><span class="nf">:ring</span><span class="w"> </span><span class="p">(</span><span class="nf">g4tubs</span><span class="w"> </span><span class="mi">50</span><span class="w"> </span><span class="mi">20</span><span class="w"> </span><span class="mi">30</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span>
+<span class="w">      </span><span class="nv">:material</span><span class="w"> </span><span class="nv">:default</span>
+<span class="w">      </span><span class="nv">:place</span><span class="w"> </span><span class="p">(</span><span class="nf">dotimes-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="nf">g4placement</span><span class="w"> </span><span class="nv">:transform</span><span class="w"> </span><span class="p">(</span><span class="nf">g4rotation</span><span class="w"> </span><span class="p">(</span><span class="nf">quantity</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="nv">:deg</span><span class="p">)</span>
+<span class="w">                                                   </span><span class="p">(</span><span class="nf">quantity</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">20</span><span class="p">)</span><span class="w"> </span><span class="nv">:deg</span><span class="p">))</span>
+<span class="w">                            </span><span class="nv">:posistion</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">quantity</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span>
+<span class="w">                                             </span><span class="p">(</span><span class="nf">quantity</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span>
+<span class="w">                                             </span><span class="p">(</span><span class="nf">quantity</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="mi">30</span><span class="p">)</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)))))</span>
+<span class="w">     </span><span class="p">((</span><span class="nf">:detector</span><span class="w"> </span><span class="p">(</span><span class="nf">g4tubes</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span>
+<span class="w">       </span><span class="nv">:material</span><span class="w"> </span><span class="nv">:default</span><span class="p">))))))</span>
+</pre></div>
+<p>So focus on <code>:detector</code> part, it should wrap geometry sepcification,
+  logical volume specification and physical volume (placement) specification.
+  So just introduce a HTML-like S-expr would be a nice idea:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">&lt;node&gt;</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">&lt;childrens&gt;</span><span class="p">)</span>
+</pre></div>
+<p>where the <code>node</code> should be:</p>
+<div class="highlight"><pre><span></span>&lt;node&gt; ::= &lt;keyword-of-detector-element&gt;
+         | ( &lt;keyword-of-detector-element&gt;
+             ( ;; geometry definition
+                [:g4box | :g4tubs | :g4ellipsoid | ... ]
+                .
+                &lt;g4-geometry-arguments-with-a-unit-at-last&gt;
+             )
+             . [property property-value]* ;; for other properities
+           )
+</pre></div>
+<p>And it would be nice if <code>:detector</code> itself could have interactively
+  preview while modeling. (I think this could be done using <a href="https://github.com/kaveh808/kons-9">Kons-9</a>
+  or other 3D modeling process).</p>
+<p>(Note: it would be nice if using CAD and import it to Geant 4,
+  but as you know, I was just struggling with Geant 4 and have no
+  time to try it out. )</p>
+<p>In the end, the project should be tangled into a CMake project
+  locally and automatically linted, and compiled.</p>
+<h1>Possible Routes to make this real</h1>
+<p>As mentioned before, this G4 simplification is just a proposal,
+  rather than a specific implementation. Because it would cost
+  massive time to cover all the Cpp features and Geant 4 features.</p>
+<h2>format</h2>
+<p>Just like what I did in <a href="/lisp/gnuplot/">Gnuplot</a>, I think I'll use a format method
+  alist to store how to formatting the Codes.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-alist-with-define-and-undefine</span><span class="w"> </span><span class="nv">cpp-format</span><span class="p">)</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">define-cpp-format-method</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">define-cpp-format</span><span class="w"> </span><span class="o">,</span><span class="nv">method</span><span class="w"> </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="o">,</span><span class="nv">stream</span><span class="w"> </span><span class="o">,@</span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">cpp-format</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">&amp;rest</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">*cpp-format-alist*</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+</pre></div>
+<h3>Cpp Wrapper</h3>
+<p>I think I will make a Lisp class-like DSL for the Cpp class:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-cpp-class</span><span class="w"> </span><span class="nv">:physics</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;G4VModularPhysicsList&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">physics-list</span><span class="w"> </span><span class="nv">*physics-list*</span><span class="p">))</span><span class="w"> </span><span class="c1">;; local bindings</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:nickname</span><span class="w"> </span><span class="s">&quot;PhysicsList&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:init-method</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">g4-regist-physics-list</span><span class="w"> </span><span class="nv">physics-list</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">:includes</span>
+<span class="w">   </span><span class="p">(</span><span class="nf">mapcar</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;atomize</span><span class="w"> </span><span class="nv">physics-list</span><span class="p">)</span>
+<span class="w">   </span><span class="s">&quot;G4OpticalPhysics&quot;</span>
+<span class="w">   </span><span class="s">&quot;G4OpticalParameters&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">((</span><span class="nf">:method</span><span class="w"> </span><span class="s">&quot;SetCuts&quot;</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span>
+<span class="w">   </span><span class="s">&quot;SetCutsWithDefault();&quot;</span><span class="p">))</span>
+</pre></div>
+<p>It should be parsed into a list like <code>(name . plist)</code>:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">:physics</span>
+<span class="w"> </span><span class="nv">:nickname</span><span class="w"> </span><span class="s">&quot;PhysicsList&quot;</span>
+<span class="w"> </span><span class="nv">:init-method</span><span class="w"> </span><span class="p">(</span><span class="s">&quot;...&quot;</span><span class="p">)</span>
+<span class="w"> </span><span class="nv">:includes</span><span class="w">    </span><span class="p">(</span><span class="o">...</span><span class="w"> </span><span class="s">&quot;G4OpticalPhysics&quot;</span><span class="w"> </span><span class="s">&quot;G4OpticalParameters&quot;</span><span class="p">)</span>
+<span class="w"> </span><span class="nv">:methods</span><span class="w">     </span><span class="p">(((</span><span class="s">&quot;SetCuts&quot;</span><span class="w"> </span><span class="nv">:void</span><span class="p">)</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="s">&quot;SetCutsWithDefault();&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>then using <code>:class-include</code> and <code>:class-src</code> to format it into
+  header files and src implementation files.</p>
+<h3>Detector</h3>
+<h4>Material and Elements</h4>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-alist-with-define-and-undefine</span><span class="w"> </span><span class="nv">material</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">define-g4material</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">name</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">nickname</span><span class="w"> </span><span class="nv">g4material</span><span class="w"> </span><span class="nv">density</span><span class="w"> </span><span class="nv">elements</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">method</span><span class="w">     </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">method</span>
+<span class="w">                         </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">(</span><span class="nf">g4material</span><span class="w"> </span><span class="nv">:g4-find-material</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">elements</span><span class="w">   </span><span class="nv">:g4-build-material</span><span class="p">)</span>
+<span class="w">                               </span><span class="p">(</span><span class="nf">T</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="s">&quot;Missing `:method&#39; keyword&quot;</span><span class="p">)))))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">properties</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">:method</span><span class="w"> </span><span class="nv">method</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">nickname</span><span class="w"> </span><span class="p">(</span><span class="nf">push-plist</span><span class="w"> </span><span class="nv">:nickname</span><span class="w"> </span><span class="nv">nickname</span><span class="w"> </span><span class="nv">properties</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">ecase</span><span class="w"> </span><span class="nv">method</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">:g4-find-material</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">push-plist</span><span class="w"> </span><span class="nv">:g4material</span><span class="w"> </span><span class="nv">g4material</span><span class="w"> </span><span class="nv">properties</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="nv">density</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">push-plist</span><span class="w"> </span><span class="nv">:density</span><span class="w"> </span><span class="p">(</span><span class="nf">quantity-value</span><span class="w"> </span><span class="nv">density</span><span class="w"> </span><span class="p">(</span><span class="nf">unit</span><span class="w"> </span><span class="nv">:g/cm3</span><span class="p">))</span><span class="w"> </span><span class="nv">properties</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">((</span><span class="nf">:build</span><span class="w"> </span><span class="nv">:g4-build-material</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">push-plist</span><span class="w"> </span><span class="nv">:density</span><span class="w">  </span><span class="p">(</span><span class="nf">quantity-value</span><span class="w"> </span><span class="nv">density</span><span class="w"> </span><span class="p">(</span><span class="nf">unit</span><span class="w"> </span><span class="nv">:g/cm3</span><span class="p">))</span><span class="w"> </span><span class="nv">properties</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">push-plist</span><span class="w"> </span><span class="nv">:elements</span><span class="w"> </span><span class="nv">elements</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">define-material</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">properties</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">define-cpp-format-method</span><span class="w"> </span><span class="nv">:g4-find-material</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">material</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">nickname</span><span class="w"> </span><span class="nv">density</span><span class="w"> </span><span class="nv">g4material</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w">     </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:g4material</span><span class="w"> </span><span class="nv">material</span><span class="w"> </span><span class="nv">:nickname</span><span class="w"> </span><span class="nv">nickname</span><span class="p">))</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">material</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">g4material</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">string-upcase</span><span class="w"> </span><span class="p">(</span><span class="nf">str:snake-case</span><span class="w"> </span><span class="nv">material</span><span class="p">)))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;G4Material *~A = ~A-&gt;&quot;</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">*nist-manager*</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">density</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;BuildMaterialWithNewDensity(</span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">, </span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">, ~F * g / cm3);~%&quot;</span>
+<span class="w">                </span><span class="nv">name</span><span class="w"> </span><span class="nv">material</span><span class="w"> </span><span class="nv">density</span><span class="p">)</span>
+<span class="w">        </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;FindOrBuildMaterial(</span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">);~%&quot;</span><span class="w"> </span><span class="nv">material</span><span class="p">))))</span>
+</pre></div>
+<p>Elements should be the same.</p>
+<h4>Geometry, LogicalVolume, PhysicalVolume</h4>
+<p>So this would like this for geometry definition:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-cpp-format-method</span><span class="w"> </span><span class="nv">:g4box</span><span class="w"> </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">name</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="w"> </span><span class="nv">&amp;optional</span><span class="w"> </span><span class="p">(</span><span class="nf">unit</span><span class="w"> </span><span class="nv">:mm</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w"> </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:cpp-name</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">            </span><span class="s">&quot;G4Box *~A = new G4Box(</span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">, ~{~{~F / 2.0 * ~A~}~^, ~});~%&quot;</span>
+<span class="w">            </span><span class="nv">name</span><span class="w"> </span><span class="nv">name</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">dolist-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">elem</span><span class="w"> </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="nv">x</span><span class="w"> </span><span class="nv">y</span><span class="w"> </span><span class="nv">z</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">quantity-value</span><span class="w"> </span><span class="nv">elem</span><span class="w"> </span><span class="nv">unit</span><span class="p">)</span><span class="w"> </span><span class="nv">unit</span><span class="p">)))))</span>
+</pre></div>
+<p>For LogicalVolume and PhysicalVolume, it would be like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-cpp-format-method</span><span class="w"> </span><span class="nv">:g4-define-volume</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stream</span><span class="w"> </span><span class="nv">g4volume</span>
+<span class="w">            </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">geometry</span><span class="w"> </span><span class="nv">parent</span><span class="w"> </span><span class="nv">material</span><span class="w"> </span><span class="p">(</span><span class="nf">unit</span><span class="w"> </span><span class="nv">:mm</span><span class="p">)</span><span class="w"> </span><span class="nv">optical</span><span class="w"> </span><span class="nv">union</span>
+<span class="w">            </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">name</span><span class="w">     </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:g4volume</span><span class="w"> </span><span class="nv">g4volume</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">material</span><span class="w"> </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:material</span><span class="w"> </span><span class="nv">material</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">geo</span><span class="w">      </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:g4volume-geometry</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nb">log</span><span class="w">      </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">nil</span><span class="w"> </span><span class="nv">:g4-logical-volume</span><span class="w"> </span><span class="nv">name</span><span class="p">)))</span>
+<span class="w">    </span><span class="c1">;; Geometry</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">let-bind*</span><span class="w"> </span><span class="p">(((</span><span class="nf">method</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="nv">geometry</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">cpp-format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="p">(</span><span class="nb">cons</span><span class="w"> </span><span class="nv">geo</span><span class="w"> </span><span class="nv">args</span><span class="p">)))</span>
+
+<span class="w">    </span><span class="c1">;; LogicalVolume</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">            </span><span class="s">&quot;G4LogicalVolume *~A = new G4LogicalVolume(~A, ~A, </span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">);~%&quot;</span>
+<span class="w">            </span><span class="nb">log</span><span class="w"> </span><span class="nv">geo</span><span class="w"> </span><span class="nv">mat</span><span class="w"> </span><span class="nb">log</span><span class="p">)</span>
+
+<span class="w">    </span><span class="c1">;; VPhyscialVolume</span>
+<span class="w">    </span><span class="p">(</span><span class="k">cond</span><span class="w"> </span><span class="p">((</span><span class="nf">null</span><span class="w"> </span><span class="nv">parent</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                   </span><span class="s">&quot;G4VPhysicalVolume *~A = ~</span>
+<span class="s">new G4PVPlacement(0, G4ThreeVector(), ~A, </span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">, 0, false, false);~%&quot;</span>
+<span class="w">                   </span><span class="nv">name</span><span class="w"> </span><span class="nb">log</span><span class="w"> </span><span class="nv">name</span><span class="p">))</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">T</span>
+<span class="w">           </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span><span class="w"> </span><span class="s">&quot;G4VPhysicalVolume *~A;~%&quot;</span><span class="w"> </span><span class="nv">name</span><span class="p">)</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">do-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">parent-log</span><span class="w"> </span><span class="nv">coordinates</span><span class="w"> </span><span class="nv">parent</span><span class="p">)</span>
+<span class="w">             </span><span class="err">​</span><span class="w">             </span><span class="p">(</span><span class="nf">dolist-indexed</span><span class="w"> </span><span class="p">(</span><span class="nf">idx</span><span class="w"> </span><span class="nv">coords</span><span class="w"> </span><span class="nv">coordinates</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">stream</span>
+<span class="w">                                    </span><span class="s">&quot;~A = ~</span>
+<span class="s">new G4PVPlacement(0, G4ThreeVector(~{~{~F * ~(~A~)~}~^, ~}), ~</span>
+<span class="s">~A, </span><span class="se">\&quot;</span><span class="s">~A</span><span class="se">\&quot;</span><span class="s">, ~A, false, ~D, false);~%&quot;</span>
+<span class="w">                                    </span><span class="nv">name</span>
+<span class="w">                                    </span><span class="p">(</span><span class="nf">dolist-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">coord</span><span class="w"> </span><span class="nv">coords</span><span class="p">)</span>
+<span class="w">                                      </span><span class="p">(</span><span class="nb">list</span><span class="w"> </span><span class="p">(</span><span class="nf">quantity-value</span><span class="w"> </span><span class="nv">coord</span><span class="w"> </span><span class="nv">unit</span><span class="p">)</span><span class="w"> </span><span class="nv">unit</span><span class="p">))</span>
+<span class="w">                                    </span><span class="nb">log</span>
+<span class="w">                                    </span><span class="nv">name</span>
+<span class="w">                                    </span><span class="nv">parent-log</span>
+<span class="w">                                    </span><span class="nv">idx</span><span class="p">)))))))</span>
+</pre></div>
+<details><summary>Notes</summary>
+<p>It should be noted that logical volume could be combined
+  and perform boolean operation. But since I only need a
+  subset of Geant 4, so maybe it is okay.</p>
+</details>
+<h4>Misc: Live preview</h4>
+<p>So I use <a href="https://github.com/kaveh808/kons-9/">kons-9</a> for quick prototype.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">define-alist-with-define-and-undefine</span><span class="w"> </span><span class="nv">kons-9-g4geometry</span><span class="p">)</span>
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">define-kons-9-geo</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">coords</span><span class="p">)</span><span class="w"> </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">with-gensyms</span><span class="w"> </span><span class="p">(</span><span class="nf">coord</span><span class="p">)</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">define-kons-9-g4geometry</span><span class="w"> </span><span class="o">,</span><span class="nv">method</span>
+<span class="w">     </span><span class="p">(</span><span class="k">lambda</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="o">,</span><span class="nv">coord</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">let-bind*</span><span class="w"> </span><span class="p">((</span><span class="o">,</span><span class="nv">coords</span>
+<span class="w">                    </span><span class="p">(</span><span class="nf">dolist-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">coord</span><span class="w"> </span><span class="p">(</span><span class="nf">butlast</span><span class="w"> </span><span class="o">,</span><span class="nv">coord</span><span class="p">))</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">*kons-9-scale*</span><span class="w"> </span><span class="nv">coord</span><span class="p">))))</span>
+<span class="w">         </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">render-g4geo</span><span class="w"> </span><span class="p">(</span><span class="nf">method</span><span class="w"> </span><span class="nv">coords</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">kons-9::add-shape</span><span class="w"> </span><span class="nv">kons-9::*scene*</span>
+<span class="w">                     </span><span class="p">(</span><span class="nf">kons-9::translate-to</span>
+<span class="w">                      </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">method</span><span class="w"> </span><span class="nv">*kons-9-g4geometry-alist*</span><span class="p">))</span><span class="w"> </span><span class="nv">coords</span><span class="p">)</span>
+<span class="w">                      </span><span class="nv">pos</span><span class="p">)))</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">render-g4volume</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;optional</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">physical-volume-alist</span><span class="w"> </span><span class="nv">*physical-volume-alist*</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">root</span><span class="w"> </span><span class="p">(</span><span class="nf">find-physical-volume-root</span><span class="w"> </span><span class="nv">physical-volume-alist</span><span class="p">))</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">from</span><span class="w"> </span><span class="nv">nil</span><span class="p">)</span>
+<span class="w">                          </span><span class="p">(</span><span class="nf">center</span><span class="w"> </span><span class="p">(</span><span class="nf">kons-9::p!</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="w"> </span><span class="mf">0.0</span><span class="p">)))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">assert</span><span class="w"> </span><span class="p">(</span><span class="nf">g4volumep</span><span class="w"> </span><span class="nv">root</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">properties</span><span class="w"> </span><span class="p">(</span><span class="nb">cdr</span><span class="w"> </span><span class="p">(</span><span class="nb">assoc</span><span class="w"> </span><span class="nv">root</span><span class="w"> </span><span class="nv">physical-volume-alist</span><span class="p">))))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">let-bind*</span><span class="w"> </span><span class="p">(((</span><span class="nf">type</span><span class="w"> </span><span class="o">.</span><span class="w"> </span><span class="nv">args</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">properties</span><span class="w"> </span><span class="nv">:geometry</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">render</span><span class="w"> </span><span class="p">(</span><span class="nf">coord</span><span class="p">)</span>
+<span class="w">               </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">pos</span><span class="w"> </span><span class="p">(</span><span class="nf">kons-9::p+</span><span class="w"> </span><span class="nv">center</span><span class="w"> </span><span class="p">(</span><span class="nb">apply</span><span class="w"> </span><span class="o">#</span><span class="ss">&#39;kons-9::p!</span><span class="w"> </span><span class="nv">coord</span><span class="p">))))</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">render-g4geo</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">args</span><span class="w"> </span><span class="nv">pos</span><span class="p">)</span>
+<span class="w">                 </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">children</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">properties</span><span class="w"> </span><span class="nv">:children</span><span class="p">))</span>
+<span class="w">                   </span><span class="p">(</span><span class="nf">render-g4volume</span><span class="w"> </span><span class="nv">physical-volume-alist</span><span class="w"> </span><span class="nv">children</span><span class="w"> </span><span class="nv">root</span><span class="w"> </span><span class="nv">pos</span><span class="p">)))))</span>
+<span class="w">        </span><span class="p">(</span><span class="k">if</span><span class="w"> </span><span class="nv">from</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">do-alist</span><span class="w"> </span><span class="p">(</span><span class="nf">parent</span><span class="w"> </span><span class="nv">coordinates</span><span class="w"> </span><span class="p">(</span><span class="nf">getf</span><span class="w"> </span><span class="nv">properties</span><span class="w"> </span><span class="nv">:parent</span><span class="p">))</span>
+<span class="w">              </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="nv">parent</span><span class="w"> </span><span class="nv">from</span><span class="p">)</span>
+<span class="w">                </span><span class="p">(</span><span class="nf">dolist</span><span class="w"> </span><span class="p">(</span><span class="nf">coord</span><span class="w"> </span><span class="nv">coordinates</span><span class="p">)</span>
+<span class="w">                  </span><span class="p">(</span><span class="nf">render</span><span class="w"> </span><span class="p">(</span><span class="nf">dolist-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">cor</span><span class="w"> </span><span class="nv">coord</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nb">*</span><span class="w"> </span><span class="nv">*kons-9-scale*</span><span class="w"> </span><span class="nv">cor</span><span class="p">))))))</span>
+<span class="w">            </span><span class="p">(</span><span class="nf">render</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="mi">0</span><span class="p">)))))))</span>
+</pre></div>
+<p>(note: code not so polished, maybe buggy)</p>
+<h1>End</h1>
+<p>I think it would be a nice try to generate template-like code
+  from lisp to anyother language. Bringing the lisp-macros to
+  other languages to speed-up the developing process, for example,
+  the Geant 4 application building.</p>
+<p>Although I think it costs more times than directly copy and
+  paste from a existing project&#8230; if i have to do all the things
+  from zero&#8230;</p>
+
+  </div><a class="u-url" href="/lisp/what-if-simplified-geant4/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

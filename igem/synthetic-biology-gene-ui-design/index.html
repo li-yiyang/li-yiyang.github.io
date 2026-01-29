@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Synthetic Biology Gene Ui Design | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Synthetic Biology Gene Ui Design" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Let 丈育 gain Knowledge! About 本文旨在作为一个对生物印象几乎没有的外系学生快速跳读合成生物学导论一书的笔记, 以及为了之后快速查找, 对目前所正在构建的项目有一个基本认知的帮助笔记. 本笔记充满了实用主义的功利思想, 所记录的内容具有非常强的偏向性. 请在参考的时候注意这一点. Synthetic Biology Quick Notes 合成生物学是指按照一定的规律和已有的知识: ① 设计和建造新的生物部件, 装置和系统; ② 重新设计已有的天然生物系统为人类的特殊目的服务. [Synthetic Biology is: A) the design and construction of new biological parts, devices, and systems, and B) the re-design of existing, natural biological systems for useful purposes. 一些概念的解释 合成生物学的基础 设计 模拟 实验 合成生物学的研究内容 工程化功能模块 接口 开发平台 调控和通讯系统 各种功能模块的仿真, 预测算法和相应软件 通过合理的突变调整转录和翻译的动力学属性, 操纵子结合亲和性以及转录因子结合协同性等都有助于使模块达到预期目标. 理想情况下, 模型应该能够捕捉生物系统的动态行为, 在活体实验之前通过计算机模拟等方式在优化设计策略, 调试等方面给出建议. 瓶颈: 计算工具, 从活体细胞中确定速度常数, 在不同模块, 系统下的速度常数计算. 合成生物学的工程本质 标准化 建立生物功能的定义, 建立识别生物部件的方法以及标准生物部件的注册登记 解耦 将复杂问题分解成简单问题, 将复杂系统分解成简单的要素, 在统一框架下分别设计 抽提 建立装置和模块的层次, 允许不同层次间的分离和有限的信息交换, 开发重设计的和简化的装置和模块, 构建具有统一接口的部件库 Module Concepts 模块化设计和构建概念 标准化 解耦 抽提 模块的基本属性 外部特性: 接口 功能 状态 内部特性: 逻辑 模块设计的三个特征因素 信息隐藏: 信息隐藏是指在设计和确定模块时, 一个模块内包含的信息对于不需要这些信息的其他模块来说是不能访问或知晓的 内聚 - 耦合: 一个模块内部各成分之间相关联程度的度量 封闭性 - 开放性: 如果一个模块可以作为一个独立体被应用, 则称模块具有封闭性; 如果一个模块可以被扩充, 则称模块具有开放性. 本底环境对模块设计的影响 BioBrick 生物 &#8220;零件&#8221; 可以参考一个标准制定的 文档 是 BBF RFC-12. Terminators 终止子部件 DNA 部件 Reporters 报告/显示部件 Receivers and Senders 信号接收和发送部件 Primers 引物部件 Inverters 转换部件 Promoters 启动子部件 其中对于这些部件: 标准前后缀 (在文档中有说明) 传递的信息 标准定量机制 PoPS (RNA polymerase per second, RNA 聚合酶每秒) RIPS (ribosomal initiations per second) mRNA 翻译水平 逻辑拓扑结构 串联 单输入 多输入 反馈 前馈 生物系统的层次化结构 Part 基因部件 启动子 Promoter (P) 不同启动子效率不同 RBS 核糖体结合位点: 结合核糖体以开始转录 终止子 Terminator (T) 不同终止子有强弱之分 操纵子: 基因表达调节装置 Device 生物装置 报告基因 (reporter) 使得产物容易被检测出来的基因 转换器 (inverter) 接受信号时停止下游基因转录, 未接收信号时开启下游基因转录 信号传导装置 (signaling) 环境与细胞之间或者邻近细胞与细胞之间 接收信号和传递信号的装置 蛋白质生成装置 (protein generator) 产生具有一定功能蛋白质的装置 &#8230; 基因开关, 双稳态开关, 逻辑门, Repressilator System 生物系统 群体感应 (quorum sensing QS) &#8230; 数学模拟与性能分析 Differential Equation 这个时候一个非常无聊的问题就是如何整一个数值求解系统. 尽管这些已经有 一堆 的现成的库了&#8230; 平衡反应方程 \(B + C \overset{p}{&rarr;} A\) \[\frac{\mathrm{d}[A]}{\mathrm{d}t} = \frac{1}{1 + [B] &times; [C]} &times; p\] 质量作用定律 元反应的反应速率与各反应物浓度的幂的乘积成正比: 在 \(a A + b B &rarr; g G + h H\) 中, 反应速率为 \(v = k [A]^m [B]^n\), \([A], [B]\) 为反应物浓度, \(m, n\) 为反应物级数, \(k\) 为反应速率常数. 米氏方程 Michaelis-Menten Equation \[V = \frac{V_{\mathrm{max}}[S]}{K_{\mathrm{m}} + [S]}\] \(K_{\mathrm{m}}\) 为酶性质决定的米氏常数, \(V_{\mathrm{max}}\) 为酶被底物饱和时的反应速度. 西尔方程 Hill Equation $$\begin{matrix}\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{(a - &xi;) X^m}{X^m + X_M^m} + &xi; - &delta; A &amp; \mathrm{possitve}&#92;&#92;\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{a - &xi;}{1 + (X / X_M)^m} + &xi; - &delta; A &amp; \mathrm{negative}\end{matrix}$$ Logistic 模型 \[\frac{\mathrm{d} N}{\mathrm{d} t} = r N, r = b - d\] 主方程 Master Equation 可逆反应 \(I \overset{b}{\underset{c}{\rightleftharpoons}} A\), \(A \overset{H &sdot; G(A)}{&rarr;} \mathrm{mRNA} \overset{K}{&rarr;} \mathrm{Protein} \overset{r}{&rarr;} &phi;\), \(A\) 以 \(G(A) = 0\ \mathrm{or}\ 1\) 表示是否开启工作, 以 \(H\) 速率转录为 mRNA; mRNA 以 \(K\) 速率翻译成蛋白质, 蛋白质以 \(r\) 速率降解为 \(&phi;\). 故可以使用概率函数进行描述: $$\begin{matrix}f_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 0] &#92;&#92; g_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 1]\end{matrix}$$ 可以有如下方程: \[\begin{matrix}\frac{\mathrm{d} f_{xy}}{\mathrm{d} t} &amp; = &amp; b g_{xy} - c f_{xy} + (x + 1) f_{x+1,y} - x f_{xy} + K x f_{x, y+1} - (K x + r y) f_{xy} &#92;&#92; \frac{\mathrm{d} g_{xy}}{\mathrm{d} t} &amp; = &amp; -b g_{xy} + c f_{xy} + G(A) H g_{x - 1, y} + (x + 1) g_{x + 1, y} &#92;&#92; &amp; &amp; -(H G(A) + x) g_{xy} + K x g_{x, y - 1} + r (y + 1) g_{x, y + 1} - (K x + r y) g_{x y}\end{matrix}\] 随机微分方程 \[\begin{matrix}\frac{\mathrm{d} x}{\mathrm{d} t} &amp; = &amp; - x + H &sdot; G(t) &#92;&#92; \frac{\mathrm{d} y}{\mathrm{d} t} &amp; = &amp; K X - r y \end{matrix}\] 性能指标 稳定性: 暂态扰动消失后的时间响应性质上, 了解系统能够承受的最大干扰的幅值和频率. 松开手, 一个东西是否会倒 可以引入参数摄动法来分析, 以及控制理论 (之后查找). 相位面分析 Robustness 健壮性: 在异常和危险情况下系统生存的关键. 用锤子敲一下, 这个东西是否会倒 参数状态敏感性 系统模型的建立 响应快速性: 稳定状态的系统对于外界改变的快速反应能力. (不应该影响健壮性和稳定性). 稳定性和健壮性的措施 冗余 反馈控制 特异性和保真度 Pattern Recognition and Machine Learning 虽然但是, 可以考虑当代显学 Transformer 在 NLP 也就是在文本序列中的应用的迁移. 后记 不愧是工程竞赛 实际上感觉这本书里面讲的生物部分并不是很多 (也可能只是因为我都跳过了), 但是对于工程的部分, 几乎和其他的工程里面的要求都差不多." />
+<meta property="og:description" content="Let 丈育 gain Knowledge! About 本文旨在作为一个对生物印象几乎没有的外系学生快速跳读合成生物学导论一书的笔记, 以及为了之后快速查找, 对目前所正在构建的项目有一个基本认知的帮助笔记. 本笔记充满了实用主义的功利思想, 所记录的内容具有非常强的偏向性. 请在参考的时候注意这一点. Synthetic Biology Quick Notes 合成生物学是指按照一定的规律和已有的知识: ① 设计和建造新的生物部件, 装置和系统; ② 重新设计已有的天然生物系统为人类的特殊目的服务. [Synthetic Biology is: A) the design and construction of new biological parts, devices, and systems, and B) the re-design of existing, natural biological systems for useful purposes. 一些概念的解释 合成生物学的基础 设计 模拟 实验 合成生物学的研究内容 工程化功能模块 接口 开发平台 调控和通讯系统 各种功能模块的仿真, 预测算法和相应软件 通过合理的突变调整转录和翻译的动力学属性, 操纵子结合亲和性以及转录因子结合协同性等都有助于使模块达到预期目标. 理想情况下, 模型应该能够捕捉生物系统的动态行为, 在活体实验之前通过计算机模拟等方式在优化设计策略, 调试等方面给出建议. 瓶颈: 计算工具, 从活体细胞中确定速度常数, 在不同模块, 系统下的速度常数计算. 合成生物学的工程本质 标准化 建立生物功能的定义, 建立识别生物部件的方法以及标准生物部件的注册登记 解耦 将复杂问题分解成简单问题, 将复杂系统分解成简单的要素, 在统一框架下分别设计 抽提 建立装置和模块的层次, 允许不同层次间的分离和有限的信息交换, 开发重设计的和简化的装置和模块, 构建具有统一接口的部件库 Module Concepts 模块化设计和构建概念 标准化 解耦 抽提 模块的基本属性 外部特性: 接口 功能 状态 内部特性: 逻辑 模块设计的三个特征因素 信息隐藏: 信息隐藏是指在设计和确定模块时, 一个模块内包含的信息对于不需要这些信息的其他模块来说是不能访问或知晓的 内聚 - 耦合: 一个模块内部各成分之间相关联程度的度量 封闭性 - 开放性: 如果一个模块可以作为一个独立体被应用, 则称模块具有封闭性; 如果一个模块可以被扩充, 则称模块具有开放性. 本底环境对模块设计的影响 BioBrick 生物 &#8220;零件&#8221; 可以参考一个标准制定的 文档 是 BBF RFC-12. Terminators 终止子部件 DNA 部件 Reporters 报告/显示部件 Receivers and Senders 信号接收和发送部件 Primers 引物部件 Inverters 转换部件 Promoters 启动子部件 其中对于这些部件: 标准前后缀 (在文档中有说明) 传递的信息 标准定量机制 PoPS (RNA polymerase per second, RNA 聚合酶每秒) RIPS (ribosomal initiations per second) mRNA 翻译水平 逻辑拓扑结构 串联 单输入 多输入 反馈 前馈 生物系统的层次化结构 Part 基因部件 启动子 Promoter (P) 不同启动子效率不同 RBS 核糖体结合位点: 结合核糖体以开始转录 终止子 Terminator (T) 不同终止子有强弱之分 操纵子: 基因表达调节装置 Device 生物装置 报告基因 (reporter) 使得产物容易被检测出来的基因 转换器 (inverter) 接受信号时停止下游基因转录, 未接收信号时开启下游基因转录 信号传导装置 (signaling) 环境与细胞之间或者邻近细胞与细胞之间 接收信号和传递信号的装置 蛋白质生成装置 (protein generator) 产生具有一定功能蛋白质的装置 &#8230; 基因开关, 双稳态开关, 逻辑门, Repressilator System 生物系统 群体感应 (quorum sensing QS) &#8230; 数学模拟与性能分析 Differential Equation 这个时候一个非常无聊的问题就是如何整一个数值求解系统. 尽管这些已经有 一堆 的现成的库了&#8230; 平衡反应方程 \(B + C \overset{p}{&rarr;} A\) \[\frac{\mathrm{d}[A]}{\mathrm{d}t} = \frac{1}{1 + [B] &times; [C]} &times; p\] 质量作用定律 元反应的反应速率与各反应物浓度的幂的乘积成正比: 在 \(a A + b B &rarr; g G + h H\) 中, 反应速率为 \(v = k [A]^m [B]^n\), \([A], [B]\) 为反应物浓度, \(m, n\) 为反应物级数, \(k\) 为反应速率常数. 米氏方程 Michaelis-Menten Equation \[V = \frac{V_{\mathrm{max}}[S]}{K_{\mathrm{m}} + [S]}\] \(K_{\mathrm{m}}\) 为酶性质决定的米氏常数, \(V_{\mathrm{max}}\) 为酶被底物饱和时的反应速度. 西尔方程 Hill Equation $$\begin{matrix}\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{(a - &xi;) X^m}{X^m + X_M^m} + &xi; - &delta; A &amp; \mathrm{possitve}&#92;&#92;\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{a - &xi;}{1 + (X / X_M)^m} + &xi; - &delta; A &amp; \mathrm{negative}\end{matrix}$$ Logistic 模型 \[\frac{\mathrm{d} N}{\mathrm{d} t} = r N, r = b - d\] 主方程 Master Equation 可逆反应 \(I \overset{b}{\underset{c}{\rightleftharpoons}} A\), \(A \overset{H &sdot; G(A)}{&rarr;} \mathrm{mRNA} \overset{K}{&rarr;} \mathrm{Protein} \overset{r}{&rarr;} &phi;\), \(A\) 以 \(G(A) = 0\ \mathrm{or}\ 1\) 表示是否开启工作, 以 \(H\) 速率转录为 mRNA; mRNA 以 \(K\) 速率翻译成蛋白质, 蛋白质以 \(r\) 速率降解为 \(&phi;\). 故可以使用概率函数进行描述: $$\begin{matrix}f_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 0] &#92;&#92; g_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 1]\end{matrix}$$ 可以有如下方程: \[\begin{matrix}\frac{\mathrm{d} f_{xy}}{\mathrm{d} t} &amp; = &amp; b g_{xy} - c f_{xy} + (x + 1) f_{x+1,y} - x f_{xy} + K x f_{x, y+1} - (K x + r y) f_{xy} &#92;&#92; \frac{\mathrm{d} g_{xy}}{\mathrm{d} t} &amp; = &amp; -b g_{xy} + c f_{xy} + G(A) H g_{x - 1, y} + (x + 1) g_{x + 1, y} &#92;&#92; &amp; &amp; -(H G(A) + x) g_{xy} + K x g_{x, y - 1} + r (y + 1) g_{x, y + 1} - (K x + r y) g_{x y}\end{matrix}\] 随机微分方程 \[\begin{matrix}\frac{\mathrm{d} x}{\mathrm{d} t} &amp; = &amp; - x + H &sdot; G(t) &#92;&#92; \frac{\mathrm{d} y}{\mathrm{d} t} &amp; = &amp; K X - r y \end{matrix}\] 性能指标 稳定性: 暂态扰动消失后的时间响应性质上, 了解系统能够承受的最大干扰的幅值和频率. 松开手, 一个东西是否会倒 可以引入参数摄动法来分析, 以及控制理论 (之后查找). 相位面分析 Robustness 健壮性: 在异常和危险情况下系统生存的关键. 用锤子敲一下, 这个东西是否会倒 参数状态敏感性 系统模型的建立 响应快速性: 稳定状态的系统对于外界改变的快速反应能力. (不应该影响健壮性和稳定性). 稳定性和健壮性的措施 冗余 反馈控制 特异性和保真度 Pattern Recognition and Machine Learning 虽然但是, 可以考虑当代显学 Transformer 在 NLP 也就是在文本序列中的应用的迁移. 后记 不愧是工程竞赛 实际上感觉这本书里面讲的生物部分并不是很多 (也可能只是因为我都跳过了), 但是对于工程的部分, 几乎和其他的工程里面的要求都差不多." />
+<link rel="canonical" href="/igem/synthetic-biology-gene-ui-design/" />
+<meta property="og:url" content="/igem/synthetic-biology-gene-ui-design/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-14T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Synthetic Biology Gene Ui Design" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-04-14T00:00:00+00:00","datePublished":"2023-04-14T00:00:00+00:00","description":"Let 丈育 gain Knowledge! About 本文旨在作为一个对生物印象几乎没有的外系学生快速跳读合成生物学导论一书的笔记, 以及为了之后快速查找, 对目前所正在构建的项目有一个基本认知的帮助笔记. 本笔记充满了实用主义的功利思想, 所记录的内容具有非常强的偏向性. 请在参考的时候注意这一点. Synthetic Biology Quick Notes 合成生物学是指按照一定的规律和已有的知识: ① 设计和建造新的生物部件, 装置和系统; ② 重新设计已有的天然生物系统为人类的特殊目的服务. [Synthetic Biology is: A) the design and construction of new biological parts, devices, and systems, and B) the re-design of existing, natural biological systems for useful purposes. 一些概念的解释 合成生物学的基础 设计 模拟 实验 合成生物学的研究内容 工程化功能模块 接口 开发平台 调控和通讯系统 各种功能模块的仿真, 预测算法和相应软件 通过合理的突变调整转录和翻译的动力学属性, 操纵子结合亲和性以及转录因子结合协同性等都有助于使模块达到预期目标. 理想情况下, 模型应该能够捕捉生物系统的动态行为, 在活体实验之前通过计算机模拟等方式在优化设计策略, 调试等方面给出建议. 瓶颈: 计算工具, 从活体细胞中确定速度常数, 在不同模块, 系统下的速度常数计算. 合成生物学的工程本质 标准化 建立生物功能的定义, 建立识别生物部件的方法以及标准生物部件的注册登记 解耦 将复杂问题分解成简单问题, 将复杂系统分解成简单的要素, 在统一框架下分别设计 抽提 建立装置和模块的层次, 允许不同层次间的分离和有限的信息交换, 开发重设计的和简化的装置和模块, 构建具有统一接口的部件库 Module Concepts 模块化设计和构建概念 标准化 解耦 抽提 模块的基本属性 外部特性: 接口 功能 状态 内部特性: 逻辑 模块设计的三个特征因素 信息隐藏: 信息隐藏是指在设计和确定模块时, 一个模块内包含的信息对于不需要这些信息的其他模块来说是不能访问或知晓的 内聚 - 耦合: 一个模块内部各成分之间相关联程度的度量 封闭性 - 开放性: 如果一个模块可以作为一个独立体被应用, 则称模块具有封闭性; 如果一个模块可以被扩充, 则称模块具有开放性. 本底环境对模块设计的影响 BioBrick 生物 &#8220;零件&#8221; 可以参考一个标准制定的 文档 是 BBF RFC-12. Terminators 终止子部件 DNA 部件 Reporters 报告/显示部件 Receivers and Senders 信号接收和发送部件 Primers 引物部件 Inverters 转换部件 Promoters 启动子部件 其中对于这些部件: 标准前后缀 (在文档中有说明) 传递的信息 标准定量机制 PoPS (RNA polymerase per second, RNA 聚合酶每秒) RIPS (ribosomal initiations per second) mRNA 翻译水平 逻辑拓扑结构 串联 单输入 多输入 反馈 前馈 生物系统的层次化结构 Part 基因部件 启动子 Promoter (P) 不同启动子效率不同 RBS 核糖体结合位点: 结合核糖体以开始转录 终止子 Terminator (T) 不同终止子有强弱之分 操纵子: 基因表达调节装置 Device 生物装置 报告基因 (reporter) 使得产物容易被检测出来的基因 转换器 (inverter) 接受信号时停止下游基因转录, 未接收信号时开启下游基因转录 信号传导装置 (signaling) 环境与细胞之间或者邻近细胞与细胞之间 接收信号和传递信号的装置 蛋白质生成装置 (protein generator) 产生具有一定功能蛋白质的装置 &#8230; 基因开关, 双稳态开关, 逻辑门, Repressilator System 生物系统 群体感应 (quorum sensing QS) &#8230; 数学模拟与性能分析 Differential Equation 这个时候一个非常无聊的问题就是如何整一个数值求解系统. 尽管这些已经有 一堆 的现成的库了&#8230; 平衡反应方程 \\(B + C \\overset{p}{&rarr;} A\\) \\[\\frac{\\mathrm{d}[A]}{\\mathrm{d}t} = \\frac{1}{1 + [B] &times; [C]} &times; p\\] 质量作用定律 元反应的反应速率与各反应物浓度的幂的乘积成正比: 在 \\(a A + b B &rarr; g G + h H\\) 中, 反应速率为 \\(v = k [A]^m [B]^n\\), \\([A], [B]\\) 为反应物浓度, \\(m, n\\) 为反应物级数, \\(k\\) 为反应速率常数. 米氏方程 Michaelis-Menten Equation \\[V = \\frac{V_{\\mathrm{max}}[S]}{K_{\\mathrm{m}} + [S]}\\] \\(K_{\\mathrm{m}}\\) 为酶性质决定的米氏常数, \\(V_{\\mathrm{max}}\\) 为酶被底物饱和时的反应速度. 西尔方程 Hill Equation $$\\begin{matrix}\\frac{\\mathrm{d} A}{\\mathrm{d} t} &amp; = &amp; \\frac{(a - &xi;) X^m}{X^m + X_M^m} + &xi; - &delta; A &amp; \\mathrm{possitve}&#92;&#92;\\frac{\\mathrm{d} A}{\\mathrm{d} t} &amp; = &amp; \\frac{a - &xi;}{1 + (X / X_M)^m} + &xi; - &delta; A &amp; \\mathrm{negative}\\end{matrix}$$ Logistic 模型 \\[\\frac{\\mathrm{d} N}{\\mathrm{d} t} = r N, r = b - d\\] 主方程 Master Equation 可逆反应 \\(I \\overset{b}{\\underset{c}{\\rightleftharpoons}} A\\), \\(A \\overset{H &sdot; G(A)}{&rarr;} \\mathrm{mRNA} \\overset{K}{&rarr;} \\mathrm{Protein} \\overset{r}{&rarr;} &phi;\\), \\(A\\) 以 \\(G(A) = 0\\ \\mathrm{or}\\ 1\\) 表示是否开启工作, 以 \\(H\\) 速率转录为 mRNA; mRNA 以 \\(K\\) 速率翻译成蛋白质, 蛋白质以 \\(r\\) 速率降解为 \\(&phi;\\). 故可以使用概率函数进行描述: $$\\begin{matrix}f_{xy}(t) &amp; = &amp; P[\\# \\mathrm{mRNA} = x, \\# \\mathrm{protein} = y, G = 0] &#92;&#92; g_{xy}(t) &amp; = &amp; P[\\# \\mathrm{mRNA} = x, \\# \\mathrm{protein} = y, G = 1]\\end{matrix}$$ 可以有如下方程: \\[\\begin{matrix}\\frac{\\mathrm{d} f_{xy}}{\\mathrm{d} t} &amp; = &amp; b g_{xy} - c f_{xy} + (x + 1) f_{x+1,y} - x f_{xy} + K x f_{x, y+1} - (K x + r y) f_{xy} &#92;&#92; \\frac{\\mathrm{d} g_{xy}}{\\mathrm{d} t} &amp; = &amp; -b g_{xy} + c f_{xy} + G(A) H g_{x - 1, y} + (x + 1) g_{x + 1, y} &#92;&#92; &amp; &amp; -(H G(A) + x) g_{xy} + K x g_{x, y - 1} + r (y + 1) g_{x, y + 1} - (K x + r y) g_{x y}\\end{matrix}\\] 随机微分方程 \\[\\begin{matrix}\\frac{\\mathrm{d} x}{\\mathrm{d} t} &amp; = &amp; - x + H &sdot; G(t) &#92;&#92; \\frac{\\mathrm{d} y}{\\mathrm{d} t} &amp; = &amp; K X - r y \\end{matrix}\\] 性能指标 稳定性: 暂态扰动消失后的时间响应性质上, 了解系统能够承受的最大干扰的幅值和频率. 松开手, 一个东西是否会倒 可以引入参数摄动法来分析, 以及控制理论 (之后查找). 相位面分析 Robustness 健壮性: 在异常和危险情况下系统生存的关键. 用锤子敲一下, 这个东西是否会倒 参数状态敏感性 系统模型的建立 响应快速性: 稳定状态的系统对于外界改变的快速反应能力. (不应该影响健壮性和稳定性). 稳定性和健壮性的措施 冗余 反馈控制 特异性和保真度 Pattern Recognition and Machine Learning 虽然但是, 可以考虑当代显学 Transformer 在 NLP 也就是在文本序列中的应用的迁移. 后记 不愧是工程竞赛 实际上感觉这本书里面讲的生物部分并不是很多 (也可能只是因为我都跳过了), 但是对于工程的部分, 几乎和其他的工程里面的要求都差不多.","headline":"Synthetic Biology Gene Ui Design","mainEntityOfPage":{"@type":"WebPage","@id":"/igem/synthetic-biology-gene-ui-design/"},"url":"/igem/synthetic-biology-gene-ui-design/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Synthetic Biology Gene Ui Design</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-04-14T00:00:00+00:00" itemprop="datePublished">Apr 14, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>Let 丈育 gain Knowledge!</h1>
+<h2>About</h2>
+<p>本文旨在作为一个对生物印象几乎没有的外系学生快速跳读合成生物学导论一书的笔记,
+  以及为了之后快速查找, 对目前所正在构建的项目有一个基本认知的帮助笔记.</p>
+<p>本笔记充满了实用主义的功利思想, 所记录的内容具有非常强的偏向性.
+  请在参考的时候注意这一点.</p>
+<h2>Synthetic Biology Quick Notes</h2>
+<blockquote>
+  <p>合成生物学是指按照一定的规律和已有的知识: ① 设计和建造新的生物部件, 装置和系统;
+    ② 重新设计已有的天然生物系统为人类的特殊目的服务. [Synthetic Biology
+    is: A) the design and construction of new biological parts, devices, and systems,
+    and B) the re-design of existing, natural biological systems for useful purposes.</p>
+</blockquote>
+<h3>一些概念的解释</h3>
+<h4>合成生物学的基础</h4>
+<ul>
+  <li>设计</li>
+  <li>模拟</li>
+  <li>实验</li>
+</ul>
+<h4>合成生物学的研究内容</h4>
+<ul>
+  <li>工程化功能模块</li>
+  <li>接口</li>
+  <li>开发平台</li>
+  <li>调控和通讯系统</li>
+  <li>各种功能模块的仿真, 预测算法和相应软件
+    <ul>
+      <li>通过合理的突变调整转录和翻译的动力学属性,
+        操纵子结合亲和性以及转录因子结合协同性等都有助于使模块达到预期目标.</li>
+      <li>理想情况下, 模型应该能够捕捉生物系统的动态行为,
+        在活体实验之前通过计算机模拟等方式在优化设计策略, 调试等方面给出建议.</li>
+      <li>瓶颈: 计算工具, 从活体细胞中确定速度常数, 在不同模块, 系统下的速度常数计算.</li>
+    </ul>
+  </li>
+</ul>
+<h4>合成生物学的工程本质</h4>
+<ul>
+  <li>标准化
+    <ul>
+      <li>建立生物功能的定义, 建立识别生物部件的方法以及标准生物部件的注册登记</li>
+    </ul>
+  </li>
+  <li>解耦
+    <ul>
+      <li>将复杂问题分解成简单问题, 将复杂系统分解成简单的要素, 在统一框架下分别设计</li>
+    </ul>
+  </li>
+  <li>抽提
+    <ul>
+      <li>建立装置和模块的层次, 允许不同层次间的分离和有限的信息交换,
+        开发重设计的和简化的装置和模块, 构建具有统一接口的部件库</li>
+    </ul>
+  </li>
+</ul>
+<h3>Module Concepts</h3>
+<h4>模块化设计和构建概念</h4>
+<ul>
+  <li>标准化</li>
+  <li>解耦</li>
+  <li>抽提</li>
+</ul>
+<h4>模块的基本属性</h4>
+<ul>
+  <li>外部特性:
+    <ul>
+      <li>接口</li>
+      <li>功能</li>
+      <li>状态</li>
+    </ul>
+  </li>
+  <li>内部特性:
+    <ul>
+      <li>逻辑</li>
+    </ul>
+  </li>
+</ul>
+<h4>模块设计的三个特征因素</h4>
+<ul>
+  <li>信息隐藏: 信息隐藏是指在设计和确定模块时,
+    一个模块内包含的信息对于不需要这些信息的其他模块来说是不能访问或知晓的</li>
+  <li>内聚 - 耦合: 一个模块内部各成分之间相关联程度的度量</li>
+  <li>封闭性 - 开放性: 如果一个模块可以作为一个独立体被应用, 则称模块具有封闭性;
+    如果一个模块可以被扩充, 则称模块具有开放性.</li>
+  <li>本底环境对模块设计的影响</li>
+</ul>
+<h4>BioBrick 生物 &#8220;零件&#8221;</h4>
+<p>可以参考一个标准制定的 <a href="http://dspace.mit.edu/bitstream/handle/1721.1/45139/BBFRFC12.txt">文档</a> 是 BBF RFC-12.</p>
+<ul>
+  <li>Terminators 终止子部件</li>
+  <li>DNA 部件</li>
+  <li>Reporters 报告/显示部件</li>
+  <li>Receivers and Senders 信号接收和发送部件</li>
+  <li>Primers 引物部件</li>
+  <li>Inverters 转换部件</li>
+  <li>Promoters 启动子部件</li>
+</ul>
+<p>其中对于这些部件:</p>
+<ul>
+  <li>标准前后缀 (在文档中有说明)</li>
+  <li>传递的信息</li>
+</ul>
+<h4>标准定量机制</h4>
+<ul>
+  <li>PoPS (RNA polymerase per second, RNA 聚合酶每秒)</li>
+  <li>RIPS (ribosomal initiations per second) mRNA 翻译水平</li>
+</ul>
+<h4>逻辑拓扑结构</h4>
+<ul>
+  <li>串联
+    <p><img src="/_img/iGEM/gene-ui/topological-series-chain.svg" alt="/_img/iGEM/gene-ui/topological-series-chain.svg" /></p>
+  </li>
+  <li>单输入
+    <p><img src="/_img/iGEM/gene-ui/topological-single-input.svg" alt="/_img/iGEM/gene-ui/topological-single-input.svg" /></p>
+  </li>
+  <li>多输入
+    <p><img src="/_img/iGEM/gene-ui/topological-single-input.svg" alt="/_img/iGEM/gene-ui/topological-single-input.svg" /></p>
+  </li>
+  <li>反馈
+    <p><img src="/_img/iGEM/gene-ui/topological-feedback.svg" alt="/_img/iGEM/gene-ui/topological-feedback.svg" /></p>
+  </li>
+  <li>前馈
+    <p><img src="/_img/iGEM/gene-ui/topological-feed-forward-loop.svg" alt="/_img/iGEM/gene-ui/topological-feed-forward-loop.svg" /></p>
+  </li>
+</ul>
+<h4>生物系统的层次化结构</h4>
+<p><img src="/_img/iGEM/gene-ui/structure-of-bio-system.svg" alt="/_img/iGEM/gene-ui/structure-of-bio-system.svg" /></p>
+<ul>
+  <li>Part 基因部件
+    <ul>
+      <li>启动子 Promoter (P)
+        <ul>
+          <li>不同启动子效率不同</li>
+        </ul>
+      </li>
+      <li>RBS 核糖体结合位点: 结合核糖体以开始转录</li>
+      <li>终止子 Terminator (T)
+        <ul>
+          <li>不同终止子有强弱之分</li>
+        </ul>
+      </li>
+      <li>操纵子: 基因表达调节装置</li>
+    </ul>
+  </li>
+  <li>Device 生物装置
+    <ul>
+      <li>报告基因 (reporter) 使得产物容易被检测出来的基因</li>
+      <li>转换器 (inverter) 接受信号时停止下游基因转录, 未接收信号时开启下游基因转录</li>
+      <li>信号传导装置 (signaling) 环境与细胞之间或者邻近细胞与细胞之间
+        接收信号和传递信号的装置</li>
+      <li>蛋白质生成装置 (protein generator) 产生具有一定功能蛋白质的装置</li>
+      <li>&#8230; 基因开关, 双稳态开关, 逻辑门, Repressilator</li>
+    </ul>
+  </li>
+  <li>System 生物系统
+    <ul>
+      <li>群体感应 (quorum sensing QS)</li>
+      <li>&#8230;</li>
+    </ul>
+  </li>
+</ul>
+<h3>数学模拟与性能分析</h3>
+<h4>Differential Equation</h4>
+<p>这个时候一个非常无聊的问题就是如何整一个数值求解系统.
+  尽管这些已经有 <a href="https://en.wikipedia.org/wiki/List_of_numerical_libraries">一堆</a> 的现成的库了&#8230;</p>
+<ul>
+  <li>平衡反应方程 \(B + C \overset{p}{&rarr;} A\)
+    <p>\[\frac{\mathrm{d}[A]}{\mathrm{d}t} = \frac{1}{1 + [B] &times; [C]} &times; p\]</p>
+  </li>
+  <li>质量作用定律
+    <p>元反应的反应速率与各反应物浓度的幂的乘积成正比:
+      在 \(a A + b B &rarr; g G + h H\) 中, 反应速率为 \(v = k [A]^m [B]^n\),
+      \([A], [B]\) 为反应物浓度, \(m, n\) 为反应物级数, \(k\) 为反应速率常数.</p>
+  </li>
+  <li>米氏方程 Michaelis-Menten Equation
+    <p>\[V = \frac{V_{\mathrm{max}}[S]}{K_{\mathrm{m}} + [S]}\]</p>
+    <p>\(K_{\mathrm{m}}\) 为酶性质决定的米氏常数,
+      \(V_{\mathrm{max}}\) 为酶被底物饱和时的反应速度.</p>
+  </li>
+  <li>西尔方程 Hill Equation
+    <p>$$\begin{matrix}\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{(a - &xi;) X^m}{X^m + X_M^m} + &xi; - &delta; A &amp; \mathrm{possitve}&#92;&#92;\frac{\mathrm{d} A}{\mathrm{d} t} &amp; = &amp; \frac{a - &xi;}{1 + (X / X_M)^m} + &xi; - &delta; A &amp; \mathrm{negative}\end{matrix}$$</p>
+  </li>
+  <li>Logistic 模型
+    <p>\[\frac{\mathrm{d} N}{\mathrm{d} t} = r N, r = b - d\]</p>
+  </li>
+  <li>主方程 Master Equation
+    <p>可逆反应 \(I \overset{b}{\underset{c}{\rightleftharpoons}} A\), \(A \overset{H &sdot; G(A)}{&rarr;} \mathrm{mRNA} \overset{K}{&rarr;} \mathrm{Protein} \overset{r}{&rarr;} &phi;\),
+      \(A\) 以 \(G(A) = 0\ \mathrm{or}\ 1\) 表示是否开启工作, 以 \(H\) 速率转录为 mRNA;
+      mRNA 以 \(K\) 速率翻译成蛋白质, 蛋白质以 \(r\) 速率降解为 \(&phi;\).</p>
+    <p>故可以使用概率函数进行描述:</p>
+    <p>$$\begin{matrix}f_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 0] &#92;&#92; g_{xy}(t) &amp; = &amp; P[\# \mathrm{mRNA} = x, \# \mathrm{protein} = y, G = 1]\end{matrix}$$</p>
+    <p>可以有如下方程:</p>
+    <p>\[\begin{matrix}\frac{\mathrm{d} f_{xy}}{\mathrm{d} t} &amp; = &amp; b g_{xy} - c f_{xy} + (x + 1) f_{x+1,y} - x f_{xy} + K x f_{x, y+1} - (K x + r y) f_{xy} &#92;&#92; \frac{\mathrm{d} g_{xy}}{\mathrm{d} t} &amp; = &amp; -b g_{xy} + c f_{xy} + G(A) H g_{x - 1, y} + (x + 1) g_{x + 1, y} &#92;&#92; &amp; &amp; -(H G(A) + x) g_{xy} + K x g_{x, y - 1} + r (y + 1) g_{x, y + 1} - (K x + r y) g_{x y}\end{matrix}\]</p>
+  </li>
+  <li>随机微分方程
+    <p>\[\begin{matrix}\frac{\mathrm{d} x}{\mathrm{d} t} &amp; = &amp; - x + H &sdot; G(t) &#92;&#92; \frac{\mathrm{d} y}{\mathrm{d} t} &amp; = &amp; K X - r y \end{matrix}\]</p>
+  </li>
+</ul>
+<h4>性能指标</h4>
+<ul>
+  <li>稳定性: 暂态扰动消失后的时间响应性质上, 了解系统能够承受的最大干扰的幅值和频率.
+    <p><del>松开手, 一个东西是否会倒</del></p>
+    <ul>
+      <li>可以引入参数摄动法来分析, 以及控制理论 (之后查找).</li>
+      <li>相位面分析</li>
+    </ul>
+  </li>
+  <li>Robustness 健壮性: 在异常和危险情况下系统生存的关键.
+    <p><del>用锤子敲一下, 这个东西是否会倒</del></p>
+    <ul>
+      <li>参数状态敏感性</li>
+      <li>系统模型的建立</li>
+    </ul>
+  </li>
+  <li>响应快速性: 稳定状态的系统对于外界改变的快速反应能力. (不应该影响健壮性和稳定性).</li>
+</ul>
+<h4>稳定性和健壮性的措施</h4>
+<ul>
+  <li>冗余</li>
+  <li>反馈控制</li>
+  <li>特异性和保真度</li>
+</ul>
+<h4>Pattern Recognition and Machine Learning</h4>
+<p>虽然但是, 可以考虑当代显学 Transformer 在 NLP 也就是在文本序列中的应用的迁移.</p>
+<h1>后记</h1>
+<h2>不愧是工程竞赛</h2>
+<p>实际上感觉这本书里面讲的生物部分并不是很多 (也可能只是因为我都跳过了),</p>
+<p>但是对于工程的部分, 几乎和其他的工程里面的要求都差不多.</p>
+
+  </div><a class="u-url" href="/igem/synthetic-biology-gene-ui-design/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

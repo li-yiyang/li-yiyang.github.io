@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ObjC [1.5] NSException (EN) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ObjC [1.5] NSException (EN)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About So this stuff has bother me for days&#8230; How to catch NSException when invoke ObjC methods? In Lisp, we could do error (condition) capture like this: (handler-case (error your-error-condition) (some-other-error () ...) (your-error-condition () (format t &quot;Haha&quot;))) which, is like you do the following in ObjC: @try { @throw YourErrorCondition } @catch (YourErrorCondition *e) { NSLog(@&quot;Haha&quot;) } however, it&#39;s not trivial to implement such thing in coca&#8230; I gave up&#8230; Well, just kidding, if I just give up, you won&#39;t see this post. :p Note: I was natively speaking Chinese. This blog post is written in English to share to other Lisp programmers on reddit. If you think my English is poor, use LLM to refine or translate it. :p How I Fails: The First Try Callback wrapped by @try and @catch I posted my struggling experience in reddit: CFFI callback function in try-catch black is not working. And here&#39;s its trivial ideas: we want to capture the NSException, so we could just write a wrapper code: void coca_lisp_call_wrapper (void (*call)(void)) { @try { call(); } @catch (NSException *e) { coca_lisp_exception_callback(e); } } but if we pass CFFI callback as call arguments: (foreign-funcall &quot;coca_lisp_call_wrapper&quot; :pointer (callback invoke-error)) the NSException is just not captured! And here&#39;s a minimum reproducable example if you are willing to try: Folded, Click me to expand. #import &lt;Foundation/Foundation.h&gt;" />
+<meta property="og:description" content="About So this stuff has bother me for days&#8230; How to catch NSException when invoke ObjC methods? In Lisp, we could do error (condition) capture like this: (handler-case (error your-error-condition) (some-other-error () ...) (your-error-condition () (format t &quot;Haha&quot;))) which, is like you do the following in ObjC: @try { @throw YourErrorCondition } @catch (YourErrorCondition *e) { NSLog(@&quot;Haha&quot;) } however, it&#39;s not trivial to implement such thing in coca&#8230; I gave up&#8230; Well, just kidding, if I just give up, you won&#39;t see this post. :p Note: I was natively speaking Chinese. This blog post is written in English to share to other Lisp programmers on reddit. If you think my English is poor, use LLM to refine or translate it. :p How I Fails: The First Try Callback wrapped by @try and @catch I posted my struggling experience in reddit: CFFI callback function in try-catch black is not working. And here&#39;s its trivial ideas: we want to capture the NSException, so we could just write a wrapper code: void coca_lisp_call_wrapper (void (*call)(void)) { @try { call(); } @catch (NSException *e) { coca_lisp_exception_callback(e); } } but if we pass CFFI callback as call arguments: (foreign-funcall &quot;coca_lisp_call_wrapper&quot; :pointer (callback invoke-error)) the NSException is just not captured! And here&#39;s a minimum reproducable example if you are willing to try: Folded, Click me to expand. #import &lt;Foundation/Foundation.h&gt;" />
+<link rel="canonical" href="/lisp/objc-ns-exception/" />
+<meta property="og:url" content="/lisp/objc-ns-exception/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-12-27T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ObjC [1.5] NSException (EN)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-12-27T00:00:00+00:00","datePublished":"2025-12-27T00:00:00+00:00","description":"About So this stuff has bother me for days&#8230; How to catch NSException when invoke ObjC methods? In Lisp, we could do error (condition) capture like this: (handler-case (error your-error-condition) (some-other-error () ...) (your-error-condition () (format t &quot;Haha&quot;))) which, is like you do the following in ObjC: @try { @throw YourErrorCondition } @catch (YourErrorCondition *e) { NSLog(@&quot;Haha&quot;) } however, it&#39;s not trivial to implement such thing in coca&#8230; I gave up&#8230; Well, just kidding, if I just give up, you won&#39;t see this post. :p Note: I was natively speaking Chinese. This blog post is written in English to share to other Lisp programmers on reddit. If you think my English is poor, use LLM to refine or translate it. :p How I Fails: The First Try Callback wrapped by @try and @catch I posted my struggling experience in reddit: CFFI callback function in try-catch black is not working. And here&#39;s its trivial ideas: we want to capture the NSException, so we could just write a wrapper code: void coca_lisp_call_wrapper (void (*call)(void)) { @try { call(); } @catch (NSException *e) { coca_lisp_exception_callback(e); } } but if we pass CFFI callback as call arguments: (foreign-funcall &quot;coca_lisp_call_wrapper&quot; :pointer (callback invoke-error)) the NSException is just not captured! And here&#39;s a minimum reproducable example if you are willing to try: Folded, Click me to expand. #import &lt;Foundation/Foundation.h&gt;","headline":"ObjC [1.5] NSException (EN)","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/objc-ns-exception/"},"url":"/lisp/objc-ns-exception/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ObjC [1.5] NSException (EN)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-12-27T00:00:00+00:00" itemprop="datePublished">Dec 27, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>So this stuff has bother me for days&#8230;
+  How to catch <code>NSException</code> when <code>invoke</code> ObjC methods?</p>
+<p>In Lisp, we could do error (condition) capture like this:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">handler-case</span><span class="w"> </span><span class="p">(</span><span class="nb">error</span><span class="w"> </span><span class="nv">your-error-condition</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">some-other-error</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="o">...</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">your-error-condition</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nb">format</span><span class="w"> </span><span class="nv">t</span><span class="w"> </span><span class="s">&quot;Haha&quot;</span><span class="p">)))</span>
+</pre></div>
+<p>which, is like you do the following in ObjC:</p>
+<div class="highlight"><pre><span></span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@throw</span><span class="w"> </span><span class="n">YourErrorCondition</span>
+<span class="p">}</span>
+<span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="n">YourErrorCondition</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Haha&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+<p>however, it's not trivial to implement such thing in <a href="https://github.com/li-yiyang/coca/commit/d91a1025bb9cdf72c434eb382dee134c72262b78">coca</a>&#8230;
+  I gave up&#8230; Well, just kidding, if I just give up, you won't
+  see this post. :p</p>
+<blockquote>
+  <p>Note: I was natively speaking Chinese. This blog post is written
+    in English to share to other Lisp programmers on reddit. If you
+    think my English is poor, use LLM to refine or translate it. :p</p>
+</blockquote>
+<h1>How I Fails: The First Try</h1>
+<h2>Callback wrapped by <code>@try</code> and <code>@catch</code></h2>
+<p>I posted my struggling experience in reddit:
+  <a href="https://www.reddit.com/r/Common_Lisp/comments/1pwetri/cffi_callback_function_in_trycatch_black_is_not/">CFFI callback function in try-catch black is not working</a>.</p>
+<p>And here's its trivial ideas:</p>
+<ul>
+  <li>we want to capture the <code>NSException</code>,
+    so we could just write a wrapper code:
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">coca_lisp_call_wrapper</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">call</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">call</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">coca_lisp_exception_callback</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+  <li>but if we pass CFFI callback as <code>call</code> arguments:
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;coca_lisp_call_wrapper&quot;</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="nv">invoke-error</span><span class="p">))</span>
+</pre></div>
+    <p>the <code>NSException</code> is just not captured!</p>
+    <p>And here's a minimum reproducable example if you are willing to try:</p>
+  <details><summary>Folded, Click me to expand. </summary>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">coca_lisp_call_wrapper</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">call</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">call</span><span class="p">();</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Safe... &quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">coca_lisp_error_function</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="n">arr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="l">@[</span><span class="mi">@1</span><span class="p">,</span><span class="w"> </span><span class="mi">@2</span><span class="l">]</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arr</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// this will capture NSException</span>
+<span class="w">  </span><span class="n">coca_lisp_call_wrapper</span><span class="p">(</span><span class="o">&amp;</span><span class="n">coca_lisp_error_function</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+    <p>if compiled and run the above code, it would return:</p>
+    <pre class="example">
+clang -fobjc-arc -framework Foundation -o test test.m &amp;&amp; ./test
+test.m:14:3: warning: container access result unused - container access should not be used for side effects [-Wunused-value]
+   14 |   arr[10];
+      |   ^~~~~~~
+1 warning generated.
+2025-12-27 21:20:02.399 test[96331:13873785] Safe...
+    </pre>
+    <p>if compiled as a library and linked into lisp, you may write a
+      callback function like this:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defcallback</span><span class="w"> </span><span class="nv">invoke-error</span><span class="w"> </span><span class="nv">:void</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;coca_lisp_error_function&quot;</span><span class="w"> </span><span class="nv">:void</span><span class="p">))</span>
+
+<span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;coca_lisp_call_wrapper&quot;</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">callback</span><span class="w"> </span><span class="nv">invoke-error</span><span class="p">))</span>
+</pre></div>
+    <p>the NSException would not be catched&#8230;</p>
+  <details><summary>How to link automatically</summary>
+    <p>You could use the <a href="https://cffi.common-lisp.dev/manual/html_node/The-Groveller.html">cffi-grovel</a>, note that the online documentation
+      is a little out-dated. And to work properly, you may need my
+      CFFI-grovel <a href="https://github.com/cffi/cffi/compare/master...li-yiyang:cffi:master">patch</a>.</p>
+  </details>
+  </details>
+  </li>
+</ul>
+<h2>Why this</h2>
+<p>According to silly LLM, they said that when you switched between Lisp, C, ObjC
+  calling frame, the error capture boundary would be broken and so the program
+  does not how to throw or capture the exception.</p>
+<p>This is really a sad story.</p>
+<h1>A trick that solving the problem</h1>
+<h2>Invoke <code>IMP</code> directly</h2>
+<p>So invoking CFFI Lisp callback is impossible, what if we directly pass the
+  C function pointer?</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">foreign-funcall</span><span class="w"> </span><span class="s">&quot;coca_lisp_call_wrapper&quot;</span>
+<span class="w">                 </span><span class="nv">:pointer</span><span class="w"> </span><span class="p">(</span><span class="nf">foreign-symbol-pointer</span><span class="w"> </span><span class="s">&quot;coca_lisp_error_function&quot;</span><span class="p">))</span>
+</pre></div>
+<p>this would work fine. The exception would be captured and so the ObjC runtime
+  won't just panic and throw <code>SIGABORT</code>.</p>
+<p>So want we want is a <code>safe_objc_msgSend</code> that does:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">safe_objc_msgSend</span><span class="w"> </span><span class="p">(</span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">id</span><span class="w"> </span><span class="nb">self</span><span class="p">,</span><span class="w"> </span><span class="kt">SEL</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">imp</span><span class="p">(</span><span class="nb">self</span><span class="p">,</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">coca_throw_exception_to_lisp</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<h2><code>va_list</code> is not a trivial thing and <code>__ASM__</code> is not portable</h2>
+<p>To implement <code>...</code> in ObjC/C is difficult and using <code>__ASM__</code> to shift
+  registers to prepare for function calling is also not so trivial.</p>
+<blockquote>
+  <p>NOTE: i was not a professional C programmer (neither a professional Lisp programmer).
+    So can't be sure the above is true.</p>
+</blockquote>
+<details><summary>register shifting</summary>
+<p>You might try this:</p>
+<div class="highlight"><pre><span></span><span class="nl">_coca_dispatch_imp:</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x9</span><span class="p">,</span><span class="w"> </span><span class="no">x0</span><span class="w">    </span><span class="c1">// imp</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x0</span><span class="p">,</span><span class="w"> </span><span class="no">x1</span><span class="w">    </span><span class="c1">// self</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x1</span><span class="p">,</span><span class="w"> </span><span class="no">x2</span><span class="w">    </span><span class="c1">// sel</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x2</span><span class="p">,</span><span class="w"> </span><span class="no">x3</span><span class="w">    </span><span class="c1">// arg1</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x3</span><span class="p">,</span><span class="w"> </span><span class="no">x4</span><span class="w">    </span><span class="c1">// arg2</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x4</span><span class="p">,</span><span class="w"> </span><span class="no">x5</span><span class="w">    </span><span class="c1">// arg3</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x5</span><span class="p">,</span><span class="w"> </span><span class="no">x6</span><span class="w">    </span><span class="c1">// arg4</span>
+<span class="w">  </span><span class="nf">mov</span><span class="w"> </span><span class="no">x6</span><span class="p">,</span><span class="w"> </span><span class="no">x7</span><span class="w">    </span><span class="c1">// arg5</span>
+
+<span class="w">  </span><span class="nf">br</span><span class="w"> </span><span class="no">x9</span><span class="w">         </span><span class="c1">// imp(self, sel, ...)</span>
+</pre></div>
+<p>with the new <code>safe_objc_msgSend</code>:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">safe_objc_msgSend</span><span class="w"> </span><span class="p">(</span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">id</span><span class="w"> </span><span class="nb">self</span><span class="p">,</span><span class="w"> </span><span class="kt">SEL</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="p">...)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">_coca_dispatch_imp</span><span class="p">(</span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="nb">self</span><span class="p">,</span><span class="w"> </span><span class="n">sel</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">coca_throw_exception_to_lisp</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>I haven't try this so cannot ensure it's working properly.</p>
+</details>
+<h2>LibFFI</h2>
+<p>So I guess I'll just use libffi to do this:</p>
+<ul>
+  <li>lisp: when in <code>coca.objc</code>, we could implement <code>compile-objc-method-calling</code>
+    to generate <code>ffi_cif</code></li>
+  <li>objc: the <code>safe_objc_msgSend</code> should be implemented like:
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">safe_objc_msgSend</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_cif</span><span class="w"> </span><span class="o">*</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">**</span><span class="w"> </span><span class="n">arg_values</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ffi_call</span><span class="p">(</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">imp</span><span class="p">),</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="n">arg_values</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">coca_throw_exception</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+  </li>
+</ul>
+<p>So in theory, we could copy the code in <a href="https://github.com/cffi/cffi/blob/master/libffi/funcall.lisp">cffi/libffi/funcall.lisp</a>.
+  The <code>safe_objc_msgSend</code> just works like <code>ffi_call</code>.</p>
+<h3>LibFFI and ObjC <code>@try</code> <code>@catch</code> prototype</h3>
+<details><summary>A minimum compilable test</summary>
+<div class="highlight"><pre><span></span><span class="cp">#import  &lt;Foundation/Foundation.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ffi.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">coca_lisp_test_fail_function</span><span class="w"> </span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">arg1</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">arg2</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="bp">NSArray</span><span class="w"> </span><span class="o">*</span><span class="n">arr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="l">@[</span><span class="mi">@1</span><span class="l">]</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arr</span><span class="p">[</span><span class="mi">10</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">coca_objc_msgSend</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_cif</span><span class="w"> </span><span class="o">*</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">**</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">ffi_call</span><span class="p">(</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">imp</span><span class="p">),</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Safe&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ffi_cif</span><span class="w"> </span><span class="n">cif</span><span class="p">;</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_prep_cif</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_DEFAULT_ABI</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_void</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">FFI_OK</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Failed to call ffi_pref_cif&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+
+<span class="w">  </span><span class="n">coca_objc_msgSend</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">coca_lisp_test_fail_function</span><span class="p">),</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+<p>the compilation result is like below:</p>
+<pre class="example">
+clang -fobjc-arc -framework Foundation -lffi -I/Library/Developer/CommandLineTools/SDKs/MacOSX26.sdk/usr/include/ffi -o test test.m &amp;&amp; ./test
+test.m:14:3: warning: container access result unused - container access should not be used for side effects [-Wunused-value]
+   14 |   arr[10];
+      |   ^~~~~~~
+1 warning generated.
+2025-12-27 23:48:27.165 test[99720:14024008] Safe
+
+Compilation finished at Sat Dec 27 23:48:27, duration 0.39 s
+</pre>
+<p>so in theory, it's workable&#8230;</p>
+</details>
+<h3>LibFFI in Common Lisp</h3>
+<p>Refering to <a href="https://github.com/cffi/cffi/blob/master/libffi/funcall.lisp">cffi/libffi/funcall.lisp</a>, we could implement our own
+  foreign-funcall-form/fsbv-with-libffi:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:coca</span><span class="o">.</span><span class="nv">objc</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">foreign-funcall-form</span><span class="w"> </span>
+</pre></div>
+<h2>A word about performance</h2>
+<p>Yes, performace&#8230; Although I don't like to care about it (I write shit codes,
+  really really shit codes), I think we could make a hole on the previous
+  <code>compile-objc-method-calling</code> rules: if we got a <code>objc_msgSend</code> with no
+  additional arguments other than <code>id self</code> and <code>SEL sel</code>, we could just call
+  the simple wrapper function:</p>
+<div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">safe_objc_msgSend_0</span><span class="w"> </span><span class="p">(</span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">id</span><span class="w"> </span><span class="n">_self</span><span class="p">,</span><span class="w"> </span><span class="kt">SEL</span><span class="w"> </span><span class="n">sel</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">imp</span><span class="p">(</span><span class="n">_self</span><span class="p">,</span><span class="w"> </span><span class="n">sel</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">coca_throw_exception</span><span class="p">(</span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+<p>but this is just left here as it is. I don't think I'd like to implement it.
+  Maybe you could generate a wrapper like CFFI-grovel, generate the
+  ObjC wrapper code for every method of likely same type encoding, and doing
+  JIT like things (compile and load the dylib into lisp image). I'd like to
+  see such PR if you are willing to contribute.</p>
+
+  </div><a class="u-url" href="/lisp/objc-ns-exception/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

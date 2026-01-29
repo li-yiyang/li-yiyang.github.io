@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Nobody Knows Shoes But Ryo Shoes | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Nobody Knows Shoes But Ryo Shoes" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About When I first learn programming, there&#39;s guy called _why. He wrote a marvellous book called Why&#39;s Guide To Ruby, together with a easy to use GUI framework Shoes. So I was really missing the Shoes DSL for the GUI creation. That&#39;s why I made ryo.shoes (repo, see ryo.shoes module), the Shoes-like DSL on CLOG. Please note that ryo.shoes is under early development and the API may change in the future and its not about to make a GUI with every thing in fancy, but make a GUI library with ease to use. And final note: RYO.SHOES is not Shoes. It&#39;s in Common Lisp and based on CLOG, rather than Ruby Shoes (native (3) or Swing (4)). This post is a mimic to the original NKS (Nobody knows shoes). As a short introduce to RYO.SHOES, while as the test of the RYO.SHOES. If I found something missing while writing this post, I will try to add them into RYO.SHOES. To Install the THING You need a Common Lisp environment (SBCL is recommanded), quicklisp and clone the ryo repo. if you&#39;re using macOS, with brew On macOS, with homebrew: &gt; brew install sbcl &gt; curl -L -O https://beta.quicklisp.org/quicklisp.lisp &gt; sbcl --load quicklisp.lisp ;;; ... * (quicklisp-quickstart:install) * (ql:add-to-init-file) * (quit) &gt; cd ~/quicklisp/local-projects/ &gt; git clone https://github.com/li-yiyang/ryo.git &gt; sbcl ;;; ... * (ql:quickload :ryo) * (defpackage :shoes-user (:use :cl :ryo.shoes)) * (in-package :shoes-user) * (window () (title &quot;Hello Shoes&quot;)) Setting up the environment is somewhat painful and can vary from person to person. So please forgive me for such a short sketch on how to install the thing. Shoes in front and Shoes at back You live in the interactive Lisp Machine REPL So: in front, windows. With buttons and words and colors. (Note: in order to reduce the image size, I&#39;v done some dithering on the screen short. Just to make it stylish) That&#39;s a quite simple code behind the scene: (window () (button &quot;Trurl? &quot; (alert &quot;Klapaucius! &quot;))) So, in your REPL (Terminal, SLIME, SLY or something else, I&#39;ll consider making a interactive one in the future), switch to to ryo.shoes package and type and evaluate the above piece of code, that should bring you a simple GUI window pop up. Note: if something unexpected happens Normally, you can count on Lisp&#39;s charming error handling and restarting features (together with a powerful debugger like SLIME or SLY, life will be much easier). For example, if you haven&#39;t start the Shoes Server, choosing try option in restart prompts will starting the Shoes Server. If you haven&#39;t open any connection (browser visiting the Shoes Server, in this context), choosing try option in restart prompts will open your browser and visiting it. However, if you really happened to met up something unexpected (I think it&#39;s common in GUI world). Please raise an issue on the repo. P.S. but in any words, this blog post is done when ryo.shoes was at very early stage. So things may vary. A Poem in Four Boxes Another more example, shoes in front: So, if you cannot readout code from the above image&#8230; Sorry for the dithering, but I really need to cut down the git repo binary file sizes. These binaries getting heavier. (window (:width 280 :height 350) (flow (:width 280 :margin 10) (stack (:width &quot;100%&quot;) (title &quot;A POEM&quot;)) (stack (:width 80) ; px (para &quot;Goes like: &quot;)) (stack (:width -90) ; px (para &quot;the sun. &quot; &quot;a lemon. &quot; &quot;the goalie. &quot; &quot;a fireplace. &quot; &quot;&quot; &quot;i want to write&quot; &quot;kids who haven&#39;t&quot; &quot;even heard one yet.&quot; &quot;&quot; &quot;and the goalie guards&quot; &quot;the fireplace&quot; :join :newline)))) okay, you ran it, you got it. The code is little longer, but I bet it sure does if you&#39;re adding tons of widgets into you GUI panel. Note: the default CSS may not seemed to be very nice, I think, but I&#39;m poor in CSS styling so I guess I&#39;ll just leave it be and fix it in the possible future. What&#39;s happening behind the scene? It&#39;s actually a box with three inside: ###################################### # # ###################################### # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ###################################### So, let&#39;s start with para because it&#39;s easy and you&#39;ll use it all over para, short for &#8220;paragraph&#8221;. Like this paragraph below: (window () (para &quot;Testing test test. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Very good. &quot;)) By default, the content of para will automatically fill up to the edges of any box it is placed inside. One subelement next to another subelement with no space, as if gluing them together as a long string of sentences. And you can just enjoy other styles like below: (window () (para &quot;Testing test test. &quot; (strong &quot;Breadsticks. &quot;) (em &quot;Breadsticks. &quot;) (ins &quot;Very good. &quot;))) Note: if you&#39;ve read the NKS, you may found something missing here. This because RYO.SHOES now is not good at them yet. a list of missing features shapes and displacements (I&#39;m not using it yet) styles and styles of the widgets, tons of styles are missing backgrounds and so on the original Shoes is kinda like drawing widgets on the Canvas, but on HTML, I think I&#39;m not experienced about it. So later or if I really has to&#8230; Anyway, 逃げるは恥だが役に立つ. All the widgets Button So a button is like: (window () (button &quot;Click Me! &quot; (alert &quot;Yes! &quot;))) You pushes the button and it runs the code. Simple, but useful. Edit Line and Edit Box So you may want some interaction between user and the program. A simple way to interrogate ask user for input is: (window (:width 400 :height 400) (flow () (flow (:width 60) (para &quot;Name: &quot;)) (flow (:width 200) (@ ask (edit-line (:width 100))))) (stack () (button &quot;Greet&quot; (alert (fmt &quot;Hello: ~A. &quot; (text (@ ask)))))) (fmt! &quot;~A&quot; (clog:text-value (@ ask)))) Closures and App Local Variables Different like Ruby Shoes, which uses the instance variables to store states and blocks passes as lambda functions (slope, I mean). I made RYO.SHOES by closure variables and app local variables. There are several global variables that would rebinded locally: ryo.shoes::*clog*: current working connection (dev only) *app*: current app window *slot*: current slot (stack or flow) *self*: used mostly for event calling The (@ var) is the app local variable. for example: the above (@ ask (edit-line (:width 100))) defines a local variable named ask referring to the edit-line element use (@ ask) to query the stored local variable it is much like the instance variable @var in Ruby Samely, you got edit-box. Animation, Every, and Timer So you want some animation? Sure: (window () (title &quot;Every (Timer Class)&quot;) (flow (:margin 10) (@ cnt 0) (@ present (para (fmt &quot;~D%&quot; (@ cnt)))) ;; fraction should be 0.0~1.0 or 0-100 (@ progress (progress :fraction (@ cnt)))) (@ update (every-sec 1 (incf (@ cnt) 10) (setf (text (@ present)) (fmt &quot;~D%&quot; (@ cnt)) (fraction (@ progress)) (@ cnt)) (when (&gt;= (@ cnt) 100) (stop (@ update)) (alert &quot;Finished! &quot;))))) Finally, the Image Well, I was not sure if I&#39;m doing this correct. But anyway, it works right now: (window () (title &quot;Image Example&quot;) (flow () (para &quot;Load from URL&quot;) ;; load from URL (image &quot;https://avatars.githubusercontent.com/u/56211811&quot; :width 50)) (flow () (para &quot;Load Locally&quot;) ;; or load locally (image #P&quot;./image.png&quot; :width &quot;80%&quot;))) Note: I run multpile times of this application so you could see it nested as if the image.png itself is infinitely self included. Others more? The idea is to add a DSL wrapper for orginal CLOG. By any means I think it would be easy to extend RYO.SHOES. An example would be the usage of CLOG-C3: ;; see ryo;lisp;shoes;c3-plot.lisp for details (in-package :ryo.shoes)" />
+<meta property="og:description" content="About When I first learn programming, there&#39;s guy called _why. He wrote a marvellous book called Why&#39;s Guide To Ruby, together with a easy to use GUI framework Shoes. So I was really missing the Shoes DSL for the GUI creation. That&#39;s why I made ryo.shoes (repo, see ryo.shoes module), the Shoes-like DSL on CLOG. Please note that ryo.shoes is under early development and the API may change in the future and its not about to make a GUI with every thing in fancy, but make a GUI library with ease to use. And final note: RYO.SHOES is not Shoes. It&#39;s in Common Lisp and based on CLOG, rather than Ruby Shoes (native (3) or Swing (4)). This post is a mimic to the original NKS (Nobody knows shoes). As a short introduce to RYO.SHOES, while as the test of the RYO.SHOES. If I found something missing while writing this post, I will try to add them into RYO.SHOES. To Install the THING You need a Common Lisp environment (SBCL is recommanded), quicklisp and clone the ryo repo. if you&#39;re using macOS, with brew On macOS, with homebrew: &gt; brew install sbcl &gt; curl -L -O https://beta.quicklisp.org/quicklisp.lisp &gt; sbcl --load quicklisp.lisp ;;; ... * (quicklisp-quickstart:install) * (ql:add-to-init-file) * (quit) &gt; cd ~/quicklisp/local-projects/ &gt; git clone https://github.com/li-yiyang/ryo.git &gt; sbcl ;;; ... * (ql:quickload :ryo) * (defpackage :shoes-user (:use :cl :ryo.shoes)) * (in-package :shoes-user) * (window () (title &quot;Hello Shoes&quot;)) Setting up the environment is somewhat painful and can vary from person to person. So please forgive me for such a short sketch on how to install the thing. Shoes in front and Shoes at back You live in the interactive Lisp Machine REPL So: in front, windows. With buttons and words and colors. (Note: in order to reduce the image size, I&#39;v done some dithering on the screen short. Just to make it stylish) That&#39;s a quite simple code behind the scene: (window () (button &quot;Trurl? &quot; (alert &quot;Klapaucius! &quot;))) So, in your REPL (Terminal, SLIME, SLY or something else, I&#39;ll consider making a interactive one in the future), switch to to ryo.shoes package and type and evaluate the above piece of code, that should bring you a simple GUI window pop up. Note: if something unexpected happens Normally, you can count on Lisp&#39;s charming error handling and restarting features (together with a powerful debugger like SLIME or SLY, life will be much easier). For example, if you haven&#39;t start the Shoes Server, choosing try option in restart prompts will starting the Shoes Server. If you haven&#39;t open any connection (browser visiting the Shoes Server, in this context), choosing try option in restart prompts will open your browser and visiting it. However, if you really happened to met up something unexpected (I think it&#39;s common in GUI world). Please raise an issue on the repo. P.S. but in any words, this blog post is done when ryo.shoes was at very early stage. So things may vary. A Poem in Four Boxes Another more example, shoes in front: So, if you cannot readout code from the above image&#8230; Sorry for the dithering, but I really need to cut down the git repo binary file sizes. These binaries getting heavier. (window (:width 280 :height 350) (flow (:width 280 :margin 10) (stack (:width &quot;100%&quot;) (title &quot;A POEM&quot;)) (stack (:width 80) ; px (para &quot;Goes like: &quot;)) (stack (:width -90) ; px (para &quot;the sun. &quot; &quot;a lemon. &quot; &quot;the goalie. &quot; &quot;a fireplace. &quot; &quot;&quot; &quot;i want to write&quot; &quot;kids who haven&#39;t&quot; &quot;even heard one yet.&quot; &quot;&quot; &quot;and the goalie guards&quot; &quot;the fireplace&quot; :join :newline)))) okay, you ran it, you got it. The code is little longer, but I bet it sure does if you&#39;re adding tons of widgets into you GUI panel. Note: the default CSS may not seemed to be very nice, I think, but I&#39;m poor in CSS styling so I guess I&#39;ll just leave it be and fix it in the possible future. What&#39;s happening behind the scene? It&#39;s actually a box with three inside: ###################################### # # ###################################### # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ###################################### So, let&#39;s start with para because it&#39;s easy and you&#39;ll use it all over para, short for &#8220;paragraph&#8221;. Like this paragraph below: (window () (para &quot;Testing test test. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Very good. &quot;)) By default, the content of para will automatically fill up to the edges of any box it is placed inside. One subelement next to another subelement with no space, as if gluing them together as a long string of sentences. And you can just enjoy other styles like below: (window () (para &quot;Testing test test. &quot; (strong &quot;Breadsticks. &quot;) (em &quot;Breadsticks. &quot;) (ins &quot;Very good. &quot;))) Note: if you&#39;ve read the NKS, you may found something missing here. This because RYO.SHOES now is not good at them yet. a list of missing features shapes and displacements (I&#39;m not using it yet) styles and styles of the widgets, tons of styles are missing backgrounds and so on the original Shoes is kinda like drawing widgets on the Canvas, but on HTML, I think I&#39;m not experienced about it. So later or if I really has to&#8230; Anyway, 逃げるは恥だが役に立つ. All the widgets Button So a button is like: (window () (button &quot;Click Me! &quot; (alert &quot;Yes! &quot;))) You pushes the button and it runs the code. Simple, but useful. Edit Line and Edit Box So you may want some interaction between user and the program. A simple way to interrogate ask user for input is: (window (:width 400 :height 400) (flow () (flow (:width 60) (para &quot;Name: &quot;)) (flow (:width 200) (@ ask (edit-line (:width 100))))) (stack () (button &quot;Greet&quot; (alert (fmt &quot;Hello: ~A. &quot; (text (@ ask)))))) (fmt! &quot;~A&quot; (clog:text-value (@ ask)))) Closures and App Local Variables Different like Ruby Shoes, which uses the instance variables to store states and blocks passes as lambda functions (slope, I mean). I made RYO.SHOES by closure variables and app local variables. There are several global variables that would rebinded locally: ryo.shoes::*clog*: current working connection (dev only) *app*: current app window *slot*: current slot (stack or flow) *self*: used mostly for event calling The (@ var) is the app local variable. for example: the above (@ ask (edit-line (:width 100))) defines a local variable named ask referring to the edit-line element use (@ ask) to query the stored local variable it is much like the instance variable @var in Ruby Samely, you got edit-box. Animation, Every, and Timer So you want some animation? Sure: (window () (title &quot;Every (Timer Class)&quot;) (flow (:margin 10) (@ cnt 0) (@ present (para (fmt &quot;~D%&quot; (@ cnt)))) ;; fraction should be 0.0~1.0 or 0-100 (@ progress (progress :fraction (@ cnt)))) (@ update (every-sec 1 (incf (@ cnt) 10) (setf (text (@ present)) (fmt &quot;~D%&quot; (@ cnt)) (fraction (@ progress)) (@ cnt)) (when (&gt;= (@ cnt) 100) (stop (@ update)) (alert &quot;Finished! &quot;))))) Finally, the Image Well, I was not sure if I&#39;m doing this correct. But anyway, it works right now: (window () (title &quot;Image Example&quot;) (flow () (para &quot;Load from URL&quot;) ;; load from URL (image &quot;https://avatars.githubusercontent.com/u/56211811&quot; :width 50)) (flow () (para &quot;Load Locally&quot;) ;; or load locally (image #P&quot;./image.png&quot; :width &quot;80%&quot;))) Note: I run multpile times of this application so you could see it nested as if the image.png itself is infinitely self included. Others more? The idea is to add a DSL wrapper for orginal CLOG. By any means I think it would be easy to extend RYO.SHOES. An example would be the usage of CLOG-C3: ;; see ryo;lisp;shoes;c3-plot.lisp for details (in-package :ryo.shoes)" />
+<link rel="canonical" href="/lisp/nobody-knows-shoes-but-ryo-shoes/" />
+<meta property="og:url" content="/lisp/nobody-knows-shoes-but-ryo-shoes/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-11-26T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Nobody Knows Shoes But Ryo Shoes" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-11-26T00:00:00+00:00","datePublished":"2024-11-26T00:00:00+00:00","description":"About When I first learn programming, there&#39;s guy called _why. He wrote a marvellous book called Why&#39;s Guide To Ruby, together with a easy to use GUI framework Shoes. So I was really missing the Shoes DSL for the GUI creation. That&#39;s why I made ryo.shoes (repo, see ryo.shoes module), the Shoes-like DSL on CLOG. Please note that ryo.shoes is under early development and the API may change in the future and its not about to make a GUI with every thing in fancy, but make a GUI library with ease to use. And final note: RYO.SHOES is not Shoes. It&#39;s in Common Lisp and based on CLOG, rather than Ruby Shoes (native (3) or Swing (4)). This post is a mimic to the original NKS (Nobody knows shoes). As a short introduce to RYO.SHOES, while as the test of the RYO.SHOES. If I found something missing while writing this post, I will try to add them into RYO.SHOES. To Install the THING You need a Common Lisp environment (SBCL is recommanded), quicklisp and clone the ryo repo. if you&#39;re using macOS, with brew On macOS, with homebrew: &gt; brew install sbcl &gt; curl -L -O https://beta.quicklisp.org/quicklisp.lisp &gt; sbcl --load quicklisp.lisp ;;; ... * (quicklisp-quickstart:install) * (ql:add-to-init-file) * (quit) &gt; cd ~/quicklisp/local-projects/ &gt; git clone https://github.com/li-yiyang/ryo.git &gt; sbcl ;;; ... * (ql:quickload :ryo) * (defpackage :shoes-user (:use :cl :ryo.shoes)) * (in-package :shoes-user) * (window () (title &quot;Hello Shoes&quot;)) Setting up the environment is somewhat painful and can vary from person to person. So please forgive me for such a short sketch on how to install the thing. Shoes in front and Shoes at back You live in the interactive Lisp Machine REPL So: in front, windows. With buttons and words and colors. (Note: in order to reduce the image size, I&#39;v done some dithering on the screen short. Just to make it stylish) That&#39;s a quite simple code behind the scene: (window () (button &quot;Trurl? &quot; (alert &quot;Klapaucius! &quot;))) So, in your REPL (Terminal, SLIME, SLY or something else, I&#39;ll consider making a interactive one in the future), switch to to ryo.shoes package and type and evaluate the above piece of code, that should bring you a simple GUI window pop up. Note: if something unexpected happens Normally, you can count on Lisp&#39;s charming error handling and restarting features (together with a powerful debugger like SLIME or SLY, life will be much easier). For example, if you haven&#39;t start the Shoes Server, choosing try option in restart prompts will starting the Shoes Server. If you haven&#39;t open any connection (browser visiting the Shoes Server, in this context), choosing try option in restart prompts will open your browser and visiting it. However, if you really happened to met up something unexpected (I think it&#39;s common in GUI world). Please raise an issue on the repo. P.S. but in any words, this blog post is done when ryo.shoes was at very early stage. So things may vary. A Poem in Four Boxes Another more example, shoes in front: So, if you cannot readout code from the above image&#8230; Sorry for the dithering, but I really need to cut down the git repo binary file sizes. These binaries getting heavier. (window (:width 280 :height 350) (flow (:width 280 :margin 10) (stack (:width &quot;100%&quot;) (title &quot;A POEM&quot;)) (stack (:width 80) ; px (para &quot;Goes like: &quot;)) (stack (:width -90) ; px (para &quot;the sun. &quot; &quot;a lemon. &quot; &quot;the goalie. &quot; &quot;a fireplace. &quot; &quot;&quot; &quot;i want to write&quot; &quot;kids who haven&#39;t&quot; &quot;even heard one yet.&quot; &quot;&quot; &quot;and the goalie guards&quot; &quot;the fireplace&quot; :join :newline)))) okay, you ran it, you got it. The code is little longer, but I bet it sure does if you&#39;re adding tons of widgets into you GUI panel. Note: the default CSS may not seemed to be very nice, I think, but I&#39;m poor in CSS styling so I guess I&#39;ll just leave it be and fix it in the possible future. What&#39;s happening behind the scene? It&#39;s actually a box with three inside: ###################################### # # ###################################### # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ###################################### So, let&#39;s start with para because it&#39;s easy and you&#39;ll use it all over para, short for &#8220;paragraph&#8221;. Like this paragraph below: (window () (para &quot;Testing test test. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Breadsticks. &quot; &quot;Very good. &quot;)) By default, the content of para will automatically fill up to the edges of any box it is placed inside. One subelement next to another subelement with no space, as if gluing them together as a long string of sentences. And you can just enjoy other styles like below: (window () (para &quot;Testing test test. &quot; (strong &quot;Breadsticks. &quot;) (em &quot;Breadsticks. &quot;) (ins &quot;Very good. &quot;))) Note: if you&#39;ve read the NKS, you may found something missing here. This because RYO.SHOES now is not good at them yet. a list of missing features shapes and displacements (I&#39;m not using it yet) styles and styles of the widgets, tons of styles are missing backgrounds and so on the original Shoes is kinda like drawing widgets on the Canvas, but on HTML, I think I&#39;m not experienced about it. So later or if I really has to&#8230; Anyway, 逃げるは恥だが役に立つ. All the widgets Button So a button is like: (window () (button &quot;Click Me! &quot; (alert &quot;Yes! &quot;))) You pushes the button and it runs the code. Simple, but useful. Edit Line and Edit Box So you may want some interaction between user and the program. A simple way to interrogate ask user for input is: (window (:width 400 :height 400) (flow () (flow (:width 60) (para &quot;Name: &quot;)) (flow (:width 200) (@ ask (edit-line (:width 100))))) (stack () (button &quot;Greet&quot; (alert (fmt &quot;Hello: ~A. &quot; (text (@ ask)))))) (fmt! &quot;~A&quot; (clog:text-value (@ ask)))) Closures and App Local Variables Different like Ruby Shoes, which uses the instance variables to store states and blocks passes as lambda functions (slope, I mean). I made RYO.SHOES by closure variables and app local variables. There are several global variables that would rebinded locally: ryo.shoes::*clog*: current working connection (dev only) *app*: current app window *slot*: current slot (stack or flow) *self*: used mostly for event calling The (@ var) is the app local variable. for example: the above (@ ask (edit-line (:width 100))) defines a local variable named ask referring to the edit-line element use (@ ask) to query the stored local variable it is much like the instance variable @var in Ruby Samely, you got edit-box. Animation, Every, and Timer So you want some animation? Sure: (window () (title &quot;Every (Timer Class)&quot;) (flow (:margin 10) (@ cnt 0) (@ present (para (fmt &quot;~D%&quot; (@ cnt)))) ;; fraction should be 0.0~1.0 or 0-100 (@ progress (progress :fraction (@ cnt)))) (@ update (every-sec 1 (incf (@ cnt) 10) (setf (text (@ present)) (fmt &quot;~D%&quot; (@ cnt)) (fraction (@ progress)) (@ cnt)) (when (&gt;= (@ cnt) 100) (stop (@ update)) (alert &quot;Finished! &quot;))))) Finally, the Image Well, I was not sure if I&#39;m doing this correct. But anyway, it works right now: (window () (title &quot;Image Example&quot;) (flow () (para &quot;Load from URL&quot;) ;; load from URL (image &quot;https://avatars.githubusercontent.com/u/56211811&quot; :width 50)) (flow () (para &quot;Load Locally&quot;) ;; or load locally (image #P&quot;./image.png&quot; :width &quot;80%&quot;))) Note: I run multpile times of this application so you could see it nested as if the image.png itself is infinitely self included. Others more? The idea is to add a DSL wrapper for orginal CLOG. By any means I think it would be easy to extend RYO.SHOES. An example would be the usage of CLOG-C3: ;; see ryo;lisp;shoes;c3-plot.lisp for details (in-package :ryo.shoes)","headline":"Nobody Knows Shoes But Ryo Shoes","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/nobody-knows-shoes-but-ryo-shoes/"},"url":"/lisp/nobody-knows-shoes-but-ryo-shoes/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Nobody Knows Shoes But Ryo Shoes</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-11-26T00:00:00+00:00" itemprop="datePublished">Nov 26, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>When I first learn programming, there's guy called _why.
+  He wrote a marvellous book called <a href="https://poignant.guide">Why's Guide To Ruby</a>,
+  together with a easy to use GUI framework <a href="http://shoesrb.com">Shoes</a>.</p>
+<p>So I was really missing the Shoes DSL for the GUI creation.
+  That's why I made <code>ryo.shoes</code> (<a href="https://github.com/li-yiyang/ryo">repo</a>, see <code>ryo.shoes</code> module),
+  the Shoes-like DSL on <a href="https://github.com/rabbibotton/clog">CLOG</a>.</p>
+<p>Please note that <code>ryo.shoes</code> is under early development and
+  the API may change in the future and its not about to make
+  a GUI with every thing in fancy, but make a GUI library
+  with ease to use.</p>
+<p>And final note: RYO.SHOES is not Shoes. It's in Common Lisp
+  and based on CLOG, rather than Ruby Shoes (native (3) or
+  Swing (4)).</p>
+<p>This post is a mimic to the original NKS (Nobody knows shoes).
+  As a short introduce to RYO.SHOES, while as the test of the
+  RYO.SHOES. If I found something missing while writing this
+  post, I will try to add them into RYO.SHOES.</p>
+<h1>To Install the THING</h1>
+<p>You need a Common Lisp environment (<a href="http://sbcl.org">SBCL</a> is recommanded),
+  <a href="https://www.quicklisp.org">quicklisp</a> and clone the <a href="https://github.com/li-yiyang/ryo">ryo</a> repo.</p>
+<details><summary>if you're using macOS, with brew</summary>
+<p>On macOS, with <a href="https://brew.sh">homebrew</a>:</p>
+<div class="highlight"><pre><span></span>&gt;<span class="w"> </span>brew<span class="w"> </span>install<span class="w"> </span>sbcl
+&gt;<span class="w"> </span>curl<span class="w"> </span>-L<span class="w"> </span>-O<span class="w"> </span>https://beta.quicklisp.org/quicklisp.lisp
+&gt;<span class="w"> </span>sbcl<span class="w"> </span>--load<span class="w"> </span>quicklisp.lisp
+<span class="p">;;;</span><span class="w"> </span>...
+*<span class="w"> </span><span class="o">(</span>quicklisp-quickstart:install<span class="o">)</span>
+*<span class="w"> </span><span class="o">(</span>ql:add-to-init-file<span class="o">)</span>
+*<span class="w"> </span><span class="o">(</span>quit<span class="o">)</span>
+&gt;<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>~/quicklisp/local-projects/
+&gt;<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/li-yiyang/ryo.git
+&gt;<span class="w"> </span>sbcl
+<span class="p">;;;</span><span class="w"> </span>...
+*<span class="w"> </span><span class="o">(</span>ql:quickload<span class="w"> </span>:ryo<span class="o">)</span>
+*<span class="w"> </span><span class="o">(</span>defpackage<span class="w"> </span>:shoes-user
+<span class="w">    </span><span class="o">(</span>:use<span class="w"> </span>:cl<span class="w"> </span>:ryo.shoes<span class="o">))</span>
+*<span class="w"> </span><span class="o">(</span><span class="k">in</span>-package<span class="w"> </span>:shoes-user<span class="o">)</span>
+*<span class="w"> </span><span class="o">(</span>window<span class="w"> </span><span class="o">()</span>
+<span class="w">    </span><span class="o">(</span>title<span class="w"> </span><span class="s2">&quot;Hello Shoes&quot;</span><span class="o">))</span>
+</pre></div>
+</details>
+<p>Setting up the environment is somewhat painful and can
+  vary from person to person. So please forgive me for
+  such a short sketch on how to install the thing.</p>
+<h1>Shoes in front and Shoes at back</h1>
+<h2>You live in the interactive Lisp Machine REPL</h2>
+<p><img src="/_img/lisp/ryo-shoes-nks/trurl-klapaucius.png" alt="/_img/lisp/ryo-shoes-nks/trurl-klapaucius.png" /></p>
+<p>So: in front, windows. With buttons and words and colors.
+  (Note: in order to reduce the image size, I'v done some dithering
+  on the screen short. Just to make it stylish)</p>
+<p>That's a quite simple code behind the scene:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">button</span><span class="w"> </span><span class="s">&quot;Trurl? &quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">alert</span><span class="w"> </span><span class="s">&quot;Klapaucius! &quot;</span><span class="p">)))</span>
+</pre></div>
+<p>So, in your REPL (Terminal, SLIME, SLY or something else, I'll
+  consider making a interactive one in the future), switch to
+  to <code>ryo.shoes</code> package and type and evaluate the above piece of
+  code, that should bring you a simple GUI window pop up.</p>
+<details><summary>Note: if something unexpected happens</summary>
+<p>Normally, you can count on Lisp's charming error handling
+  and restarting features (together with a powerful debugger
+  like SLIME or SLY, life will be much easier).</p>
+<p>For example, if you haven't start the Shoes Server,
+  choosing <code>try</code> option in restart prompts will starting
+  the Shoes Server. If you haven't open any connection
+  (browser visiting the Shoes Server, in this context),
+  choosing <code>try</code> option in restart prompts will open
+  your browser and visiting it.</p>
+<p>However, if you really happened to met up something
+  unexpected (I think it's common in GUI world). Please
+  raise an issue on the <a href="https://github.com/li-yiyang/ryo/issues/new">repo</a>.</p>
+<p>P.S. but in any words, this blog post is done when
+  <code>ryo.shoes</code> was at very early stage. So things may vary.</p>
+</details>
+<h2>A Poem in Four Boxes</h2>
+<p>Another more example, shoes in front:</p>
+<p><img src="/_img/lisp/ryo-shoes-nks/a-poem.png" alt="/_img/lisp/ryo-shoes-nks/a-poem.png" /></p>
+<details><summary>So, if you cannot readout code from the above image&#8230;</summary>
+<p>Sorry for the dithering, but I really need to cut down the git repo
+  binary file sizes. These binaries getting heavier.</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">280</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="mi">350</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">280</span><span class="w"> </span><span class="nv">:margin</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stack</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="s">&quot;100%&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="s">&quot;A POEM&quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stack</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">80</span><span class="p">)</span><span class="w">                  </span><span class="c1">; px</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Goes like: &quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">stack</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">-90</span><span class="p">)</span><span class="w">                 </span><span class="c1">; px</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">para</span>
+<span class="w">        </span><span class="s">&quot;the sun. &quot;</span>
+<span class="w">        </span><span class="s">&quot;a lemon. &quot;</span>
+<span class="w">        </span><span class="s">&quot;the goalie. &quot;</span>
+<span class="w">        </span><span class="s">&quot;a fireplace. &quot;</span>
+<span class="w">        </span><span class="s">&quot;&quot;</span>
+<span class="w">        </span><span class="s">&quot;i want to write&quot;</span>
+<span class="w">        </span><span class="s">&quot;kids who haven&#39;t&quot;</span>
+<span class="w">        </span><span class="s">&quot;even heard one yet.&quot;</span>
+<span class="w">        </span><span class="s">&quot;&quot;</span>
+<span class="w">        </span><span class="s">&quot;and the goalie guards&quot;</span>
+<span class="w">        </span><span class="s">&quot;the fireplace&quot;</span>
+<span class="w">        </span><span class="nv">:join</span><span class="w"> </span><span class="nv">:newline</span><span class="p">))))</span>
+</pre></div>
+</details>
+<p>okay, you ran it, you got it.</p>
+<p>The code is little longer, but I bet it sure does if you're
+  adding tons of widgets into you GUI panel.</p>
+<p>Note: the default CSS may not seemed to be very nice, I
+  think, but I'm poor in CSS styling so I guess I'll just
+  leave it be and fix it in the possible future.</p>
+<details><summary>What's happening behind the scene? </summary>
+<p>It's actually a box with three inside:</p>
+<pre class="example">
+######################################
+#                                    #
+######################################
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+#         #                          #
+######################################
+</pre>
+</details>
+<h2>So, let's start with <code>para</code> because it's easy and you'll use it all over</h2>
+<p><code>para</code>, short for &#8220;paragraph&#8221;. Like this paragraph below:</p>
+<p><img src="/_img/lisp/ryo-shoes-nks/para-example.png" alt="/_img/lisp/ryo-shoes-nks/para-example.png" /></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Testing test test. &quot;</span>
+<span class="w">    </span><span class="s">&quot;Breadsticks. &quot;</span>
+<span class="w">    </span><span class="s">&quot;Breadsticks. &quot;</span>
+<span class="w">    </span><span class="s">&quot;Breadsticks. &quot;</span>
+<span class="w">    </span><span class="s">&quot;Very good. &quot;</span><span class="p">))</span>
+</pre></div>
+<p>By default, the content of <code>para</code> will automatically fill up
+  to the edges of any box it is placed inside. One subelement
+  next to another subelement with no space, as if gluing them
+  together as a long string of sentences.</p>
+<p>And you can just enjoy other styles like below:</p>
+<p><img src="/_img/lisp/ryo-shoes-nks/para-styles.png" alt="/_img/lisp/ryo-shoes-nks/para-styles.png" /></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Testing test test. &quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">strong</span><span class="w"> </span><span class="s">&quot;Breadsticks. &quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">em</span><span class="w"> </span><span class="s">&quot;Breadsticks. &quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">ins</span><span class="w"> </span><span class="s">&quot;Very good. &quot;</span><span class="p">)))</span>
+</pre></div>
+<p>Note: if you've read the NKS, you may found something missing
+  here. This because <code>RYO.SHOES</code> now is not good at them yet.</p>
+<details><summary>a list of missing features</summary>
+<ol>
+  <li>shapes and displacements (I'm not using it yet)</li>
+  <li>styles and styles of the widgets, tons of styles
+    are missing</li>
+  <li>backgrounds and so on</li>
+</ol>
+<p>the original Shoes is kinda like drawing widgets on the
+  Canvas, but on HTML, I think I'm not experienced about it.
+  So later or if I really has to&#8230;</p>
+<p>Anyway, 逃げるは恥だが役に立つ.</p>
+</details>
+<h1>All the widgets</h1>
+<h2>Button</h2>
+<p>So a button is like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">button</span><span class="w"> </span><span class="s">&quot;Click Me! &quot;</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">alert</span><span class="w"> </span><span class="s">&quot;Yes! &quot;</span><span class="p">)))</span>
+</pre></div>
+<p>You pushes the button and it runs the code.
+  Simple, but useful.</p>
+<h2>Edit Line and Edit Box</h2>
+<p>So you may want some interaction between user and the program.
+  A simple way to <del>interrogate</del> ask user for input is:</p>
+<p><img src="/_img/lisp/ryo-shoes-nks/edit-line.png" alt="/_img/lisp/ryo-shoes-nks/edit-line.png" /></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">400</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="mi">400</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">60</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Name: &quot;</span><span class="p">))</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">200</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">ask</span><span class="w"> </span><span class="p">(</span><span class="nf">edit-line</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">100</span><span class="p">)))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">stack</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">button</span><span class="w"> </span><span class="s">&quot;Greet&quot;</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">alert</span><span class="w"> </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;Hello: ~A. &quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">ask</span><span class="p">))))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">fmt!</span><span class="w"> </span><span class="s">&quot;~A&quot;</span><span class="w"> </span><span class="p">(</span><span class="nf">clog:text-value</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">ask</span><span class="p">))))</span>
+</pre></div>
+<details><summary>Closures and App Local Variables</summary>
+<p>Different like Ruby Shoes, which uses the instance variables to
+  store states and blocks passes as lambda functions (slope, I mean).</p>
+<p>I made <code>RYO.SHOES</code> by closure variables and app local variables.
+  There are several global variables that would rebinded locally:</p>
+<ul>
+  <li><code>ryo.shoes::*clog*</code>: current working connection (dev only)</li>
+  <li><code>*app*</code>: current app window</li>
+  <li><code>*slot*</code>: current slot (stack or flow)</li>
+  <li><code>*self*</code>: used mostly for event calling</li>
+</ul>
+<p>The <code>(@ var)</code> is the app local variable.
+  for example:</p>
+<ul>
+  <li>the above <code>(@ ask (edit-line (:width 100)))</code> defines a local
+    variable named <code>ask</code> referring to the <code>edit-line</code> element</li>
+  <li>use <code>(@ ask)</code> to query the stored local variable</li>
+  <li>it is much like the instance variable <code>@var</code> in Ruby</li>
+</ul>
+</details>
+<p>Samely, you got <code>edit-box</code>.</p>
+<h2>Animation, Every, and Timer</h2>
+<p>So you want some animation? Sure:</p>
+<p><img src="/_img/lisp/ryo-shoes-nks/every-sec.png" alt="/_img/lisp/ryo-shoes-nks/every-sec.png" /></p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="s">&quot;Every (Timer Class)&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">(</span><span class="nf">:margin</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="w">      </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">present</span><span class="w">  </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~D%&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">))))</span>
+<span class="w">    </span><span class="c1">;; fraction should be 0.0~1.0 or 0-100</span>
+<span class="w">    </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">progress</span><span class="w"> </span><span class="p">(</span><span class="nf">progress</span><span class="w"> </span><span class="nv">:fraction</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">update</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">every-sec</span><span class="w"> </span><span class="mi">1</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">incf</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">)</span><span class="w"> </span><span class="mi">10</span><span class="p">)</span>
+<span class="w">       </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">text</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">present</span><span class="p">))</span><span class="w">      </span><span class="p">(</span><span class="nf">fmt</span><span class="w"> </span><span class="s">&quot;~D%&quot;</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">))</span>
+<span class="w">             </span><span class="p">(</span><span class="nf">fraction</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">progress</span><span class="p">))</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">))</span>
+<span class="w">       </span><span class="p">(</span><span class="k">when</span><span class="w"> </span><span class="p">(</span><span class="nb">&gt;=</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">cnt</span><span class="p">)</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">stop</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">update</span><span class="p">))</span>
+<span class="w">         </span><span class="p">(</span><span class="nf">alert</span><span class="w"> </span><span class="s">&quot;Finished! &quot;</span><span class="p">)))))</span>
+</pre></div>
+<h2>Finally, the Image</h2>
+<p>Well, I was not sure if I'm doing this correct.
+  But anyway, it works right now:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">()</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">title</span><span class="w"> </span><span class="s">&quot;Image Example&quot;</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Load from URL&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; load from URL</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="s">&quot;https://avatars.githubusercontent.com/u/56211811&quot;</span><span class="w"> </span><span class="nv">:width</span><span class="w"> </span><span class="mi">50</span><span class="p">))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">flow</span><span class="w"> </span><span class="p">()</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">para</span><span class="w"> </span><span class="s">&quot;Load Locally&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="c1">;; or load locally</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">image</span><span class="w"> </span><span class="o">#</span><span class="nv">P</span><span class="s">&quot;./image.png&quot;</span><span class="w"> </span><span class="nv">:width</span><span class="w"> </span><span class="s">&quot;80%&quot;</span><span class="p">)))</span>
+</pre></div>
+<p><img src="/_img/lisp/ryo-shoes-nks/image.png" alt="/_img/lisp/ryo-shoes-nks/image.png" /></p>
+<p>Note: I run multpile times of this application so you could
+  see it nested as if the <code>image.png</code> itself is infinitely
+  self included.</p>
+<h2>Others more?</h2>
+<p>The idea is to add a DSL wrapper for orginal CLOG.
+  By any means I think it would be easy to extend <code>RYO.SHOES</code>.</p>
+<p>An example would be the usage of <a href="https://github.com/li-yiyang/clog-c3">CLOG-C3</a>:</p>
+<div class="highlight"><pre><span></span><span class="c1">;; see ryo;lisp;shoes;c3-plot.lisp for details</span>
+<span class="p">(</span><span class="nf">in-package</span><span class="w"> </span><span class="nv">:ryo</span><span class="o">.</span><span class="nv">shoes</span><span class="p">)</span>
+
+<span class="p">(</span><span class="nf">defclass</span><span class="w"> </span><span class="nv">c3-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">clog-c3:clog-c3</span><span class="w"> </span><span class="nv">element</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nf">id</span><span class="p">))</span>
+
+<span class="c1">;; NOTE:</span>
+<span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">%c3-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">&amp;key</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">height</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Create a CLOG-C3 plot. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="k">let</span><span class="w"> </span><span class="p">((</span><span class="nf">id</span><span class="w"> </span><span class="p">(</span><span class="nb">gensym</span><span class="w"> </span><span class="s">&quot;C3-PLOT&quot;</span><span class="p">)))</span>
+<span class="w">    </span><span class="c1">;; init with a dummy data</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">with-wrap-as-shoes</span>
+<span class="w">        </span><span class="p">(</span><span class="nf">c3-plot</span><span class="w"> </span><span class="nv">c3-plot</span>
+<span class="w">          </span><span class="p">(</span><span class="nf">clog-c3:create-clog-c3-plot</span><span class="w"> </span><span class="nv">*slot*</span><span class="w"> </span><span class="p">()</span>
+<span class="w">                                       </span><span class="nv">:width</span><span class="w">  </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">width</span><span class="w">  </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">                                       </span><span class="nv">:height</span><span class="w"> </span><span class="p">(</span><span class="k">or</span><span class="w"> </span><span class="nv">height</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">                                       </span><span class="nv">:id</span><span class="w">     </span><span class="nv">id</span><span class="p">))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">slot-value</span><span class="w"> </span><span class="nv">c3-plot</span><span class="w"> </span><span class="ss">&#39;id</span><span class="p">)</span><span class="w"> </span><span class="nv">id</span><span class="p">)</span>
+<span class="w">      </span><span class="c1">;; the dummy data should be hide</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">clog-c3:c3-hide</span><span class="w"> </span><span class="nv">c3-plot</span><span class="w"> </span><span class="nv">id</span><span class="w"> </span><span class="nv">:with-legend</span><span class="w"> </span><span class="nv">nil</span><span class="p">))))</span>
+
+<span class="p">(</span><span class="k">defmacro</span><span class="w"> </span><span class="nv">c3-plot</span><span class="w"> </span><span class="p">((</span><span class="nf">&amp;rest</span><span class="w"> </span><span class="nv">styles</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">height</span><span class="w"> </span><span class="nv">&amp;allow-other-keys</span><span class="p">)</span>
+<span class="w">                   </span><span class="nv">&amp;body</span><span class="w"> </span><span class="nv">body</span><span class="p">)</span>
+<span class="w">  </span><span class="s">&quot;Make a CLOG-C3 plot element. &quot;</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">declare</span><span class="w"> </span><span class="p">(</span><span class="nf">ignore</span><span class="w"> </span><span class="nv">width</span><span class="w"> </span><span class="nv">height</span><span class="p">))</span>
+<span class="w">  </span><span class="o">`</span><span class="p">(</span><span class="nf">with-wrap</span><span class="w"> </span><span class="p">(</span><span class="nf">*self*</span><span class="w"> </span><span class="p">(</span><span class="nf">%c3-plot</span><span class="w"> </span><span class="o">,@</span><span class="nv">styles</span><span class="p">))</span>
+<span class="w">     </span><span class="p">(</span><span class="nf">flet</span><span class="w"> </span><span class="p">((</span><span class="nf">plot</span><span class="w"> </span><span class="p">(</span><span class="nf">data</span><span class="w"> </span><span class="nv">&amp;key</span><span class="w"> </span><span class="nv">color</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">id</span><span class="w">   </span><span class="p">(</span><span class="nf">clog-c3:c3-data-id</span><span class="w"> </span><span class="nv">data</span><span class="p">))</span>
+<span class="w">                        </span><span class="p">(</span><span class="nf">type</span><span class="w"> </span><span class="p">(</span><span class="nf">clog-c3:c3-data-type</span><span class="w"> </span><span class="nv">data</span><span class="p">)))</span>
+<span class="w">              </span><span class="p">(</span><span class="nf">clog-c3:c3-load</span><span class="w"> </span><span class="nv">*self*</span><span class="w"> </span><span class="nv">data</span>
+<span class="w">                               </span><span class="nv">:color</span><span class="w"> </span><span class="nv">color</span>
+<span class="w">                               </span><span class="nv">:id</span><span class="w"> </span><span class="nv">id</span><span class="w"> </span><span class="nv">:type</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">       </span><span class="o">,@</span><span class="nv">body</span><span class="p">)))</span>
+</pre></div>
+<p>So you could just add the plot like:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">window</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">400</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="mi">400</span><span class="p">)</span>
+<span class="w">  </span><span class="c1">;; see `ryo.stat&#39; and `ryo.macros&#39; package</span>
+<span class="w">  </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">hist</span><span class="w"> </span><span class="p">(</span><span class="nf">make-histogram</span><span class="w"> </span><span class="p">(</span><span class="nf">dotimes-collect</span><span class="w"> </span><span class="p">(</span><span class="nf">i</span><span class="w"> </span><span class="mi">100</span><span class="p">)</span>
+<span class="w">                            </span><span class="p">(</span><span class="nb">random</span><span class="w"> </span><span class="mf">1.0</span><span class="p">))))</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">c3-plot</span><span class="w"> </span><span class="p">(</span><span class="nf">:width</span><span class="w"> </span><span class="mi">300</span><span class="w"> </span><span class="nv">:height</span><span class="w"> </span><span class="mi">300</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="nf">plot</span><span class="w"> </span><span class="p">(</span><span class="k">@</span><span class="w"> </span><span class="nv">hist</span><span class="p">))))</span>
+</pre></div>
+<p><img src="/_img/lisp/ryo-shoes-nks/c3-plot.png" alt="/_img/lisp/ryo-shoes-nks/c3-plot.png" /></p>
+<h1>So what's next and the future plan?</h1>
+<p>I think I would slow down the development of <code>RYO.SHOES</code>
+  (since I'm not majored in CS but actually Physics).</p>
+<p>The main point I may considering would now be the
+  data visualization and analyzing. (for example, a
+  better data viewer JS library other than <a href="https://c3js.org">C3</a>, hopefully,
+  something that could meet the science plotting needs.
+  Yes, I could use <a href="https://github.com/li-yiyang/gurafu">gurafu</a>, but I think it needs a lot of
+  modification to add interaction and beautiful styles&#8230;
+  This could be done if I have more free time. )</p>
+<p>Also, as you may noticed from the <a href="https://github.com/li-yiyang/ryo">source code</a>, <code>RYO.SHOES</code>
+  is just a &#8220;small&#8221; submodule of my personal code base <code>RYO</code>,
+  which I think is a messy place to place my experimental
+  pieces of code. So I think I'll separate <code>RYO.SHOES</code> as
+  a standalone package for GUI DSL in the future.</p>
+<p>Emmm&#8230; I think I'll rewrite this introduction to <code>RYO.SHOES</code>
+  after it got stable. I'm totally not satisfied with current
+  version: missing alot features from original Ruby Shoes and
+  most of all, not fancy and beautiful.</p>
+<p>But anyway, it works and I have to do some other stuffs.
+  Hope you would enjoy <code>RYO.SHOES</code>. Also, contributions and
+  advices are welcomed.</p>
+
+  </div><a class="u-url" href="/lisp/nobody-knows-shoes-but-ryo-shoes/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

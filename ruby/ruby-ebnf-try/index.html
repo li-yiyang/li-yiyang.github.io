@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Ruby and EBNF (Very Naive) | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="Ruby and EBNF (Very Naive)" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="What&#39;s these? 读了一个有趣的文章 三点几嚟，饮茶先啦 —— 将大马饮料名编译成汉语, 于是想要学学看关于 EBNF 和 Ruby 相关的内容. 并且希望能够最后实现一个 FSTN 的处理机器. 其中使用了一个 gem 来处理 EBNF. require &#39;ebnf&#39; EBNF EBNF, 即 Extended Backus–Naur Form. 它的感觉非常的像是 FSTN (finite-state transition network). 在一个 BNF Playground 的网站, 可以试试简单的 BNF 在线测试. 其同样支持 EBNF 的一些语法, 不过和 ebnf gem 用的语法还是有一点点的区别. (具体对于每个系统来说, 不同的语法根据规定会有一些不一样的) 对于使用的这个 gem 来说, 其接受的书写形式为 W3C EBNF: symbol ::= expression 也可以通过用 [&lt;num&gt;] 在开头表示顺序: [1] symbol ::= expression 其满足的具体规则请直接查看 文档. 那么直接从例子上手可能会快一些: 一个计算器的例子 (PEG Parser) 来自 calc.html, 是 ebnf gem 的一个例子. [1] Expr ::= Sum [2] Sum ::= Product ((&#39;+&#39; | &#39;-&#39;) Product)* [3] Product ::= Power ((&#39;*&#39; | &#39;/&#39;) Power)* [4] Power ::= Value (&#39;^&#39; Power)? [5] Value ::= NUMBER | &#39;(&#39; Expr &#39;)&#39; [6] NUMBER ::= [0-9]+ 在上面的 EBNF 中, 一个简单的例子比如: (1 + 3 ^ 2) * 4 - 5 这样的一个表达式, 对应的 AST 如下: 那么计算 Expr 的值的过程就是一个规约过程, 即从 AST 的根部向上一步步根据规则化简的过程. 比如上面的图, 在遇到 a ^ b 这样的形式的时候, 就将其用 $a^b$ 的值来替代. 于是可以新建一个 Ruby 类来作为 Parser 来处理程序: class Calc include EBNF::PEG::Parser @@rules = EBNF.parse(CALC_RULES).make_peg.ast" />
+<meta property="og:description" content="What&#39;s these? 读了一个有趣的文章 三点几嚟，饮茶先啦 —— 将大马饮料名编译成汉语, 于是想要学学看关于 EBNF 和 Ruby 相关的内容. 并且希望能够最后实现一个 FSTN 的处理机器. 其中使用了一个 gem 来处理 EBNF. require &#39;ebnf&#39; EBNF EBNF, 即 Extended Backus–Naur Form. 它的感觉非常的像是 FSTN (finite-state transition network). 在一个 BNF Playground 的网站, 可以试试简单的 BNF 在线测试. 其同样支持 EBNF 的一些语法, 不过和 ebnf gem 用的语法还是有一点点的区别. (具体对于每个系统来说, 不同的语法根据规定会有一些不一样的) 对于使用的这个 gem 来说, 其接受的书写形式为 W3C EBNF: symbol ::= expression 也可以通过用 [&lt;num&gt;] 在开头表示顺序: [1] symbol ::= expression 其满足的具体规则请直接查看 文档. 那么直接从例子上手可能会快一些: 一个计算器的例子 (PEG Parser) 来自 calc.html, 是 ebnf gem 的一个例子. [1] Expr ::= Sum [2] Sum ::= Product ((&#39;+&#39; | &#39;-&#39;) Product)* [3] Product ::= Power ((&#39;*&#39; | &#39;/&#39;) Power)* [4] Power ::= Value (&#39;^&#39; Power)? [5] Value ::= NUMBER | &#39;(&#39; Expr &#39;)&#39; [6] NUMBER ::= [0-9]+ 在上面的 EBNF 中, 一个简单的例子比如: (1 + 3 ^ 2) * 4 - 5 这样的一个表达式, 对应的 AST 如下: 那么计算 Expr 的值的过程就是一个规约过程, 即从 AST 的根部向上一步步根据规则化简的过程. 比如上面的图, 在遇到 a ^ b 这样的形式的时候, 就将其用 $a^b$ 的值来替代. 于是可以新建一个 Ruby 类来作为 Parser 来处理程序: class Calc include EBNF::PEG::Parser @@rules = EBNF.parse(CALC_RULES).make_peg.ast" />
+<link rel="canonical" href="/ruby/ruby-ebnf-try/" />
+<meta property="og:url" content="/ruby/ruby-ebnf-try/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-01-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Ruby and EBNF (Very Naive)" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-01-29T00:00:00+00:00","datePublished":"2023-01-29T00:00:00+00:00","description":"What&#39;s these? 读了一个有趣的文章 三点几嚟，饮茶先啦 —— 将大马饮料名编译成汉语, 于是想要学学看关于 EBNF 和 Ruby 相关的内容. 并且希望能够最后实现一个 FSTN 的处理机器. 其中使用了一个 gem 来处理 EBNF. require &#39;ebnf&#39; EBNF EBNF, 即 Extended Backus–Naur Form. 它的感觉非常的像是 FSTN (finite-state transition network). 在一个 BNF Playground 的网站, 可以试试简单的 BNF 在线测试. 其同样支持 EBNF 的一些语法, 不过和 ebnf gem 用的语法还是有一点点的区别. (具体对于每个系统来说, 不同的语法根据规定会有一些不一样的) 对于使用的这个 gem 来说, 其接受的书写形式为 W3C EBNF: symbol ::= expression 也可以通过用 [&lt;num&gt;] 在开头表示顺序: [1] symbol ::= expression 其满足的具体规则请直接查看 文档. 那么直接从例子上手可能会快一些: 一个计算器的例子 (PEG Parser) 来自 calc.html, 是 ebnf gem 的一个例子. [1] Expr ::= Sum [2] Sum ::= Product ((&#39;+&#39; | &#39;-&#39;) Product)* [3] Product ::= Power ((&#39;*&#39; | &#39;/&#39;) Power)* [4] Power ::= Value (&#39;^&#39; Power)? [5] Value ::= NUMBER | &#39;(&#39; Expr &#39;)&#39; [6] NUMBER ::= [0-9]+ 在上面的 EBNF 中, 一个简单的例子比如: (1 + 3 ^ 2) * 4 - 5 这样的一个表达式, 对应的 AST 如下: 那么计算 Expr 的值的过程就是一个规约过程, 即从 AST 的根部向上一步步根据规则化简的过程. 比如上面的图, 在遇到 a ^ b 这样的形式的时候, 就将其用 $a^b$ 的值来替代. 于是可以新建一个 Ruby 类来作为 Parser 来处理程序: class Calc include EBNF::PEG::Parser @@rules = EBNF.parse(CALC_RULES).make_peg.ast","headline":"Ruby and EBNF (Very Naive)","mainEntityOfPage":{"@type":"WebPage","@id":"/ruby/ruby-ebnf-try/"},"url":"/ruby/ruby-ebnf-try/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Ruby and EBNF (Very Naive)</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-01-29T00:00:00+00:00" itemprop="datePublished">Jan 29, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>What's these?</h1>
+<p>读了一个有趣的文章 <a href="https://ruby-china.org/topics/41296">三点几嚟，饮茶先啦 —— 将大马饮料名编译成汉语</a>,
+  于是想要学学看关于 EBNF 和 Ruby 相关的内容.
+  并且希望能够最后实现一个 FSTN 的处理机器.</p>
+<p>其中使用了一个 <a href="https://github.com/dryruby/ebnf">gem</a> 来处理 EBNF.</p>
+<div class="highlight"><pre><span></span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;ebnf&#39;</span>
+</pre></div>
+<h1>EBNF</h1>
+<p>EBNF, 即 Extended <a href="https://en.wikipedia.org/wiki/Backus–Naur_form">Backus–Naur Form</a>.
+  它的感觉非常的像是 FSTN (finite-state transition network).</p>
+<p>在一个 <a href="https://bnfplayground.pauliankline.com">BNF Playground</a> 的网站, 可以试试简单的 BNF 在线测试.
+  其同样支持 EBNF 的一些语法, 不过和 ebnf gem 用的语法还是有一点点的区别.
+  (具体对于每个系统来说, 不同的语法根据规定会有一些不一样的)
+  对于使用的这个 <a href="https://github.com/dryruby/ebnf">gem</a> 来说, 其接受的书写形式为 <a href="https://www.w3.org/TR/REC-xml/#sec-notation">W3C EBNF</a>:</p>
+<div class="highlight"><pre><span></span><span class="k">symbol </span><span class="err">::</span><span class="o">=</span> <span class="k">expression</span>
+</pre></div>
+<p>也可以通过用 <code>[&lt;num&gt;]</code> 在开头表示顺序:</p>
+<div class="highlight"><pre><span></span><span class="err">[1]</span> <span class="k">symbol </span><span class="err">::</span><span class="o">=</span> <span class="k">expression</span>
+</pre></div>
+<p>其满足的具体规则请直接查看 <a href="https://github.com/dryruby/ebnf#ebnf-grammar">文档</a>.</p>
+<p>那么直接从例子上手可能会快一些:</p>
+<h2>一个计算器的例子 (PEG Parser)</h2>
+<p>来自 <a href="https://dryruby.github.io/ebnf/examples/calc/doc/calc.html">calc.html</a>, 是 <a href="https://github.com/dryruby/ebnf">ebnf gem</a> 的一个例子.</p>
+<div class="highlight"><pre><span></span>[1] Expr    ::= Sum
+[2] Sum     ::= Product ((&#39;+&#39; | &#39;-&#39;) Product)*
+[3] Product ::= Power ((&#39;*&#39; | &#39;/&#39;) Power)*
+[4] Power   ::= Value (&#39;^&#39; Power)?
+[5] Value   ::= NUMBER | &#39;(&#39; Expr &#39;)&#39;
+[6] NUMBER  ::= [0-9]+
+</pre></div>
+<p>在上面的 EBNF 中, 一个简单的例子比如: <code>(1 + 3 ^ 2) * 4 - 5</code>
+  这样的一个表达式, 对应的 AST 如下:</p>
+<p><img src="/_img/ebnf/dot-calc-ebnf-example.svg" alt="/_img/ebnf/dot-calc-ebnf-example.svg" /></p>
+<p>那么计算 <code>Expr</code> 的值的过程就是一个规约过程,
+  即从 AST 的根部向上一步步根据规则化简的过程.
+  比如上面的图, 在遇到 <code>a ^ b</code> 这样的形式的时候,
+  就将其用 $a^b$ 的值来替代.</p>
+<p>于是可以新建一个 Ruby 类来作为 Parser 来处理程序:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">PEG</span><span class="o">::</span><span class="no">Parser</span>
+<span class="w">  </span><span class="vc">@@rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">CALC_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">ast</span>
+
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">    </span><span class="n">input</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;(1 + 3^2) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+(1 + 3^2) * 4 - 5
+</pre>
+<details><summary>for debug usage&#8230;</summary>
+<p>这里用了一个 <code>rule</code> 方法来访问类变量 <code>@@rules</code>.</p>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">rules</span>
+<span class="w">    </span><span class="vc">@@rules</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">rules</span>
+</pre></div>
+</details>
+<p>自然, 这个程序什么都不会干, 只会原封不动地输出输入.</p>
+<p>于是需要对各种形式来规定特定的规则.
+  因为选择的是 <a href="https://en.wikipedia.org/wiki/Parsing_expression_grammar">PEG</a> 的形式, 所以希望得到的是关于 PEG 格式的信息输出.</p>
+<p>对于这个需求, 可以通过 <code>to_sxp</code>, <code>to_html</code> 等方法来将其转换为美观的输出.
+  即查看 ebnf 这个 gem 将输入的 EBNF 转换为什么样的一个表达式结构了:</p>
+<div class="highlight"><pre><span></span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">CALC_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">to_sxp</span>
+</pre></div>
+<pre class="example">
+(
+ (rule Expr &quot;1&quot; (seq Sum))
+ (rule Sum &quot;2&quot; (seq Product _Sum_1))
+ (rule _Sum_1 &quot;2.1&quot; (star _Sum_2))
+ (rule _Sum_2 &quot;2.2&quot; (seq _Sum_3 Product))
+ (rule _Sum_3 &quot;2.3&quot; (alt &quot;+&quot; &quot;-&quot;))
+ (rule Product &quot;3&quot; (seq Power _Product_1))
+ (rule _Product_1 &quot;3.1&quot; (star _Product_2))
+ (rule _Product_2 &quot;3.2&quot; (seq _Product_3 Power))
+ (rule _Product_3 &quot;3.3&quot; (alt &quot;*&quot; &quot;/&quot;))
+ (rule Power &quot;4&quot; (seq Value _Power_1))
+ (rule _Power_1 &quot;4.1&quot; (opt _Power_2))
+ (rule _Power_2 &quot;4.2&quot; (seq &quot;^&quot; Power))
+ (rule Value &quot;5&quot; (alt NUMBER _Value_1))
+ (rule _Value_1 &quot;5.1&quot; (seq &quot;(&quot; Expr &quot;)&quot;))
+ (terminal NUMBER &quot;6&quot; (plus _NUMBER_1))
+ (terminal _NUMBER_1 &quot;6.1&quot; (range &quot;0-9&quot;)))
+</pre>
+<p>对于上面的结构, 其示意图如下:</p>
+<p><img src="/_img/ebnf/dot-calc-ebnf-ast.svg" alt="/_img/ebnf/dot-calc-ebnf-ast.svg" /></p>
+<p>那么可以通过添加规则来对其进行 <code>parse</code>:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">    </span><span class="n">parse</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="ss">:Expr</span><span class="p">,</span><span class="w"> </span><span class="vc">@@rules</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<details><summary>运行结果</summary>
+<div class="highlight"><pre><span></span><span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;(1 + 3^2) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+[{:Sum=&gt;
+   [{:Product=&gt;
+      [{:Power=&gt;
+         [{:Value=&gt;
+            [{:&quot;(&quot;=&gt;&quot;(&quot;},
+             {:Expr=&gt;
+               [{:Sum=&gt;
+                  [{:Product=&gt;
+                     [{:Power=&gt;[{:Value=&gt;&quot;1&quot;}, {:_Power_1=&gt;nil}]},
+                      {:_Product_1=&gt;[]}]},
+                   {:_Sum_1=&gt;
+                     [[{:_Sum_3=&gt;&quot;+&quot;},
+                       {:Product=&gt;
+                         [{:Power=&gt;
+                            [{:Value=&gt;&quot;3&quot;},
+                             {:_Power_1=&gt;
+                               [{:^=&gt;&quot;^&quot;},
+                                {:Power=&gt;
+                                  [{:Value=&gt;&quot;2&quot;}, {:_Power_1=&gt;nil}]}]}]},
+                          {:_Product_1=&gt;[]}]}]]}]}]},
+             {:&quot;)&quot;=&gt;&quot;)&quot;}]},
+          {:_Power_1=&gt;nil}]},
+       {:_Product_1=&gt;
+         [[{:_Product_3=&gt;&quot;*&quot;},
+           {:Power=&gt;[{:Value=&gt;&quot;4&quot;}, {:_Power_1=&gt;nil}]}]]}]},
+    {:_Sum_1=&gt;
+      [[{:_Sum_3=&gt;&quot;-&quot;},
+        {:Product=&gt;
+          [{:Power=&gt;[{:Value=&gt;&quot;5&quot;}, {:_Power_1=&gt;nil}]},
+           {:_Product_1=&gt;[]}]}]]}]}]
+</pre>
+</details>
+<p>(<code>parse</code> 的 <a href="https://dryruby.github.io/ebnf/EBNF/PEG/Parser.html#parse-instance_method">文档</a>) 即告诉机器对于输入, 以 <code>Expr</code> 为入口, 用 <code>@rules</code> 来进行处理.
+  于是得到的结果就是输入经过 Parser 被处理后的一个结构.
+  即, 默认返回值为一个符合 PEG 逻辑的结构.</p>
+<p>可以将 Parser 看作是一个在这个结构上行走的机器.
+  根据不同层级的结构和不同种类的结构来进行处理.
+  而通过 <code>production</code> 方法 (<a href="https://dryruby.github.io/ebnf/EBNF/PEG/Parser/ClassMethods.html#production-instance_method">文档</a>), 可以为特定的节点指定规约规则,
+  如:</p>
+<ul>
+  <li>对于一个 <code>Value</code> 规则描述的节点.
+    其有两种可能: <code>(alt NUMBER _Value_1)</code>,
+    即前者返回的是一个匹配的 <code>NUMBER</code> 对象,
+    而后者返回的是一个 <code>[{:&quot;(&quot; =&gt; &quot;(&quot;}, ...]</code> 形式的值.
+    (可以参考上面的结果).
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:Value</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="k">case</span><span class="w"> </span><span class="n">node</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">to_i</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="nb">Array</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">1</span><span class="o">][</span><span class="ss">:Expr</span><span class="o">]</span>
+<span class="w">	</span><span class="k">end</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+</pre></div>
+  <details><summary>运行结果及说明</summary>
+<div class="highlight"><pre><span></span><span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;(1 + 3^2) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+    <pre class="example">
+ [{:Sum=&gt;
+    [{:Product=&gt;
+	[{:Power=&gt;
+	   [{:Value=&gt;
+	      [{:Sum=&gt;
+		 [{:Product=&gt;
+		    [{:Power=&gt;[{:Value=&gt;1}, {:_Power_1=&gt;nil}]},
+		     {:_Product_1=&gt;[]}]},
+		  {:_Sum_1=&gt;
+		    [[{:_Sum_3=&gt;&quot;+&quot;},
+		      {:Product=&gt;
+			[{:Power=&gt;
+			   [{:Value=&gt;3},
+			    {:_Power_1=&gt;
+			      [{:^=&gt;&quot;^&quot;},
+			       {:Power=&gt;[{:Value=&gt;2}, {:_Power_1=&gt;nil}]}]}]},
+			 {:_Product_1=&gt;[]}]}]]}]}]},
+	    {:_Power_1=&gt;nil}]},
+	 {:_Product_1=&gt;
+	   [[{:_Product_3=&gt;&quot;*&quot;}, {:Power=&gt;[{:Value=&gt;4}, {:_Power_1=&gt;nil}]}]]}]},
+     {:_Sum_1=&gt;
+	[[{:_Sum_3=&gt;&quot;-&quot;},
+	  {:Product=&gt;
+	    [{:Power=&gt;[{:Value=&gt;5}, {:_Power_1=&gt;nil}]}, {:_Product_1=&gt;[]}]}]]}]}]
+    </pre>
+    <p>其中可以看到, 现在的 <code>Value</code> 指向的值从 <code>String</code> 和 <code>Expr</code> 的类型
+      已经变成了数字和其他的类型.</p>
+    <p>需要注意的是, 这里是用了 Ruby 自身的方法来进行的一个值转换的操作.
+      通过这样的方式来转换输入.</p>
+  </details>
+  </li>
+  <li>那么继续向上一层, 对于 <code>Power</code> 规则,
+    需要将 <code>[{:Value =&gt; ...}, {:_Power_1 =&gt; ...}]</code>
+    这样的形式进行转换, 于是根据 <code>_Power_1</code> 的类型的不同:
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:Power</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">pow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Value</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Power_1</span><span class="o">]</span>
+<span class="w">	</span><span class="n">pow</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="n">base</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">pow</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:Power</span><span class="o">]</span><span class="p">)</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">base</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+</pre></div>
+  <details><summary>运行结果及解释</summary>
+<div class="highlight"><pre><span></span><span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;(1 + 3^2) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+    <pre class="example">
+ [{:Sum=&gt;
+    [{:Product=&gt;
+	[{:Power=&gt;
+	   [{:Sum=&gt;
+	      [{:Product=&gt;[{:Power=&gt;1}, {:_Product_1=&gt;[]}]},
+	       {:_Sum_1=&gt;
+		 [[{:_Sum_3=&gt;&quot;+&quot;},
+		   {:Product=&gt;[{:Power=&gt;9}, {:_Product_1=&gt;[]}]}]]}]}]},
+	 {:_Product_1=&gt;[[{:_Product_3=&gt;&quot;*&quot;}, {:Power=&gt;4}]]}]},
+     {:_Sum_1=&gt;
+	[[{:_Sum_3=&gt;&quot;-&quot;}, {:Product=&gt;[{:Power=&gt;5}, {:_Product_1=&gt;[]}]}]]}]}]
+    </pre>
+    <p>可以看到, 上面的结果中, 有两种形式的化简:</p>
+    <ul>
+      <li>若 <code>{:_Power_1 =&gt; nil}</code>,
+        即在三目运算符中 <code>pow ? &lt;t&gt; : &lt;f&gt;</code> 会选择 <code>&lt;f&gt;</code> 分支.
+        <p>也就是对应无 <code>^</code> 形式的指数. 默认为一次指数.</p>
+      </li>
+      <li>若 <code>{:_Power_1 =&gt; [{:^ =&gt; &quot;^&quot;}, {:Power =&gt; ...}]}</code>,
+        也就是对应有指数形式的节点, 那么就用 <code>Integer#pow</code> 方法来计算指数.</li>
+    </ul>
+  </details>
+  </li>
+  <li><code>Product</code> 规则和 <code>Sum</code> 规则:
+    <p>这两个的规则实际上非常的相似, 只是因为计算优先级不同而在不同的层级而已.
+      它们的思路大致是这样的:</p>
+    <p>将节点下的列表中有效的数字提取出来,
+      然后对于 <code>_Product_1</code> 和 <code>_Sum_1</code> 非空的情况,
+      根据其运算符的类型进行计算.
+      为了实现这个操作, 首先化简 <code>_Product_1</code> 和 <code>_Sum_1</code>,
+      使其更容易用来处理.</p>
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:_Product_1</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">node</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">op</span><span class="o">|</span><span class="w"> </span><span class="n">op</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:values</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:_Sum_1</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">node</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">op</span><span class="o">|</span><span class="w"> </span><span class="n">op</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:values</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:Product</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Power</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Product_1</span><span class="o">]</span>
+<span class="w">	</span><span class="n">ops</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">product</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">op</span><span class="o">|</span><span class="w"> </span><span class="n">res</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="o">*</span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:Sum</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Product</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Sum_1</span><span class="o">]</span>
+<span class="w">	</span><span class="n">ops</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="n">sum</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">res</span><span class="p">,</span><span class="w"> </span><span class="n">op</span><span class="o">|</span><span class="w"> </span><span class="n">res</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="o">*</span><span class="n">op</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+</pre></div>
+  <details><summary>运行结果和解释</summary>
+<div class="highlight"><pre><span></span><span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;1 * 2 - 1 + 2 + 3 + 4 * 2&quot;</span><span class="p">)</span>
+</pre></div>
+    <pre class="example">
+[{:Sum=&gt;14}]
+    </pre>
+    <p>因为这两个就是对称的, 所以只分析一个:</p>
+    <ul>
+      <li><code>_Product_1</code> 部分: 其下节点形式如下
+        <code>[[{:_Product_3 =&gt; &quot;*&quot;}, {:Power =&gt; ...}], ...]</code>,
+        为了方便后续处理, 将其约化成 <code>[[&quot;*&quot;, ...], ...]</code> 的形式.
+        <p><code>map</code> 取其中的每个子元素 <code>[{:_Product_3 =&gt; &quot;*&quot;}, {:Power =&gt; ...}]</code>.
+          再使用 <code>map(&amp;:values)</code>, 等价于 <code>map {|obj| obj.values}</code> 转换为 <code>[[&quot;*&quot;], [val]]</code>
+          的形式, 最终用 <code>flatten</code> 变换为 <code>[&quot;*&quot;, val]</code> 的结果.</p>
+      </li>
+      <li><code>Product</code> 部分: 其节点形式如下: <code>[{:Power =&gt; ...}, {:_Product_1 =&gt; ...}]</code>.
+        <p>利用 <code>inject(initial) { |obj| ... }</code> 方法, 在历遍 <code>_Product_1</code> 中元素的同时,
+          将 <code>Power</code> 做为初始值进行计算. 差不多等价于:
+          <code>product * ... / ... * ... * ...</code> 这样的一个展开.</p>
+        <p>用到的两个方法的例子:</p>
+<div class="highlight"><pre><span></span><span class="c1"># inject, see more by `ri Array#inject`</span>
+<span class="p">(</span><span class="mi">0</span><span class="o">..</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">sum</span><span class="p">,</span><span class="w"> </span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="n">sum</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="c1"># equal to -5 + 0 + 1 + ... + 5</span>
+</pre></div>
+        <pre class="example">
+10
+        </pre>
+<div class="highlight"><pre><span></span><span class="c1"># send, see more by `ri Object#send`</span>
+<span class="mi">2</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">3</span><span class="p">)</span><span class="w"> </span><span class="c1"># equal to 2.+(3) &lt;=&gt; 2 + 3</span>
+</pre></div>
+      </li>
+    </ul>
+  </details>
+  </li>
+  <li>于是最后, 只需要将 <code>Expr</code> 规则指明即可 (当前为 <code>{:Expr =&gt; [{:Sum =&gt; ...}]}</code> 的形式):
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="k">class</span><span class="w"> </span><span class="nc">Calc</span>
+<span class="w">     </span><span class="n">production</span><span class="p">(</span><span class="ss">:Expr</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">	</span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Sum</span><span class="o">]</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+</pre></div>
+  </li>
+</ul>
+<p>至此, 一个能动的 (整数) 计算器应该就算完事了:</p>
+<div class="highlight"><pre><span></span><span class="no">Calc</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s2">&quot;(1 + 3^2) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+35
+</pre>
+<p>(之后可能需要一些测试集去覆盖测试,
+  不过作为一个普通的练习应该差不多就可以了. )</p>
+<p>一个可行的优化是通过在 <code>production</code> 的选项中传入 <code>clear_packrat: true</code> 参数,
+  来通过删除 <code>packrat</code> 来减少</p>
+<h3>反思</h3>
+<ul>
+  <li>核心的思路就是在 Parse 之后的结构树上进行约化</li>
+  <li>那么就需要设计一个逻辑性强的结构树</li>
+  <li>上面的代码并没有做到容易修改,
+    一个更好的做法应该是将结构和操作尽可能地分离.
+    (来自 PAIP 中的说法)</li>
+</ul>
+<h3>那么来做一个更加有趣的东西吧</h3>
+<p>和之前的差不多, 只是现在要将这个 <code>Calc</code> 做成一个能将输入的数学表达式转换为
+  <a href="https://graphviz.org">graphviz</a> 绘图代码, 以及能够计算的一个程序.</p>
+<p>那么实现的方法如下:</p>
+<ul>
+  <li>类似于上面的代码, 将程序约化为类似于 Lisp 的 S-Exp.
+    作为一个 Hash 来返回. (<code>{:op =&gt; [args ...]}</code>).</li>
+  <li>计算的时候, 根据 Hash 的 <code>op</code> 来选择对应的计算方法.</li>
+  <li>绘图的时候, 绘制出对应的调用结构.</li>
+</ul>
+<details><summary>Parser 处理代码</summary>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">CalcDot</span>
+<span class="w">   </span><span class="kp">include</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">PEG</span><span class="o">::</span><span class="no">Parser</span>
+<span class="w">   </span><span class="vc">@@rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">CALC_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">ast</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:Value</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="k">case</span><span class="w"> </span><span class="n">node</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">to_i</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Array</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">1</span><span class="o">][</span><span class="ss">:Expr</span><span class="o">]</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:Power</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">pow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Value</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Power_1</span><span class="o">]</span>
+<span class="w">     </span><span class="n">pow</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="o">[</span><span class="ss">:power</span><span class="p">,</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">pow</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:Power</span><span class="o">]]</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">base</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:Sum</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Product</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Sum_1</span><span class="o">]</span><span class="w"> </span>
+<span class="w">     </span><span class="n">map_ops</span><span class="p">(</span><span class="n">product</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:_Sum_1</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">node</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">ops</span><span class="o">|</span><span class="w"> </span><span class="n">ops</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:values</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:first</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:Product</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">power</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Power</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:_Product_1</span><span class="o">]</span>
+<span class="w">     </span><span class="n">map_ops</span><span class="p">(</span><span class="n">power</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:_Product_1</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">node</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">ops</span><span class="o">|</span><span class="w"> </span><span class="n">ops</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:values</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="o">&amp;</span><span class="ss">:first</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:Expr</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:Sum</span><span class="o">]</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nc">self</span><span class="o">.</span><span class="nf">map_ops</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="p">)</span>
+<span class="w">     </span><span class="nb">p</span><span class="w"> </span><span class="n">ops</span>
+<span class="w">     </span><span class="k">if</span><span class="w"> </span><span class="n">ops</span><span class="o">.</span><span class="n">empty?</span>
+<span class="w">	</span><span class="n">exp</span>
+<span class="w">     </span><span class="k">else</span>
+<span class="w">	</span><span class="n">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ops</span><span class="o">.</span><span class="n">first</span>
+<span class="w">	</span><span class="k">case</span><span class="w"> </span><span class="n">op</span><span class="o">.</span><span class="n">first</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="s2">&quot;+&quot;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:add</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="s2">&quot;-&quot;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:sub</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="s2">&quot;*&quot;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:mul</span>
+<span class="w">	</span><span class="k">when</span><span class="w"> </span><span class="s2">&quot;/&quot;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ss">:div</span>
+<span class="w">	</span><span class="k">end</span>
+
+<span class="w">	</span><span class="o">[</span><span class="n">operation</span><span class="p">,</span><span class="w"> </span><span class="n">exp</span><span class="p">,</span><span class="w"> </span><span class="n">map_ops</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">last</span><span class="p">,</span><span class="w"> </span><span class="n">ops</span><span class="o">[</span><span class="mi">1</span><span class="o">..]</span><span class="p">)</span><span class="o">]</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">     </span><span class="n">parse</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="ss">:Expr</span><span class="p">,</span><span class="w"> </span><span class="vc">@@rules</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+<span class="w"> </span><span class="k">end</span>
+</pre></div>
+<p>其中定义了一个 <code>map_ops</code> 的 class method 来处理结构.</p>
+</details>
+<p>现在通过 <code>read</code> 方法可以将输入的表达式转换为下面这样的 S-Exp.</p>
+<div class="highlight"><pre><span></span><span class="no">CalcDot</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;1 + 2 + (3 + 4) * 2^3 * 3&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+[:add, 1, [:add, 2, [:mul, [:add, 3, 4], [:mul, [:power, 2, 3], 3]]]]
+</pre>
+<p>于是可以定义一个绘图代码:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">CalcDot</span>
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">to_dot</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">     </span><span class="n">ast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">     </span><span class="n">iter_to_dot</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="kp">private</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">iter_to_dot</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span><span class="w"> </span><span class="n">depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">node_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;node&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="k">case</span><span class="w"> </span><span class="n">ast</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Array</span>
+<span class="w">	</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;0&#39;</span>
+<span class="w">	</span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ast</span><span class="o">.</span><span class="n">first</span><span class="p">,</span><span class="w"> </span><span class="n">ast</span><span class="o">[</span><span class="mi">1</span><span class="o">..]</span>
+<span class="w">	</span><span class="n">line</span><span class="w"> </span><span class="o">=</span>
+<span class="w">	  </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">op</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">depth</span><span class="si">}</span><span class="s2"> [label = </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">op</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">];</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">\</span>
+<span class="w">	  </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">op</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">depth</span><span class="si">}</span><span class="s2"> -&gt; &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">\</span>
+<span class="w">	  </span><span class="s2">&quot;{ </span><span class="si">#{</span><span class="w"> </span><span class="n">args</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="si">{</span><span class="o">|</span><span class="n">exp</span><span class="o">|</span><span class="w"> </span><span class="n">to_dot_node</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span><span class="w"> </span><span class="n">depth</span><span class="p">,</span><span class="w"> </span><span class="n">node_name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">a</span><span class="o">.</span><span class="n">succ!</span><span class="p">)</span><span class="si">}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="p">)</span><span class="w"> </span><span class="si">}</span><span class="s2"> };</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">\</span>
+<span class="w">	  </span><span class="n">args</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="o">|</span><span class="n">exp</span><span class="o">|</span><span class="w"> </span><span class="n">iter_to_dot</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span><span class="w"> </span><span class="n">depth</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">node_name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">b</span><span class="o">.</span><span class="n">succ!</span><span class="p">)}</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Integer</span>
+<span class="w">	</span><span class="n">line</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">ast</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">depth</span><span class="si">}</span><span class="s2"> [label = </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">ast</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">];</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">to_dot_node</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span><span class="w"> </span><span class="n">depth</span><span class="p">,</span><span class="w"> </span><span class="n">node_name</span><span class="p">)</span>
+<span class="w">     </span><span class="k">case</span><span class="w"> </span><span class="n">ast</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Array</span>
+<span class="w">	</span><span class="n">op</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ast</span><span class="o">.</span><span class="n">first</span>
+<span class="w">	</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">op</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">depth</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Integer</span>
+<span class="w">	</span><span class="n">node</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">node_name</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">ast</span><span class="si">}</span><span class="s2">_</span><span class="si">#{</span><span class="n">depth</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+<span class="w"> </span><span class="k">end</span>
+</pre></div>
+<div class="highlight"><pre><span></span><span class="no">CalcDot</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">to_dot</span><span class="p">(</span><span class="s2">&quot;(1 + 2^3) * 4 - 5&quot;</span><span class="p">)</span>
+</pre></div>
+<p><img src="/_img/ebnf/calc-dot-example-to-dot-code.svg" alt="/_img/ebnf/calc-dot-example-to-dot-code.svg" /></p>
+<p>注: 还能够继续干的事情:</p>
+<ul>
+  <li>写一个 <code>simplify</code> 函数, 来把 <code>[:add, 1, [:add 2, 3]]</code> 这样的结构化简成
+    <code>[:add, 1, 2, 3]</code> 的形式.</li>
+  <li>写一个 <code>evaluate</code> 函数, 根据 <code>read</code> 返回的结构来进行计算求值.
+    一个大概的思路是这样的:
+<div class="highlight"><pre><span></span><span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+<span class="w">     </span><span class="k">case</span><span class="w"> </span><span class="n">ast</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Array</span>
+<span class="w">	</span><span class="vc">@@methods</span><span class="o">[</span><span class="n">ast</span><span class="o">.</span><span class="n">first</span><span class="o">].</span><span class="n">call</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">ast</span><span class="o">[</span><span class="mi">1</span><span class="o">..].</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">exp</span><span class="o">|</span><span class="w"> </span><span class="n">evaluate</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span><span class="w"> </span><span class="p">}))</span>
+<span class="w">     </span><span class="k">when</span><span class="w"> </span><span class="nb">Integer</span>
+<span class="w">	</span><span class="n">ast</span>
+<span class="w">     </span><span class="k">end</span>
+<span class="w">   </span><span class="k">end</span>
+</pre></div>
+    <p>其中 <code>@@methods</code> 为 <code>CalcDot</code> 这个类中的储存方法的函数. 为 <code>Hash</code> 类型.
+      比如 <code>:add</code> Key 对应的应该是 <code>-&gt; (*args) { args.inject { |sum, item| sum + item } }</code>
+      这样的东西.</p>
+  </li>
+  <li>写更多的匹配规则</li>
+  <li>做一个会出错的计算器</li>
+  <li>加入 <code>Logger</code> 来记录运行日志</li>
+</ul>
+<h2>一个 EBNF Parser</h2>
+<p>参考的 <a href="https://github.com/dryruby/ebnf/tree/develop/examples/ebnf-peg-parser">例子</a>:</p>
+<blockquote>
+  <p>This example creates a parser for the EBNF grammar which
+    generates the same Abstract Syntax Tree as the built-in
+    parser in the gem.</p>
+</blockquote>
+<p>这个例子里面引入了 <code>terminal</code> 的概念来方便处理.
+  虽然暂时还不是很了解这个有什么用就是了, 感觉类似于对前面的 node 进行了分类.</p>
+<p>其中用来描述 EBNF 的 EBNF 代码在 <a href="https://github.com/dryruby/ebnf/blob/develop/etc/ebnf.ebnf">这里</a>:</p>
+<details><summary>展开</summary>
+<div class="highlight"><pre><span></span><span class="c1"># if you have a good network connection</span>
+<span class="nb">require</span><span class="w"> </span><span class="s1">&#39;open-uri&#39;</span>
+<span class="nb">require</span><span class="w"> </span><span class="s1">&#39;ebnf&#39;</span>
+
+<span class="n">link</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">URI</span><span class="p">(</span><span class="s2">&quot;https://raw.githubusercontent.com/dryruby/ebnf/develop/etc/ebnf.ebnf&quot;</span><span class="p">)</span>
+
+<span class="no">EBNF_RULES</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">URI</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">link</span><span class="p">)</span><span class="o">.</span><span class="n">read</span>
+</pre></div>
+<pre class="example">
+#&lt;Errno::ECONNREFUSED: Failed to open TCP connection to raw.githubusercontent.com:443 (Connection refused - connect(2) for &quot;raw.githubusercontent.com&quot; port 443)&gt;
+</pre>
+<p>emmm, 网不是很好. 直接用开梯子下载的文件算了.</p>
+<div class="highlight"><pre><span></span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">EBNF_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">to_sxp</span>
+</pre></div>
+<pre class="example">
+(
+ (rule ebnf &quot;1&quot; (star _ebnf_1))
+ (rule _ebnf_1 &quot;1.1&quot; (alt declaration rule))
+ (rule declaration &quot;2&quot; (alt &quot;@terminals&quot; pass))
+ (rule rule &quot;3&quot; (seq LHS expression))
+ (rule expression &quot;4&quot; (seq alt))
+ (rule alt &quot;5&quot; (seq seq _alt_1))
+ (rule _alt_1 &quot;5.1&quot; (star _alt_2))
+ (rule _alt_2 &quot;5.2&quot; (seq &quot;|&quot; seq))
+ (rule seq &quot;6&quot; (plus diff))
+ (rule diff &quot;7&quot; (seq postfix _diff_1))
+ (rule _diff_1 &quot;7.1&quot; (opt _diff_2))
+ (rule _diff_2 &quot;7.2&quot; (seq &quot;-&quot; postfix))
+ (rule postfix &quot;8&quot; (seq primary _postfix_1))
+ (rule _postfix_1 &quot;8.1&quot; (opt POSTFIX))
+ (rule primary &quot;9&quot; (alt HEX SYMBOL O_RANGE RANGE STRING1 STRING2 _primary_1))
+ (rule _primary_1 &quot;9.1&quot; (seq &quot;(&quot; expression &quot;)&quot;))
+ (rule pass &quot;10&quot; (seq &quot;@pass&quot; expression))
+ (terminals _terminals (seq))
+ (terminal LHS &quot;11&quot; (seq _LHS_1 SYMBOL _LHS_2 &quot;::=&quot;))
+ (terminal _LHS_1 &quot;11.1&quot; (opt _LHS_3))
+ (terminal _LHS_3 &quot;11.3&quot; (seq &quot;[&quot; SYMBOL &quot;]&quot; _LHS_4))
+ (terminal _LHS_4 &quot;11.4&quot; (plus &quot; &quot;))
+ (terminal _LHS_2 &quot;11.2&quot; (star &quot; &quot;))
+ (terminal SYMBOL &quot;12&quot; (plus _SYMBOL_1))
+ (terminal _SYMBOL_1 &quot;12.1&quot; (alt _SYMBOL_2 _SYMBOL_3 _SYMBOL_4 &quot;_&quot; &quot;.&quot;))
+ (terminal _SYMBOL_2 &quot;12.2&quot; (range &quot;a-z&quot;))
+ (terminal _SYMBOL_3 &quot;12.3&quot; (range &quot;A-Z&quot;))
+ (terminal _SYMBOL_4 &quot;12.4&quot; (range &quot;0-9&quot;))
+ (terminal HEX &quot;13&quot; (seq &quot;#x&quot; _HEX_1))
+ (terminal _HEX_1 &quot;13.1&quot; (plus _HEX_2))
+ (terminal _HEX_2 &quot;13.2&quot; (alt _HEX_3 _HEX_4 _HEX_5))
+ (terminal _HEX_3 &quot;13.3&quot; (range &quot;a-f&quot;))
+ (terminal _HEX_4 &quot;13.4&quot; (range &quot;A-F&quot;))
+ (terminal _HEX_5 &quot;13.5&quot; (range &quot;0-9&quot;))
+ (terminal RANGE &quot;14&quot; (seq &quot;[&quot; _RANGE_1 _RANGE_2 _RANGE_3))
+ (terminal _RANGE_1 &quot;14.1&quot; (plus _RANGE_4))
+ (terminal _RANGE_4 &quot;14.4&quot; (alt _RANGE_5 _RANGE_6 R_CHAR HEX))
+ (terminal _RANGE_5 &quot;14.5&quot; (seq R_CHAR &quot;-&quot; R_CHAR))
+ (terminal _RANGE_6 &quot;14.6&quot; (seq HEX &quot;-&quot; HEX))
+ (terminal _RANGE_2 &quot;14.2&quot; (opt &quot;-&quot;))
+ (terminal _RANGE_3 &quot;14.3&quot; (diff &quot;]&quot; LHS))
+ (terminal O_RANGE &quot;15&quot; (seq &quot;[^&quot; _O_RANGE_1 _O_RANGE_2 &quot;]&quot;))
+ (terminal _O_RANGE_1 &quot;15.1&quot; (plus _O_RANGE_3))
+ (terminal _O_RANGE_3 &quot;15.3&quot; (alt _O_RANGE_4 _O_RANGE_5 R_CHAR HEX))
+ (terminal _O_RANGE_4 &quot;15.4&quot; (seq R_CHAR &quot;-&quot; R_CHAR))
+ (terminal _O_RANGE_5 &quot;15.5&quot; (seq HEX &quot;-&quot; HEX))
+ (terminal _O_RANGE_2 &quot;15.2&quot; (opt &quot;-&quot;))
+ (terminal STRING1 &quot;16&quot; (seq &quot;\&quot;&quot; _STRING1_1 &quot;\&quot;&quot;))
+ (terminal _STRING1_1 &quot;16.1&quot; (star _STRING1_2))
+ (terminal _STRING1_2 &quot;16.2&quot; (diff CHAR &quot;\&quot;&quot;))
+ (terminal STRING2 &quot;17&quot; (seq &quot;&#39;&quot; _STRING2_1 &quot;&#39;&quot;))
+ (terminal _STRING2_1 &quot;17.1&quot; (star _STRING2_2))
+ (terminal _STRING2_2 &quot;17.2&quot; (diff CHAR &quot;&#39;&quot;))
+ (terminal CHAR &quot;18&quot; (alt _CHAR_1 _CHAR_2 _CHAR_3 _CHAR_4))
+ (terminal _CHAR_1 &quot;18.1&quot; (range &quot;#x9#xA#xD&quot;))
+ (terminal _CHAR_2 &quot;18.2&quot; (range &quot;#x20-#xD7FF&quot;))
+ (terminal _CHAR_3 &quot;18.3&quot; (range &quot;#xE000-#xFFFD&quot;))
+ (terminal _CHAR_4 &quot;18.4&quot; (range &quot;#x10000-#x10FFFF&quot;))
+ (terminal R_CHAR &quot;19&quot; (diff CHAR _R_CHAR_1))
+ (terminal _R_CHAR_1 &quot;19.1&quot; (alt &quot;]&quot; &quot;-&quot; HEX))
+ (terminal POSTFIX &quot;20&quot; (range &quot;?*+&quot;))
+ (terminal PASS &quot;21&quot; (alt _PASS_1 _PASS_2 _PASS_3 _PASS_4))
+ (terminal _PASS_1 &quot;21.1&quot; (range &quot;#x9#xA#xD#x20&quot;))
+ (terminal _PASS_2 &quot;21.2&quot; (seq _PASS_5 _PASS_6))
+ (terminal _PASS_5 &quot;21.5&quot; (alt _PASS_7 &quot;//&quot;))
+ (terminal _PASS_7 &quot;21.7&quot; (diff &quot;#&quot; &quot;#x&quot;))
+ (terminal _PASS_6 &quot;21.6&quot; (star _PASS_8))
+ (terminal _PASS_8 &quot;21.8&quot; (range &quot;^#xA#xD&quot;))
+ (terminal _PASS_3 &quot;21.3&quot; (seq &quot;/*&quot; _PASS_9 &quot;*/&quot;))
+ (terminal _PASS_9 &quot;21.9&quot; (star _PASS_10))
+ (terminal _PASS_10 &quot;21.10&quot; (alt _PASS_11 _PASS_12))
+ (terminal _PASS_11 &quot;21.11&quot; (opt _PASS_13))
+ (terminal _PASS_13 &quot;21.13&quot; (seq &quot;*&quot; _PASS_14))
+ (terminal _PASS_14 &quot;21.14&quot; (range &quot;^/&quot;))
+ (terminal _PASS_12 &quot;21.12&quot; (range &quot;^*&quot;))
+ (terminal _PASS_4 &quot;21.4&quot; (seq &quot;(*&quot; _PASS_15 &quot;*)&quot;))
+ (terminal _PASS_15 &quot;21.15&quot; (star _PASS_16))
+ (terminal _PASS_16 &quot;21.16&quot; (alt _PASS_17 _PASS_18))
+ (terminal _PASS_17 &quot;21.17&quot; (opt _PASS_19))
+ (terminal _PASS_19 &quot;21.19&quot; (seq &quot;*&quot; _PASS_20))
+ (terminal _PASS_20 &quot;21.20&quot; (range &quot;^)&quot;))
+ (terminal _PASS_18 &quot;21.18&quot; (range &quot;^*&quot;))
+ (pass _pass (seq PASS)))
+</pre>
+<p>暂时没什么好的解释, 因为并不是很会.</p>
+</details>
+<p>那么还是和前面 <code>Calc</code> 的例子一样, 看看这样的规则会得到什么样的结构吧.</p>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">EBNFParser</span>
+<span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">PEG</span><span class="o">::</span><span class="no">Parser</span>
+<span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">Terminals</span>
+<span class="w">  </span><span class="vc">@@rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">EBNF_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">ast</span>
+<span class="w">  </span><span class="vc">@@whitespace</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">Terminals</span><span class="o">::</span><span class="no">PASS</span>
+
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">    </span><span class="n">parse</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="ss">:ebnf</span><span class="p">,</span><span class="w"> </span><span class="vc">@@rules</span><span class="p">,</span>
+<span class="w">	    </span><span class="ss">whitespace</span><span class="p">:</span><span class="w"> </span><span class="vc">@@whitespace</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">EBNFParser</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;[1] test ::= test_a | test_b&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+[[{:LHS=&gt;&quot;[1] test ::=&quot;},
+  {:expression=&gt;
+    [{:alt=&gt;
+       [{:seq=&gt;
+          [[{:postfix=&gt;[{:primary=&gt;&quot;test_a&quot;}, {:_postfix_1=&gt;nil}]},
+            {:_diff_1=&gt;nil}]]},
+        {:_alt_1=&gt;
+          [[{:|=&gt;&quot;|&quot;},
+            {:seq=&gt;
+              [[{:postfix=&gt;[{:primary=&gt;&quot;test_b&quot;}, {:_postfix_1=&gt;nil}]},
+                {:_diff_1=&gt;nil}]]}]]}]}]}]]
+</pre>
+<p>其中, <code>@@whitespace</code> 用于告诉 <code>parse</code> 函数要忽略的空白符的形式.
+  通常是一个正则表达式或者是一个字符串. 这里直接使用了现成的.
+  (不过不知道该不该说这是一个小小的 bug 呢?
+  因为这里按照文档所说: Symbol of whitespace rule (defaults to <code>@pass</code>),
+  or a regular expression for eating whitespace between non-terminal rules
+  (strongly encouraged). 应该是可以从输入的规则中读出来的.
+  不过不清楚, 还是忽略吧. )</p>
+<p>于是首先要对 <code>terminals</code> 进行一个处理.
+  目前对于这个 <code>terminals</code> 的片面理解就是其将被捕获到的东西,
+  作为一个整体的 (字符串) 传值和处理, 而不是像 Calc 中,
+  <code>rules</code> 中对于捕获到的对象保留捕获的结构.
+  所以可以认为是将一堆 <code>rule</code> 抽象为一个点的感觉.
+  也就是目前的最基本元素.</p>
+<p>所以需要处理 <code>terminals</code> 的信息:</p>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">EBNFParser</span>
+<span class="w">  </span><span class="c1"># [SYMBOL] SYMBOL ::= -&gt; [SYMBOL, SYMBOL]</span>
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:LHS</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="n">value</span><span class="o">.</span><span class="n">to_s</span><span class="o">.</span><span class="n">scan</span><span class="p">(</span><span class="sr">/(?:\[([^\]]+)\])?\s*(\w+)\s*::=/</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="c1"># #xN -&gt; [:hex, &quot;#xN&quot;]</span>
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:HEX</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="o">[</span><span class="ss">:hex</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="o">]</span>
+<span class="w">    </span><span class="n">value</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="c1"># [...-...] -&gt; [:range, &quot;......&quot;]</span>
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:RANGE</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="nb">p</span><span class="w"> </span><span class="n">value</span>
+<span class="w">    </span><span class="o">[</span><span class="ss">:range</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="o">[</span><span class="mi">1</span><span class="o">..-</span><span class="mi">2</span><span class="o">]]</span>
+<span class="w">    </span><span class="n">value</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:O_RANGE</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="o">[</span><span class="ss">:range</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="o">[</span><span class="mi">1</span><span class="o">..-</span><span class="mi">2</span><span class="o">]]</span>
+<span class="w">    </span><span class="n">value</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:STRING1</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="n">value</span><span class="o">[</span><span class="mi">1</span><span class="o">..-</span><span class="mi">2</span><span class="o">]</span>
+<span class="w">  </span><span class="k">end</span>
+
+<span class="w">  </span><span class="n">terminal</span><span class="p">(</span><span class="ss">:STRING2</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="o">|</span>
+<span class="w">    </span><span class="n">value</span><span class="o">[</span><span class="mi">1</span><span class="o">..-</span><span class="mi">2</span><span class="o">]</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+
+<span class="no">EBNFParser</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;test ::= </span><span class="se">\&quot;</span><span class="s2">HELLO</span><span class="se">\&quot;</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+[[{:LHS=&gt;[nil, &quot;test&quot;]},
+  {:expression=&gt;
+    [{:alt=&gt;
+       [{:seq=&gt;
+          [[{:postfix=&gt;[{:primary=&gt;&quot;HELLO&quot;}, {:_postfix_1=&gt;nil}]},
+            {:_diff_1=&gt;nil}]]},
+        {:_alt_1=&gt;[]}]}]}]]
+</pre>
+<p>这个例子就不完全分析了. 就列举一些目前了解的技巧算了:</p>
+<ul>
+  <li>使用 <code>terminal</code> 来对末端的节点进行提前的处理.
+    其中 block 中传入的 <code>|value, prod|</code> 中 <code>prod</code> 参数为父规则的名字.</li>
+  <li>使用 <code>start_production</code> 在处理 rule 之前提前进行处理,
+    比如使用 <code>as_hash: true</code> 的方式, 来将
+    <code>[{KEY_1: value_1}, {KEY_2: value_2}]</code> 这样的变成
+    <code>{KEY_1: value_1, KEY_2: value_2}</code> 这样的结果,
+    在 <code>production</code> 中以 <code>value</code> 的形式传播.</li>
+  <li>使用 <code>production</code> 传入 block 代码块的时候,
+    通过使用 <code>|value, data, callback|</code> 中的 <code>callback</code> 来在 parse
+    的时候以 <code>yeild</code> 的形式传值出去.
+    <p>形式大致如下:</p>
+<div class="highlight"><pre><span></span><span class="n">production</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">callback</span><span class="o">|</span>
+<span class="w">  </span><span class="n">callback</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+<span class="k">end</span>
+
+<span class="n">parse</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">args</span><span class="o">|</span>
+<span class="w">  </span><span class="c1"># ...</span>
+<span class="k">end</span>
+</pre></div>
+  </li>
+</ul>
+<h1>FSTN Parser</h1>
+<p>首先是 FSTN 的 EBNF 的语法表述:
+  (其所满足的规则在 <a href="/reading/natural-language-processing-in-lisp/">Natural Language Processing in Lisp 01</a> 里面有介绍.)</p>
+<div class="highlight"><pre><span></span>[1] fstn ::= (network | abbreviates)+
+
+[2] network ::= &quot;Name&quot; name &quot;:&quot; (nodes | arcs)+ &quot;.&quot;
+[3] nodes   ::= (&quot;Initial&quot; | &quot;Final&quot;) value
+[4] arcs    ::= &quot;From&quot; node &quot;to&quot; node &quot;by&quot; label
+
+[5] abbreviates ::= name &quot;abbreviates&quot; &quot;:&quot; array &quot;.&quot;
+
+[6] value   ::= node_array | node
+[7] node_array   ::= (node &quot;,&quot;)+ node
+[8] array   ::= (char &quot;,&quot;)* char
+
+@terminals
+[9] name    ::= [A-Z]+ (&quot;-&quot; [A-Z]+)*
+[10] node    ::= [1-9] [0-9]*
+[11] label   ::= name | char | [#x21-#x2f#x3a-#x40#x5b-#x60#7b-#x7e]
+[12] char    ::= [a-z]+ (&quot;-&quot; [a-z])*
+</pre></div>
+<details><summary>S-Exp of EBNF</summary>
+<div class="highlight"><pre><span></span><span class="nb">require</span><span class="w"> </span><span class="s1">&#39;ebnf&#39;</span>
+<span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">FSTN_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">to_sxp</span>
+</pre></div>
+<pre class="example">
+(
+ (rule fstn &quot;1&quot; (plus _fstn_1))
+ (rule _fstn_1 &quot;1.1&quot; (alt network abbreviates))
+ (rule network &quot;2&quot; (seq &quot;Name&quot; name &quot;:&quot; _network_1 &quot;.&quot;))
+ (rule _network_1 &quot;2.1&quot; (plus _network_2))
+ (rule _network_2 &quot;2.2&quot; (alt nodes arcs))
+ (rule nodes &quot;3&quot; (seq _nodes_1 value))
+ (rule _nodes_1 &quot;3.1&quot; (alt &quot;Initial&quot; &quot;Final&quot;))
+ (rule arcs &quot;4&quot; (seq &quot;From&quot; node &quot;to&quot; node &quot;by&quot; label))
+ (rule abbreviates &quot;5&quot; (seq name &quot;abbreviates&quot; &quot;:&quot; array &quot;.&quot;))
+ (rule value &quot;6&quot; (alt node_array node))
+ (rule node_array &quot;7&quot; (seq _node_array_1 node))
+ (rule _node_array_1 &quot;7.1&quot; (plus _node_array_2))
+ (rule _node_array_2 &quot;7.2&quot; (seq node &quot;,&quot;))
+ (rule array &quot;8&quot; (seq _array_1 char))
+ (rule _array_1 &quot;8.1&quot; (star _array_2))
+ (rule _array_2 &quot;8.2&quot; (seq char &quot;,&quot;))
+ (terminals _terminals (seq))
+ (terminal name &quot;9&quot; (seq _name_1 _name_2))
+ (rule _name_1 &quot;9.1&quot; (plus _name_3))
+ (terminal _name_3 &quot;9.3&quot; (range &quot;A-Z&quot;))
+ (rule _name_2 &quot;9.2&quot; (star _name_4))
+ (rule _name_4 &quot;9.4&quot; (seq &quot;-&quot; _name_5))
+ (rule _name_5 &quot;9.5&quot; (plus _name_6))
+ (terminal _name_6 &quot;9.6&quot; (range &quot;A-Z&quot;))
+ (terminal node &quot;10&quot; (seq _node_1 _node_2))
+ (terminal _node_1 &quot;10.1&quot; (range &quot;1-9&quot;))
+ (rule _node_2 &quot;10.2&quot; (star _node_3))
+ (terminal _node_3 &quot;10.3&quot; (range &quot;0-9&quot;))
+ (terminal label &quot;11&quot; (alt name char _label_1))
+ (terminal _label_1 &quot;11.1&quot; (range &quot;#x21-#x2f#x3a-#x40#x5b-#x60#7b-#x7e&quot;))
+ (terminal char &quot;12&quot; (seq _char_1 _char_2))
+ (rule _char_1 &quot;12.1&quot; (plus _char_3))
+ (terminal _char_3 &quot;12.3&quot; (range &quot;a-z&quot;))
+ (rule _char_2 &quot;12.2&quot; (star _char_4))
+ (rule _char_4 &quot;12.4&quot; (seq &quot;-&quot; _char_5))
+ (terminal _char_5 &quot;12.5&quot; (range &quot;a-z&quot;)))
+</pre>
+</details>
+<div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">FSTN</span>
+<span class="w">  </span><span class="kp">include</span><span class="w"> </span><span class="no">EBNF</span><span class="o">::</span><span class="no">PEG</span><span class="o">::</span><span class="no">Parser</span>
+<span class="w">  </span><span class="vc">@@rules</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="no">EBNF</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="no">FSTN_RULES</span><span class="p">)</span><span class="o">.</span><span class="n">make_peg</span><span class="o">.</span><span class="n">ast</span>
+
+<span class="w">  </span><span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">    </span><span class="n">parse</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="ss">:fstn</span><span class="p">,</span><span class="w"> </span><span class="vc">@@rules</span><span class="p">,</span>
+<span class="w">	    </span><span class="ss">whitespace</span><span class="p">:</span> <span class="sr">/\s/</span><span class="p">)</span>
+<span class="w">  </span><span class="k">end</span>
+<span class="k">end</span>
+</pre></div>
+<details><summary>其中, 测试用的 FSTN 例子以及默认的结果</summary>
+<div class="highlight"><pre><span></span>Name TEST:
+  Initial 1
+  Final 3
+  From 1 to 2 by ABB
+  From 1 to 3 by #
+  From 2 to 3 by ABB.
+
+ABB abbreviates:
+  test, hello, world.
+</pre></div>
+<div class="highlight"><pre><span></span><span class="no">FSTN</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="no">FSTN_EXAMPLE</span><span class="p">)</span>
+</pre></div>
+<p>
+</p>
+</details>
+<p>那么, 开始写规则吧:</p>
+<h2>Terminals</h2>
+<p>对于 terminal, 相当于要把对应的匹配的东西全部都转换成一个 &#8220;最小&#8221; 零售单元的感觉.
+  (注: 可以试试看将 <code>@terminals</code> 去掉后的结果. )</p>
+<p>注意到里面的 <code>name</code>, <code>node</code>, <code>label</code>, <code>char</code> 是等价的,
+  只是在其字符可用区间上有一些限制.
+  即 <code>@terminals</code> 的作用仅仅只是将其作为一个整体进行匹配而已.</p>
+<h2>Rules</h2>
+<p>对于其他的规则, 也就是对结构进行约化. 一个简单的想法就是将其约化为如下的形式:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">networks</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">	</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:name_of_network</span><span class="p">,</span>
+<span class="w">	</span><span class="ss">des</span><span class="p">:</span><span class="w"> </span><span class="o">[</span>
+<span class="w">	  </span><span class="p">{</span><span class="w"> </span><span class="ss">initial</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">},</span>
+<span class="w">	  </span><span class="p">{</span><span class="w"> </span><span class="ss">final</span><span class="p">:</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">},</span>
+<span class="w">	  </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="n">by</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="p">}</span>
+<span class="w">	</span><span class="o">]</span>
+<span class="w">     </span><span class="p">},</span>
+<span class="w">     </span><span class="p">{</span>
+<span class="w">	</span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="ss">:name_of_abbreviation</span><span class="p">,</span>
+<span class="w">	</span><span class="ss">des</span><span class="p">:</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="n">char</span><span class="p">,</span><span class="w"> </span><span class="n">char</span><span class="p">,</span><span class="w"> </span><span class="o">...</span><span class="w"> </span><span class="o">]</span>
+<span class="w">     </span><span class="p">}</span>
+<span class="w">   </span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+<p>于是开整:</p>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">FSTN</span>
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:arcs</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="n">to</span><span class="p">,</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">1</span><span class="o">][</span><span class="ss">:node</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">3</span><span class="o">][</span><span class="ss">:node</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">5</span><span class="o">][</span><span class="ss">:label</span><span class="o">]</span>
+<span class="w">     </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="n">by</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">from</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="p">}</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:nodes</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">0</span><span class="o">][</span><span class="ss">:_nodes_1</span><span class="o">].</span><span class="n">downcase</span><span class="o">.</span><span class="n">to_sym</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="mi">1</span><span class="o">][</span><span class="ss">:value</span><span class="o">]</span>
+<span class="w">     </span><span class="p">{</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=&gt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">}</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:array</span><span class="p">,</span><span class="w"> </span><span class="ss">clear_packrat</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span>
+<span class="w">     </span><span class="n">node</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:_array_1</span><span class="o">]</span>
+<span class="w">	</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="n">item</span><span class="o">.</span><span class="n">first</span><span class="o">[</span><span class="ss">:char</span><span class="o">].</span><span class="n">to_sym</span><span class="w"> </span><span class="p">}</span>
+<span class="w">	</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">last</span><span class="o">[</span><span class="ss">:char</span><span class="o">].</span><span class="n">to_sym</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">start_production</span><span class="p">(</span><span class="ss">:network</span><span class="p">,</span><span class="w"> </span><span class="ss">as_hash</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:network</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">callback</span><span class="o">|</span>
+<span class="w">     </span><span class="nb">name</span><span class="p">,</span><span class="w"> </span><span class="n">des</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:name</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:_network_1</span><span class="o">]</span>
+<span class="w">     </span><span class="n">callback</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:network</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="nb">name</span><span class="p">,</span><span class="w"> </span><span class="ss">des</span><span class="p">:</span><span class="w"> </span><span class="n">des</span><span class="w"> </span><span class="p">})</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="n">start_production</span><span class="p">(</span><span class="ss">:abbreviates</span><span class="p">,</span><span class="w"> </span><span class="ss">as_hash</span><span class="p">:</span><span class="w"> </span><span class="kp">true</span><span class="p">)</span>
+<span class="w">   </span><span class="n">production</span><span class="p">(</span><span class="ss">:abbreviates</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="p">,</span><span class="w"> </span><span class="n">callback</span><span class="o">|</span>
+<span class="w">     </span><span class="nb">name</span><span class="p">,</span><span class="w"> </span><span class="n">des</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:name</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="n">node</span><span class="o">[</span><span class="ss">:array</span><span class="o">]</span>
+<span class="w">     </span><span class="n">callback</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="ss">:abbreviates</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nb">name</span><span class="p">:</span><span class="w"> </span><span class="nb">name</span><span class="p">,</span><span class="w"> </span><span class="ss">des</span><span class="p">:</span><span class="w"> </span><span class="n">des</span><span class="w"> </span><span class="p">})</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">input</span><span class="p">)</span>
+<span class="w">     </span><span class="n">ast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">network</span><span class="p">:</span><span class="w"> </span><span class="o">[]</span><span class="p">,</span><span class="w"> </span><span class="ss">abbreviates</span><span class="p">:</span><span class="w"> </span><span class="o">[]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">   </span>
+<span class="w">     </span><span class="n">parse</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="ss">:fstn</span><span class="p">,</span><span class="w"> </span><span class="vc">@@rules</span><span class="p">,</span><span class="w"> </span><span class="ss">whitespace</span><span class="p">:</span> <span class="sr">/\s/</span><span class="p">)</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="o">|</span>
+<span class="w">	</span><span class="n">ast</span><span class="o">[</span><span class="n">type</span><span class="o">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">value</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="n">ast</span>
+<span class="w">   </span><span class="k">end</span>
+<span class="w"> </span><span class="k">end</span>
+</pre></div>
+<p>于是:</p>
+<div class="highlight"><pre><span></span><span class="no">FSTN</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="no">FSTN_EXAMPLE</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+{:network=&gt;
+  [{:name=&gt;&quot;TEST&quot;,
+    :des=&gt;
+     [{:initial=&gt;&quot;1&quot;},
+      {:final=&gt;&quot;3&quot;},
+      {:arc=&gt;&quot;ABB&quot;, :from=&gt;&quot;1&quot;, :to=&gt;&quot;2&quot;},
+      {:arc=&gt;&quot;#&quot;, :from=&gt;&quot;1&quot;, :to=&gt;&quot;3&quot;},
+      {:arc=&gt;&quot;ABB&quot;, :from=&gt;&quot;2&quot;, :to=&gt;&quot;3&quot;}]}],
+ :abbreviates=&gt;[{:name=&gt;&quot;ABB&quot;, :des=&gt;[:test, :hello, :world]}]}
+</pre>
+<h2>FSTN 自动机可视化</h2>
+<p>对于读到的 FSTN. 需要将其画出来. (使用 <a href="https://graphviz.org">graphviz</a>)</p>
+<p>于是简单的想法就是根据 <code>read</code> 返回的 ast 来进行绘制:</p>
+<details><summary>代码折叠</summary>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">FSTN</span>
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">draw</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+<span class="w">     </span><span class="n">draw_ast</span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">input</span><span class="p">),</span><span class="w"> </span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">draw_ast</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+<span class="w">     </span><span class="n">layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:layout</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="ss">:dot</span>
+<span class="w">     </span><span class="n">shape</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:shape</span><span class="o">]</span><span class="w">  </span><span class="o">||</span><span class="w"> </span><span class="ss">:circle</span>
+<span class="w">     </span><span class="n">in_out</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:in_out</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="kp">true</span>
+<span class="w">     </span><span class="n">rankdir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:rankdir</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="ss">:LR</span>
+
+<span class="w">     </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;layout = </span><span class="si">#{</span><span class="n">layout</span><span class="si">}</span><span class="s2">;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span>
+<span class="w">	    </span><span class="s2">&quot;rankdir = </span><span class="si">#{</span><span class="n">rankdir</span><span class="si">}</span><span class="s2">;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span>
+<span class="w">	    </span><span class="p">(</span><span class="n">in_out</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="s2">&quot;node [shape = point]; qi, qa;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span>
+<span class="w">	    </span><span class="s2">&quot;node [shape = </span><span class="si">#{</span><span class="n">shape</span><span class="si">}</span><span class="s2">];</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+<span class="w">     </span><span class="n">ast</span><span class="o">[</span><span class="ss">:network</span><span class="o">].</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">network</span><span class="o">|</span>
+<span class="w">	</span><span class="n">network</span><span class="o">[</span><span class="ss">:des</span><span class="o">].</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">items</span><span class="o">|</span>
+<span class="w">	  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;qi -&gt; </span><span class="si">#{</span><span class="n">items</span><span class="o">[</span><span class="ss">:initial</span><span class="o">]</span><span class="si">}</span><span class="s2">;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">items</span><span class="o">[</span><span class="ss">:initial</span><span class="o">]</span>
+<span class="w">	  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">items</span><span class="o">[</span><span class="ss">:final</span><span class="o">]</span><span class="si">}</span><span class="s2"> -&gt; qa;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">items</span><span class="o">[</span><span class="ss">:final</span><span class="o">]</span>
+<span class="w">	  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">(</span><span class="s2">&quot;</span><span class="si">#{</span><span class="n">items</span><span class="o">[</span><span class="ss">:from</span><span class="o">]</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">#{</span><span class="n">items</span><span class="o">[</span><span class="ss">:to</span><span class="o">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">+</span>
+<span class="w">		  </span><span class="p">(</span><span class="n">items</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="w"> </span><span class="p">?</span><span class="w">  </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;[label = </span><span class="se">\&quot;</span><span class="si">#{</span><span class="n">items</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">]&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">+</span>
+<span class="w">		  </span><span class="s2">&quot;;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">items</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span>
+
+<span class="w">	</span><span class="k">end</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">res</span>
+<span class="w">   </span><span class="k">end</span>
+<span class="w"> </span><span class="k">end</span>
+</pre></div>
+</details>
+<p>于是可以有如下的绘图结果:</p>
+<div class="highlight"><pre><span></span><span class="no">FSTN</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="no">FSTN_EXAMPLE</span><span class="p">)</span>
+</pre></div>
+<p><img src="/_img/ebnf/ruby-fstn-draw-ast-example.svg" alt="/_img/ebnf/ruby-fstn-draw-ast-example.svg" /></p>
+<h2>FSTN 的自动生成</h2>
+<p>在这里我就想吐槽一下之前是有什么大病想到那么离谱的 ast 数据组织方式.
+  不过无所谓了, 论屎山的诞生:</p>
+<p>首先是为了方便引用 abbreviates, 将其转换成通过缩写即可得到一列数据的形式.
+  为了方便生成, 将 <code>{initial: ...}</code> 和 <code>{final: ...}</code> 都变成 <code>{arc: ...}</code> 的形式.
+  并且将其最终变为 <code>{&lt;from&gt; =&gt; [{to =&gt; &lt;to&gt;, arc =&gt; &lt;arc&gt;}, ...]}</code> 的形式.</p>
+<details><summary>代码折叠</summary>
+<div class="highlight"><pre><span></span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">FSTN</span>
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="n">input</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+<span class="w">     </span><span class="n">generate_ast</span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">input</span><span class="p">),</span><span class="w"> </span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">generate_ast</span><span class="p">(</span><span class="n">ast</span><span class="p">,</span><span class="w"> </span><span class="n">options</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span>
+<span class="w">     </span><span class="n">terminal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:terminal</span><span class="o">]</span>
+<span class="w">     </span><span class="n">join_char</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">options</span><span class="o">[</span><span class="ss">:join</span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">&quot; &quot;</span>
+
+<span class="w">     </span><span class="n">network_ast</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ast</span><span class="o">[</span><span class="ss">:network</span><span class="o">].</span><span class="n">select</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">terminal</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">terminal</span><span class="o">.</span><span class="n">nil?</span><span class="w"> </span><span class="p">}</span><span class="o">.</span><span class="n">first</span>
+<span class="w">     </span><span class="n">network</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_network</span><span class="p">(</span><span class="n">network_ast</span><span class="o">[</span><span class="ss">:des</span><span class="o">]</span><span class="p">)</span>
+<span class="w">     </span><span class="n">abbreviates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">parse_abbreviates</span><span class="p">(</span><span class="n">ast</span><span class="o">[</span><span class="ss">:abbreviates</span><span class="o">]</span><span class="p">)</span>
+
+<span class="w">     </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">[]</span>
+<span class="w">     </span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;qi&quot;</span>
+<span class="w">     </span><span class="k">while</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="s2">&quot;qa&quot;</span>
+<span class="w">	</span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">[</span><span class="n">state</span><span class="o">].</span><span class="n">length</span>
+<span class="w">	</span><span class="n">arc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">network</span><span class="o">[</span><span class="n">state</span><span class="o">][</span><span class="nb">rand</span><span class="p">(</span><span class="n">length</span><span class="p">)</span><span class="o">]</span>
+<span class="w">	</span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arc</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span>
+
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">&quot;#&quot;</span>
+<span class="w">	</span><span class="k">elsif</span><span class="w"> </span><span class="n">abbreviates</span><span class="o">.</span><span class="n">include?</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+<span class="w">	  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">abbreviates</span><span class="o">[</span><span class="n">label</span><span class="o">][</span><span class="nb">rand</span><span class="p">(</span><span class="n">abbreviates</span><span class="o">[</span><span class="n">label</span><span class="o">].</span><span class="n">length</span><span class="p">)</span><span class="o">]</span>
+<span class="w">	</span><span class="k">else</span>
+<span class="w">	  </span><span class="n">res</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">label</span>
+<span class="w">	</span><span class="k">end</span>
+
+<span class="w">	</span><span class="n">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">arc</span><span class="o">[</span><span class="ss">:to</span><span class="o">]</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">res</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">join_char</span><span class="p">)</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">parse_abbreviates</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+<span class="w">     </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">     </span><span class="n">ast</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">abb</span><span class="o">|</span>
+<span class="w">	</span><span class="n">res</span><span class="o">[</span><span class="n">abb</span><span class="o">[</span><span class="ss">:name</span><span class="o">]]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">abb</span><span class="o">[</span><span class="ss">:des</span><span class="o">]</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">res</span>
+<span class="w">   </span><span class="k">end</span>
+
+<span class="w">   </span><span class="k">def</span><span class="w"> </span><span class="nf">parse_network</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+<span class="w">     </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">     </span><span class="n">parse_init</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">nodes</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="nb">Array</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="n">nodes</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qi&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qi&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">nodes</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="n">parse_final</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">nodes</span><span class="o">.</span><span class="n">is_a?</span><span class="p">(</span><span class="nb">Array</span><span class="p">)</span><span class="w"> </span><span class="p">?</span><span class="w"> </span><span class="n">nodes</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">node</span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">node</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qa&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#&quot;</span><span class="p">,</span><span class="w"> </span><span class="ss">from</span><span class="p">:</span><span class="w"> </span><span class="n">nodes</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;qa&quot;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">     </span><span class="n">ast</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">item</span><span class="o">|</span>
+<span class="w">	</span><span class="k">if</span><span class="w"> </span><span class="n">item</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span>
+<span class="w">	  </span><span class="n">item</span>
+<span class="w">	</span><span class="k">elsif</span><span class="w"> </span><span class="n">item</span><span class="o">[</span><span class="ss">:initial</span><span class="o">]</span>
+<span class="w">	  </span><span class="n">parse_init</span><span class="o">[</span><span class="n">item</span><span class="o">[</span><span class="ss">:initial</span><span class="o">]]</span>
+<span class="w">	</span><span class="k">else</span>
+<span class="w">	  </span><span class="n">parse_final</span><span class="o">[</span><span class="n">item</span><span class="o">[</span><span class="ss">:final</span><span class="o">]]</span>
+<span class="w">	</span><span class="k">end</span>
+<span class="w">     </span><span class="k">end</span><span class="o">.</span><span class="n">each</span><span class="w"> </span><span class="k">do</span><span class="w"> </span><span class="o">|</span><span class="n">arc</span><span class="o">|</span>
+<span class="w">	</span><span class="n">res</span><span class="o">[</span><span class="n">arc</span><span class="o">[</span><span class="ss">:from</span><span class="o">]]</span><span class="w"> </span><span class="o">||=</span><span class="w"> </span><span class="o">[]</span>
+<span class="w">	</span><span class="n">res</span><span class="o">[</span><span class="n">arc</span><span class="o">[</span><span class="ss">:from</span><span class="o">]]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="ss">arc</span><span class="p">:</span><span class="w"> </span><span class="n">arc</span><span class="o">[</span><span class="ss">:arc</span><span class="o">]</span><span class="p">,</span><span class="w"> </span><span class="ss">to</span><span class="p">:</span><span class="w"> </span><span class="n">arc</span><span class="o">[</span><span class="ss">:to</span><span class="o">]</span><span class="w"> </span><span class="p">}</span>
+<span class="w">     </span><span class="k">end</span>
+
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="n">res</span>
+<span class="w">   </span><span class="k">end</span>
+<span class="w"> </span><span class="k">end</span>
+</pre></div>
+</details>
+<div class="highlight"><pre><span></span><span class="no">FSTN</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="no">FSTN_EXAMPLE</span><span class="p">)</span>
+</pre></div>
+<pre class="example">
+test hello
+</pre>
+<h1>其他的一些资料</h1>
+<p>都是一些想看但是并没有时间看的东西 <del>毕竟现在还是假期, 并且这东西也不是我主业</del></p>
+<ul>
+  <li><a href="https://cse.buffalo.edu/~regan/cse305/RubyBNF.pdf">RubyBNF.pdf</a> Ruby 的一个 BNF Syntax (基于 ruby-man-1.4)</li>
+  <li><a href="https://www.ics.uci.edu/~pattis/misc/ebnf2.pdf">EBNF: A Notation to Describe Syntax</a> 一个看起来比较有意思的介绍</li>
+</ul>
+<h1>一些其他的想法</h1>
+<ul>
+  <li>重新实现之前的 <a href="/ruby/ri-lang/">riLang</a>, 不过是通过 EBNF 的形式</li>
+  <li>实现一个 EBNF 的处理程序 (模仿 ebnf 这个 gem)</li>
+  <li>&#8230;</li>
+</ul>
+<h1>后记</h1>
+<ul>
+  <li>怎么寒假就开始倒数了</li>
+  <li>怎么 DDL 开始入侵寒假了</li>
+  <li>怎么我写完就已经第二天了&#8230;
+    <p><del>虽然这个写了我很久&#8230;</del></p>
+  </li>
+  <li>不过写到后面我又重新用 Regexp 重新写了 <a href="/_img/ebnf/fstn_parser.rb">一个</a>&#8230;
+    (<del>因为出现了一些懒得调的问题, 里面的 whitespace 的设定有点麻烦</del>)
+    等于说啥也没学到了就是了. 并且尴尬的是, 还不是一个匹配网络.
+    害&#8230;</li>
+</ul>
+
+  </div><a class="u-url" href="/ruby/ruby-ebnf-try/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
