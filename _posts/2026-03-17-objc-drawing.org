@@ -1,0 +1,56 @@
+#+title: ObjC drawing on window
+#+date: 2026-03-19
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+虽然还是放在 =lisp= 类目里面 (因为是写 McCLIM-Coca backend 的产物),
+但是实际是关于 Objective-C 这种麻烦的东西.
+
+因为自己并不会 ObjC, 也没啥 Cocoa 的开发经验, 于是一开始就选择了求助 AI,
+那么整理一下这段时间求助 AI 的结果记录一下简短的踩坑经验.
+
+TLDR: AI 还是幻觉太重了, 应该会选择 CGBitmapContext 来作为最终的方案.
+
+* =drawRect:=
+#+begin_src lisp
+(objc:define-objc-method ("McCLIMCocaView" "drawRect:")
+                         :void (((x y w h) :ns-rect))
+  (objc:invoke-super objc:self "drawRect:" :ns-rect (x y w h))
+  (dolist (draw-op (coca-window-draw-ops (find-coca-window objc:self)))
+    (with-ns-graphics-state
+      (funcall draw-op))))
+#+end_src
+
+评价: 不好用, 还得手动维护 =coca-window-draw-ops= 这个队列,
+AI 一上来就推荐这种, 还反复地推荐, 搞的我在这个队列维护和更新的过程中累得要死.
+要是让 AI 自己写确实没毛病, (虽然但是, AI 写了一个队列维护但是完全没有用,
+我写了 ≠ 我要用, 你别说好不好, 你就说有没有吧).
+
+* =CAShapeLayer=
+还是 AI 给的方法, 说是什么现代的绘图标准. 没毛病, 确实是现代,
+也是很高性能的方案. 只是有一个小问题: 问题从原来的管理队列变成了管理 Layer,
+因为每个 Layer 的 path attribute 是唯一的, 所以想要支持不同属性 (粗细,
+颜色, 填充), 就要用不同的 layer, 那么最简单的想法就是用 =design= (颜色),
+=fill=, =line-style= 的方式来做索引, 找到对应的 layer, 然后进行 path 更新.
+
+效果确实很好, 但是另一个问题就是, 那么 layer 的层级该如何管理?
+如果 layer 需要更新或者擦除, 那么好像又会变得非常麻烦.
+
+* =CGBitmapContext=
+最终选择了该方案, 虽然如果你是一个 ObjC 大佬, 估计会觉得我这方案选型完全是没苦硬吃,
+(我也觉得). 不过不管怎么样, 最后的效果 ([[https://codeberg.org/li-yiyang/McCLIM/commit/1b2699dbd5ecc2a8edda737c4ba3b168fc110ea5][#1b2699dbd5]]) 目前如下:
+
+[[{{ site.github.url }}/_img/lisp/mcclim-coca/broken-text-1b2699dbd5.png]]
+
+[[{{ site.github.url }}/_img/lisp/mcclim-coca/demodemo-1b2699dbd5.png]]
+
+[[{{ site.github.url }}/_img/lisp/mcclim-coca/demodemo-2-1b2699dbd5.png]]
+
+注: 那么为什么不和旧的 beagle 的实现一样使用 lockFocus 呢?
+因为在 Cocoa 中已经被标记 Deprecated, 并且 Apple 狠心地也确实完全没有向后支持...
+还是 Windows 向后支持的能力好啊.
+
+* About
+那么这篇博客就这样水过去了吧, 毕竟感觉花了我快两周的时间了.
