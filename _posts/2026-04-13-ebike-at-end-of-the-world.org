@@ -1,0 +1,202 @@
+#+title: 终末油改电
+#+date: 2026-04-13
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: physics
+* About
+在看终末摩托行 (末世二輪之旅, 終末ツーリング) 的时候,
+开局不是说是化油器的老摩托么, 不是还有灵魂脚启动么,
+怎么一下子就变成了太阳能充电的单车油改电了.
+
+虽然比捡破烂就能发现石油的末世设定好一些, 但是毕竟是幻想世界啊,
+不能来点美妙的燃油车幻想吗? (某少女终末旅行如是说)
+
+既然如此没有幻想, 不妨算算看这太阳能合不合理.
+
+* 太阳能面板的功率
+[[{{ site.github.url }}/_img/shumatsurinku/solar-panel.png]]
+
+按照 Wikipedia 上的数据 ([[https://en.wikipedia.org/wiki/Average_human_height_by_country][Average human height by country]]),
+这里就假设是 160cm 的身高, 用作估算太阳能面板边长的参考长度,
+其面积约 \(1.6^{2} = 2.56 \mathrm{m}^{2}\)
+
+取太阳常数 \(S_{\odot} = 1.361 \mathrm{kW} / \mathrm{m}^{2}\),
+易知太阳能面板的 "超级理想" 的最大功率为 \(3.48 \mathrm{kW}\) (\(3.5 \mathrm{kW}\)).
+
+注: 虽然说是直接用 \(A S_{\odot}\) 来计算的功率,
+但是考虑到太阳常数是在地球大气层以外的卫星测量的,
+实际到达地面的功率应该是不及此的.
+所以按照 \(70\%\) 的效率: (\(S_{\odot}^{\mathrm{eff}} \dot{=} 1 \mathrm{kW} / \mathrm{m}^{2}\)),
+实际的功率约 \(2.5 \mathrm{kW}\).
+
+开始充电大概是 10% 的电量:
+
+[[{{ site.github.url }}/_img/shumatsurinku/init-10-percent.png]]
+
+假如只要 2 到 3 个小时就能够充满电的话
+
+[[{{ site.github.url }}/_img/shumatsurinku/2-or-3-hour.png]]
+
+那么电池的容量约是 \(8.3 \mathrm{kWh}\).
+
+注: 考虑到电池电量的非线性性,
+理论上应该没法直接这样标定.
+并且充电中损耗的能量也并未考虑.
+
+那么实际大概是多少呢, 从 [[https://www.data.jma.go.jp/risk/obsdl/index.php][日本气象厅]] 网站上可以下载历年数据,
+不过貌似只有部分的带气象站的地区有日照辐射量数据.
+第一集出现的箱根很遗憾应该是没有的, 所以这里用的是东京的 [[{{ site.github.url }}/_img/shumatsurinku/tokyo-rad.csv][数据]],
+为每时刻前一时刻的日照辐射量累计 (\(\mathrm{MJ} / \mathrm{m}^{2}\)),
+这里稍微作弊一下, 认为是全年最佳的连续三个小时 \(10.57 \mathrm{MJ} / \mathrm{m}^{2} \leftrightarrow 0.97 \mathrm{kW} / \mathrm{h}\),
+不过考虑故事的设定, 应该是被核平了, 没啥污染的话应该大气会比较洁净吧.
+所以实际输入的能量约为 \(7.34 \mathrm{kWh}\) 左右.
+
+故事中的未来科技也许能将太阳能电板的效率干到理论极限,
+这里计算按 "目前" 太阳能电板实验室的最佳极限
+(\(34\%\), ref: [[https://www.huanqiukexue.com/?p=1554][太阳能电池效率新纪录：接近34%，我国科学家让光伏电池效率超越了单结物理极限]]),
+那么太阳能板的输出能量约为 \(2.50 \mathrm{kWh}\) 左右.
+
+#+html: <details><summary>理论极限</summary>
+#+begin_quote
+A solar panel is essentially a P-N junction diode. Depending on the
+bandgap of the semiconductor material used, only light at specific
+wavelengths will actually create electron-hole pairs in the
+junction. Most solar cells are made from silicon, because it's
+relatively cheap. Silicon has a bandgap of 1.1 eV, resulting in a
+maximum theoretical efficiency of 29%.
+
+In theory you could build a device with multiple layers composed of
+different semiconductor materials with a range of bandgaps, thereby
+making use of more of the energy. The maximum theoretical efficiency
+of a solar cell if it had an infinite number of layers would be
+86%. This limit is referred to as the Shockley–Queisser limit.
+
+In addition to these quantum mechanical limitations, there's also
+optical inefficiencies due to the material of the glass covering and
+protecting the PV cells, and inefficiencies in the electronics that
+collect and convert the power into something useful.
+
+Any solar cell comprised of multiple semiconductor layers is going to
+be far more expensive to produce than one built from a single
+layer. Other semiconductor materials have a higher individual
+Shockley-Queisser limit (again as a function of the bandgap of the
+material), but these materials tend to be more expensive.
+#+end_quote
+
+ref: [[https://www.reddit.com/r/engineering/comments/330xeu/comment/cqggxyd/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button][What's stopping Solar Panels from hitting the 80-90% efficiency mark? | Reddit]]
+#+html: </details>
+
+考虑电池的充电效率, 这里按 90% 来算 (真的么? 新能源汽车充电效率约 80-90%,
+锂电池效率约 90%), 那么实际电池得到的能量为 \(2.24 \mathrm{kWh}\) 左右.
+假设故事中的 "未来科技" 可以让电池电量线性标注,
+那么电池容量大约在 \(2.50 \mathrm{kWh}\) 左右 (大约两度电).
+
+* 电车的功率计算
+车辆的功率用非常简陋的空气阻力 \(F_{d}\) + 滚动阻力 \(F_{\mathrm{r}}\) 来计算:
+
+\[F = F_{d} + F_{\mathrm{r}}\]
+
+** 空气阻力
+\[F_{d} = \frac{1}{2} \rho v^{2} C_{d} A\]
+
++ \(\rho = 1.225 \mathrm{kg} / \mathrm{m}^{2}\)
++ \(C_{d} = 0.45 \sim 0.60 = 0.50\)
+
+  注: 实际上可能会偏低, 因为加装了三箱估计迎风面还挺大的.
++ \(A\)
+
+  车辆的原型应该是 [[https://en.wikipedia.org/wiki/Yamaha_XT225][YAMAHA ZeroW 225 (XT225) | Wikipedia]]
+  (ref: [[https://animeanime.jp/article/2025/11/07/93645.html][「終末ツーリング」の“リアリティ”と“バイク愛”をバイク愛好家が語る！「セローはもう一人の主役」]]).
+  一台风冷 4 冲程的单缸机.
+
+  #+begin_quote
+  + Overall length × width × height: 2,055mm × 825mm × 1,160mm
+  + Weight: 102kg
+  + Engine type: Air-cooled, 4-stroke, OHC, 2-valve, single-cylinder, 223cm³
+  + Maximum power output: 14.7kW (20.0PS) / 8,000r/min
+  + Maximum torque: 18.6N･m (1.9kgf･m) / 7,000r/min
+
+  Ref: [[https://global.yamaha-motor.com/showroom/cp/collection/serow225_xt225/][1985 SEROW225 (XT225) | YAMAHA]]
+  #+end_quote
+
+  故 \(A = 1.70 \mathrm{m}^{2}\)
+
+  #+html: <details><summary>一点点原型车的小调查</summary>
+
+  +吐槽: 女主姐姐就是装逼, 这车明明有电启动, 在开头一幕还故意用打火棍.+
+
+  +在 [[https://ja.wikipedia.org/wiki/ヤマハ・セロー][ヤマハ・セロー | Wikipedia]] 里面说, 二代才有电启动, 所以假如女主姐姐是老资历的话, 估计得用初代.+
+
+  好吧, 仔细一看, 原来是电瓶没电了呀 (乐)
+
+  找了一个视频资料 [[https://www.youtube.com/watch?v=bv1VL4tnrOU][Yamaha XT225 Serow - Walk Around & Short Ride Out (Classic Motorcycle) | Youtube]],
+  +动漫开头引擎和排气的声音有点没太还原的感觉, (假如上面的视频资料的收音没毛病的话).+
+
+  不过在这个视频 [[https://www.youtube.com/watch?v=DDHwe829t90][No Frills and Cheap Thrills: Yamaha XT225 | Youtube]] 里面,
+  声音好像更像是动画里面的感觉.
+
+  不愧是乐器厂, 还有专门的声音录制 [[https://www.youtube.com/watch?v=AksBe-DUi7A][EXHAUST SOUNDS "SEROW" ; XT225 1985 | Youtube]].
+  这个感觉就还挺像的.
+
+  动画里面启动的声音给我一种这车转速很高的感觉
+  (不过 [[https://global.yamaha-motor.com/showroom/cp/collection/serow225_xt225/][资料]] 说其最大功率在 8000 转, 最大扭矩在 7000 转,
+  好像也没啥毛病).
+
+  动画里面姐姐骑车的时候还有换档特写, 不愧是热爱摩托的作者的漫改么.
+
+  不过后面反正都改电动车了, 电机的声音应该没啥毛病.
+  #+html: </details>
+
+假设只是匀速直线行驶:
+
+#+begin_quote
+The Serow's power ratio is only 20PS/19Nm with a top cruising speed of
+only, say, 110 kph (someone correct me if I'm wrong), its tank is only
+10 liters, but it is light, nimble, and a delight to ride.
+
+...
+
+I have an xt225 that I have fitted with road tires (continental
+Conti-Tour). I recently took it on a 240 mile day trip. I had no
+problem running at 70mph (112 kph) but the bike does run more
+comfortably at 65mph (104kph). I didn't take the bike off-road at all.
+
+Ref: [[https://www.horizonsunlimited.com/hubb/which-bike/rtw-yamaha-serow-225we-against-4842][RTW On A Yamaha Serow 225WE: Against Conventional Wisdom?]]
+#+end_quote
+
+虽然但是, 动画里面的运行时速应该没有那么快 (100km/h),
+大概是在 40km/h 的样子. (不排除是外国 "本地人" 开车比较野)
+
+[[{{ site.github.url }}/_img/shumatsurinku/40kph.png]]
+
+** 滚动阻力
+\[F_{\mathrm{r}} = C_{\mathrm{r}} M g\]
+
++ \(C_{\mathrm{r}} = 0.0150 \sim 0.0250\)
+
+  注: 问 gemini deep research 的, 没地方找,
+  不知道对不对. 应该是一个和速度相关的参数?
++ \(M \dot{=} 250 kg\)
+
+  假设车重不变 (102kg 毕竟我也不清楚会变重还是如何),
+  两个主角体重都只有 50kg (嗯, 二次元, 虽然有一个明显不是人,
+  不过假设未来机器人也非常轻量化火力还很大吧),
+  带的三箱也只有 50 kg (有点少? ).
+
+  #+html: <details><summary>小小吐槽</summary>
+  不对不对, 二次元机器人就该跟铳梦或者素子一样是超重铁金刚.
+  #+html: </details>
+
++ \(g = 9.8 \mathrm{m} / \mathrm{s}^{2}\)
+
+** 功率与续航
+故实际功率约为 \(P = F v \dot{=} 1.26 \mathrm{kW}\), 维持 \(40 \mathrm{km} / \mathrm{h}\) 行驶的话,
+估计只有 \(2 \mathrm{h}\) 左右的续航 (80km). 这还是不算加速, 过非铺装路面,
+爬坡, 逆风等各种 debuff.
+
+不过动画里面还有一些其他的用电场景, 比如机器人的充电, 净水器的充电,
+这小小一块太阳能板好像有点不太够用啊...
+
+* 后记
+上面的计算过程不保证正确, 如果您发现有错, 欢迎指正. 
