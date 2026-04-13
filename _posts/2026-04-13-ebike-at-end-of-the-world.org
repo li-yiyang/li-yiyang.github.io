@@ -100,10 +100,21 @@ ref: [[https://www.reddit.com/r/engineering/comments/330xeu/comment/cqggxyd/?utm
 ** 空气阻力
 \[F_{d} = \frac{1}{2} \rho v^{2} C_{d} A\]
 
-+ \(\rho = 1.225 \mathrm{kg} / \mathrm{m}^{2}\)
-+ \(C_{d} = 0.45 \sim 0.60 = 0.50\)
++ \(\rho = 1.225 \mathrm{kg} / \mathrm{m}^{3}\)
++ \(C_{d} = 0.45 \sim 0.60 = 0.50\) (问 AI 的)
 
-  注: 实际上可能会偏低, 因为加装了三箱估计迎风面还挺大的.
+  +注: 实际上可能会偏低, 因为加装了三箱估计迎风面还挺大的.+
+
+  并不确定这个估算值的正确性. 比如 AI 给出的:
+
+  | 车辆形态              | 迎风面积 A (m2) | 阻力系数 Cd | 阻力面积 Cd​A (m2) |
+  |-----------------------+-----------------+-------------+--------------------|
+  | 竞赛级公路自行车      | 0.40 - 0.50     | 0.70 - 0.90 | 0.30 - 0.45        |
+  | 流线型微型车 (VW XL1) | 1.50            | 0.189       | 0.28               |
+  | 3人电动载人车 (估算)  | 2.00 - 2.30     | 0.50 - 0.55 | 1.00 - 1.25        |
+  | 货运三轮车 (满载)     | 2.50            | 0.60        | 1.50               |
+
+  公路自行车竟然比三轮车的阻力系数还高...
 + \(A\)
 
   车辆的原型应该是 [[https://en.wikipedia.org/wiki/Yamaha_XT225][YAMAHA ZeroW 225 (XT225) | Wikipedia]]
@@ -120,7 +131,7 @@ ref: [[https://www.reddit.com/r/engineering/comments/330xeu/comment/cqggxyd/?utm
   Ref: [[https://global.yamaha-motor.com/showroom/cp/collection/serow225_xt225/][1985 SEROW225 (XT225) | YAMAHA]]
   #+end_quote
 
-  故 \(A = 1.70 \mathrm{m}^{2}\)
+  故 \(A = 0.957 \mathrm{m}^{2}\)
 
   #+html: <details><summary>一点点原型车的小调查</summary>
 
@@ -173,7 +184,7 @@ Ref: [[https://www.horizonsunlimited.com/hubb/which-bike/rtw-yamaha-serow-225we-
 ** 滚动阻力
 \[F_{\mathrm{r}} = C_{\mathrm{r}} M g\]
 
-+ \(C_{\mathrm{r}} = 0.0150 \sim 0.0250\)
++ \(C_{\mathrm{r}} = 0.0150 \sim 0.0250 = 0.02\)
 
   注: 问 gemini deep research 的, 没地方找,
   不知道对不对. 应该是一个和速度相关的参数?
@@ -191,12 +202,74 @@ Ref: [[https://www.horizonsunlimited.com/hubb/which-bike/rtw-yamaha-serow-225we-
 + \(g = 9.8 \mathrm{m} / \mathrm{s}^{2}\)
 
 ** 功率与续航
-故实际功率约为 \(P = F v \dot{=} 1.26 \mathrm{kW}\), 维持 \(40 \mathrm{km} / \mathrm{h}\) 行驶的话,
-估计只有 \(2 \mathrm{h}\) 左右的续航 (80km). 这还是不算加速, 过非铺装路面,
+故实际功率约为 \(P = F v \dot{=} 0.95 \mathrm{kW}\), 维持 \(40 \mathrm{km} / \mathrm{h}\) 行驶的话,
+估计有 \(2.64 \mathrm{h}\) 左右的续航 (105km). 这还是不算加速, 过非铺装路面,
 爬坡, 逆风等各种 debuff.
+
+#+html: <details><summary>计算的 Mathematica 代码</summary>
+#+begin_src mathematica
+v = Quantity[40, "Kilometers"/"Hours"];
+a = Quantity[1160, "Millimeters"]*Quantity[825, "Millimeters"];
+m = Quantity[250, "Kilograms"];
+q = Quantity[2.5, "kWh"];
+cd = 0.5;
+cr = 0.02;
+
+rho = Quantity[1.225, "Kilograms"/"Meters"^3];
+fd = 0.5*rho*v^2*cd*a;
+
+g = Quantity[9.8, "Meters"/"Seconds"^2];
+fr = cr*m*g;
+
+p = (fd + fr)*v;
+tol = UnitConvert[(q/p)*v, "Kilometers"]
+#+end_src
+#+html: </details>
 
 不过动画里面还有一些其他的用电场景, 比如机器人的充电, 净水器的充电,
 这小小一块太阳能板好像有点不太够用啊...
 
+计算结果合理性的一个讨论:
+
+九号的 [[https://ninebot.com/escooter/products/e300p-mk2.html?kid=K02445][E300P MK2]] 的标称续航为 125km, 其电瓶容量为 \(74 \mathrm{V} 28 \mathrm{A} \mathrm{h} = 2.072 \mathrm{kWh}\).
+其车重 150kg, 测试的环境应该是单人无负重的匀速环境.
+
+假如复用上面的计算过程, 仅更改总质量 \(M = 150 \mathrm{kg} + 50 \mathrm{kg}\) 和电瓶容量 \(2 \mathrm{kWh}\),
+其最终续航的计算结果约为 \(99 \mathrm{km}\).
+
+#+html: <details><summary>计算的 Mathematica 代码</summary>
+#+begin_src mathematica
+v = Quantity[40, "Kilometers"/"Hours"];
+a = Quantity[1160, "Millimeters"]*Quantity[825, "Millimeters"];
+m = Quantity[200, "Kilograms"];
+q = Quantity[74, "Volts"]*Quantity[28, "Amperes"*"Hours"];
+cd = 0.5;
+cr = 0.02;
+
+(* 同上 *)
+#+end_src
+#+html: </details>
+
+应该是有些错误, 这里感觉可能的原因是:
++ \(C_{d}\) 偏小, AI 给的估计值偏小 (相比公路自行车? 见前文讨论)
++ \(C_{r}\) 偏大, 因为我问的是龟背胎 (见动画),
+  可能和普通的较光滑车胎存在差异
+
+考虑修正 \(C_{d} = 0.7, C_{r} = 0.0070 \sim 0.0150 = 0.011\), 约是 \(103 \mathrm{km}\).
+估计再修修迎风面积, 可以和标称续航接近. 只能说这套算法差不太多.
+
+当然, 如果把速度改成 \(80 \mathrm{km} / \mathrm{h}\),
+那么这套计算流程的结果就变成了 \(50 \mathrm{km}\) 量级 (差得有点太多了),
+和实际感觉有点不太符合. 感觉可能的原因:
++ 实际的电动车有动能回收?
++ 迎风面积和载重并没有那么多?
++ 滚行阻力其实更小
+
+比如把参数改到 \(C_{d} = 0.2, C_{r} = 0.007\), 结果约 \(104 \mathrm{km}\),
+听起来像是一个合理的值. 但是这种瞎jb 乱改参数的值是万万不可以的.
+
+
+鉴于我也不是啥做力学专业的, 所以这套计算也就只能说是图一乐了.
+
 * 后记
-上面的计算过程不保证正确, 如果您发现有错, 欢迎指正. 
+上面的计算过程不保证正确, 如果您发现有错, 欢迎指正.
