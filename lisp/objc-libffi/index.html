@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>ObjC [1.75] libffi, cffi, cffi-grovel, and C | My Blog</title>
+<meta name="generator" content="Jekyll v4.2.2" />
+<meta property="og:title" content="ObjC [1.75] libffi, cffi, cffi-grovel, and C" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="About 无限接近 ObjC [2] 的道路中&#8230; 那么在解决了 NSException (见 [[/lisp/objc-ns-exception/][ObjC [1.5]​]]) 之后, 又是什么阻碍了我呢? 答案就是我引入的 libffi. 虽然现在错误捕获这一块已经是完全胜利了 (大概), 但是另一个奇怪的问题出现了: 用 cffi-libffi 调用的函数, 好像返回值不太正确. 那么该怎么办呢? 只好自己去实现了吧. 如何使用 libffi 尽管可以依赖网上搜的教程, libffi 文档, 或者可以参考 This Library is a Hidden Gem, Tsoding (bilibili), 或者可以直接问 AI. 可以问 AI, 但是问 AI 好像不太行 我猜这是可能是因为用的 macOS 内置的 libffi: pkg-config libffi --cflags 所以导致了和 AI 常见的 libffi 有所出入&#8230; (当然, 更有可能是因为没啥训练语料, 所以 AI 在乱说, 所以更建议是问完 AI 之后自己再修改一下 &#8211; 不过试过几遍之后, 可能会发现还不如自己直接写 &#8211; 问 AI 也是要时间的嘛. 因为我的目标是要能够调用 ObjC 中的方法, 所以这里尝试给 ObjC 中的 Type Encoding 都尽可能地测一边: 该如何调用 ObjC encoding. ObjC encodingffi_type :charffi_type_sint8 :unsigned-char, :boolffi_type_uint8 :intffi_type_sint32 :unsigned-intffi_type_uint32 :shortffi_type_sint16 :unsigned-shortffi_type_uint16 :long, :long-longffi_type_sint64 :unsigned-long, :unsigned-long-longffi_type_uint64 :floatffi_type_float :doubleffi_type_double :string, :object, :class, :sel, :unknownffi_type_pointer :voidffi_type_void :structffi_type_struct (should manually specify) :union? :bits? :array? 使用 man ffi_call 命令可以获得一个最简单的调用的例子, 这里仿照其结果以及用 在 [[/lisp/objc-ns-exception/][ObjC [1.5]​]] 中提到的 coca_objc_msgSend 思路实现的一个 ffi_call wrapper 来作为例子. 点击展开折叠的例子 #import &lt;Foundation/Foundation.h&gt; #include &lt;ffi.h&gt;" />
+<meta property="og:description" content="About 无限接近 ObjC [2] 的道路中&#8230; 那么在解决了 NSException (见 [[/lisp/objc-ns-exception/][ObjC [1.5]​]]) 之后, 又是什么阻碍了我呢? 答案就是我引入的 libffi. 虽然现在错误捕获这一块已经是完全胜利了 (大概), 但是另一个奇怪的问题出现了: 用 cffi-libffi 调用的函数, 好像返回值不太正确. 那么该怎么办呢? 只好自己去实现了吧. 如何使用 libffi 尽管可以依赖网上搜的教程, libffi 文档, 或者可以参考 This Library is a Hidden Gem, Tsoding (bilibili), 或者可以直接问 AI. 可以问 AI, 但是问 AI 好像不太行 我猜这是可能是因为用的 macOS 内置的 libffi: pkg-config libffi --cflags 所以导致了和 AI 常见的 libffi 有所出入&#8230; (当然, 更有可能是因为没啥训练语料, 所以 AI 在乱说, 所以更建议是问完 AI 之后自己再修改一下 &#8211; 不过试过几遍之后, 可能会发现还不如自己直接写 &#8211; 问 AI 也是要时间的嘛. 因为我的目标是要能够调用 ObjC 中的方法, 所以这里尝试给 ObjC 中的 Type Encoding 都尽可能地测一边: 该如何调用 ObjC encoding. ObjC encodingffi_type :charffi_type_sint8 :unsigned-char, :boolffi_type_uint8 :intffi_type_sint32 :unsigned-intffi_type_uint32 :shortffi_type_sint16 :unsigned-shortffi_type_uint16 :long, :long-longffi_type_sint64 :unsigned-long, :unsigned-long-longffi_type_uint64 :floatffi_type_float :doubleffi_type_double :string, :object, :class, :sel, :unknownffi_type_pointer :voidffi_type_void :structffi_type_struct (should manually specify) :union? :bits? :array? 使用 man ffi_call 命令可以获得一个最简单的调用的例子, 这里仿照其结果以及用 在 [[/lisp/objc-ns-exception/][ObjC [1.5]​]] 中提到的 coca_objc_msgSend 思路实现的一个 ffi_call wrapper 来作为例子. 点击展开折叠的例子 #import &lt;Foundation/Foundation.h&gt; #include &lt;ffi.h&gt;" />
+<link rel="canonical" href="/lisp/objc-libffi/" />
+<meta property="og:url" content="/lisp/objc-libffi/" />
+<meta property="og:site_name" content="My Blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-12-30T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="ObjC [1.75] libffi, cffi, cffi-grovel, and C" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-12-30T00:00:00+00:00","datePublished":"2025-12-30T00:00:00+00:00","description":"About 无限接近 ObjC [2] 的道路中&#8230; 那么在解决了 NSException (见 [[/lisp/objc-ns-exception/][ObjC [1.5]​]]) 之后, 又是什么阻碍了我呢? 答案就是我引入的 libffi. 虽然现在错误捕获这一块已经是完全胜利了 (大概), 但是另一个奇怪的问题出现了: 用 cffi-libffi 调用的函数, 好像返回值不太正确. 那么该怎么办呢? 只好自己去实现了吧. 如何使用 libffi 尽管可以依赖网上搜的教程, libffi 文档, 或者可以参考 This Library is a Hidden Gem, Tsoding (bilibili), 或者可以直接问 AI. 可以问 AI, 但是问 AI 好像不太行 我猜这是可能是因为用的 macOS 内置的 libffi: pkg-config libffi --cflags 所以导致了和 AI 常见的 libffi 有所出入&#8230; (当然, 更有可能是因为没啥训练语料, 所以 AI 在乱说, 所以更建议是问完 AI 之后自己再修改一下 &#8211; 不过试过几遍之后, 可能会发现还不如自己直接写 &#8211; 问 AI 也是要时间的嘛. 因为我的目标是要能够调用 ObjC 中的方法, 所以这里尝试给 ObjC 中的 Type Encoding 都尽可能地测一边: 该如何调用 ObjC encoding. ObjC encodingffi_type :charffi_type_sint8 :unsigned-char, :boolffi_type_uint8 :intffi_type_sint32 :unsigned-intffi_type_uint32 :shortffi_type_sint16 :unsigned-shortffi_type_uint16 :long, :long-longffi_type_sint64 :unsigned-long, :unsigned-long-longffi_type_uint64 :floatffi_type_float :doubleffi_type_double :string, :object, :class, :sel, :unknownffi_type_pointer :voidffi_type_void :structffi_type_struct (should manually specify) :union? :bits? :array? 使用 man ffi_call 命令可以获得一个最简单的调用的例子, 这里仿照其结果以及用 在 [[/lisp/objc-ns-exception/][ObjC [1.5]​]] 中提到的 coca_objc_msgSend 思路实现的一个 ffi_call wrapper 来作为例子. 点击展开折叠的例子 #import &lt;Foundation/Foundation.h&gt; #include &lt;ffi.h&gt;","headline":"ObjC [1.75] libffi, cffi, cffi-grovel, and C","mainEntityOfPage":{"@type":"WebPage","@id":"/lisp/objc-libffi/"},"url":"/lisp/objc-libffi/"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css">
+
+  <style type="text/css">
+    img {
+      margin-left: auto; 
+      margin-right:auto; 
+      display:block;
+    }
+  </style><link type="application/atom+xml" rel="alternate" href="/feed.xml" title="My Blog" /><script>
+  document.addEventListener("DOMContentLoaded", function() {
+      renderMathInElement(document.body, {
+        // customised options
+        // • auto-render specific keys, e.g.:
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+        ],
+        // • rendering keys, e.g.:
+        throwOnError : false
+      });
+  });
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.css" integrity="sha384-z91AFMXXGZasvxZz5DtKJse3pKoTPU0QcNFj/B4gDFRmq6Q2bi1StsT7SOcIzLEN" crossorigin="anonymous">
+
+<!-- The loading of KaTeX is deferred to speed up page rendering -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/katex.min.js" integrity="sha384-Af7YmksQNWRLMvro3U9F84xa0paoIu7Pu2niAIUmZoI09Q4aCsbha5dvaj1tHy6K" crossorigin="anonymous"></script>
+
+<!-- To automatically render math in text elements, include the auto-render extension: -->
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.23/dist/contrib/auto-render.min.js" integrity="sha384-+XBljXPPiv+OzfbB3cVmLHf4hdUFHlWNZN5spNQ7rmHTXpd7WvJum6fIACpNNfIR" crossorigin="anonymous"
+        onload="renderMathInElement(document.body);"></script>
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">My Blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/categories/">Categories</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">ObjC [1.75] libffi, cffi, cffi-grovel, and C</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-12-30T00:00:00+00:00" itemprop="datePublished">Dec 30, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1>About</h1>
+<p>无限接近 ObjC [2] 的道路中&#8230; 那么在解决了 <code>NSException</code> (见 [[/lisp/objc-ns-exception/][ObjC [1.5]​]]) 之后,
+  又是什么阻碍了我呢? 答案就是我引入的 <code>libffi</code>.</p>
+<p>虽然现在错误捕获这一块已经是完全胜利了 (大概), 但是另一个奇怪的问题出现了:
+  用 <code>cffi-libffi</code> 调用的函数, 好像返回值不太正确. 那么该怎么办呢? 只好自己去实现了吧.</p>
+<h1>如何使用 libffi</h1>
+<p>尽管可以依赖网上搜的教程, <a href="https://www.chiark.greenend.org.uk/doc/libffi-dev/html/index.html">libffi 文档</a>,
+  或者可以参考 <a href="https://www.youtube.com/watch?v=0o8Ex8mXigU">This Library is a Hidden Gem, Tsoding</a> (<a href="https://www.bilibili.com/video/BV1Pg1SBfE7w/">bilibili</a>),
+  或者可以直接问 AI.</p>
+<details><summary>可以问 AI, 但是问 AI 好像不太行</summary>
+<p>我猜这是可能是因为用的 macOS 内置的 libffi:</p>
+<div class="highlight"><pre><span></span>pkg-config<span class="w"> </span>libffi<span class="w"> </span>--cflags
+</pre></div>
+<p>所以导致了和 AI 常见的 libffi 有所出入&#8230; (当然, 更有可能是因为没啥训练语料,
+  所以 AI 在乱说, 所以更建议是问完 AI 之后自己再修改一下 &#8211; 不过试过几遍之后,
+  可能会发现还不如自己直接写 &#8211; 问 AI 也是要时间的嘛.</p>
+</details>
+<p>因为我的目标是要能够调用 ObjC 中的方法, 所以这里尝试给 ObjC 中的 Type Encoding
+  都尽可能地测一边: 该如何调用 <a href="https://github.com/li-yiyang/coca/blob/cfb71ae5564b73b3304bbd765fc6b63078b480b3/objc/encoding.lisp#L163">ObjC encoding</a>.</p>
+<table>
+  <tr><th>ObjC encoding</th><th><code>ffi_type</code></th></tr>
+  <tr><td><code>:char</code></td><td><code>ffi_type_sint8</code></td></tr>
+  <tr><td><code>:unsigned-char</code>, <code>:bool</code></td><td><code>ffi_type_uint8</code></td></tr>
+  <tr><td><code>:int</code></td><td><code>ffi_type_sint32</code></td></tr>
+  <tr><td><code>:unsigned-int</code></td><td><code>ffi_type_uint32</code></td></tr>
+  <tr><td><code>:short</code></td><td><code>ffi_type_sint16</code></td></tr>
+  <tr><td><code>:unsigned-short</code></td><td><code>ffi_type_uint16</code></td></tr>
+  <tr><td><code>:long</code>, <code>:long-long</code></td><td><code>ffi_type_sint64</code></td></tr>
+  <tr><td><code>:unsigned-long</code>, <code>:unsigned-long-long</code></td><td><code>ffi_type_uint64</code></td></tr>
+  <tr><td><code>:float</code></td><td><code>ffi_type_float</code></td></tr>
+  <tr><td><code>:double</code></td><td><code>ffi_type_double</code></td></tr>
+  <tr><td><code>:string</code>, <code>:object</code>, <code>:class</code>, <code>:sel</code>, <code>:unknown</code></td><td><code>ffi_type_pointer</code></td></tr>
+  <tr><td><code>:void</code></td><td><code>ffi_type_void</code></td></tr>
+  <tr><td><code>:struct</code></td><td><code>ffi_type_struct</code> (should manually specify)</td></tr>
+  <tr><td><code>:union</code></td><td>?</td></tr>
+  <tr><td><code>:bits</code></td><td>?</td></tr>
+  <tr><td><code>:array</code></td><td>?</td></tr>
+</table>
+<p>使用 <code>man ffi_call</code> 命令可以获得一个最简单的调用的例子, 这里仿照其结果以及用
+  在 [[/lisp/objc-ns-exception/][ObjC [1.5]​]] 中提到的 <code>coca_objc_msgSend</code> 思路实现的一个 <code>ffi_call</code> wrapper
+  来作为例子.</p>
+<details><summary>点击展开折叠的例子</summary>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ffi.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">coca_objc_msgSend</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_cif</span><span class="w"> </span><span class="o">*</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="kt">IMP</span><span class="w"> </span><span class="n">imp</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="o">**</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;coca_objc_msgSend&quot;</span><span class="p">);</span>
+<span class="w">  </span><span class="k">@try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">ffi_call</span><span class="p">(</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">imp</span><span class="p">),</span><span class="w"> </span><span class="n">retval</span><span class="p">,</span><span class="w"> </span><span class="n">args</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">@catch</span><span class="w"> </span><span class="p">(</span><span class="bp">NSException</span><span class="w"> </span><span class="o">*</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Safe: %@&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">**</span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="o">&lt;&lt;</span><span class="n">ffi_calling_code_here</span><span class="o">&gt;&gt;</span>
+<span class="p">}</span>
+</pre></div>
+<p>不过这里更加推荐直接查看 <code>objc/wrapper.lisp</code> 中的代码作为默认的策略.</p>
+</details>
+<h2>Basic Types and their return values</h2>
+<h3>Trivial C Example</h3>
+<p>这里为了方便, 可以来看这样的一个例子:</p>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ffi.h&gt;</span>
+
+<span class="kt">void</span><span class="w"> </span><span class="nf">foo</span><span class="w"> </span><span class="p">(</span><span class="kt">char</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="kt">BOOL</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">I</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="kt">float</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Got %c, %d, %d, %u, %ld, %lld, %f, %f&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="n">I</span><span class="p">,</span><span class="w"> </span><span class="n">l</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="p">,</span><span class="w"> </span><span class="n">d</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ffi_cif</span><span class="w"> </span><span class="n">cif</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ffi_type</span><span class="o">*</span><span class="w"> </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_sint8</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_uint8</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_sint32</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_uint32</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_sint64</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_uint64</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_float</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_double</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_prep_cif</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_DEFAULT_ABI</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_void</span><span class="p">,</span><span class="w"> </span><span class="n">arg_types</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">FFI_OK</span><span class="p">)</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Error!!!!!!&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="kt">char</span><span class="w">             </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sc">&#39;L&#39;</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">BOOL</span><span class="w">             </span><span class="n">B</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">YES</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w">              </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-23333</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w">     </span><span class="n">I</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3242342</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">long</span><span class="w">             </span><span class="n">l</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">-134533256432</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w">        </span><span class="n">q</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">3245633256732234543</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">float</span><span class="w">            </span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">3.14159265354</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">double</span><span class="w">           </span><span class="n">d</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">114.514</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">c</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">B</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">i</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">I</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">l</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">q</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">f</span><span class="p">;</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">d</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">ffi_call</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">foo</span><span class="p">),</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">arg_values</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>大概演示了如何进行简单的 libffi 调用. 不难发现其实可以把上面的 <code>main</code> 函数过程看成两部分:</p>
+<ul>
+  <li><code>ffi_prep_cif</code>: 准备函数类型签名部分</li>
+  <li><code>ffi_call</code>: 实际函数调用部分</li>
+</ul>
+<p>假如需要反复调用一个函数 &#8211; 这在 ObjC bridge 中应该是较常见的一种状态,
+  那么理论上可以通过复用 <code>ffi_cif</code> 来实现减少计算的功能.
+  实际上由于我们已知 ObjC method 的 type encoding, 根据 Type Encoding 来生成 <code>ffi_cif</code>
+  并非困难的事情.</p>
+<details><summary>如何生成&#8230;</summary>
+<div class="highlight"><pre><span></span><span class="p">(</span><span class="nf">defun</span><span class="w"> </span><span class="nv">compile-objc-encoding-ffi-cif</span><span class="w"> </span><span class="p">(</span><span class="nf">encoding</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="nf">multiple-value-bind</span><span class="w"> </span><span class="p">(</span><span class="nf">arg-types</span><span class="w"> </span><span class="nv">ret</span><span class="p">)</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">decode-objc-type-encoding</span><span class="w"> </span><span class="nv">encoding</span><span class="p">)</span>
+<span class="w">    </span><span class="p">(</span><span class="k">let*</span><span class="w"> </span><span class="p">((</span><span class="nf">cif</span><span class="w">    </span><span class="p">(</span><span class="nf">foreign-alloc</span><span class="w"> </span><span class="o">&#39;</span><span class="p">(</span><span class="nv">:struct</span><span class="w"> </span><span class="nv">ffi_cif</span><span class="p">)))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">len</span><span class="w">    </span><span class="p">(</span><span class="nb">length</span><span class="w"> </span><span class="nv">arg-types</span><span class="p">))</span>
+<span class="w">           </span><span class="p">(</span><span class="nf">atypes</span><span class="w"> </span><span class="p">(</span><span class="nf">foreign-alloc</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="nv">:count</span><span class="w"> </span><span class="nv">len</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">loop</span><span class="w"> </span><span class="nv">:for</span><span class="w"> </span><span class="nv">i</span><span class="w"> </span><span class="nv">:from</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">            </span><span class="nv">:for</span><span class="w"> </span><span class="nv">type</span><span class="w"> </span><span class="nv">:in</span><span class="w"> </span><span class="nv">arg-types</span>
+<span class="w">            </span><span class="nv">:do</span><span class="w"> </span><span class="p">(</span><span class="nf">setf</span><span class="w"> </span><span class="p">(</span><span class="nf">mem-aref</span><span class="w"> </span><span class="nv">atypes</span><span class="w"> </span><span class="nv">:pointer</span><span class="w"> </span><span class="nv">i</span><span class="p">)</span>
+<span class="w">                      </span><span class="p">(</span><span class="nf">objc-encoding-ffi-type</span><span class="w"> </span><span class="nv">type</span><span class="p">)))</span>
+<span class="w">      </span><span class="p">(</span><span class="nf">assert</span><span class="w"> </span><span class="p">(</span><span class="nf">eq</span><span class="w"> </span><span class="p">(</span><span class="nf">ffi_prep_cif</span><span class="w"> </span><span class="nv">cif</span><span class="w"> </span><span class="nv">:default-abi</span><span class="w"> </span><span class="nv">len</span><span class="w"> </span><span class="p">(</span><span class="nf">objc-encoding-ffi-type</span><span class="w"> </span><span class="nv">ret</span><span class="p">)</span><span class="w"> </span><span class="nv">atypes</span><span class="p">)</span>
+<span class="w">                  </span><span class="nv">:ffi-ok</span><span class="p">))</span>
+<span class="w">      </span><span class="nv">cif</span><span class="p">)))</span>
+</pre></div>
+</details>
+<p>只是我们还是需要解决 <code>struct</code> 的难题&#8230;</p>
+<h3>Struct</h3>
+<p>修改以下上面的代码, 便可以得到:</p>
+<div class="highlight"><pre><span></span><span class="cp">#import &lt;Foundation/Foundation.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ffi.h&gt;</span>
+
+<span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">_greet</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">name</span><span class="p">;</span>
+<span class="w">  </span><span class="kt">int</span><span class="w"> </span><span class="n">repeat</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="n">Greet</span><span class="p">;</span>
+
+<span class="n">Greet</span><span class="w"> </span><span class="nf">foo</span><span class="w"> </span><span class="p">(</span><span class="n">Greet</span><span class="w"> </span><span class="n">greet</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">greet</span><span class="p">.</span><span class="n">repeat</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Hello %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">greet</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">greet</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">**</span><span class="w"> </span><span class="n">argv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">ffi_cif</span><span class="w"> </span><span class="n">cif</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ffi_type</span><span class="w"> </span><span class="n">ffi_type_greet</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">ffi_type</span><span class="o">*</span><span class="w"> </span><span class="n">elements</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+<span class="w">  </span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_pointer</span><span class="p">;</span>
+<span class="w">  </span><span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_sint32</span><span class="p">;</span>
+<span class="w">  </span><span class="n">elements</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">ffi_type_greet</span><span class="p">.</span><span class="n">size</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ffi_type_greet</span><span class="p">.</span><span class="n">alignment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ffi_type_greet</span><span class="p">.</span><span class="n">type</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n">FFI_TYPE_STRUCT</span><span class="p">;</span>
+<span class="w">  </span><span class="n">ffi_type_greet</span><span class="p">.</span><span class="n">elements</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">elements</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">ffi_type</span><span class="o">*</span><span class="w"> </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">  </span><span class="n">arg_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_greet</span><span class="p">;</span>
+
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ffi_prep_cif</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_DEFAULT_ABI</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ffi_type_greet</span><span class="p">,</span><span class="w"> </span><span class="n">arg_types</span><span class="p">)</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">FFI_OK</span><span class="p">)</span>
+<span class="w">    </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Error!!!!!!&quot;</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">Greet</span><span class="w"> </span><span class="n">bar</span><span class="p">;</span>
+<span class="w">  </span><span class="n">bar</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;Ryo&quot;</span><span class="p">;</span>
+<span class="w">  </span><span class="n">bar</span><span class="p">.</span><span class="n">repeat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+
+<span class="w">  </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="w">  </span><span class="n">arg_values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bar</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">Greet</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+
+<span class="w">  </span><span class="n">ffi_call</span><span class="p">(</span><span class="o">&amp;</span><span class="n">cif</span><span class="p">,</span><span class="w"> </span><span class="n">FFI_FN</span><span class="p">(</span><span class="n">foo</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">result</span><span class="p">,</span><span class="w"> </span><span class="n">arg_values</span><span class="p">);</span>
+
+<span class="w">  </span><span class="n">NSLog</span><span class="p">(</span><span class="s">@&quot;Got: %s&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">name</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+<p>其实仍然不难发现, <code>ffi_type_greet</code> 也是一个可以被提前定义的量 &#8211;
+  在 <code>define-objc-struct</code> 的时候便可以被定义了.</p>
+<p>不过好处是由于用的是 <code>libffi</code>, 现在并不需要过分手动展开结构体了,
+  只需要实现一个 <code>objc-encoding-ffi-type</code> 即可.</p>
+<h3>除了 Struct, 还有&#8230;</h3>
+<p>为了能够处理各种类型的输入和输出, 这里将整个调用过程的形式编译为如下的形式
+  (<a href="https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L170">objc-method-foreign-call-form</a>):</p>
+<ol>
+  <li><code>foreign-alloc</code> \(&rarr;\) <code>arg_types</code></li>
+  <li>通过 <a href="https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L72">objc-method-foreign-alloc-form</a> 在堆上分配调用的参数的空间,
+    通过 <a href="https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L92">objc-method-foreign-setf-form</a> 将 Lisp 的值复制到堆上</li>
+  <li>调用设置好的 wrapper <a href="https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/wrapper.lisp#L22">coca_objc_msgSend</a> 来调用 ObjC method</li>
+  <li>通过 <a href="https://github.com/li-yiyang/coca/blob/ad9c9959fb786ca60764982e20ad69654b0021c6/objc/method.lisp#L123">objc-method-foreign-aref-form</a> 将结果从指针拷贝到 Lisp 环境中</li>
+</ol>
+<h1>如何使用 CFFI grovel</h1>
+<p><a href="https://cffi.common-lisp.dev/manual/cffi-manual.html#The-Groveller">CFFI-Grovel</a> 提供了一种非常巧妙的方法来构造 CFFI binding: 即通过生成一个 C 程序 (grovel),
+  将宏, 常量值, <code>enum</code> 等值打印输出为 Lisp 代码, 然后将这个 Lisp 代码作为代码载入;
+  以及通过编译一个 C 程序 (wrapper), 将一些简单的静态库链接编译成动态库载入,
+  同时也可以获得简单的 C 互操作性 &#8211; 我认为这比让用户手动打包一个 <code>dylib</code> 要优雅&#8230;</p>
+<p>虽然但是, 在 CFFI 的文档和具体实现里面还是有些差别的&#8230; (见 <a href="https://github.com/cffi/cffi/pull/426">PR</a>).
+  等上游合并可能有点慢, 这里我选择了自己维护一份用于 ObjC 的 wrapper 拓展.</p>
+<h2>Grovel and Wrapper</h2>
+<p>实际的代码可以参考 <a href="https://github.com/li-yiyang/cffi/blob/b9ee202b6a8961f81b190b8cf1ba10b203605c62/grovel/grovel.lisp">grovel.lisp</a>, 定义了 grovel file 和 wrapper file
+  是如何被映射为 C 代码, 以及如何生成 Lisp 端的接口的.</p>
+<p>然后在 <a href="https://github.com/li-yiyang/cffi/blob/b9ee202b6a8961f81b190b8cf1ba10b203605c62/grovel/asdf.lisp">asdf.lisp</a> 中注册了对应的功能来让 ASDF 载入的时候能够按照前面定义的规则进行处理.
+  实际上是非常棒的设计.</p>
+<details><summary>如何阅读 Lisp 代码</summary>
+<p>这里是一点点我的简单的阅读 Lisp 代码的小经验:</p>
+<p>因为 Lisp 的动态性, 所以用 C 的那种 &#8220;静态&#8221; 代码分析其实并不是很现实 &#8211; 或者说,
+  会很痛苦, 所以最好还是利用 SLY/SLIME 这样的动态环境去分析代码的逻辑:</p>
+<ul>
+  <li>用 <code>git clone ...</code> 将代码拉到本地</li>
+  <li><code>(ql:quickload :system)</code> 将系统载入
+    <ul>
+      <li><code>(trace ...)</code>: 通过 <code>trace</code> 来跟踪方法调用 &#8211; 其实更多的时候是用来不重定义函数,
+        来得到函数的输出和输入, 来确认函数的功能
+        <p>当然, 最好还是自己给这个函数加上注释和文档, 这样一来就方便自己下一次重新观察代码.</p>
+      </li>
+      <li><code>sly-edit-definition</code>: 这样就能够直接跳到函数的定义</li>
+      <li><code>sly-who-calls</code>, <code>sly-who-binds</code>, &#8230; 虽然有这些个功能, 但是貌似好多都跟踪不了 (找不到&#8230;</li>
+    </ul>
+  </li>
+  <li>并且在了解了一些 MOP 之后, 现在看到 Class 我也会觉得可以很好地阅读和了解了,
+    感觉就只是缺少一个比较好的可视化辅助 &#8211; LEM 的 <a href="https://lem-project.github.io/usage/living-canvas/">Living Canvas</a> 我觉得还挺不错,
+    可惜是在 Electron 上实现的, 希望 coca 实现完了之后能够摆脱 Electron 这个可怕的家伙&#8230;</li>
+</ul>
+</details>
+<h2>ObjC File</h2>
+<p>如果对实际的实现感兴趣的话, 请参考 <code>grovel/grovel.lisp</code> 以及 <code>grovel/asdf.lisp</code>,
+  不过估计也不会有人那么闲吧&#8230; 那还是请参考 <code>grovel/syntax.lisp</code> 中具体的语法说明吧.</p>
+<details><summary>那么具体是什么呢? </summary>
+<p>在 <code>grovel/asdf.lisp</code> 中, 为 <code>:objc-file</code> 注册了一个处理接口,
+  于是所有的 <code>:objc-file</code> 将会被交由 <code>process-objc-file</code> 函数来进行处理.</p>
+<p>对于 <code>process-objc-file</code> 函数, 其做的事情导致如下:</p>
+<ul>
+  <li>从 <code>:objc-file</code> 中读取 S-expr</li>
+  <li>根据 S-expr 的 <code>car</code> 信息, 找到对应的 <code>%process-objc-form</code> 方法, 然后对其进行处理</li>
+  <li>在 <code>grovel/syntax.lisp</code> 中定义了一堆可用的处理函数</li>
+</ul>
+</details>
+<ul>
+  <li><code>progn</code>: 执行一组 ObjC form 指令 (实际上适合用来做 feature switch)</li>
+  <li><code>in-package</code>: 设置 Lisp package</li>
+  <li><code>objc</code>: 直接嵌入 ObjC 代码</li>
+  <li><code>cc-flags</code>: 添加 compiler flags</li>
+  <li><code>ld-flags</code>: 添加 linker flags</li>
+  <li><code>pkg-config-cflags</code>: 使用 <code>pkg-config ... --cflags</code> 来添加 <code>cc-flags</code></li>
+  <li><code>define</code>: 映射到 C 的 <code>#define ...</code> 宏</li>
+  <li><code>include</code>: 映射到 C 的 <code>#include &lt;...&gt;</code> 宏</li>
+  <li><code>import</code>: 映射到 ObjC 的 <code>#import &lt;...&gt;</code> 宏</li>
+</ul>
+<p>之后我想我应该添加一些在 Coca.ObjC 包中的函数, 比如 <code>define-objc-struct</code>,
+  <code>define-objc-const</code> 之类的命令来让写 ObjC wrapper 的体验和写 Lisp 代码是一模一样的.</p>
+<h1>最后</h1>
+<p>目前的状态是 <a href="https://github.com/li-yiyang/coca/commit/ad9c9959fb786ca60764982e20ad69654b0021c6">#ad9c995</a>, 我认为算是可以实现一个比较简单的 ObjC 调用了&#8230;
+  之后的目标还是继续学习 ObjC 和 Cocoa 的编程来实现最终的 macOS 的 GUI 编程的大业&#8230;</p>
+
+  </div><a class="u-url" href="/lisp/objc-libffi/" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">My Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">My Blog</li><li><a class="u-email" href="mailto:thebigbigwordl@qq.com">thebigbigwordl@qq.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/li-yiyang"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">li-yiyang</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>某不知名的很硬的双非学校的物理系学生的无聊博客</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
