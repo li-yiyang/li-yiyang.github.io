@@ -1,0 +1,205 @@
+#+title: [Tech Report] iMaxima: ECL on iOS, cross-compiling
+#+date: 2026-05-28
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: lisp
+* About
+[[https://ecl.common-lisp.dev][ECL]] (*E*​mbeddable *C*​ommon *L*​isp) provides cross-compiling
+functionality to iOS or Android platform ([[https://gitlab.com/embeddable-common-lisp/ecl/-/blob/develop/INSTALL?ref_type=heads#L106][INSTALL#L106]]).
+
+This post is a minimal tech report on how to possibliy port
+an existing CL application ([[https://maxima.sourceforge.io][Maxima]], for example) to iOS environment.
+
+The main process could be described as three steps:
+1. cross compiling ECL for iOS [easy as instructed in [[https://gitlab.com/embeddable-common-lisp/ecl/-/blob/develop/INSTALL?ref_type=heads#L106][INSTALL#L106]]]
+2. cross compiling CL libraries
+3. load ECL and CL libraries in iOS
+   and interacting between CL and C/ObjC/Swift
+
+* Cross Compiling ECL
+:PROPERTIES:
+:header-args:sh: :tangle ../_img/lisp/ecl/cc-ecl.sh :mkdirp yes
+:END:
+
+#+begin_src sh :exports none
+export ECL_SRC_DIR=ecl
+
+[ -d $ECL_SRC_DIR ] || git clone https://gitlab.com/embeddable-common-lisp/ecl.git $ECL_SRC_DIR
+
+cd $ECL_SRC_DIR
+#+end_src
+
+As described in [[https://gitlab.com/embeddable-common-lisp/ecl/-/blob/develop/INSTALL?ref_type=heads#L106][INSTALL#L106]]:
+
+1. Configuration and make
+
+   #+begin_src sh
+   export IOS_VERSION_MIN="8.0"
+   export IOS_SDK_DIR="`xcode-select --print-path`/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk/"
+
+   export CC="clang"
+   export CXX="clang++"
+
+   export CFLAGS="-arch arm64 -miphoneos-version-min=${IOS_VERSION_MIN} -isysroot ${IOS_SDK_DIR}"
+   export CFLAGS="$CFLAGS -pipe -Wno-trigraphs -Wreturn-type -Wunused-variable"
+   export CFLAGS="$CFLAGS -fpascal-strings -fasm-blocks -fmessage-length=0 -fvisibility=hidden"
+   export CFLAGS="$CFLAGS -O2 -DNO_ASM"
+
+   export LD="ld"
+   export LDFLAGS="-arch arm64 -pipe -std=c99 -gdwarf-2 -isysroot ${IOS_SDK_DIR}"
+   export LIBS="-framework Foundation"
+
+   export CFLAGS="$CFLAGS -DGC_DISABLE_INCREMENTAL -DECL_RWLOCK"
+   export CXXFLAGS="$CFLAGS"
+
+   export ECL_TO_RUN=ecl
+
+   ./configure --host=aarch64-apple-darwin \
+               --prefix=`pwd`/ecl-iOS \
+               --disable-c99complex \
+               --disable-shared \
+               --with-cross-config=`pwd`/src/util/iOS-arm64.cross_config
+
+   make -j$`nproc`
+   make install
+   #+end_src
+
+2. iOS Build Settings
+
+   + Other Linker Flags:
+
+     #+begin_example
+     -leclgc -lecl -leclatomic -leclgmp # add when needed
+     #+end_example
+   + Search Paths
+     + Header Search Paths
+     + Library Search Paths
+
+     Note: it is recommend to just copy ecl include and lib to the
+     source of your iOS app:
+
+     #+begin_src sh
+     export IOS_APP_SRC=/path/to/iMaxima/iMaxima/
+     cp -r $ECL_SRC_DIR/ecl-iOS/include $ECL_SRC_DIR/ecl-iOS/lib $IOS_APP_SRC
+     #+end_src
+
+   If XCode could configure programmatically...
+
+3. iOS Build Phases
+
+   Booting ECL needs setting =SYS= path via environment variable =ECLDIR=,
+   which should be copied from =$ECL_SRC_DIR/ecl-iOS/include/ecl=.
+
+   Thus thoese files should be copied in iOS Build Phases.
+
+You might got the building script from [[{{ site.github.url }}/_img/lisp/ecl/cc-ecl.sh][cc-ecl.sh]].
+
+* Cross Compiling CL libraries
+According to ECL's manual [[https://ecl.common-lisp.dev/static/files/manual/ecl.26.5.5/System-building.html#Cross-compilation][Cross compilation]], a CL library should be compiled
+like:
+
+#+begin_src lisp
+(require 'cmp)
+
+(defvar *target*
+  (c:read-target-info
+   ;; or just replace like
+   ;; "/path/to/ecl-iOS/lib/ecl-26.5.5/target-info.lsp"
+   (merge-pathname "ecl-iOS/lib/ecl-26.5.5/target-info.lsp"
+                   (uiop:getenv "ECL_SRC_DIR"))))
+
+(dolist (src lisp-files-to-compile)
+  (compile-file src :target *target* :system-p t :output-file out))
+
+(with-compilation-unit (:target *target*)
+  (c:build-static-library lib-name
+                          :lisp-files outs
+                          :init-name  init-c-function-name-string))
+#+end_src
+
+Note: if you want some kind of automation, you might refer [[https://gist.github.com/li-yiyang/6ce2bb71afdd02da50b7fba7358ffaa0][cross-maxima.lisp]].
+The idea is using ASDF to compute dependency in order. (However, some library
+might using ASDF feature which might cause problems)
+
+* Load in iOS and interacting
+** ECL libraries
+As described in ECL manual [[https://ecl.common-lisp.dev/static/files/manual/ecl.26.5.5/Embedding-ECL.html#Embedding-ECL-_002d-Embedding-Reference][Embedding ECL]], to load built libraries:
+
+#+begin_src c
+extern void ecl_init_maxima(cl_object);
+
+void ecl_load_lib() {
+  ecl_init_module(NULL, ecl_init_maxima);
+}
+#+end_src
+
+ECL provides some prebuilt libraries in =lib/ecl-*.*.*=, for example:
+
+#+begin_example
+> ls lib*.a
+libasdf.a		libecl-curl.a		libql-minitar.a
+libcmp.a		libecl-help.a		libsb-bsd-sockets.a
+libdeflate.a		libecl-quicklisp.a	libsockets.a
+libecl-cdb.a		libpackage-locks.a
+#+end_example
+
+It has to be noted that those libraries init name is as =init_lib_ASDF=
+for =libasdf.a=.
+
+** Files in iOS sandbox
+Within iOS, files are protected in sandbox model.
+So to make ECL run happily, has to set =ECLDIR= and =HOME= and
+other possibliy environment variables correctly:
+
+#+begin_src c
+void maxima_init(const char *ecldir, const char *home) {
+    setenv("ECLDIR", ecldir, 1);
+    setenv("HOME",   home,   1);
+
+    char *argv[] = { "ecl", "-dir", (char *)home, NULL };
+
+    cl_boot(3, argv);
+
+    // ecl_init_module(NULL, ...);
+    // ...
+}
+#+end_src
+
+#+begin_src swift
+// Copy eclSYSPath -> /Library/ecl
+let fileManager = FileManager.default
+guard let libURL = fileManager.urls(for: .libraryDirectory, in: .userDomainMask).first else { return }
+guard let bundleMainPath = Bundle.main.resourcePath else { return }
+
+let eclSYSDestURL    = libURL.appendingPathComponent("ecl", isDirectory: true)
+let eclSYSDestPath   = eclSYSDestURL.path
+let eclSYSSourcePath = (bundleMainPath as NSString).appendingPathComponent("ecl")
+let eclSYSPath = (bundleMainPath as NSString).appendingPathComponent("ecl/help.doc")
+
+do {
+    if fileManager.fileExists(atPath: eclSYSDestPath) {
+        try fileManager.removeItem(at: eclSYSDestURL)
+    }
+
+    try fileManager.copyItem(atPath: eclSYSSourcePath, toPath: eclSYSDestPath)
+    print("cp \(eclSYSSourcePath) \(eclSYSDestPath)")
+} catch {
+    return
+}
+
+// HOME=/Directory/
+guard let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+let documentsPath = (documentsURL.path as NSString).appendingPathComponent(".maxima")
+
+maxima_init(strdup(eclSYSPath), strdup(documentsPath))
+#+end_src
+
+*** ECL communicating with C
+Should refer to [[https://gitlab.com/embeddable-common-lisp/ecl/-/blob/develop/examples/embed/hello.c?ref_type=heads][examples/embed/hello.c]].
+
+Or, you might refer iMaxima's code: [[https://github.com/li-yiyang/iMaxima/blob/e23be1cfa81b10e4af0569b26a3334a97f8a3e2c/iMaxima/ecl_boost.c#L60][ecl_boost.c]].
+
+* End
+Hope more ECL on iOS application could be seen in the future.
+I want some performance optimize. :p
