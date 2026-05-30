@@ -1,0 +1,104 @@
+#+title: [MEMO] ESP32C3 甲醛传感器
+#+date: 2026-05-30
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: misc
+* About
+我想要出去租房子住, 但是又有点怕死
+(虽然但是感觉看起来干净的都很有串串房嫌疑...).
+
++嘻嘻, 我要活下去口牙... 我还想要骑非双+
+
+虽然我自认为色准还算过得去, 但是从小学酸碱试纸开始我就对这种充满了
+"人" 这种不确定因素的测量方法感到有些不喜欢.
+但是买甲醛传感器太贵了, 刚好我有很多的单片机存货,
+于是花费 12.7 和 11 买了两个不同的传感器模块进行一个小作坊手搓.
+
+* ESP32C3
+使用的是一块非常小巧的 ESP32C3 板子, 带一个 0.42inch 的 OLED 显示.
+价格的话大概在淘宝上不到 20 (今天看的价格是 15.8,
+明明我买的时候还是 18.34... ).
+
+开发环境用的是 Arduino. 虽然我很讨厌 Arduino 的 IDE,
+非常的难用并且还没有增量编译和编译 cache.
+导致每次 upload 都需要等待编译, 配合 esp32 非常慢的编译速度,
+体验不是很舒服. [[http://www.ulisp.com][ulisp]] 在编写 extension 的时候实在是太痛苦了,
+所以也不在考虑范围内. 也许我有空可以尝试一下移植 [[https://github.com/Robert-van-Engelen/tinylisp][tinylisp]],
+但那是以后的大饼.
+
+这里推荐参考 [[https://emalliab.wordpress.com/2025/02/12/esp32-c3-0-42-oled/][ESP32-C3 0.42 OLED]] 的博客, 里面很多坑已经被解决了.
+一下是一个简单的概括:
++ ESP32C3 Dev Module
+
+  需要在 Arduino 设置中添加 ESP32 的源 ([[https://docs.espressif.com/projects/arduino-esp32/en/latest/installing.html][ref]]):
+
+  #+begin_example
+  https://espressif.github.io/arduino-esp32/package_esp32_index.json
+  #+end_example
++ Serial/USB Serial
+
+  在 ESP32C3 这块板子上有两套 UART:
+  + 引脚引出的是 UART0 (=Serial0=)
+  + 在 Arduino 中 =Tools > USB CDC on boot: Enabled= 设置后,
+    USB 引脚对应的是 UART1 (=HWCDCSerial=)
++ OLED, u8g2
+
+  参考的是 [[https://github.com/peff74/ESP32-C3_OLED/][peff74/ESP32-C3_OLED]] 这个项目,
+  按照文档的说明, 0.42inch OLED 应该是 SSD1306 128x64 的屏幕上切了一部分 (?)
+  需要添加一个 offset:
+
+  #+begin_src c
+  #define OLED_RESET U8X8_PIN_NONE  // Reset pin
+  #define OLED_SDA 5
+  #define OLED_SCL 6
+
+  U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, OLED_RESET, OLED_SCL, OLED_SDA);
+  int width = 72;
+  int height = 40;
+  int xOffset = 30;  // = (132-w)/2
+  int yOffset = 12;  // = (64-h)/2
+  #+end_src
+
+* 21VOC
+模块是广州传苣电子的空气质量传感器 (21VOC).
+
+其通过二进制串口发送数据包如下:
+
+| Index | Name             | Description                              |
+|     0 | Head             | ~0x2c~                                   |
+|     1 | VOC high         | ug/m3                                    |
+|     2 | VOC low          |                                          |
+|     3 | HCHO high        | ug/m3                                    |
+|     4 | HCHO low         |                                          |
+|     5 | eCO2 high        | PPM                                      |
+|     6 | eCO2 low         |                                          |
+|     7 | temperature high | 0.1°                                     |
+|     8 | temperature low  |                                          |
+|     9 | humidity high    | 0.1% RH                                  |
+|    10 | humidity low     |                                          |
+|    11 | validate         | ~1 + bitinverse(sum(buff[i], i, 0, 10))~ |
+
+若 =temperature= 最高位以 =1= 开头, 则:
+
+#+begin_src c
+temp = (int)((0xffff - temp0) * 0.1);
+#+end_src
+
+完整的控制代码见 [[https://gist.github.com/li-yiyang/80655ec5d49cde09399c33ea709f701f][esp32c3-oled-hcho-sensor.ino]] (gist)
+
+* End
+做了一个外壳:
+
+[[{{ site.github.url }}/_img/misc/esp32c3-oled-hcho-sensor.webp]]
+
+但是做完之后就有点小后悔, 因为用了纳米胶做了填充和固定,
+而传感器又塞在里面, 感觉会有很大的影响... (虽然看起来感觉不大,
+但是在充电发热的时候读数会有一个巨大的上升)
+
+并且手册中说明需要对传感器芯片进行老化...
+也就是说需要至少先跑个 24h 压力测试... 总之先睡一觉看看.
+(至少测出来的电池续航是 1h 左右, 对于一块 100mAh 的小小小电池来说,
+还算不错? 毕竟我也没写啥省电逻辑)
+
+
