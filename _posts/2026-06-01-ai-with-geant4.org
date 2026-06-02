@@ -1,0 +1,395 @@
+#+title: 用 AI 辅助 Geant 4 做模拟
+#+date: 2026-06-01
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: geant4
+* About
+本文是粒子探测器模拟课程的作业, 作业要求如下:
+
+#+begin_quote
+放疗是肿瘤治疗的一种常用手段, 射线种类有伽马/质子/中子/离子等.
+1. 请设计并实现一个探测器模拟程序,
+   对比肿瘤细胞和正常细胞 (细胞直径假设 10 微米, 球形) 的线能量谱,
+   剂量谱等物理量, 比较使用伽马和质子射线进行放疗的优劣.
+2. 硼中子俘获疗法 (BNCT) 是一种新的疗法,
+   2020 年全球首个 BNCT 设备在日本获批上市.
+   假如使用 0.5 eV 的热中子束流,
+   请研究预期治疗效果与肿瘤细胞内原子浓度分布的关系
+   (考虑均匀分布和集中分布在 1 微米外壳层两种情况).
+   最后, 与其它射线的治疗效果进行对比.
+#+end_quote
+
+本文可以看作是这个作业的一个实现上的交代,
+不过更重要的是尝试能否用 AI 来解决 Geant 4 模拟上的问题,
+同时不至于让 AI 出太大的茬子.
+
+代码是使用 DeepSeekv4 Pro 开启 MAX context 以及 thinking (reasoning)
+在 OpenCode 下运行得到的, 我将会贴出 prompt 并将整个代码放在 [[https://github.com/li-yiyang/g4][Github]] 上.
+
+*Reference*
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/index.html][Book For Application Developers]]
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/PhysicsListGuide/html/index.html][Guide for Physics Lists]]
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/PhysicsReferenceManual/html/index.html][Physics Refernce Manual]]
+
+* Overview
+按照我的理解, 若是将 Geant 4 的模拟在 "使用者" (application user)
+的视角上去观察, 一个 Geant 4 的模拟如下:
+1. 构建几何结构 (Geometry), 以及对应的材料 (Material)
+2. 考虑物理过程 (PhysicsList)
+   + 根据实际的探测器和待测粒子之间的相互作用过程选择
+   + 通过边界条件, 阈值等减少计算量优化模拟
+3. 构造粒子源 (GenParticle)
+   + "产生子": 根据物理分布产生粒子 (随机抽样过程)
+
+     #+html: <details><summary>吐槽</summary>
+     虽然课上大把的时间都在强调这个产生子构造的随机过程,
+     但是感觉很多情况下没必要把产生子逻辑写进 Geant 4 模拟的程序里面,
+     C++ 还是太难用了.
+
+     随机过程很有用, 不过课上讲的随机数生成算法太 trivial 了.
+     随机过程构造讲得也有点... 不太工程化.
+     #+html: </details>
+   + =beamOn= 打在探测器上
+4. 记录能量沉积或相关的物理量
+5. 分析重建探测量
+
+#+html: <details><summary>变成 SKILL...</summary>
+上面的过程完全可以变成一个用来指导如何规划 SKILL,
+以下是我扔给 DeepSeek 用来生成 Skill 的 prompt:
+
+#+begin_example
+使用英文按照下面的大纲生成一个 agent SKILL.md, 用于构建 geant 4 项目时进行规划的 Planer:
+一个 Geant 4 的模拟如下:
+1. 构建几何结构 (Geometry), 以及对应的材料 (Material):
+   仔细询问用户,
+   使用 skill geant4-detector-construction 构建几何结构,
+   在生成几何结构后以 GUI 可视化的方式运行,
+   得到用户确认后进行下一步
+   + 是否有参数化的需求
+   + 用户需要通过 GUI 可视化确认
+2. 考虑物理过程 (PhysicsList):
+   仔细询问用户的模拟需求,
+   初次运行考虑是否可以正常运行,
+   后续需要根据用户的实验数据或额外需求在精度和速度中进行取舍
+   + 根据实际的探测器和待测粒子之间的相互作用过程选择
+   + 通过边界条件, 阈值等减少计算量优化模拟
+   + 使用 skill geant4-physics-list 规划需要使用的物理过程
+   + 询问可能的能量段, 主要关心的粒子种类, 物理过程
+3. 构造粒子源 (GenParticle):
+   仔细询问用户的模拟需求,
+   需要的粒子源的种类,
+   位置 (可以从 1. detector construction 中提取),
+   粒子源的能量, 动量 (方向) 分布或取值范围等
+   + "产生子": 根据物理分布产生粒子 (随机抽样过程),
+     对于简单分布 (均匀分布/泊松分布/指数分布/高斯分布等)
+   + =beamOn= 打在探测器上
+4. 记录能量沉积或相关的物理量:
+   仔细询问用户的模拟需求, 关心的测量物理量,
+   尽可能提取有效的物理信息减少内存占用和浪费,
+   将数据以用户需要的方式储存或导出
+5. 分析重建探测量
+#+end_example
+
+最终生成的 [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-planer/SKILL.md][SKILL]] 为 =geant4-planer=.
+#+html: </details>
+
+#+html: <details><summary>如果让我来设计这门课程...</summary>
+叠甲: 我算个球, 就是纯个人口嗨罢了, 并且我现在掌握的东西也就是个三脚猫水平.
+
+1. 前置要求:
+   + 计算物理/概统: 随机抽样过程, 如何用分布生成随机数 (会调包即可)
+   + 粒子探测器技术: 粒子探测器 = 相互作用 \(\rightarrow\) 能量沉积 \(\rightarrow\) 可测量量
+
+     大概知道有啥相互作用 (PhysicsList) 即可, 这门课完全可以和探测器技术接轨,
+     探测器技术课上讲一类探测器, 就可以去模拟一类探测器, 不过这样的话课程强度就上来了.
+
+     然后还可以后续接数据分析和数据存储标准流程, 这样的话才算是真正的贯通培养吧...
+
+     (不过说实话我觉得我个人还是没有搞定后面的存储和标准分析流程,
+     每次都有点人工执掌的感觉, 太废人了)
+   + 每个人充 50 块钱 DeepSeek, 配置个 opencode-like, 安装好 Geant 4 环境
+
+     关于 Geant 4 配置: [[{{ site.github.io }}/geant4/build-geant4-on-mac/][Build Geant 4 on macOS]]
+     (其实现在让 AI 来估计也没问题, 没准还更快, 诶, 已经是老古董了).
+
+     注: 其实 50 块根本不需要, 我初步写完 SKILLs 并完成了下面的 Introduction
+     里面的 =geant4-planer= 的例子用了还不到 5 块.
+2. Introduction:
+   + 过一遍 =geant4-planer=,
+     相当于是 AI 带着过了一遍一个普通 Geant 4 程序的一般流程 [大约 1 课时]
+
+     #+begin_example
+     /geant4-planer
+
+     创建一个固体闪烁体探测器 (20x20x5cm) 置于空气中,
+     能量为 1GeV 的宇宙线 muon 从中心正上方 (10x10cm, 距离闪烁体 1cm)
+     击中探测器. 模拟 muon 在闪烁体中的能量沉积并绘制能损分布图.
+     使用 Landu 分布拟合能损分布图.
+
+                          |
+                          | muon 1GeV
+                          |
+                          V
+             +---------------------------+
+             |                           |
+             |                           | 5cm
+             +---------------------------+
+                          20cm
+     #+end_example
+
+     注: 这里的示意图是用 Emacs 的 artist-mode 绘制的,
+     主要是之前传图片给 DeepSeek 发现好像效果一般.
+
+     嗯, 这里估计还可以添加一些小的 bounous:
+     假如在使用过程中发现了 SKILL 的不足之处,
+     可以提交 pr 然后获得加分 (bushi).
+
+     #+html: <details><summary>整个的对话过程</summary>
+     #+html: <iframe src="{{ site.github.io }}/_img/geant4/skills/g4-planer-demo.html" width="100%" height="800px" frameborder="0">
+     #+html: </details>
+
+     最终的拟合效果如下:
+
+     [[{{ site.github.io }}/_img/geant4/skills/edep_landau_fit.png]]
+
+     怎么说呢, 看起来还挺正确, 估计之后加一些 plot 的 SKILL,
+     以及其他的后处理会更好一些.
+   + 带着大家写 =geant4-reviewer= 等其他 SKILL [大约 1-2 课时]
+     + 主要用的还是 =skill-creator=,
+       主要的目的是通过写 SKILL 来介绍哪些要点是在模拟过程中常常会出错的,
+       在检查的过程中需要去 check 的;
+     + 估计还需要写一些类似于 =geant4-explainer= 的 SKILL 来辅助阅读代码,
+       理解 Geant 4 的底层模拟逻辑, 这部分的话估计干讲还挺枯燥的;
+     + 如果这个课可以和实验课接轨的话, 让他们给块闪烁体测量的结果,
+       然后编写 =geant4-exp-validate= SKILL,
+       目的是通过比较实验和模拟数据, 来判断模拟过程中哪些量是可以忽略的,
+       哪些量是需要考虑的;
+     + 如果不能做实验的话, 或者是第一年上课没有实验数据 (没有牛马帮我测),
+       那么就把问题变成理论估计吧, 算一个 \(\frac{\mathrm{d}E}{\mathrm{d}x}\),
+       用 AI 来帮忙定量估计;
+3. 去用 =geant4-planer= 去拆 Geant 4 的事例代码 [小/大作业]
+   + 如何对选定的 Geant 4 项目去生成一套:
+     Geometry+Materials, PhysicsLists, *Action 的自然语言描述 (短);
+     以及对应的详细的 project infomation report (长);
+   + 然后用这套自然语言描述去复刻选定的 Geant 4 项目;
+   + 如何面对更加现实, 更加贴近科研中的真实世界中的:
+     复杂几何, 复杂材料, 复杂约束条件 (还是在前面最简单基础上)
+4. 最终评比的是每个人自己维护的 SKILL 的任务解决能力,
+   看前面的拆解, 生成, 分析的能力
+
+最后: 反正我也说了, 这全都是我在口嗨罢了, 你也可以说这样没有灵魂,
+物理工作者需要物理图像和物理直觉, 只是依赖计算机一条死路.
+
+但是我觉得其实我现在 (或者我之前) 面对 Geant 4 的困境恰好是没法依赖计算机,
+因为做的结果不知道对不对.
+#+html: </details>
+
+** Geometry, Materials [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-detector-construction/SKILL.md][geant4-detector-construction]]
++ Materials: [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-detector-construction/references/geant4-materials.md][references/geant4-materials.md]]
+  + Elements, Isotropic 等混合得到自定义材料
+  + NIST Manager 直接载入预制材料
+  + NIST Manager 在预制材料基础上修改材料特性
++ Geometry: [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-detector-construction/references/geant4-geometry.md][references/geant4-geometry.md]]
+  + Solid:
+    + 通过 =G4Box=, =G4Tubs= 之类的得到基础实体
+    + 基础实体通过逻辑组合/减去得到复杂实体 (性能)
+  + Logic Volume: 实体+属性(材料, ...)
+  + PhysicsVolume: 放置在 parent 下面 (大盒子装小盒子)
++ 特别的, 对于光学过程: [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-detector-construction/references/geant4-optical.md][references/geant4-optical.md]]
+  + 材料需要添加光学属性
+  + 对于逻辑边界需要添加光学边界属性
++ 特别的, 对于电磁场环境: [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-detector-construction/references/geant4-em-field.md][reference/geant4-em-field.md]]
+  + 构建场的分量
+  + 在全局场管理器中注册
++ 特别的, 对于有效的探测器区域
+  (比如闪烁体探测器中的 PMT 之类的),
+  需要构造 SD (Sensitive Detector),
+  实际上可以看作是标记一块几何区域为 SD
+
+当然, 上面的是对于一个比较 "思路清晰" 的情况下的探测器几何构建,
+对于类似于作业那种的稍微思路模糊一些的问题就糟了: 什么材料?
+啥几何? 为啥还要模拟到细胞层面? 啥射线? 啥能段?
+
+所以我添加了类似的 "反问" 和 "俺有一计" 的流程来处理这些比较抽象的需求:
++ research: common energy range and detecting target/background
+  -> particle, energy range
++ research: common design -> ask user to select
+  -> geometry, material SD design
++ review: is selected geometry and material enough to detect?
+  use empirical formula to compute the signal strengh or so
++ ask: should environment be simulated?
+
+** Physics List [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-choose-physics-list/SKILL.md][geant4-choose-physics-list]]
+在选择物理过程的时候, 显然是需要考虑具体分析的物理过程,
+探测器是什么种类的探测器 (依靠什么相互作用测量物理量).
+比如穿越辐射探测器, 漂移室, Cherenkov 探测器...
+
+同时不同的物理过程对计算的影响也不同, 高精度的计算会减少误差,
+同时也会导致时间变长. 所以在 Physics List 选择的过程中需要考虑不同的需求:
+根据用户的需求提问并返回结果.
+
++ [[https://geant4-ed-project.pages.in2p3.fr/geant4-ed-web/docs/physics_lists.pdf][Which Physics List To Use ?, Geant4 PHENIICS & IN2P3 Tutorial, Orsay, 12 - 16 May 2025]].
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/TrackingAndPhysics/physicsProcess.html][Physics Process]]
+
+#+html: <details><summary>吐槽: AI 还是太万能了... </summary>
+之前找物理过程很少直接全读 Geant 4 的文档的... 太长了还不知道重点, 巨难读.
+基本都是在旧的屎山上挖宝...
+#+html: </details>
+
+注: 我现在觉得目前的 SKILL 版本稍微还是有点不够 "聪明".
+还是没有那么有经验.
+
+同样的, 对于那些比较抽象的问题, 需要通过思考和探索具体化,
+并且对于用户考虑不够的地方: 比如只考虑了某类粒子,
+但是没有考虑其他粒子 (背景噪声之类的) 的相互影响.
+比如只考虑了主要的探测过程, 但是忽略了其他物理过程.
+
+** Particel Gun, UserActions...
+构造粒子源, 基本的思路是根据分布去产生粒子
+(从粒子表中查表, 从分布函数/输入/mac 中生成能量和方向),
+然后打到探测器上.
+
+这个时候, 通过不同层级的 UserActions (=RunAction=, =EventAction=,
+=StackingAction=, =SteppingAction=)
+(类似于 Common Lisp 中的 CLOS 的 =:before=, =:after=, =:around=)
+来捕获粒子在模拟的不同阶段的信息.
+
+#+html: <details><summary>粒子模拟的一个比较抽象的思路</summary>
++ 运行程序, 开始了一个: run
+  + beamOn 射出一个粒子, 开始了一次: event
+    + 每个粒子添加到队列中等待计算轨迹: stacking
+      + 被接收的粒子在模拟循环中步进并直到死掉为止, 每次步进: stepping
+
+大概是这个样子, 然后还要考虑的就是边界条件如何影响 tracking (stepping),
+如何通过设置阈值来杀掉更多的粒子.
+#+html: </details>
+
+于是...
+
++ geant4-particles: 告诉 Agents 有那些粒子可以使用, 不要自己乱造
++ [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-data-dump/SKILL.md][geant4-data-dump]]: 在 *Action 中注入 hook 代码来输出需要的信息;
++ [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-analyzer/SKILL.md][geant4-analyzer]]: 在上一步的基础上做适当分析再输出或者直接输出分析后的数据,
+  总之教会 AI 如何利用 Geant 4 的内置分析工具进行分析;
+
+** Other Things
+*** Visualization [[https://github.com/li-yiyang/g4/blob/d08dbe3c22301f8710e03d9519ece8b279081e6d/.agents/skills/geant4-visualization/SKILL.md][geant4-visualization]]
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/GettingStarted/visualization.html][How to Visualize the Detector and Events]]
++ [[https://geant4-userdoc.web.cern.ch/UsersGuides/ForApplicationDeveloper/html/Visualization/visualization.html][Visualization]]
+
+其实这一步基本和 CSS 没啥区别了, 我觉得让 AI 来参与也是不错的...
+之后应该再加一些课上提到的绘图的规则约束让图片更加好看一些估计会更好.
+
+*** Debugging
+不过说实话, 其实这部分我的经验还不足...
+没法提供比较好一个 SKILL 思路. (还做不了老师捏)
+
+* Example
+以大作业为例:
+
+#+begin_example
+/geant4-planer
+
+放疗是肿瘤治疗的一种常用手段, 射线种类有伽马/质子/中子/离子等.
+1. 请设计并实现一个探测器模拟程序,
+   对比肿瘤细胞和正常细胞 (细胞直径假设 10 微米, 球形) 的线能量谱,
+   剂量谱等物理量, 比较使用伽马和质子射线进行放疗的优劣.
+2. 硼中子俘获疗法 (BNCT) 是一种新的疗法,
+   2020 年全球首个 BNCT 设备在日本获批上市.
+   假如使用 0.5 eV 的热中子束流,
+   请研究预期治疗效果与肿瘤细胞内原子浓度分布的关系
+   (考虑均匀分布和集中分布在 1 微米外壳层两种情况).
+   最后, 与其它射线的治疗效果进行对比.
+
+                      -------
+                    -/       \-
+                   /           \   头直径
+                   |     ------+---D=180mm               (球)
+                   \           /
+                    -\       /-
+               o--------+-+-----------------------
+               |\       | |D=100mm 脖子直径  90mm 脖子高 (圆柱)
+               | \+-----+-+-----+-----------------
+               |  |             |    ^        ^
+               |  |          | 5cm   25cm     |
+               |  |         +++ |    V        |
+               |  |         |X|-+----*<放射源 | 身体高   (立方体)
+               |  |         +-+ |             500mm
+               |  |        肿瘤 |             |
+               |  |             |             |
+               |\ |             |             V
+               | \+---+-----+---+-----------------
+               |  |   |     |   |             ^
+             宽20mm   |     |   |             |
+               |  |   |     |   |             | 腿长     (圆柱)
+                  |   |     |   |             820mm
+                  |   |     |   |             |
+                  |   |     |   |腿直径       |
+                  |   |     |   |D=110mm      V
+                  +---+     +---+-----------------
+                  |             |
+                  |             |
+                  |             |
+                  | <--长260mm> |
+#+end_example
+
+注:
+1. 因为喂图片的效果不太行, 所以用 Emacs 的 artist-mode 绘制一个草图给 AI.
+2. 我保留了原始的抽象提问, 而不是自己优化一下提示词, 这样你才知道
+
+过程大概如下:
++ Phase 1:
+  + 此时会看到 agents 提问具体的尺寸, 位置之类的信息
+  + 不过好像还是得加一些提示, 比如:
+    + 把 cell 看作是 SD 在肿瘤区域和正常粒子区域做抽样探测
+
+      注: 这个被 AI 的 think twice 规则给指出了均匀分布被击中的概率太低了,
+      做了几轮修改后变成了增加 cell 数量, 增宽 beam, 多次投点.
+
+      需要注意的是不能够直接让 AI 写代码, 最好是 plan first, then code,
+      这个估计之后也需要添加到 SKILL 里面.
+  + 做了几轮修正之后得到的结果如下图所示
+
+    [[{{ site.gihub.io }}/_img/geant4/skills/tumor-with-cells.png]]
+
+    [[{{ site.github.io }}/_img/geant4/skills/geometry-with-tumor.png]]
++ Phase 2:
+  + 会看到 agents 提问具体的 target 的能量范围,
+    如何 beam 之类的问题
+  + 同时可以注意到 AI 用到了 NeutronHP 的物理过程来保证离子过程正确
++ Phase 3: 直接就过了, 确实在代码中有显示,
+  应该是从 Phase 2 的过程中提取到了信息
++ Phase 4: 发现了问题, 然后回到 Phase 1 继续修改
+
+大概就是这样的一种来回修正的感觉, 不过因为是 AI 帮我做这块的累活,
+所以速度上确实比我快多了. 
+
+* Appendix
+** Bootstrap SKILL.md
+主要是翻到了这个:
++ [[https://lavinigam.com/posts/adk-skill-design-patterns/][5 Agent Skill Design Patterns Every ADK Developer Should Know]]
++ [[https://lavinigam.com/posts/adk-agent-skills-part3/][Self-Extending ADK Agents: Meta Skills That Write SKILL.md Files (Part 3)]]
+
+于是让 AI 写了一个 =skill-creator= SKILL.
+上文中的各种 SKILL 都是用这个 SKILL + 我的注解生成的.
+
+大概的一个使用思路如下:
+
+#+begin_example
+/skill-creator
+[我的注解]
+Reference:
++ [Geant 4 Manual 链接]
+#+end_example
+
+于是就可以让 AI 通过 Tool Wrapper 的方式把 Geant 4 的 Manual 转换为可以使用的手册,
+同时保证使用的思路和我的习惯差不多. (比如编码规范, 构建项目的逻辑之类的).
+
+不过遇到的问题是貌似 SKILL 的遵守遵守得并不咋地...
+写出来的效果感觉挺一般的 (估计还得优化几遍).
+
+一般常见的修改意见:
++ fetch URL in reference and write to references/*.md
++ read examples under Geant 4 source file and generate example usage under references/*.md
+
+不过鉴于 DeepSeek 的 API 价格实在便宜, 所以感觉这么折腾也一点也不心疼.
