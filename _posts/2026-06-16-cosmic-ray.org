@@ -1,0 +1,546 @@
+#+title: 宇宙线物理
+#+date: 2026-06-16
+#+layout: post
+#+math: true
+#+options: _:nil ^:nil
+#+categories: notes
+* About
+本来想要让 AI 用 PPT 做 RAG 查询的, 结果发现效果一言难尽.
+估计是原始语料清洗的效果不好.
+
+* 宇宙线理论
+** 宇宙线加速和宇宙线源
++ 一般认为: 高能宇宙线来自河外 (大尺度各向同性), 略低来自河内
+  (能谱斜率变换说明可能存在至少两种宇宙线源)
+
+
+*** 河外源
++ \(E > 10^{19} \mathrm{eV}\) 宇宙线在银河系磁场中不再扩散
++ UHECR (Ultra-High Energy Cosmic Ray)
++ Hillas 图: 源不能太小 (最小化能量损失), 也不能太大 (过长加速时间).
+  即加速粒子的拉莫尔半径 \(R_L = \frac{E}{Z e B}\) 应当能够被装进大小为 \(R_s\) 的加速器内:
+  \(R_L \leq R_s\). 故可以通过已知磁场和源的尺寸限制其能够到达的最大能量 \(E_{\mathrm{max}} = \Gamma Z e B R_s\).
+  其中 \(\Gamma\) 为相对论整体运动的洛伦兹因子修正 (特别的, GRB).
+
+  [[{{ site.github.url }}/_img/cosmic-rays/hillas-plot.png]]
+
++ Blandford: 利用宇宙线能量估算源的数量
+
+  + 单个源的光度估算
+
+    质子加速到 \(E = 10^{20} \mathrm{eV}\) 需要电势差 \(U = 10^{20} \mathrm{V}\),
+    按照电阻 \(R \sim 1 \mathrm{k\Omega}\) (真空阻抗 \(R = 4 \pi k_0 / c \approx 377 \mathrm{\Omega}\)),
+    得 \(P = U^2 / R = L \gtrsim 10^{37} \mathrm{W} = 10^{44} \mathrm{erg} / \mathrm{s}\).
+
+  + UHECR 源数密度估算
+
+    观测得到的单位体积和时间的能量输入约 \(\mathcal{I} \sim 3 \times 10^{46} \mathrm{erg} / (\mathrm{Mpc}^3 \mathrm{yr})\),
+    故总的源的数密度应当小于 \(n_s = \mathcal{I} / L \sim 10^{-5} / \mathrm{Mpc}^3\).
+
+    普通星系数密度约 \(n_s \approx 10^{-2} / \mathrm{Mpc}^3\),
+    在红移 \(z < \sim 0.02\) 范围内, 常见的活动星系核 (Seyfert galaxies)
+    数密度 \(n_s \approx (1 \sim 5) \times 10^{-5} / \mathrm{Mpc}^3\).
+
+*** 河内源
++ Supernova remnants (SNR, 超新星遗迹)
+
+  质量非常大的恒星 (\(M \gt \sim (5 \sim 8) M_{\odot}\)) 的核聚变过程末期.
+  这些恒星会发展成类似洋葱的结构, 中心是一个简并的铁核.
+  当核心完全融合成铁后, 不再有能够释放能量的进一步过程.
+  相反, 光致蜕变会摧毁重核, 例如通过反应 \(\gamma + ^{56} \mathrm{Fe} \rightarrow 4 \mathrm{He} + 4 n\),
+  并移除维持压力支撑所需的热能. 在随后的恒星塌缩过程中, 密度增加,
+  自由电子通过逆贝塔衰变被迫与质子结合形成中子, \(e^- + p \rightarrow n + \nu_e\):
+  一个原中子星形成了. 如果超新星爆发成功 会留下一个中子星;
+  否则会留下一个黑洞.
+
+  释放的引力结合能
+
+  \[\Delta E = \left[ - \frac{G M^2}{R} \right]_{\mathrm{star}} - \left[ - \frac{G M^2}{R} \right]_{\mathrm{NS}} \sim 5 \times 10^{53} \mathrm{erg} \left( \frac{10 \mathrm{km}}{R} \right) \left( \frac{M_{\mathrm{NS}}}{1.4 M_{\odot}} \right)\]
+
+  主要 (99%) 通过中微子发生, 1% 转化为爆发恒星的动能, 0.01% 转换为光子.
+
+  抛射物质和星际介质 (ISM) 相互作用形成激波,
+  激波加速 \(E \sim 10^{15 \sim 17} \mathrm{eV}\) (一般).
+
++ Plusars (脉冲星)
+
+  铁核的残余物形成中子星 \(R_{\mathrm{NS}} / R_{\odot} \sim 10^{-5}\),
+  角动量守恒 \(\Rightarrow\) 收缩后转速变得极快 (\(I \sim M R^2\));
+  磁通量守恒 \(\Rightarrow\) 收缩后磁场强度极强 \(R_{\odot} / R_{\mathrm{NS}} \sim 10^{10}\) (\(\Phi_B = B A\)).
+
+  + Rotating dipole model: 旋转电偶极子辐射
+
+    \[\dot{E} = - \frac{B^2 R^6 \omega^4 \sin^2 \alpha}{6 c^3}\]
+
+    最大加速能量
+
+    \[E_{\mathrm{max}} \approx \frac{Z B_0 R^2 \sin^2 \theta_0}{c} \approx \frac{Z B_0 R^3 \omega^2}{c^2} \approx 8 \times 10^{20} \mathrm{eV} \frac{Z B}{10^{13} G} \left( \frac{\Omega}{3000 \mathrm{s}^{-1}} \right)^2\]
+
+    因为加速电势差相比要小且存在极端能量损失 (曲率辐射),
+    所以很难到达.
+
++ Active Galaxy Nuclei (AGN, 活动星系核)
+
+  认为 AGN 中能量产生的共同机制是吸积到其中心的超大质量黑洞 (SMBH) 上.
+
+  这一观点的主要理由是它们光谱的快速变化, 从类星体光谱的月级时间尺度到耀变体的日级变化.
+  因果律将发射区的大小限制为 \(c t \leq \sim 200 \mathrm{AU}\).
+  其次, AGN巨大的能量输出需要极其高效的能量产生机制
+  对于黑洞吸积, 最大能量增益为 \(E_{\mathrm{max}} \sim \frac{G m M}{R_s}\),
+  其中史瓦西半径为 \(R_s = 2 G M / c^2\), 因此 \(E_{\mathrm{max}} = m c^2 / 2\).
+  这部分能量的大部分将被黑洞吸收, 而剩余部分则通过摩擦加热黑洞周围的吸积盘.
+
+  假设吸积效率 \(\epsilon = 10 \% \sim 20 \%\), 吸积光度:
+
+  \[L = \frac{\epsilon c^2 \mathrm{d}m}{2 \mathrm{d}t}\]
+
+  对于一个相对温和的黑洞消耗率 \(\mathrm{d}m/ \mathrm{d}t = 1 M_{\odot} / \mathrm{yr}\),
+  \(L \sim 10^{12} L_{\odot} = 6 \times 10^{45} \mathrm{erg} / \mathrm{s}\).
+
++ Gamma Ray Bursts (GRB, 伽马暴)
+  + 短暴: 可能是中子星双星合并
+
+  + 长暴 (2/3 GRB): 极高质量恒星中的超新星事件
+
+*** Fermi Acceleration
++ 带电粒子与磁云之间的碰撞可以加速宇宙线.
+  想象一个速度为 \(V\) 的网球与速度为 \(V'\) 的球拍碰撞.
+  很容易得到网球与球拍碰撞后的速度为 \(V + 2 V'\).
+  网球每次与球拍碰撞都会被加速. 宇宙线粒子就像网球一样,
+  每次与磁云碰撞都会被加速. 计算过程是首先转换到球拍参考系,
+  网球速度为 \(V + V'\) 碰撞后速度不变. 再转换回实验室系
+  我们得到速度为 \(V + 2 V'\).
+
+  在相对论情况下的能量增益
+
+  \[\left\langle \xi \right\rangle = \frac{1 + \beta^2 / 3}{1 - \beta^2} - 1 \simeq \frac{4}{3} \beta^2\]
+
++ First-order Fermi Acceleration
+
+  粒子被激波加速称为一阶加速. (发生于粒子和激波波前相碰撞,
+  如与磁湍流的多次反复散射在穿越激波时产生微小能量增益)
+
+  \[\frac{\mathrm{d}n}{\mathrm{d} \cos \theta_1} = \left\{\begin{matrix}2 \cos \theta_1 & \cos \theta_1 < 0 \\\\ 0 & \cos \theta_1 > 0 \end{matrix}\right.\]
+
+  \[\left\langle \cos \theta_1 \right\rangle = -2/3, \left\langle \cos \theta'_2 \right\rangle = 2/ 3 \Rightarrow \left\langle \xi \right\rangle \approx \frac{4}{3} \beta = \frac{4}{3} \frac{v_1 - v_2}{c} = \frac{E_2 - E_1}{E_1}\]
+
++ Second-order Fermi Acceleration
+
+  每次散射能量增益与 \(\beta\) 二阶项相关, 称为二阶费米加速.
+
++ Fermi Acc 能谱
+
+  经过 \(n\) 次加速循环后宇宙线能量 \(E_n = E_0 (1 + \xi)^n\),
+  若逃逸概率 \(p_{\mathrm{sec}}\) 为常数, 则
+
+  \[f(> E) = \sum_{m=n}^{\infty} (1 - p_{\mathrm{esc}})^m = \frac{(1 - p_{\mathrm{esc}})^n}{p_{\mathrm{esc}}} \propto \frac{1}{p_{\mathrm{esc}}} \left( \frac{E}{E_0} \right)^{\gamma}\]
+
+  \[\gamma = \ln \left( \frac{1}{1 - p_{\mathrm{esc}}} \right) / \ln (1 + \xi) \approx p_{\mathrm{esc}} / \xi, \xi \ll 1, p_{\mathrm{esc}} \ll 1\]
+
+  即产生幂律能谱
+
++ 能谱指数
+
+  \[\gamma \approx \frac{3 + M^2}{M^2 - 1} \approx 1 + \frac{1}{4 M^2} + O(M^{-4}) \approx 1\]
+
+  其中 \(M = v / c_s\), \(v\) 激波波前速度 (\(\sim 10^4 \mathrm{km} / \mathrm{s}\)),
+  \(c_s\) 介质中声速 (\(\sim 10 \mathrm{km} / \mathrm{s}\)).
+
+  和银河系观测结果较一致 (银河系宇宙线加速标准图景)
+
++ 主流模型
+  + 源 \(E^{-2.1}\)
+  + 在银河系传播 \(\times E^{-0.6}\)
+  + 到地球 \(= E^{-2.7}\)
+  + SNR: 频率和能量足以解释宇宙线密度
+  + 低能宇宙线是银河系的, 在银河磁场中扩散 (相对论性电子同步辐射+IC 辐射)
+  + 暂无决定性证据
++ 谱 \(E^{-\gamma}\) 的软硬 (相比 \(E^{-2}\))
+  + \(\gamma < 2\) 更硬:
+    + 轻子起源 \(\sim E^{-1.5}\)
+    + 强子起源 (激波在团块介质中传播)
+  + \(\gamma > 2\) 更软:
+    + 散射中心速度改变
+    + 加速过程中能量损失
+    + 各向同性破坏 (仅 \(\nu_{\mathrm{sh}} \gtrsim 10^4 \mathrm{km} / \mathrm{s}\)
+    + 中性氢改变激波结构 (仅 \(\nu_{\mathrm{sh}} \ltrsim 3000 \mathrm{km} / \mathrm{s}\)
+    + 粒子逃逸 (仅对中年 SNR)
++ 关键在于要有宽的能量范围, 从射电, X 射线, 一直到极高能的伽马射线观测 (~100TeV),
+  这样才能最终确定是否是宇宙线的加速源.
++ 中微子观测是确定宇宙线源的最终判据
+
+** 宇宙线传播
++ 反应过程: 描述原初粒子 \(p\) 变成次级粒子 \(s\) 的过程 \(p \rightarrow s + X\)
+
+  \[\begin{array}{rcl} \frac{\mathrm{d} n_p}{\mathrm{d} X} & = & - \frac{n_p}{\lambda_p} \\\\ \frac{\mathrm{d} n_s}{\mathrm{d} X} & = & - \frac{n_s}{\lambda_s} + \frac{p_{sp} n_p}{\lambda_p} \end{array}\]
+
+  + 符号说明
+
+    | 符号                            | 说明                                        |
+    |-----------------------------------+---------------------------------------------|
+    | \(X = \int \mathrm{d}l \rho(l)\)              | 穿过物质的厚度                              |
+    | \(\lambda_i = \frac{m}{\sigma_i}\)               | 粒子 \(i\) 的相互作用长度 \(\mathrm{g} / \mathrm{cm}^2\) |
+    | \(p_{sp} = \frac{\sigma_{sp}}{\sigma_{\mathrm{tot}}}\) | 散裂概率                                    |
+
+  + 方程的求解
+
+    *初始条件* \(n_s(0) = 0\) 下的解:
+
+    \[\frac{n_s}{n_p} = \frac{p_{sp} \lambda_s}{\lambda_s - \lambda_p} \left[ \mathrm{exp}\left( \frac{X}{\lambda_p} - \frac{X}{\lambda_s} \right) - 1 \right]\]
+
++ 扩散过程: 描述宇宙线在银盘中的随机游走
+
+  \[\boldsymbol{j} = - D \nabla n\]
+
+  + 符号说明
+
+    | 符号     | 说明     |
+    |----------+----------|
+    | \(\boldsymbol{j}\) | 流密度   |
+    | \(n\)    | 数密度   |
+    | \(D\)    | 扩散系数 |
+
+  + 方程的求解
+
+    *连续性方程* \(\nabla \cdot \boldsymbol{j} + \frac{\partial n}{\partial t} = 0\)
+
+    \(\Rightarrow\) *扩散方程* \(\frac{\partial n}{\partial t} = D \nabla^2 n\)
+
+    *格林函数* \(G(r) = \frac{1}{(4 \pi D t)^{3/2}} \mathrm{exp}\left[ - \frac{r^2}{4 D t} \right]\)
+
+    \(\Rightarrow\) 传播距离 \(\sim \sqrt{D t}\)
+
+    *随机行走* \(\left\langle r^2 \right\rangle \sim N l_0^2 \sim D t \Rightarrow D = l_0 v / 3\), \(l_0\) 为平均自由程
+
+  + \(D(E)\) 的能量依赖
+
+    + *低能*: 拉莫半径 \(R_L = \frac{p}{Z e B}\) 小于磁云 (数密度 \(n\)) 大小 \(r_0\),
+      进入和离开方向之间的角度呈各向同性分布.
+      + 平均自由程 \(l_0\) 为云之间的距离 \(= \frac{1}{\sigma n} \sim \frac{1}{r_0^2 n}\)
+
+      + \(D_0 = \frac{1}{3} l_0 v \sim \frac{1}{3} \frac{c}{r_0^2 n} \sim \mathrm{constant}\)
+
+    + *高能*: 宇宙线在每个磁云仅偏转一个小角度 \(\delta \sim r_0 / R_L\).
+      + 平均偏转为零 \(\left\langle \delta \right\rangle = 0\) (方向不相关),
+
+      + 偏转方差 \(\left\langle \delta^2 \right\rangle \sim N(r_0 / R_L)^2\) (随机行走)
+
+      + 平均自由程 \(l_0\) 满足 \(\left\langle \delta^2 \right\rangle \sim 1\)
+
+      + \(D(E) = \left( \frac{R_L}{r_0} \right)^2 D_0 \propto E^2\)
+
+    + 转变条件
+      + \(R_L(E_{\mathrm{cr}}) = r_0\)
+
+      + \(E_{\mathrm{cr}} \approx 10^{15} \mathrm{eV} (\mathrm{B} / \mu \mathrm{G}) (r_0 / \mathrm{pc})\)
+
++ Complete cascade equation
+
+  \[\begin{array}{rcl} \frac{\partial n_i (E, x, t)}{\partial t} - \nabla (D \nabla n_i(E, x, t)) & = & Q(E, x, t) \\\\ & - & \left( c \rho \lambda_{i, \mathrm{inel}}^{-1}(E) + \lambda_d^{-1} \right) n_i(E, x, t) \\\\ & - & \frac{\partial}{\partial E}\left( \beta_i n_i(E, x, t) \right) \\\\ & + & \sum_k \int_E^{\infty} \mathrm{d}E' \frac{\mathrm{d} \sigma_{ki}(E', E)}{\mathrm{d}E} n_k(E', x, t)\]
+
+  | 项                      | 说明                                                                         |
+  |-------------------------+------------------------------------------------------------------------------|
+  | \(Q(E, x, t)\)          | 描述扩散                                                                     |
+  | \(\lambda_{i, \mathrm{inel}}, \lambda_d\) | 描述相互作用与衰变导致粒子在能量区间 \([E, E + \mathrm{d}E]\)的损失                |
+  | \(\frac{\partial}{\partial E}(\cdots)\)        | 粒子的连续能量损失 (同步辐射, 绝热红移损失), 可以看作是粒子流 \(\beta n\) 的散度 |
+  | \(\sum_k\)                 | 将 \(k\) 粒子 (其他粒子) 转换为 \(i\) 粒子的转换项                                                 |
+
++ 扩散传播: 宇宙线在银盘中的随机游走
+  + 在考虑各向异性和弥散伽马射线发生时比较重要
++ 漏箱模型
+
+  在约束体积 (银盘) 内宇宙线具有恒定逃逸概率 \(T_{\mathrm{esc}} \gg \frac{h}{c}\),
+  在忽略扩散效应的情况下, 扩散项:
+
+  \[D \Delta n_i(E, x) \rightarrow - \frac{n_i(E, x)}{T_{\mathrm{esc}}}\]
+
+  在此场景下, 稳态解 \(\partial n_i / \partial t = 0\), 得
+
+  \[\frac{n_i(E)}{T_{\mathrm{esc}}} = Q_i - \left( \frac{c \rho}{\lambda_i} + \frac{1}{\Gamma \tau_{1/2}} \right) n_i(E) + \sum_k \int_E^{\infty} \mathrm{d}E' \frac{\mathrm{d}\sigma_{ki}(E', E)}{\mathrm{d}E} n_k(E')\]
+
+  不考虑质子和铁等初级粒子的衰变, 忽略碎裂 (无衰变项), 得到:
+
+  \[n_i = \frac{Q_i \tau_{\mathrm{esc}}}{1 + \lambda_{\mathrm{esc}} / \lambda}, \lambda_{\mathrm{esc}} = \beta c \rho \tau_{\mathrm{esc}}\]
+
+  假设不同元素的 \(t_{\mathrm{esc}}(E)\) 只取决于 \(Z\), 对 B/C 数据拟合的结果为
+
+  \[\lambda_{\mathrm{esc}} \approx 11 \frac{\mathrm{g}}{\mathrm{cm}^2} \left( \frac{4 Z \mathrm{GeV}}{p} \right)^{\delta}, p \geq 4 Z \mathrm{GeV}, \delta \approx 0.6\]
+
+  结果讨论:
+  + 较低能量时 \(\lambda_{\mathrm{esc}} = \mathrm{const}\)
+
+  + 质子 \(\lambda_p = 55 \mathrm{g}/ \mathrm{cm}^2 \gg \lambda_{\mathrm{esc}}\) (基本都能跑出来)
+    \(\Rightarrow n_p = Q_p \tau_{\mathrm{esc}} \propto Q_p E^{-\delta}\),
+    质子产生能谱应当比观测到的更陡 \(Q_p \propto E^{-2.7 + \delta} = E^{-2.1}\)
+
+  + 铁 \(\lambda_{\mathrm{Fe}} = 2.6 \mathrm{g} / \mathrm{cm}^2\)
+    + 低能时 \(\ll \lambda_{\mathrm{esc}}\) (在逃逸前就被摧毁了, 铁能谱反应了产生谱)
+      \(\Rightarrow n_{\mathrm{Fe}} \propto Q_{\mathrm{Fe}} \tau_{\mathrm{int}} \propto Q_{\mathrm{Fe}} \sim 2.1\)
+
+    + 高能 \(\lambda_{\mathrm{Fe}} \sim \lambda_{\mathrm{esc}}\) 开始变陡
+
++ 电子/正电子传播
+
+  在 Complete cascade equation 基础上, 忽略:
+  + 散裂
+  + 加速和对流 (数 GeV 以上)
+  + 只考虑能量损失
+
+  \[\partial_t N - \nabla \cdot \left\{ K(E) \nabla N \right\} + \partial_E \left\{ \frac{\mathrm{d} E}{\mathrm{d} t} N \right\} = Q(E, x, t)\]
++ 宇宙线传播的数值模拟程序 [[https://galprop.stanford.edu/code.php?option=theory][GALPROP]]
++ 太阳调制
+
+  力场近似模型: 宇宙线流强和本地星际空间流强关系, Gleeson & Axford
+
+  \[J(E) = \frac{E^2 - m^2}{(E + \vert Z \vert \Phi)^2 - m^2} \times J_{\mathrm{LIS}} (E + \vert Z \vert \Phi)\]
+
+  | 参数  | 说明                           |
+  |-------+--------------------------------|
+  | \(E\) | 宇宙线总能量                   |
+  | \(m\) | 宇宙线质量                     |
+  | \(Z\) | 宇宙线电荷                     |
+  | \(\Phi\) | 调制程度参数, 正相关于太阳活动 |
+  | \(\vert Z \vert \Phi\) | 宇宙线粒子进入太阳系到达地球克服力场做的功 (减少的动能量) |
+
++ 利用 \(^{10}\mathrm{Be} / ^{9}\mathrm{Be}\) 检验传播模型
+
+** 宇宙线能谱的特殊结构: Knee, Ankle, GZK Cutoff
++ Knee (膝) \(-2.7 \sim -3.1 @ 4 \mathrm{PeV}\)
++ 2nd Knee \(-3.1 \sim -3.3 @ 400 \mathrm{PeV}\)
++ Ankle (踝) \(-3.3 \sim -2.7 @ 4 \mathrm{EeV}\)
++ GZK \(-2.7 \sim \mathrm{cutoff} @ 60 \mathrm{EeV}\)
+
+*** Knee 膝 poly-gonato 模型
++ 基于测量数据, 假定幂律形式并考虑低能太阳调制, 参数化了各元素的能谱.
+
+  假设截断是由于加速或传播造成的, 并且每个元素的截断能量取决于其电荷 Z.
+  受这些理论的启发, 采用以下 ansatz 来描述电荷为 Z 的粒子的流强能量依赖性:
+
+  \[\frac{\mathrm{d} \Phi_Z}{\mathrm{d} E_0} (E_0) = \Phi_Z^0 E_0^{\gamma}^Z \left[ 1 + \left( \frac{E_0}{\hat{E}_Z} \right)^{\epsilon_c} \right]^{\gamma_c - \gamma_z}\]
+
+  绝对流强 \(\Phi_Z^0\) 和谱指数 \(\gamma Z\) 量化了幂律.
+  截断能量以上的流强由第二个更陡的幂律来建模.
+  \(\gamma c\) 和 \(\epsilon c\) 描述了在截断能量 \(\hat{E} Z\) 处能谱的变化.
+  这两个参数被假定对所有能谱都是相同的, \(\gamma c\) 是膝后假设的斜率,
+  \(\epsilon c\) 描述了从第一个幂律过渡到第二个幂律的平滑程度.
+
+  为了研究系统效应, 不是对所有元素在截断能量以上采用一个共同的谱指数,
+  而是尝试了膝以下和膝以上谱指数之间的一个恒定差值 \(\Delta \gamma\)
+  并假设电荷为 Z 的元素的能谱为
+
+  \[\frac{\mathrm{d} \Phi_Z}{\mathrm{d} E_0} (E_0) = \Phi_Z^0 E_0^{\gamma}^Z \left[ 1 + \left( \frac{E_0}{\hat{E}_Z} \right)^{\epsilon_c} \right]^{- \frac{\Delta \gamma}{\epsilon_c}}\]
+
+  如果截断是由加速或传播引起的, 则 \(E_Z\) 取决于 Z.
+  如果是由与大气相互作用引起的, 它可能取决于 A.
+
+  \[\hat{E}_Z = \left\{\begin{matrix} \hat{E}_p \cdot Z & \mathrm{rigidity\ dependent} \\\\ \hat{E}_p \cdot A & \mathrm{mass\ dependent} \\\\ \hat{E}_p & \mathrm{constant} \end{matrix}\right.\]
++ 由于在膝区附近的分成分的能谱有很大的误差, 因此,
+  目前还没有办法确定膝形成的物理机制.
++ 解决膝形成物理机制的最主要的因素是确定不同成分的能谱.
+
+*** GZK
++ 假定 UHECR 的成分为质子, 而且源在宇宙中均匀的分布,
+  宇宙线在宇宙中传播会和 CMB 相互作用产生正负电子对 (踝),
+  pion 介子 (GZK) 而损失能量.
+
+* 宇宙线实验理论基础
+** 电磁相互作用理论
+*** 带电粒子
++ 电离能损 Bethe-Block formula
+
+  \[- \frac{\mathrm{d} E}{\mathrm{d} x} = 4 \pi N_A r_e^2 m_e c^2 z^2 \frac{Z}{A} \frac{1}{\beta^2} \left[ \ln \frac{2 m_e c^2 \gamma^2 \beta^2}{I} - \beta^2 - \frac{\delta}{2} \right]\]
+
++ 韧致辐射
+
++ 库伦散射
+
++ 同步辐射
+
++ 切伦科夫辐射
+
++ 穿越辐射
+
+*** 光子与物质相互作用
++ 光电效应
+
++ 康普顿散射
+
++ 逆康普顿散射
+
++ 电子-正电子对产生 Pair Production
+
++ 光致裂变 (Photofission)
+
+** 电磁级联过程
++ 纵向发展
++ 横向发展
++ EAS
+  + 大气模型
+** 强相互作用理论模型, 强子级联过程
+
+* 宇宙线实验方法
+** 粒子方向测量
+*** 空间卫星
++ 通过径迹重建直接获得宇宙线到达方向
+
+*** 大气荧光望远镜 (Air fluorescence telescope-mono)
++ 分别重建每个望远镜的像平面, 两个平面的交线为原初方向
+
+*** 成像型大气切伦科夫光望远镜 IACT (Imaging Air Cherenkov Telescope)
++ 测量 EAS 极大附近正负电子方向得到原初方向
+
+*** EAS 地面阵列
++ 芯位重建
+  + 重心法
+
+    + LHAASO-KM2A
+
+      \[X_{\mathrm{core}} = \frac{\sum_i w_i x_i}{\sum_i w_i}\]
+      \[w_i = N_i \mathrm{e}^{- \frac{1}{2} \left( \frac{\mathrm{d} r}{15} \right)^2}, \mathrm{d} r = \sqrt{(x - h_x)^2 + (y - h_y)^2}\]
+
+    + AS \(\gamma\)
+
+      \[X_{\mathrm{core}} = \frac{\sum_i \rho_i^2 x_i}{\sum_i \rho_i^2}\]
+
+    + 重心法重建的芯位都在阵列内部
+  + 似然法
+
+    + NKG
+
+      \[\rho = N_e c(s) \left( \frac{r}{r_0} \right)^{s - \alpha} \left( 1 + \frac{r}{r_0} \right)^{s - \beta}\]
+      \[c(s) = \frac{\Gamma(\beta - s)}{2 \pi r_0^2 \Gamma(s - \alpha + 2) \Gamma(\alpha + \beta - 2 s - 2)}\]
+
+      | 参数  | 说明               |
+      |-------+--------------------|
+      | \(s\) | 簇射年龄           |
+      | \(r\) | 距离簇射芯位的距离 |
+      | \(N_e\)   | 电子数                |
+    + 对 NKG 进行拟合 (最大似然拟合)
+      + 距离芯位 \(R\) 处理论粒子数 \(\mu\),
+        实际测得粒子数为 \(m\) 的概率 \(p(m) = \frac{\mu^m}{m!} \mathrm{e}^{-\mu}\) 满足泊松分布
+
+      + 似然函数
+
+        \[F = \log \mathcal{l}(r, N_e, s) = \log \left( \prod_i^{\mathrm{id}} \frac{\mu_i^{m_i} \mathrm{e}^{-\mu_i}}{m_i!} \right) = \sum \left( m_i \log \mu_i - \mu_i - \left( \log m_i! \right)_{\mathrm{constant}} \right)\]
+
+      + 芯位重建偏向芯内 (bias)
+
++ 芯位分辨
+
+  \[d_r = \sqrt{(X - X_{\mathrm{rec}})^2 + (Y - Y_{\mathrm{rec}})^2}\]
+
+  利用模拟投点芯位 \(X\) 和重建芯位 \(X_{\mathrm{rec}}\) 得到芯位分辨 \(d_r\);
+  一般随着能量的升高而变好.
+
++ 芯外事例
+
++ 前锋面拟合
+
+  \[\chi^2 = \sum_i w_i \left( t_0 + \frac{l}{c} x_i + \frac{m}{c} y_i - t_i \right)^2 \Rightarrow \frac{\partial^2 \chi^2}{\partial(l, m, t_0)} = 0\]
+
+  + 角分辨 \(\sim \frac{1}{\sqrt{N_{\mathrm{hit}}}}\)
+
+  + 锥面修正
+
+    \[\chi^2 = \sum_i w_i \left( t_0 + \frac{l}{c} x_i + \frac{m}{c} y_i + \frac{\alpha r_i}{c} - t_i \right)^2\]
+
+    | 参数                  | 说明     |
+    |-----------------------+----------|
+    | \(\alpha = \frac{h}{r}\)       | 锥面因子 |
+    | \(w_i(N_e, r)\)       | 权重     |
+    | \(l = \sin \theta \cos \phi\) | 方向余弦 |
+    | \(m = \sin \theta \sin \phi\) | 方向余弦 |
++ 角分辨
+
+  \[\Delta \theta = \arcos \left( l \times l_r + m \times m_r + n \times n_r \right)\]
+
+  利用模拟投点角方向 \(l = \sin \theta \cos \phi, m = \sin \theta \sin \phi, n = \cos \theta\)
+  和重建角方向进行比较得到角分辨.
+
+  影响因素
+  + 簇射涨落
+
+  + 阵列分辨本领
+
+    + 探测器几何及位置偏差
+
+    + 探测器阵列几何指向
+      + GPS 绝对位置标定
+      + 已知天体绝对标定坐标轴指向
+        + 亮星法 (标准烛光)
+        + 阴影法 (月影)
+
+    + 时间标定系统偏差
+      + TOF: \(\mu\) 绝对定标
+      + 特征面法: 利用簇射作为标定束流
+
+    + 原初方向重建系统偏差
+
+** 电荷测量
+直接探测原初宇宙线 -- 空间卫星/高空气球.
+
+*** CREAM
+
+*** Cherenkov
+
+*** 磁谱仪
+
+** 宇宙线成分区分
+*** AMS-02 (空间卫星)
+*** IACT
+**** \(X_{\mathrm{max}}\), RMS (\(X_{\mathrm{max}}\)
+**** DC-light
+*** EAS
+**** \(N_{\mu}\)
+**** \(\left\langle \ln A \right\rangle\)
+**** 地磁场
+
+** 能量测量, 量能器
+*** 磁谱仪
+*** IACT
+*** EAS
+** 高能天文
+*** 坐标系
++ 地平坐标系 \((A, E, t)\)
++ 赤道坐标系 \((\mathrm{RA}, \mathrm{DEC})\)
+
+*** 背景估计
++ 为什么需要
+  + 不同天区曝光时间的各向异性
+  + 探测器正常工作时间的各向异性
+  + 探测器探测效率的各向异性
++ 等赤纬法
++ 等天顶角法
++ 直接积分法
+
+** 卫星实验
+*** AMS-02
+在 "相同" 能量情况下:
+
+[[{{ site.github.url }}/_img/cosmic-rays/ams-02.png]]
+
+|         | \(e^-\)                     | \(p\)           | He, Li, Be, ..., Fe        | \(\gamma \rightarrow e^+, e^-\) | \(\gamma\)  | \(e^+\)  | \(\bar{p}, \bar{\mathrm{D}}\) | \(\bar{\mathrm{He}}, \bar{\mathrm{C}}\) |
+|---------+-----------------------------+-----------------+----------------------------+------------------+--------+----------+-------------------------+----------------------------|
+| TRD     | 大信号                      | 弱信号          |                            | 无信号           | 无信号 | 同前, 略 |                         |                            |
+|         | 轻粒子 \(\gamma\) 大, 穿越辐射强 | 重粒子 \(\gamma\) 小 | \(\gamma\) 更小                 | 不带电           | 不带电 |          |                         |                            |
+|---------+-----------------------------+-----------------+----------------------------+------------------+--------+----------+-------------------------+----------------------------|
+| TOF     |                             |                 |                            |                  | 无信号 |          |                         |                            |
+|         |                             |                 |                            | \(e^+, e^-\)     | 不带电 |          |                         |                            |
+|---------+-----------------------------+-----------------+----------------------------+------------------+--------+----------+-------------------------+----------------------------|
+| Tracker |                             |                 |                            | 两条相反径迹     |        |          |                         |                            |
+|         | 偏转反应电性                |                 | 电荷量大, 径迹粗           |                  |        |          |                         |                            |
+|---------+-----------------------------+-----------------+----------------------------+------------------+--------+----------+-------------------------+----------------------------|
+| RICH    |                             |                 |                            |                  |        |          |                         |                            |
+|         |                             |                 | 电荷量大, 切伦科夫光产额多 |                  |        |          |                         |                            |
+|---------+-----------------------------+-----------------+----------------------------+------------------+--------+----------+-------------------------+----------------------------|
+| ECAL    | 尖锐密集电磁簇射信号        | 微弱穿透性           |                            |                  |        |          |                         |                            |
+|         | 电磁级联过程为主                      | 重核以穿透为主  |                            |                  |        |          |                         |                            |
+
++ RICH 上为 ECAL 留了一个缺口减少 ECAL 上的物质量
+
+*** DAMPE
+
+** 地面实验
+*** 切伦科夫望远镜
+*** EAS
+*** 荧光望远镜
