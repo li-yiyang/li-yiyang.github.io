@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>神喻生成器</title>
+    <script>
+      // Data:
+      const dbg = false;
+      function dbg_log(message) { if (dbg) { console.log(message) } };
+      
+      const rule  = {
+          sentence : ["object", "spliter", "verb_p", "spliter", "subject", "eof"],
+          object   : [["adj", ""], "spliter", "noun"],
+          verb_p   : [["adv", ""], "spliter", "verb"],
+          subject  : [["adj", ""], "spliter", "noun"],
+          noun     : [["小狗", "小猫", "小鸭", "小猪", "小狼"]],
+          adj      : [["聪明的", "漂亮的", "无聊的", "随便的"]],
+          adv      : [["开心地", "轻轻地", "伤心地"]],
+          verb     : [["跑", "玩", "吃"]],
+          spliter  : [""],
+          eof      : [". "]
+      }
+      
+      var counter = 0;
+      
+      // Functions:
+      // Helper functions
+      function change_color_to(id, color) {
+          let elem = document.getElementById(id);
+          elem.style.color = color;
+      }
+      
+      function random_choose(list) {
+          let length = list.length;
+          let pick   = Math.floor(Math.random() * length);
+          return list[pick];
+      }
+
+      // god's spell generater function
+      function create_sentence (terminal = "sentence") {
+          let sequence = rule[terminal];
+          if (typeof sequence === "undefined") {
+              return terminal;
+          } else {              
+              return sequence.map((elem) => {
+                  return create_sentence(Array.isArray(elem) ? random_choose(elem) : elem);
+              }).join("");
+          }
+      }
+
+      var increase_counter_hook = [];
+      
+      function increase_counter() {
+          counter += 1;
+          increase_counter_hook.map((f) => { f.call(); });
+      }
+
+      increase_counter_hook.push(() => {
+          // increase counter update html
+          let elem = document.getElementById("counter");
+          elem.innerHTML = "You clicked " + counter + " times.";
+      })
+
+      increase_counter_hook.push(() => {
+          // append body with ...
+          let elem = document.getElementById("unordered_list");
+          let list = document.createElement("li");
+          list.innerHTML = create_sentence();
+          elem.appendChild(list);
+      })
+
+      // function create_sentence_old() {
+      //     return [
+      //         create_object(),
+      //         create_verb(),
+      //         create_subject()
+      //     ].join(" ") + ". ";
+      // }
+
+      // function create_object() {
+      //     return [
+      //         choose_adj(),
+      //         choose_noun()
+      //     ].join(" ");
+      // }
+
+      // function create_verb() {
+      //     return [
+      //         choose_adv(),
+      //         choose_verb()
+      //     ].join(" ");
+      // }
+
+      // function create_subject() {
+      //     return [
+      //         choose_adj(),
+      //         choose_noun()
+      //     ].join(" ");
+      // }
+
+      // function choose_noun() {
+      //     let nouns = ["人", "狗", "鸡"];
+      //     return random_choose(nouns);
+      // }
+      
+      // function choose_verb() {
+      //     let nouns = ["吃", "跑", "跳"];
+      //     return random_choose(nouns);
+      // }
+      
+      // function choose_adj() {
+      //     let nouns = ["漂亮的", "随便的", "丑陋的"];
+      //     return random_choose(nouns);
+      // }
+
+      // function choose_adv() {
+      //     let nouns = ["温柔地", "轻轻地", "用力地"];
+      //     return random_choose(nouns);
+      // }
+
+    </script>
+    <style>
+      body {
+        background: black;
+        color: red;
+        text-shadow:
+          0px  2px 4px #940909,
+          2px  4px 3px #870707,
+          0px  6px 2px #6e0505,
+          -2px 8px 8px #400303;
+      }
+      
+      .centered {
+        align-items: center;
+        justify-content: center;
+        display: flex;
+      }
+    </style>
+  </head>
+  <body> <!-- View -->
+    <h1 id="title"
+        class="centered"
+        onclick="change_color_to('title',
+                                 random_choose(['red', 'yellow', 'green', 'black', 'grey']));
+                 increase_counter();">
+      点我获得神喻...
+    </h1>
+    <h2 id="counter"
+        class="centered">
+      神已经为回答了你 0 次问题
+    </h2>
+    <p class="centered">
+      这是神的回答:
+    </p>
+    <div class="centered">
+      <ul id="unordered_list">
+        <!-- 神喻 goes here. -->
+      </ul>
+    </div>
+  </body>
+</html>
